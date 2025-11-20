@@ -1,0 +1,18 @@
+{
+  "name": "mui-gamebook-root",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.2",
+    "@testing-library/react": "^15.0.2",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^1.5.0",
+    "jsdom": "^24.0.0",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  },
+  "type": "module"
+}
