@@ -1,0 +1,23 @@
+{
+  "name": "@mui-gamebook/asset-generator",
+  "version": "0.0.1",
+  "description": "Generates AI assets and uploads to Cloudflare R2 for MUI Gamebook",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "npm run build -- --watch",
+    "generate": "node dist/index.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.11.0",
+    "@aws-sdk/client-s3": "^3.540.0",
+    "@mui-gamebook/parser": "workspace:*",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  }
+}

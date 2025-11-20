@@ -1,0 +1,20 @@
+{
+  "name": "@mui-gamebook/parser",
+  "version": "0.0.1",
+  "description": "DSL parser for MUI Gamebook",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "npm run build -- --watch"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "tsup": "^8.0.2",
+    "typescript": "^5.4.5"
+  }
+}
