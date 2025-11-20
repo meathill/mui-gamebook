@@ -8,9 +8,28 @@
 
 ## 2. 全局配置 (YAML Front Matter)
 
-所有的全局定义，包括游戏状态和 AI 设置，都使用 YAML Front Matter 在游戏文件的最顶端进行定义。该区块由 `---` 分隔。
+所有的全局定义，包括游戏元数据、游戏状态和 AI 设置，都使用 YAML Front Matter 在游戏文件的最顶端进行定义。该区块由 `---` 分隔。
 
-### 2.1 游戏状态 (`state`)
+### 2.1 游戏元数据
+
+这部分用于定义游戏本身的基础信息。
+
+- **`title`** (必须): 游戏的标题。
+- **`description`** (可选): 游戏的简短介绍。
+- **`cover_image`** (可选): 游戏的封面图片链接。
+- **`tags`** (可选): 一个用于分类的标签列表。
+
+**示例：**
+```yaml
+---
+title: "小红帽"
+description: "一个关于小女孩和一只狡猾大灰狼的经典童话故事。"
+cover_image: "/assets/covers/lrrh_cover.png"
+tags: ["童话", "经典", "多分支"]
+---
+```
+
+### 2.2 游戏状态 (`state`)
 
 该对象持有游戏范围内的变量，如统计数据、物品栏或环境条件。
 
@@ -25,7 +44,7 @@ state:
 ---
 ```
 
-### 2.2 AI 设置 (`ai`)
+### 2.3 AI 设置 (`ai`)
 
 该对象包含用于指导 AI 生成素材的配置，以确保游戏在风格和角色表现上的一致性。
 
@@ -36,7 +55,7 @@ state:
 
 ```yaml
 ---
-# 为简洁起见，此处省略 'state'，但实际使用时应包含
+# 为简洁起见，此处省略其他元数据，但实际使用时应包含
 ai:
   style:
     image: "奇幻, 水彩, 色彩鲜艳, 精细线条"
@@ -47,16 +66,11 @@ ai:
       description: "一位中年剑客，神情冷峻，左眼上有一道长长的伤疤，身穿蓝色长袍。"
       image_prompt: "一位智慧而强大的中国剑客，40岁，左眼有疤"
       voice_sample_url: "/assets/voices/zhang_daxia_sample.wav"
-    goblin:
-      name: "哥布林"
-      description: "一种绿色的小型生物，狡猾而淘气。"
-      image_prompt: "一只小巧、淘气的绿色哥布林，奇幻风格"
 ---
 ```
 
 ## 3. 场景 (Scenes)
-
-一个游戏由多个场景组成。每个场景代表故事中的一个特定时刻或地点。
+A game is composed of multiple scenes. Each scene represents a specific moment or location in the narrative.
 
 ### 3.1 场景定义
 
@@ -88,17 +102,20 @@ ai:
 
 ### 4.2 AI 生成的素材
 
-对于动态内容，DSL 使用带有特定语言标签（`image-gen`, `audio-gen`, `video-gen`）的代码块来指示引擎调用 AI 模型。
+对于动态内容，DSL 使用带有特定语言标签（`image-gen`, `audio-gen`, `video-gen`）的代码块来指示引擎调用 AI 模型。在素材生成后，引擎或编辑器会将生成的 `url` 写回到代码块中，用于缓存和预览。
+
+- **`prompt`**: (必须) 用于指导 AI 生成的提示词。
+- **`character`**: (可选) 引用在 `ai.characters` 中定义的角色 ID，以使用其特定的 `image_prompt`。
+- **`url`**: (可选) 由引擎或编辑器在生成后自动填入的素材链接。
 
 #### 4.2.1 图像生成 (`image-gen`)
-
-生成场景图片。局部的 `prompt` 可以与全局风格和角色提示词结合使用。
 
 **语法：**
 ````
 ```image-gen
-prompt: 用于描述图像的提示词。
-character: characterID (可选，用于使用角色的 `image_prompt`)
+prompt: A descriptive prompt for the image.
+character: characterID (optional)
+url: https://... (optional, auto-filled after generation)
 ```
 ````
 
@@ -106,18 +123,18 @@ character: characterID (可选，用于使用角色的 `image_prompt`)
 ````
 ```image-gen
 prompt: 一条雄伟的巨龙在雪山之巅上空盘旋
+url: https://ai-provider.com/generated/image456.png
 ```
 ````
 
 #### 4.2.2 音频生成 (`audio-gen`)
 
-生成背景音乐或音效。
-
 **语法：**
 ````
 ```audio-gen
 type: background_music | sfx
-prompt: 用于描述音频的提示词。
+prompt: A descriptive prompt for the audio.
+url: https://... (optional, auto-filled after generation)
 ```
 ````
 
@@ -131,19 +148,13 @@ prompt: 一段紧张、悬疑的洞穴探索背景音乐
 
 #### 4.2.3 视频生成 (`video-gen`)
 
-*注意：这是一个前瞻性功能。* 它将用于生成短视频剪辑或动画。
+*注意：这是一个前瞻性功能。*
 
 **语法：**
 ````
 ```video-gen
-prompt: 用于描述视频的提示词。
-```
-````
-
-**示例：**
-````
-```video-gen
-prompt: 一段雨滴落在窗格上并不断滑落的循环动画
+prompt: A descriptive prompt for the video.
+url: https://... (optional, auto-filled after generation)
 ```
 ````
 
