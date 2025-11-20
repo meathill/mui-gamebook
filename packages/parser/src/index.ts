@@ -35,10 +35,10 @@ function parseSceneContent(content: string): SceneNode[] {
     if (mode === 'in_block') {
       if (BLOCK_END_REGEX.test(line)) {
         const blockContentStr = blockContentBuffer.join('\n');
-        const blockContent = blockContentStr ? yaml.load(blockContentStr) : null;
+        const blockContent = blockContentStr ? yaml.load(blockContentStr) as SceneNode : null;
         if (blockContent && typeof blockContent === 'object') {
           if (blockType === 'image-gen') {
-            nodes.push({ type: 'ai_image', ...blockContent });
+            nodes.push({ ...blockContent, type: 'ai_image' });
           } else if (blockType === 'audio-gen') {
             const { type: audioType, ...rest } = blockContent as any;
             nodes.push({ type: 'ai_audio', audioType, ...rest });
@@ -160,4 +160,85 @@ export function parse(source: string): ParseResult {
   } catch (e: any) {
     return { success: false, error: `YAML parsing failed: ${e.message}` };
   }
+}
+
+/**
+ * Converts a structured Game object back into a Markdown string.
+ * This is the inverse of the parse function.
+ * @param game The structured Game object.
+ * @returns The Markdown string representation of the game.
+ */
+export function stringify(game: Game): string {
+  let markdown = '';
+
+  // 1. Front Matter
+  const frontMatter: any = {
+    title: game.title,
+  };
+  if (game.description) frontMatter.description = game.description;
+  if (game.cover_image) frontMatter.cover_image = game.cover_image;
+  if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
+  if (Object.keys(game.initialState).length > 0) frontMatter.state = game.initialState;
+  if (Object.keys(game.ai.style || {}).length > 0 || Object.keys(game.ai.characters || {}).length > 0) {
+    frontMatter.ai = {};
+    if (Object.keys(game.ai.style || {}).length > 0) frontMatter.ai.style = game.ai.style;
+    if (Object.keys(game.ai.characters || {}).length > 0) frontMatter.ai.characters = game.ai.characters;
+  }
+
+  markdown += '---\n' + yaml.dump(frontMatter, { indent: 2, lineWidth: -1 }) + '---\n\n';
+
+  // 2. Scenes
+  const sceneEntries = Array.from(game.scenes.values());
+  for (let i = 0; i < sceneEntries.length; i++) {
+    const scene = sceneEntries[i];
+    markdown += `# ${scene.id}\n`;
+
+    for (const node of scene.nodes) {
+      switch (node.type) {
+        case 'text':
+          markdown += `${node.content}\n`;
+          break;
+        case 'static_image':
+          markdown += `![${node.alt || ''}](${node.url})\n`;
+          break;
+        case 'choice':
+          let choiceLine = `* [${node.text}] -> ${node.nextSceneId}`;
+          if (node.condition) {
+            choiceLine += ` (if: ${node.condition})`;
+          }
+          if (node.set) {
+            choiceLine += ` (set: ${node.set})`;
+          }
+          markdown += `${choiceLine}\n`;
+          break;
+        case 'ai_image':
+          markdown += `\`\`\`image-gen\n`;
+          markdown += `prompt: ${node.prompt}\n`;
+          if (node.character) markdown += `character: ${node.character}\n`;
+          if (node.url) markdown += `url: ${node.url}\n`;
+          markdown += `\`\`\`\n`;
+          break;
+        case 'ai_audio':
+          markdown += `\`\`\`audio-gen\n`;
+          markdown += `type: ${node.audioType}\n`;
+          markdown += `prompt: ${node.prompt}\n`;
+          if (node.url) markdown += `url: ${node.url}\n`;
+          markdown += `\`\`\`\n`;
+          break;
+        case 'ai_video':
+          markdown += `\`\`\`video-gen\n`;
+          markdown += `prompt: ${node.prompt}\n`;
+          if (node.url) markdown += `url: ${node.url}\n`;
+          markdown += `\`\`\`\n`;
+          break;
+      }
+    }
+    markdown += '\n'; // Add a newline after each scene content
+
+    if (i < sceneEntries.length - 1) {
+      markdown += '---\n\n'; // Separator between scenes
+    }
+  }
+
+  return markdown.trim();
 }

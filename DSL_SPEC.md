@@ -102,7 +102,7 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 
 ### 4.2 AI 生成的素材
 
-对于动态内容，DSL 使用带有特定语言标签（`image-gen`, `audio-gen`, `video-gen`）的代码块来指示引擎调用 AI 模型。在素材生成后，引擎或编辑器会将生成的 `url` 写回到代码块中，用于缓存和预览。
+对于动态内容，DSL 使用带有特定语言标签（`image-gen`, `audio-gen`, `video-gen`）的代码块来指示引擎调用 AI 模型。**在素材生成后，游戏引擎或编辑器会将生成的 `url` 写回到代码块中，用于缓存和预览，确保 Markdown 文件本身始终是唯一的数据源。**
 
 - **`prompt`**: (必须) 用于指导 AI 生成的提示词。
 - **`character`**: (可选) 引用在 `ai.characters` 中定义的角色 ID，以使用其特定的 `image_prompt`。
