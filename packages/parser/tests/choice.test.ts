@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from './index';
+import { parse } from '../src';
 
 describe('choice parser', () => {
   it('should parse a simple choice', () => {

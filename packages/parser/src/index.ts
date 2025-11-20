@@ -1,20 +1,20 @@
 import * as yaml from 'js-yaml';
 import type { Game, ParseResult, Scene, SceneNode } from './types';
 
+// Final, correct regexes
 const FRONT_MATTER_REGEX = /---\n([\s\S]*?)\n---/;
-const SCENE_ID_REGEX = /^#\s*([a-zA-Z0-9_]+)/;
-
-// Node-level regexes
-const CHOICE_REGEX = /^\s*\*\s*\[(.*?)\]\s*->\s*([a-zA-Z0-9_]+)\s*(.*)/;
+const SCENE_ID_REGEX = /^#\s*([\w-]+)/;
+const CHOICE_REGEX = /^\s*\*\s*\[(.*?)\]\s*->\s*([\w-]+)\s*(.*?)\s*$/;
 const IF_REGEX = /\(if:\s*(.*?)\)/;
 const SET_REGEX = /\(set:\s*(.*?)\)/;
-const STATIC_IMAGE_REGEX = /^\s*!\[(.*?)\]\((.*?)\)/;
-const BLOCK_START_REGEX = /^```(\w+)/;
-const BLOCK_END_REGEX = /^```/;
+const STATIC_IMAGE_REGEX = /^\s*!\[(.*?)\]\((.*?)\)$/;
+const BLOCK_START_REGEX = /^```([\w-]+)$/;
+const BLOCK_END_REGEX = /^```$/;
 
 function parseSceneContent(content: string): SceneNode[] {
   const nodes: SceneNode[] = [];
   const lines = content.split('\n');
+
 
   let mode: 'default' | 'in_block' = 'default';
   let blockType = '';

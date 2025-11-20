@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from './index';
-import { SceneNode } from './types';
+import { parse } from '../src';
+import { SceneNode } from '../src/types';
 
 describe('assets parser', () => {
   it('should parse a static markdown image', () => {
@@ -27,11 +27,11 @@ title: "Static Image"
 title: "AI Image"
 ---
 # start
-\
+\`\`\`image-gen
   prompt: A castle in the clouds
   character: lrrh
   url: https://some.url/image.png
-\
+\`\`\`
 `;
     const result = parse(source);
     expect(result.success).toBe(true);
@@ -51,10 +51,10 @@ title: "AI Image"
 title: "AI Audio"
 ---
 # start
-\
+\`\`\`audio-gen
   type: background_music
   prompt: tense battle music
-\
+\`\`\`
 `;
     const result = parse(source);
     expect(result.success).toBe(true);
@@ -73,24 +73,24 @@ title: "AI Audio"
 title: "Mixed Content"
 ---
 # start
+\`\`\`image-gen
+  prompt: something else
+\`\`\`
+
 Welcome to the scene.
 ![alt text](url)
+
 * [A choice] -> next
-\
-  prompt: something else
-\
-Final text.
 `;
     const result = parse(source);
     expect(result.success).toBe(true);
     if (!result.success) return;
 
     const nodes = result.data.scenes.get('start')?.nodes;
-    expect(nodes?.length).toBe(5);
-    expect(nodes?.[0].type).toBe('text');
-    expect(nodes?.[1].type).toBe('static_image');
-    expect(nodes?.[2].type).toBe('choice');
-    expect(nodes?.[3].type).toBe('ai_image');
-    expect(nodes?.[4].type).toBe('text');
+    expect(nodes?.length).toBe(4);
+    expect(nodes?.[0].type).toBe('ai_image');
+    expect(nodes?.[1].type).toBe('text');
+    expect(nodes?.[2].type).toBe('static_image');
+    expect(nodes?.[3].type).toBe('choice');
   });
 });

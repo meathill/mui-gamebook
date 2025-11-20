@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from './index';
-import { Game } from './types';
+import { parse } from '../src';
+import { Game } from '../src/types';
 
 describe('metadata parser', () => {
   it('should correctly parse the YAML front matter', () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from './index';
+import { parse } from '../src';
 
 describe('scene parser', () => {
   it('should parse a document with a single scene', () => {
@@ -15,7 +15,7 @@ This is the first scene.
 
     expect(result.data.scenes.size).toBe(1);
     expect(result.data.scenes.has('first_scene')).toBe(true);
-    
+
     const scene = result.data.scenes.get('first_scene');
     expect(scene?.id).toBe('first_scene');
     expect(scene?.nodes.length).toBe(1);
