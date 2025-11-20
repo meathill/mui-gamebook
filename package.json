@@ -2,7 +2,7 @@
   "name": "mui-gamebook-root",
   "private": true,
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
     "test:ui": "vitest --ui"
   },
   "devDependencies": {
