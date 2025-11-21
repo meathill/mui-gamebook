@@ -1,9 +1,10 @@
 import 'dotenv/config';
-import { readFileSync, writeFileSync } from 'fs';
+import {readFileSync, writeFileSync} from 'fs';
 import * as path from 'path';
-import { parse, stringify, Game, SceneNode } from '@mui-gamebook/parser';
-import { GoogleGenAI } from '@google/genai';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {Game, parse, SceneNode, stringify} from '@mui-gamebook/parser';
+import {GoogleGenAI} from '@google/genai';
+import {PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
+import slugify from "slugify";
 
 // --- Real Implementations ---
 
@@ -25,7 +26,10 @@ const genAI = new GoogleGenAI({
  * @param prompt The prompt to generate the image.
  * @returns A promise that resolves to an image buffer.
  */
-async function generateImage(prompt: string): Promise<Buffer> {
+async function generateImage(prompt: string): Promise<{
+  buffer: Buffer,
+  type: string,
+}> {
   console.log(`[AI] Generating image for prompt: "${prompt}"`);
 
   const model = process.env.GOOGLE_IMAGE_MODEL || 'gemini-3-pro-image-preview';
@@ -35,13 +39,27 @@ async function generateImage(prompt: string): Promise<Buffer> {
     contents: prompt,
   });
   let buffer: Buffer;
-  for (const part of response.parts) {
+  if (!response.candidates || response.candidates.length === 0) {
+    throw new Error('No candidates received from Google AI.');
+  }
+
+  const [candidate] = response.candidates;
+  if (!candidate.content || !candidate.content.parts) {
+    throw new Error('No content parts received from Google AI.');
+  }
+  for (const part of candidate.content.parts) {
     if (part.text) {
       console.log(part.text);
     } else if (part.inlineData) {
       const imageData = part.inlineData.data;
-      buffer = Buffer.from(imageData, "base64");
-      return buffer;
+      if (!imageData) {
+        continue;
+      }
+      buffer = Buffer.from(imageData, 'base64');
+      return {
+        type: part.inlineData.mimeType || '',
+        buffer,
+      };
     }
   }
   throw new Error('No image data received from Google AI.');
@@ -53,18 +71,21 @@ async function generateImage(prompt: string): Promise<Buffer> {
  * @param body The file content as a Buffer.
  * @returns A promise that resolves to the public URL.
  */
-async function uploadToR2(fileName: string, body: Buffer): Promise<string> {
+async function uploadToR2(
+  fileName: string,
+  body: Buffer,
+  type: string = 'image/png',
+): Promise<string> {
   console.log(`[R2] Uploading ${fileName}...`);
   await s3Client.send(
     new PutObjectCommand({
       Bucket: process.env.R2_BUCKET!,
       Key: fileName,
       Body: body,
-      ContentType: 'image/png', // Assuming PNG, adjust if necessary
+      ContentType: type,
     })
   );
-  const publicUrl = `${process.env.R2_PUBLIC_URL!}/${fileName}`;
-  return publicUrl;
+  return `${process.env.R2_PUBLIC_URL!}/${fileName}`;
 }
 
 
@@ -74,9 +95,14 @@ async function processNode(node: SceneNode, game: Game): Promise<boolean> {
   if (node.type === 'ai_image' && !node.url) {
     const fullPrompt = `${game.ai.style?.image || ''}, ${node.prompt}`;
     try {
-      const imageBuffer = await generateImage(fullPrompt);
-      const fileName = `images/${game.title}/${Date.now()}.png`;
-      const publicUrl = await uploadToR2(fileName, imageBuffer);
+      const { buffer: imageBuffer, type } = await generateImage(fullPrompt);
+      const folder = slugify(game.title, {
+        lower: true,
+        trim: true,
+        strict: true,
+      });
+      const fileName = `images/${folder}/${Date.now()}.png`;
+      const publicUrl = await uploadToR2(fileName, imageBuffer, type);
       node.url = publicUrl;
       console.log(`[SUCCESS] Generated and uploaded image: ${publicUrl}`);
       return true;
