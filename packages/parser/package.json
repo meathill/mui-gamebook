@@ -8,13 +8,9 @@
   "dependencies": {
     "js-yaml": "^4.1.0"
   },
-  "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "npm run build -- --watch"
-  },
+  "scripts": {},
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
-    "tsup": "^8.0.2",
     "typescript": "^5.4.5"
   }
 }
