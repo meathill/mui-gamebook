@@ -7,7 +7,7 @@ import type { GameState } from '@mui-gamebook/parser/src/types';
  * - Boolean logic: true, false
  * - Variables from gameState
  * - Numbers and Strings
- * 
+ *
  * Examples:
  * - "gold >= 10"
  * - "has_key == true"
@@ -22,7 +22,7 @@ export function evaluateCondition(condition: string | undefined, state: GameStat
 
   if (parts.length === 1) {
     // Boolean variable check e.g. "has_key"
-    const val = getValue(parts[0], state);
+    const val = getValue(parts[ 0 ], state);
     return !!val;
   }
 
@@ -51,7 +51,7 @@ export function evaluateCondition(condition: string | undefined, state: GameStat
  * - Assignment: key = value
  * - Arithmetic: key = key + value, key = key - value
  * - Boolean toggle: key = !key (simple version: key = false)
- * 
+ *
  * Examples:
  * - "gold = gold - 10"
  * - "has_key = true"
@@ -61,7 +61,7 @@ export function executeSet(instruction: string | undefined, state: GameState): G
   if (!instruction) return state;
 
   const newState = { ...state };
-  
+
   // Handle multiple instructions separated by comma
   const statements = instruction.split(',').map(s => s.trim());
 
@@ -72,8 +72,8 @@ export function executeSet(instruction: string | undefined, state: GameState): G
       continue;
     }
 
-    const key = parts[0];
-    const expression = parts[1];
+    const key = parts[ 0 ];
+    const expression = parts[ 1 ];
 
     // Check for simple arithmetic: "key +/- value" or "val1 +/- val2"
     // This regex captures: (operand1) (operator) (operand2)
@@ -85,20 +85,20 @@ export function executeSet(instruction: string | undefined, state: GameState): G
       const op2 = getValue(op2Raw, newState) as number;
 
       if (typeof op1 === 'number' && typeof op2 === 'number') {
-        newState[key] = operator === '+' ? op1 + op2 : op1 - op2;
+        newState[ key ] = operator === '+' ? op1 + op2 : op1 - op2;
       } else {
         console.warn(`Invalid arithmetic operands in: ${stmt}`);
       }
     } else {
       // Direct assignment
-      newState[key] = getValue(expression, newState);
+      newState[ key ] = getValue(expression, newState);
     }
   }
 
   return newState;
 }
 
-function getValue(token: string, state: GameState): any {
+function getValue(token: string, state: GameState): boolean | number | string | undefined {
   // Boolean literals
   if (token === 'true') return true;
   if (token === 'false') return false;
@@ -107,13 +107,13 @@ function getValue(token: string, state: GameState): any {
   if (!isNaN(Number(token))) return Number(token);
 
   // String literals (start/end with ' or ")
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
     return token.slice(1, -1);
   }
 
   // Variable lookup
   if (state.hasOwnProperty(token)) {
-    return state[token];
+    return state[ token ];
   }
 
   // Undefined variable treats as 0 if strictly numeric context needed, or null?

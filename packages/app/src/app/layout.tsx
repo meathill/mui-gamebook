@@ -1,31 +1,31 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | 姆伊游戏书",
-    default: "姆伊游戏书 - AI 驱动的互动小说平台",
+    template: '%s | 姆伊游戏书',
+    default: '姆伊游戏书 - AI 驱动的互动小说平台',
   },
-  description: "探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。",
+  description: '探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。',
   openGraph: {
-    title: "姆伊游戏书 - AI 驱动的互动小说平台",
-    description: "探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。",
-    type: "website",
-    locale: "zh_CN",
-    siteName: "姆伊游戏书",
+    title: '姆伊游戏书 - AI 驱动的互动小说平台',
+    description: '探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。',
+    type: 'website',
+    locale: 'zh_CN',
+    siteName: '姆伊游戏书',
   },
 };
 

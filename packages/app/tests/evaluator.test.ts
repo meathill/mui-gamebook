@@ -26,7 +26,7 @@ describe('evaluator', () => {
 
     it('should evaluate string comparisons', () => {
       const state = { name: 'Hero' };
-      expect(evaluateCondition("name == 'Hero'", state)).toBe(true);
+      expect(evaluateCondition('name == \'Hero\'', state)).toBe(true);
       expect(evaluateCondition('name == "Villain"', state)).toBe(false);
     });
 
