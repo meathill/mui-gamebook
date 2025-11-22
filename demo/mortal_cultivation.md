@@ -34,7 +34,7 @@ ai:
 ```image-gen
 prompt: A humble village in ancient China, a young man working in fields, mountains in the distance shrouded in mist
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/start.png
+url: https://images.baifo.life/images/凡人修仙传/1763828270720.png
 ```
 你叫韩立，是一个普通的山村少年。日复一日，你在田间劳作，过着平凡的生活。然而，你心中总有一个梦想——踏上修仙之路，追求长生不老。
 
@@ -52,7 +52,7 @@ prompt: mysterious, ancient Chinese music with flute and guqin, ethereal atmosph
 ```image-gen
 prompt: A young man climbing a misty mountain path, ancient Chinese mountains with floating clouds, mystical atmosphere
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/mountain.png
+url: https://images.baifo.life/images/凡人修仙传/1763829600850.png
 ```
 你踏上了寻仙之路。山路崎岖，云雾缭绕。经过数日的跋涉，你终于在一处隐秘的山洞前，发现了一位白发苍苍的老者正在打坐。
 
@@ -66,7 +66,7 @@ url: https://images.baifo.life/images/mortal-cultivation/mountain.png
 ```image-gen
 prompt: An old immortal master examining a young disciple, ancient Chinese cultivation scene
 character: elder
-url: https://images.baifo.life/images/mortal-cultivation/elder.png
+url: https://images.baifo.life/images/凡人修仙传/1763828430395.png
 ```
 老者打量了你一番，点了点头。"你资质虽然普通，但心性尚可。老夫可以传你一部基础功法，但能否有所成就，全看你的造化了。"
 
@@ -80,7 +80,7 @@ url: https://images.baifo.life/images/mortal-cultivation/elder.png
 ```image-gen
 prompt: A young man observing an old master from a distance, cautious and alert
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/cautious.png
+url: https://images.baifo.life/images/凡人修仙传/1763828534425.png
 ```
 你并没有立即表明来意，而是仔细观察着老者。你发现老者虽然仙风道骨，但眼神中似乎隐藏着什么。老者似乎察觉到了你的谨慎，微微一笑。
 
@@ -94,7 +94,7 @@ url: https://images.baifo.life/images/mortal-cultivation/cautious.png
 ```image-gen
 prompt: A young man reading an ancient cultivation manual by candlelight in a cave
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/reading.png
+url: https://images.baifo.life/images/凡人修仙传/1763828617558.png
 ```
 你接过《长春功》，如获至宝。回到村中，你开始日夜研读。这是一部基础功法，能够引气入体，炼化天地灵气。
 
@@ -108,7 +108,7 @@ url: https://images.baifo.life/images/mortal-cultivation/reading.png
 ```image-gen
 prompt: An old master teaching a young disciple about cultivation principles
 character: elder
-url: https://images.baifo.life/images/mortal-cultivation/teaching.png
+url: https://images.baifo.life/images/凡人修仙传/1763829695488.png
 ```
 老者满意地点了点头。"很好，知道询问说明你并非鲁莽之人。修炼之道，首重心性，其次才是资质。记住，欲速则不达，基础要打牢。"
 
@@ -125,7 +125,7 @@ prompt: meditative, peaceful music with flowing energy
 ```image-gen
 prompt: A young cultivator meditating, spiritual energy swirling around him, ancient Chinese cultivation scene
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/meditation.png
+url: https://images.baifo.life/images/凡人修仙传/1763829852254.png
 ```
 你日复一日地修炼，体内的真气逐渐壮大。你感受到了炼气期的门槛。然而，突破需要契机。
 
@@ -139,7 +139,7 @@ url: https://images.baifo.life/images/mortal-cultivation/meditation.png
 ```image-gen
 prompt: A young man searching for spiritual herbs in a mystical forest, glowing plants
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/herbs.png
+url: https://images.baifo.life/images/凡人修仙传/1763828724725.png
 ```
 你决定寻找灵药来辅助修炼。经过数日的搜寻，你在一处隐秘的山谷中发现了一株百年灵参，散发着浓郁的灵气。
 
@@ -152,7 +152,7 @@ url: https://images.baifo.life/images/mortal-cultivation/herbs.png
 # found_spirit_herb
 ```image-gen
 prompt: A glowing spiritual herb being harvested, mystical energy radiating
-url: https://images.baifo.life/images/mortal-cultivation/herb-harvest.png
+url: https://images.baifo.life/images/凡人修仙传/1763828809729.png
 ```
 你小心翼翼地采摘了灵草/灵参。回到修炼之地，你将其炼化。磅礴的灵气涌入你的体内，你感到修为在飞速提升！
 
@@ -165,7 +165,7 @@ url: https://images.baifo.life/images/mortal-cultivation/herb-harvest.png
 ```image-gen
 prompt: A dark figure watching from the shadows, sinister aura
 character: demon
-url: https://images.baifo.life/images/mortal-cultivation/demon.png
+url: https://images.baifo.life/images/凡人修仙传/1763828895172.png
 ```
 你仔细观察，发现一个黑衣修士正潜伏在暗处，显然也在打这株灵参的主意。他身上的气息让你感到不安——那是魔道修士的气息。
 
@@ -183,7 +183,7 @@ prompt: powerful, ascending music with energy building up
 ```image-gen
 prompt: A cultivator breaking through cultivation realm, spiritual energy explosion, light radiating
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/breakthrough.png
+url: https://images.baifo.life/images/凡人修仙传/1763828979338.png
 ```
 经过长时间的积累，你感到体内的真气已经达到了临界点。你决定尝试突破。
 
@@ -200,7 +200,7 @@ prompt: intense battle music, clashing swords, magical energy explosions
 ```image-gen
 prompt: A fierce battle between a young cultivator and a dark demonic cultivator, energy blasts and flying swords
 character: demon
-url: https://images.baifo.life/images/mortal-cultivation/battle.png
+url: https://images.baifo.life/images/凡人修仙传/1763829064778.png
 ```
 你决定先发制人！你运转真气，向魔修发起了攻击。然而，对方的修为明显在你之上。经过一番激战，你虽然受了伤，但凭借着机智和运气，你成功击退了对方，获得了灵参。
 
@@ -213,7 +213,7 @@ url: https://images.baifo.life/images/mortal-cultivation/battle.png
 ```image-gen
 prompt: A young man leaving quietly, avoiding conflict, wise decision
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/leave.png
+url: https://images.baifo.life/images/凡人修仙传/1763829945819.png
 ```
 你明智地选择了离开。虽然失去了灵参，但你保住了性命。你明白，在修仙界，有时候退让比硬拼更明智。
 
@@ -230,7 +230,7 @@ prompt: triumphant, ascending music, achievement unlocked
 ```image-gen
 prompt: A successful cultivator standing on a mountain peak, looking at the vast world below, new horizons ahead
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/success.png
+url: https://images.baifo.life/images/凡人修仙传/1763829172497.png
 ```
 恭喜！你成功踏上了修仙之路。虽然这只是开始，但你已经不再是那个普通的凡人少年了。
 
@@ -243,7 +243,7 @@ url: https://images.baifo.life/images/mortal-cultivation/success.png
 ```image-gen
 prompt: A peaceful village scene, a young man working in fields, content with simple life
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/mortal.png
+url: https://images.baifo.life/images/凡人修仙传/1763829267157.png
 ```
 你选择了平凡的生活。虽然心中偶尔还会想起修仙的梦想，但你明白，不是每个人都有仙缘。
 
@@ -256,10 +256,9 @@ url: https://images.baifo.life/images/mortal-cultivation/mortal.png
 ```image-gen
 prompt: A young man descending the mountain, looking back with regret
 character: protagonist
-url: https://images.baifo.life/images/mortal-cultivation/regret.png
+url: https://images.baifo.life/images/凡人修仙传/1763830022131.png
 ```
 你选择了离开。回到村中，你继续过着平凡的生活。然而，你心中始终有一个遗憾——如果当初选择了修仙，会怎样呢？
 
 也许，这就是命运。但也许，还有机会...
 * [重新开始] -> start
-
