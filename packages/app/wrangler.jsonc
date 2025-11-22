@@ -16,6 +16,13 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mui-gamebook",
+      "database_id": "f1e05f17-9197-4344-a106-1fe0f906586f"
+    }
+  ],
   "observability": {
     "logs": {
       "enabled": false,

@@ -3,7 +3,7 @@ import GamePlayer from '@/components/GamePlayer';
 
 export default async function PlayPage({ params }: { params: { slug: string } }) {
   const { slug } = await params;
-  const game = getGameBySlug(slug);
+  const game = await getGameBySlug(slug);
 
   if (!game) {
     return (

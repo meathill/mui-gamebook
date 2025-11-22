@@ -2,8 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getPublishedGames } from '@/lib/games';
 
-export default function Home() {
-  const games = getPublishedGames();
+export default async function Home() {
+  const games = await getPublishedGames();
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

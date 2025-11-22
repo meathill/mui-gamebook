@@ -1,50 +1,59 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { parse } from '@mui-gamebook/parser';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { GameRow } from '@/types';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-// Navigate up from packages/app/src/lib to root/demo
-const demoDir = path.resolve(__dirname, '../../../../demo');
+export async function getPublishedGames() {
+  try {
+    const { env } = getCloudflareContext();
+    const DB = env.DB; // Assume binding name is DB
 
-export function getPublishedGames() {
-  if (!fs.existsSync(demoDir)) {
-    console.warn(`Demo directory not found at: ${demoDir}`);
+    if (!DB) {
+      console.error('D1 database binding \'DB\' not found.');
+      return [];
+    }
+
+    const { results } = (await DB.prepare(
+      'SELECT slug, title, description, cover_image, tags FROM Games WHERE published = 1'
+    ).all() as { results: GameRow[] });
+
+    return results.map((row: GameRow) => ({
+      ...row,
+      tags: row.tags ? JSON.parse(row.tags) : [],
+    }));
+  } catch (e) {
+    console.error('Failed to fetch from D1:', e);
     return [];
   }
-
-  const files = fs.readdirSync(demoDir).filter(file => file.endsWith('.md'));
-  const games = [];
-
-  for (const file of files) {
-    const content = fs.readFileSync(path.join(demoDir, file), 'utf-8');
-    const result = parse(content);
-
-    if (result.success && result.data.published) {
-      const { scenes, ...metadata } = result.data;
-      games.push({
-        slug: file.replace('.md', ''),
-        ...metadata,
-      });
-    }
-  }
-  return games;
 }
 
-export function getGameBySlug(slug: string) {
-  const filePath = path.join(demoDir, `${slug}.md`);
-  if (!fs.existsSync(filePath)) {
+export async function getGameBySlug(slug: string) {
+  try {
+    const { env } = getCloudflareContext();
+    const DB = env.DB;
+
+    if (!DB) {
+      console.error('D1 database binding \'DB\' not found.');
+      return null;
+    }
+
+    // Fetch content
+    const contentRecord = await DB.prepare(
+      'SELECT content FROM GameContent WHERE slug = ?'
+    ).bind(slug).first();
+
+    if (contentRecord) {
+      const result = parse(contentRecord.content as string);
+      if (result.success) {
+        // Double check published status from the parsed content (or we could trust the DB query if we joined tables)
+        // For consistency with previous logic, let's check the parsed metadata
+        if (result.data.published) {
+          return result.data;
+        }
+      }
+    }
+    return null;
+  } catch (e) {
+    console.error('Failed to fetch game from D1:', e);
     return null;
   }
-  const content = fs.readFileSync(filePath, 'utf-8');
-  const result = parse(content);
-
-  if (result.success) {
-    // Only return if published
-    if (result.data.published) {
-      return result.data;
-    }
-  }
-  return null;
 }
