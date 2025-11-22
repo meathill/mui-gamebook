@@ -18,6 +18,7 @@
 - **`description`** (可选): 游戏的简短介绍。
 - **`cover_image`** (可选): 游戏的封面图片链接。
 - **`tags`** (可选): 一个用于分类的标签列表。
+- **`published`** (可选): 布尔值，标记游戏是否已发布。默认为 `false`。
 
 **示例：**
 ```yaml
@@ -26,6 +27,7 @@ title: "小红帽"
 description: "一个关于小女孩和一只狡猾大灰狼的经典童话故事。"
 cover_image: "/assets/covers/lrrh_cover.png"
 tags: ["童话", "经典", "多分支"]
+published: true
 ---
 ```
 
@@ -85,6 +87,10 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 ### 3.2 场景分隔
 
 场景之间由 Markdown 的水平分割线（`---`）分隔。
+
+### 3.3 默认启动场景
+
+所有游戏都**必须**包含一个 `SceneID` 为 `start` 的场景。当游戏加载时，播放器将默认从这个场景开始。
 
 ## 4. 场景内容
 

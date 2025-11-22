@@ -6,7 +6,7 @@ describe('scene parser', () => {
     const source = `---
 title: "Scene Test"
 ---
-# first_scene
+# start
 This is the first scene.
 `;
     const result = parse(source);
@@ -14,10 +14,10 @@ This is the first scene.
     if (!result.success) return;
 
     expect(result.data.scenes.size).toBe(1);
-    expect(result.data.scenes.has('first_scene')).toBe(true);
+    expect(result.data.scenes.has('start')).toBe(true);
 
-    const scene = result.data.scenes.get('first_scene');
-    expect(scene?.id).toBe('first_scene');
+    const scene = result.data.scenes.get('start');
+    expect(scene?.id).toBe('start');
     expect(scene?.nodes.length).toBe(1);
     expect(scene?.nodes[0]).toEqual({ type: 'text', content: 'This is the first scene.' });
   });
@@ -26,7 +26,7 @@ This is the first scene.
     const source = `---
 title: "Multi-Scene Test"
 ---
-# scene1
+# start
 Content of scene 1.
 
 ---
@@ -39,7 +39,7 @@ Content of scene 2.
     if (!result.success) return;
 
     expect(result.data.scenes.size).toBe(2);
-    expect(result.data.scenes.has('scene1')).toBe(true);
+    expect(result.data.scenes.has('start')).toBe(true);
     expect(result.data.scenes.has('scene2')).toBe(true);
 
     const scene2 = result.data.scenes.get('scene2');
@@ -51,7 +51,7 @@ Content of scene 2.
 title: "Whitespace Test"
 ---
 
-# a_scene
+# start
 
   Some content with spaces.  
 
@@ -60,7 +60,7 @@ title: "Whitespace Test"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const scene = result.data.scenes.get('a_scene');
+    const scene = result.data.scenes.get('start');
     expect(scene?.nodes[0]).toEqual({ type: 'text', content: 'Some content with spaces.' });
   });
 
@@ -68,13 +68,13 @@ title: "Whitespace Test"
     const source = `---
 title: "Empty Scene"
 ---
-# empty_scene
+# start
 `;
     const result = parse(source);
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const scene = result.data.scenes.get('empty_scene');
+    const scene = result.data.scenes.get('start');
     expect(scene).toBeDefined();
     expect(scene?.nodes.length).toBe(0);
   });

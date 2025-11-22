@@ -6,7 +6,7 @@ describe('choice parser', () => {
     const source = `---
 title: "Choice Test"
 ---
-# scene1
+# start
 Some text.
 * [Go to scene 2] -> scene2
 `;
@@ -14,7 +14,7 @@ Some text.
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const scene = result.data.scenes.get('scene1');
+    const scene = result.data.scenes.get('start');
     expect(scene?.nodes.length).toBe(2);
     expect(scene?.nodes[1]).toEqual({
       type: 'choice',
@@ -82,7 +82,7 @@ title: "Complex Test"
     const source = `---
 title: "Order Test"
 ---
-# a_scene
+# start
 Text before choice.
 * [The Choice] -> somewhere
 Text after choice.
@@ -91,7 +91,7 @@ Text after choice.
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const scene = result.data.scenes.get('a_scene');
+    const scene = result.data.scenes.get('start');
     expect(scene?.nodes.length).toBe(3);
     expect(scene?.nodes[0].type).toBe('text');
     expect(scene?.nodes[1].type).toBe('choice');

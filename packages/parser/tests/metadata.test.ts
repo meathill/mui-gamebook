@@ -14,7 +14,11 @@ state:
 ai:
   style:
     image: "fantasy"
----`;
+---
+
+# start
+Must have a start scene.
+`;
 
     const result = parse(source);
 
@@ -26,6 +30,7 @@ ai:
     expect(game.title).toBe('测试游戏');
     expect(game.description).toBe('这是一个测试描述。');
     expect(game.tags).toEqual(['测试', '演示']);
+    expect(game.published).toBe(false); // Default value
 
     // Check initial state
     expect(game.initialState).toEqual({ health: 100, has_key: false });
@@ -34,7 +39,21 @@ ai:
     expect(game.ai.style?.image).toBe('fantasy');
 
     // Check that scenes are empty
-    expect(game.scenes.size).toBe(0);
+    expect(game.scenes.size).toBe(1);
+  });
+
+  it('should correctly parse published status', () => {
+    const source = `---
+title: "Published Game"
+published: true
+---
+# start
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.published).toBe(true);
+    }
   });
 
   it('should return an error if title is missing', () => {

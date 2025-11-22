@@ -2,6 +2,7 @@
 title: 小红帽
 description: 一个经典童话的互动版本，你的选择将决定小红帽的命运。
 cover_image: https://picsum.photos/400/600
+published: true
 tags:
   - 童话
   - 多分支
@@ -28,7 +29,7 @@ ai:
       image_prompt: an old, sweet-faced woman, sick in bed
 ---
 
-# home
+# start
 ```image-gen
 prompt: A cozy kitchen, a mother gives her daughter a basket of food
 character: mom
@@ -162,4 +163,4 @@ url: https://fake-r2-bucket.pub/images/小红帽/1763691122061.png
 ```
 “那是为了——一口吃掉你！”
 大灰狼从床上一跃而起！
-* [游戏结束 - 重新开始] -> home
+* [游戏结束 - 重新开始] -> start

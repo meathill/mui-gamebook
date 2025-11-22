@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from '../src';
+import { parse } from '../src/index';
 
 describe('parser', () => {
   it('should successfully parse a minimal valid document', () => {
