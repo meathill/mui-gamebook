@@ -1,11 +1,16 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { parse } from '@mui-gamebook/parser';
 
-const demoDir = path.join(process.cwd(), '../../demo');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// Navigate up from packages/app/src/lib to root/demo
+const demoDir = path.resolve(__dirname, '../../../../demo');
 
 export function getPublishedGames() {
   if (!fs.existsSync(demoDir)) {
+    console.warn(`Demo directory not found at: ${demoDir}`);
     return [];
   }
 
@@ -15,6 +20,7 @@ export function getPublishedGames() {
   for (const file of files) {
     const content = fs.readFileSync(path.join(demoDir, file), 'utf-8');
     const result = parse(content);
+
     if (result.success && result.data.published) {
       const { scenes, ...metadata } = result.data;
       games.push({
@@ -33,8 +39,12 @@ export function getGameBySlug(slug: string) {
   }
   const content = fs.readFileSync(filePath, 'utf-8');
   const result = parse(content);
+
   if (result.success) {
-    return result.data;
+    // Only return if published
+    if (result.data.published) {
+      return result.data;
+    }
   }
   return null;
 }

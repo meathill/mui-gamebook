@@ -164,6 +164,11 @@ export function parse(source: string): ParseResult {
       scenes,
     };
 
+    // Validate that a 'start' scene exists
+    if (!game.scenes.has('start')) {
+      return { success: false, error: "Game must contain a 'start' scene." };
+    }
+
     return { success: true, data: game };
   } catch (e: any) {
     return { success: false, error: `YAML parsing failed: ${e.message}` };

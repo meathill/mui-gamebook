@@ -88,6 +88,10 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 
 场景之间由 Markdown 的水平分割线（`---`）分隔。
 
+### 3.3 默认启动场景
+
+所有游戏都**必须**包含一个 `SceneID` 为 `start` 的场景。当游戏加载时，播放器将默认从这个场景开始。
+
 ## 4. 场景内容
 
 在每个场景中，内容可以包括图片（静态或 AI 生成）、音频、视频、描述性文本和玩家选项。

@@ -29,7 +29,7 @@ ai:
       image_prompt: an old, sweet-faced woman, sick in bed
 ---
 
-# home
+# start
 ```image-gen
 prompt: A cozy kitchen, a mother gives her daughter a basket of food
 character: mom
@@ -163,4 +163,4 @@ url: https://fake-r2-bucket.pub/images/小红帽/1763691122061.png
 ```
 “那是为了——一口吃掉你！”
 大灰狼从床上一跃而起！
-* [游戏结束 - 重新开始] -> home
+* [游戏结束 - 重新开始] -> start

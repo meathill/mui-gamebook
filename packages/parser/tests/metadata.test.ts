@@ -14,7 +14,11 @@ state:
 ai:
   style:
     image: "fantasy"
----`;
+---
+
+# start
+Must have a start scene.
+`;
 
     const result = parse(source);
 
@@ -35,7 +39,7 @@ ai:
     expect(game.ai.style?.image).toBe('fantasy');
 
     // Check that scenes are empty
-    expect(game.scenes.size).toBe(0);
+    expect(game.scenes.size).toBe(1);
   });
 
   it('should correctly parse published status', () => {
