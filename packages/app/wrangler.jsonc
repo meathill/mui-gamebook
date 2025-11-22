@@ -16,17 +16,28 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "observability": {
+    "logs": {
+      "enabled": false,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
+  "placement": {
+    "mode": "smart"
+  },
+  "r2_buckets": [
+     {
+       "binding": "NEXT_INC_CACHE_R2_BUCKET",
+       "bucket_name": "baifo"
+     }
+  ],
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
       // The service should match the "name" of your worker
       "service": "mui-gamebook"
     }
-  ],
-  "r2_buckets": [
-     {
-       "binding": "NEXT_INC_CACHE_R2_BUCKET",
-       "bucket_name": "baifo"
-     }
   ]
 }

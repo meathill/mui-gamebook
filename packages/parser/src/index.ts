@@ -41,12 +41,12 @@ function parseSceneContent(content: string): SceneNode[] {
         const blockContent = blockContentStr ? yaml.load(blockContentStr) as SceneNode : null;
         if (blockContent && typeof blockContent === 'object') {
           if (blockType === 'image-gen') {
-            nodes.push({ type: 'ai_image', ...blockContent });
+            nodes.push({ ...blockContent, type: 'ai_image' } as SceneNode);
           } else if (blockType === 'audio-gen') {
             const { type: audioType, ...rest } = blockContent as any;
             nodes.push({ type: 'ai_audio', audioType, ...rest });
           } else if (blockType === 'video-gen') {
-            nodes.push({ type: 'ai_video', ...blockContent });
+            nodes.push({ ...blockContent, type: 'ai_video'  } as SceneNode);
           }
         }
         mode = 'default';
