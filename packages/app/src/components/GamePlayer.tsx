@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import type { Game } from '@mui-gamebook/parser/src/types';
+import { evaluateCondition, executeSet } from '@/lib/evaluator';
 
 export default function GamePlayer({ game, slug }: { game: Game; slug: string }) {
-  // Initialize with default values, actual loading happens in useEffect
-  const [currentSceneId, setCurrentSceneId] = useState<string>('start');
+  const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
   const [gameState, setGameState] = useState(game.initialState);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -40,7 +40,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
   const handleRestart = () => {
     if (confirm('Are you sure you want to restart? Your progress will be lost.')) {
       localStorage.removeItem(`game_progress_${slug}`);
-      setCurrentSceneId('start');
+      setCurrentSceneId(game.startSceneId || 'start');
       setGameState(game.initialState);
     }
   };
@@ -112,14 +112,21 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
                 );
               
               case 'choice':
-                // TODO: Implement condition check logic here using gameState
-                // For now, we show all choices
+                // Check condition
+                if (!evaluateCondition(node.condition, gameState)) {
+                  return null;
+                }
+
                 return (
                   <button 
                     key={index}
                     className="w-full text-left p-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
                     onClick={() => {
-                      // TODO: Implement state update logic (set:) here
+                      // Update state if 'set' is present
+                      if (node.set) {
+                        const newState = executeSet(node.set, gameState);
+                        setGameState(newState);
+                      }
                       setCurrentSceneId(node.nextSceneId);
                     }}
                   >

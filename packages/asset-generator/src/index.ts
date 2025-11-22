@@ -99,9 +99,8 @@ async function processNode(node: SceneNode, game: Game, force: boolean = false):
       const folder = slugify(game.title, {
         lower: true,
         trim: true,
-        strict: true,
       });
-      const fileName = `images/${folder}/${Date.now()}.png`;
+      const fileName = `images/${folder || game.title}/${Date.now()}.png`;
       const publicUrl = await uploadToR2(fileName, imageBuffer, type);
       node.url = publicUrl;
       console.log(`[SUCCESS] Generated and uploaded image: ${publicUrl}`);
@@ -144,7 +143,7 @@ async function main() {
 
   for (const scene of game.scenes.values()) {
     for (const node of scene.nodes) {
-      const updated = await processNode(node, game.title, force);
+      const updated = await processNode(node, game, force);
       if (updated) {
         hasChanged = true;
       }

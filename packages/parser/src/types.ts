@@ -78,6 +78,9 @@ export interface Game {
 
   // 场景集合
   scenes: Map<string, Scene>;
+
+  // 未来可能会用到
+  startSceneId?: 'start';
 }
 
 /**

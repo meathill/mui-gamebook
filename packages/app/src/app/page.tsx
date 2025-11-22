@@ -2,6 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getPublishedGames } from '@/lib/games';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const games = await getPublishedGames();
 
