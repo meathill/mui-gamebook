@@ -1,6 +1,7 @@
 import { parse } from '@mui-gamebook/parser';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GameRow } from '@/types';
+import { cache } from 'react';
 
 export async function getPublishedGames() {
   try {
@@ -57,3 +58,5 @@ export async function getGameBySlug(slug: string) {
     return null;
   }
 }
+
+export const cachedGetGameBySlug = cache(getGameBySlug);

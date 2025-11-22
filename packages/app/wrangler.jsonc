@@ -46,5 +46,8 @@
       // The service should match the "name" of your worker
       "service": "mui-gamebook"
     }
-  ]
+  ],
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://mui-gamebook.meathill.workers.dev/"
+  }
 }
