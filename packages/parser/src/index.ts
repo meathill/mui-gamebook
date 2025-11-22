@@ -19,7 +19,6 @@ function parseSceneContent(content: string): SceneNode[] {
   const nodes: SceneNode[] = [];
   const lines = content.split('\n');
 
-
   let mode: 'default' | 'in_block' = 'default';
   let blockType = '';
   let blockContentBuffer: string[] = [];
