@@ -3,10 +3,10 @@ import { getGameBySlug } from '@/lib/games';
 
 export async function GET(
   request: Request,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   const { slug } = await params;
-  const game = getGameBySlug(slug);
+  const game = await getGameBySlug(slug);
 
   if (!game) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 });

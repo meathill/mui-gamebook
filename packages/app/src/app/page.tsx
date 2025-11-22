@@ -2,8 +2,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getPublishedGames } from '@/lib/games';
 
-export default function Home() {
-  const games = getPublishedGames();
+export default async function Home() {
+  const games = await getPublishedGames();
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -11,7 +11,7 @@ export default function Home() {
         <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-10">
           MUI Gamebook Library
         </h1>
-        
+
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {games.map((game) => (
             <Link href={`/play/${game.slug}`} key={game.slug} className="group">
@@ -38,7 +38,7 @@ export default function Home() {
                     {game.description}
                   </p>
                   <div className="flex flex-wrap gap-2 mt-auto">
-                    {game.tags?.map(tag => (
+                    {game.tags?.map((tag: string) => (
                       <span key={tag} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                         {tag}
                       </span>

@@ -70,9 +70,6 @@ export interface Game {
   // 初始状态
   initialState: GameState;
 
-  // 初始状态
-  initialState: GameState;
-
   // AI 配置
   ai: {
     style?: Record<string, string>;
