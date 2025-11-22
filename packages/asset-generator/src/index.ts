@@ -144,7 +144,7 @@ async function main() {
 
   for (const scene of game.scenes.values()) {
     for (const node of scene.nodes) {
-      const updated = await processNode(node, game, force);
+      const updated = await processNode(node, game.title, force);
       if (updated) {
         hasChanged = true;
       }
