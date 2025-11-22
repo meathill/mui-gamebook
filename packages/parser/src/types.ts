@@ -65,6 +65,7 @@ export interface Game {
   description?: string;
   cover_image?: string;
   tags?: string[];
+  published?: boolean;
 
   // 初始状态
   initialState: GameState;

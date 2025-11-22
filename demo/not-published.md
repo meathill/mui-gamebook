@@ -1,19 +1,18 @@
 ---
-title: Hello World Game
-description: 一个简单的测试游戏
-published: true
+title: 未发布游戏
+description: 这个游戏没有发布，你不应该看到它
 tags:
   - 测试
-  - Hello World
+  - 未发布
 ai:
   style:
     image: minimalist, line art, futuristic
 ---
 
 # start
-欢迎来到 Hello World 游戏！
+如果你看到这个游戏
 
-你看到一个未来城市的壮丽景色。
+就说明我们出问题了……
 ```image-gen
 prompt: a futuristic cityscape at sunset, neon lights
 url: 

@@ -123,6 +123,7 @@ export function parse(source: string): ParseResult {
       description,
       cover_image,
       tags,
+      published,
       state = {},
       ai = {},
     } = frontMatter;
@@ -154,6 +155,7 @@ export function parse(source: string): ParseResult {
       description,
       cover_image,
       tags: tags || [],
+      published: !!published,
       initialState: state,
       ai: {
         style: ai.style || {},
@@ -184,6 +186,7 @@ export function stringify(game: Game): string {
   if (game.description) frontMatter.description = game.description;
   if (game.cover_image) frontMatter.cover_image = game.cover_image;
   if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
+  if (game.published) frontMatter.published = true;
   if (Object.keys(game.initialState).length > 0) frontMatter.state = game.initialState;
   if (Object.keys(game.ai.style || {}).length > 0 || Object.keys(game.ai.characters || {}).length > 0) {
     frontMatter.ai = {};
