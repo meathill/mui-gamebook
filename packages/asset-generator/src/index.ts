@@ -91,8 +91,8 @@ async function uploadToR2(
 
 // --- Core Logic ---
 
-async function processNode(node: SceneNode, game: Game): Promise<boolean> {
-  if (node.type === 'ai_image' && !node.url) {
+async function processNode(node: SceneNode, game: Game, force: boolean = false): Promise<boolean> {
+  if (node.type === 'ai_image' && (!node.url || force)) {
     const fullPrompt = `${game.ai.style?.image || ''}, ${node.prompt}`;
     try {
       const { buffer: imageBuffer, type } = await generateImage(fullPrompt);
@@ -117,16 +117,19 @@ async function processNode(node: SceneNode, game: Game): Promise<boolean> {
 
 async function main() {
   const args = process.argv.slice(2);
-  const relativePath = args[0];
+  const force = args.includes('--force');
+  // Filter out flags to find the file path argument
+  const fileArgs = args.filter(arg => !arg.startsWith('--'));
+  const relativePath = fileArgs[0];
 
   if (!relativePath) {
     console.error('Error: Please provide a path to the game file.');
-    console.log('Usage: pnpm --filter=@mui-gamebook/asset-generator generate <path/to/your/game.md>');
+    console.log('Usage: pnpm --filter=@mui-gamebook/asset-generator generate <path/to/your/game.md> [--force]');
     process.exit(1);
   }
 
   const filePath = path.resolve(process.cwd(), '../..', relativePath);
-  console.log(`Processing file: ${filePath}`);
+  console.log(`Processing file: ${filePath} (Force mode: ${force})`);
 
   const fileContent = readFileSync(filePath, 'utf-8');
   const parseResult = parse(fileContent);
@@ -141,7 +144,7 @@ async function main() {
 
   for (const scene of game.scenes.values()) {
     for (const node of scene.nodes) {
-      const updated = await processNode(node, game);
+      const updated = await processNode(node, game, force);
       if (updated) {
         hasChanged = true;
       }

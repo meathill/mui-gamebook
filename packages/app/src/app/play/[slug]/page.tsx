@@ -1,9 +1,34 @@
-import { getGameBySlug } from '@/lib/games';
+import { cachedGetGameBySlug } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
+import { Metadata } from 'next';
 
-export default async function PlayPage({ params }: { params: { slug: string } }) {
+type Props = {
+  params: Promise<{ slug: string }>
+}
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const game = await getGameBySlug(slug);
+  const game = await cachedGetGameBySlug(slug);
+
+  if (!game) {
+    return {
+      title: '游戏未找到',
+    };
+  }
+
+  return {
+    title: game.title,
+    description: game.description,
+    openGraph: {
+      title: game.title,
+      description: game.description,
+      images: game.cover_image ? [game.cover_image] : [],
+    },
+  };
+}
+
+export default async function PlayPage({ params }: Props) {
+  const { slug } = await params;
+  const game = await cachedGetGameBySlug(slug);
 
   if (!game) {
     return (
