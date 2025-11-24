@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import {readFileSync, writeFileSync} from 'fs';
+import { readFile, writeFile } from 'node:fs/promises';
 import * as path from 'path';
 import {Game, parse, SceneNode, stringify} from '@mui-gamebook/parser';
 import {GoogleGenAI} from '@google/genai';
@@ -22,18 +22,42 @@ const genAI = new GoogleGenAI({
 });
 
 /**
- * Generates an image with Google AI.
- * @param prompt The prompt to generate the image.
- * @returns A promise that resolves to an image buffer.
+ * Helper function to retry an async operation with exponential backoff.
  */
+async function retry<T>(
+  operation: () => Promise<T>,
+  retries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (retries <= 0) throw error;
+    console.warn(`Operation failed, retrying in ${delay}ms... (${retries} retries left)`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return retry(operation, retries - 1, delay * 2);
+  }
+}
+
 async function generateImage(prompt: string): Promise<{
+  buffer: Buffer,
+  type: string,
+}> {
+  return retry<{
+    buffer: Buffer,
+    type: string,
+  }>(() => _generateImage(prompt));
+}
+/**
+ * Generates an image with Google AI.
+ */
+async function _generateImage(prompt: string): Promise<{
   buffer: Buffer,
   type: string,
 }> {
   console.log(`[AI] Generating image for prompt: "${prompt}"`);
 
   const model = process.env.GOOGLE_IMAGE_MODEL || 'gemini-3-pro-image-preview';
-
   const response = await genAI.models.generateContent({
     model,
     contents: prompt,
@@ -67,11 +91,16 @@ async function generateImage(prompt: string): Promise<{
 
 /**
  * Uploads a buffer to Cloudflare R2.
- * @param fileName The name for the file in the bucket.
- * @param body The file content as a Buffer.
- * @returns A promise that resolves to the public URL.
  */
 async function uploadToR2(
+  fileName: string,
+  body: Buffer,
+  type: string = 'image/png',
+
+): Promise<string> {
+  return retry(() => _uploadToR2(fileName, body, type));
+}
+async function _uploadToR2(
   fileName: string,
   body: Buffer,
   type: string = 'image/png',
@@ -88,12 +117,63 @@ async function uploadToR2(
   return `${process.env.R2_PUBLIC_URL!}/${fileName}`;
 }
 
-
 // --- Core Logic ---
+
+async function processGlobalAssets(game: Game, force: boolean): Promise<boolean> {
+  let changed = false;
+
+  // 1. Characters
+  if (game.ai && game.ai.characters) {
+    for (const [id, char] of Object.entries(game.ai.characters)) {
+      if (char.image_prompt && (!char.image_url || force)) {
+        const fullPrompt = `${game.ai.style?.image || ''}, character portrait of ${char.image_prompt}`;
+        try {
+          const { buffer, type } = await generateImage(fullPrompt);
+          const fileName = `images/${game.title}/characters/${id}-${Date.now()}.png`;
+          const publicUrl = await uploadToR2(fileName, buffer, type);
+          char.image_url = publicUrl;
+          console.log(`[SUCCESS] Generated character image for ${char.name}: ${publicUrl}`);
+          changed = true;
+        } catch (e: any) {
+          console.error(`[ERROR] Failed to generate character image for ${char.name}: ${e.message}`);
+        }
+      }
+    }
+  }
+
+  // 2. Cover Image
+  if (game.cover_image && game.cover_image.startsWith('prompt:')) {
+    const prompt = game.cover_image.replace(/^prompt:\s*/, '');
+    const fullPrompt = `${game.ai.style?.image || ''}, cover art, ${prompt}`;
+    try {
+      const { buffer, type } = await generateImage(fullPrompt);
+      const fileName = `images/${game.title}/cover-${Date.now()}.png`;
+      const publicUrl = await uploadToR2(fileName, buffer, type);
+      game.cover_image = publicUrl;
+      console.log(`[SUCCESS] Generated cover image: ${publicUrl}`);
+      changed = true;
+    } catch (e: any) {
+      console.error(`[ERROR] Failed to generate cover image: ${e.message}`);
+    }
+  }
+
+  return changed;
+}
 
 async function processNode(node: SceneNode, game: Game, force: boolean = false): Promise<boolean> {
   if (node.type === 'ai_image' && (!node.url || force)) {
-    const fullPrompt = `${game.ai.style?.image || ''}, ${node.prompt}`;
+    let fullPrompt = `${game.ai.style?.image || ''}`;
+
+    // Include character description if available
+    if (node.character && game.ai.characters && game.ai.characters[node.character]) {
+      const char = game.ai.characters[node.character];
+      if (char.image_prompt) {
+        fullPrompt += `, ${char.image_prompt}`;
+      }
+    }
+
+    fullPrompt += `, ${node.prompt}`;
+
     try {
       const { buffer: imageBuffer, type } = await generateImage(fullPrompt);
       const folder = slugify(game.title, {
@@ -130,7 +210,7 @@ async function main() {
   const filePath = path.resolve(process.cwd(), '../..', relativePath);
   console.log(`Processing file: ${filePath} (Force mode: ${force})`);
 
-  const fileContent = readFileSync(filePath, 'utf-8');
+  const fileContent = await readFile(filePath, 'utf-8');
   const parseResult = parse(fileContent);
 
   if (!parseResult.success) {
@@ -140,6 +220,10 @@ async function main() {
 
   const game = parseResult.data;
   let hasChanged = false;
+
+  // Process Global Assets first
+  const globalChanged = await processGlobalAssets(game, force);
+  if (globalChanged) hasChanged = true;
 
   for (const scene of game.scenes.values()) {
     for (const node of scene.nodes) {
@@ -153,7 +237,7 @@ async function main() {
   if (hasChanged) {
     console.log('Asset URLs have been updated. Writing back to file...');
     const newFileContent = stringify(game);
-    writeFileSync(filePath, newFileContent, 'utf-8');
+    await writeFile(filePath, newFileContent, 'utf-8');
     console.log('File updated successfully!');
   } else {
     console.log('No new assets needed to be generated. File is up to date.');

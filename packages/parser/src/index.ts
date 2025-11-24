@@ -1,5 +1,6 @@
 import * as yaml from 'js-yaml';
-import type { Game, ParseResult, Scene, SceneNode } from './types';
+import type {AICharacter, Game, ParseResult, Scene, SceneNode} from './types';
+import { omitBy } from "lodash-es";
 export {
   Game,
   SceneNode,
@@ -184,7 +185,7 @@ export function stringify(game: Game): string {
   let markdown = '';
 
   // 1. Front Matter
-  const frontMatter: any = {
+  const frontMatter: Partial<Game> = {
     title: game.title,
   };
   if (game.description) frontMatter.description = game.description;
@@ -195,7 +196,23 @@ export function stringify(game: Game): string {
   if (Object.keys(game.ai.style || {}).length > 0 || Object.keys(game.ai.characters || {}).length > 0) {
     frontMatter.ai = {};
     if (Object.keys(game.ai.style || {}).length > 0) frontMatter.ai.style = game.ai.style;
-    if (Object.keys(game.ai.characters || {}).length > 0) frontMatter.ai.characters = game.ai.characters;
+    if (Object.keys(game.ai.characters || {}).length > 0) {
+      frontMatter.ai.characters = {};
+      for (const [id, char] of Object.entries(game.ai.characters || {})) {
+        frontMatter.ai.characters[id] = {
+          name: char.name,
+          description: char.description,
+          image_prompt: char.image_prompt,
+          image_url: char.image_url,
+          voice_sample_url: char.voice_sample_url,
+        };
+        // Clean up undefined fields
+        frontMatter.ai.characters[id] = omitBy(
+          frontMatter.ai.characters[id],
+          v => v === undefined
+        ) as AICharacter;
+      }
+    }
   }
 
   markdown += '---\n' + yaml.dump(frontMatter, { indent: 2, lineWidth: -1 }) + '---\n\n';

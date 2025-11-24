@@ -14,6 +14,7 @@ export interface AICharacter {
   name: string;
   description?: string;
   image_prompt?: string;
+  image_url?: string;
   voice_sample_url?: string;
 }
 
@@ -69,6 +70,7 @@ export interface Game {
 
   // 初始状态
   initialState: GameState;
+  state?: GameState;
 
   // AI 配置
   ai: {
