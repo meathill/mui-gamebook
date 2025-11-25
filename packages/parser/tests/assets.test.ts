@@ -46,6 +46,27 @@ title: "AI Image"
     expect(node.url).toBe('https://some.url/image.png');
   });
 
+  it('should parse an ai-image generation block with multiple characters', () => {
+    const source = `---
+title: "Multi Char AI Image"
+---
+# start
+\`\`\`image-gen
+prompt: Little Red Riding Hood meeting the Wolf
+characters: [lrrh, wolf]
+\`\`\`
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    expect(node.type).toBe('ai_image');
+    if (node.type !== 'ai_image') return;
+
+    expect(node.characters).toEqual(['lrrh', 'wolf']);
+  });
+
   it('should parse an ai-audio generation block', () => {
     const source = `--- 
 title: "AI Audio"

@@ -14,6 +14,7 @@ export interface AICharacter {
   name: string;
   description?: string;
   image_prompt?: string;
+  image_url?: string;
   voice_sample_url?: string;
 }
 
@@ -27,6 +28,7 @@ export type SceneNode =
       type: 'ai_image';
       prompt: string;
       character?: string;
+      characters?: string[];
       url?: string;
     }
   | {
@@ -69,6 +71,7 @@ export interface Game {
 
   // 初始状态
   initialState: GameState;
+  state?: GameState;
 
   // AI 配置
   ai: {

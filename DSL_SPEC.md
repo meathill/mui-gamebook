@@ -120,7 +120,8 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 ````
 ```image-gen
 prompt: A descriptive prompt for the image.
-character: characterID (optional)
+character: characterID (可选，单人模式，向后兼容)
+characters: [charID1, charID2] (可选，多人模式，推荐)
 url: https://... (optional, auto-filled after generation)
 ```
 ````
@@ -128,7 +129,8 @@ url: https://... (optional, auto-filled after generation)
 **示例：**
 ````
 ```image-gen
-prompt: 一条雄伟的巨龙在雪山之巅上空盘旋
+prompt: 小红帽在森林里遇到了大灰狼
+characters: [lrrh, wolf]
 url: https://ai-provider.com/generated/image456.png
 ```
 ````
