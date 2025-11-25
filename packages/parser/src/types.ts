@@ -28,6 +28,7 @@ export type SceneNode =
       type: 'ai_image';
       prompt: string;
       character?: string;
+      characters?: string[];
       url?: string;
     }
   | {

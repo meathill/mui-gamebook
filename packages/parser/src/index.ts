@@ -245,6 +245,7 @@ export function stringify(game: Game): string {
           markdown += `\`\`\`image-gen\n`;
           markdown += `prompt: ${node.prompt}\n`;
           if (node.character) markdown += `character: ${node.character}\n`;
+          if (node.characters && node.characters.length > 0) markdown += `characters: [${node.characters.join(', ')}]\n`;
           if (node.url) markdown += `url: ${node.url}\n`;
           markdown += `\`\`\`\n`;
           break;

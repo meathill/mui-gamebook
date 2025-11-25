@@ -164,16 +164,25 @@ async function processNode(node: SceneNode, game: Game, force: boolean = false):
   if (node.type === 'ai_image' && (!node.url || force)) {
     let fullPrompt = `${game.ai.style?.image || ''}`;
 
-    // Include character description if available
-    if (node.character && game.ai.characters && game.ai.characters[node.character]) {
-      const char = game.ai.characters[node.character];
-      if (char.image_prompt) {
-        fullPrompt += `, ${char.image_prompt}`;
-      }
-    }
-
-    fullPrompt += `, ${node.prompt}`;
-
+        // Include character description if available
+        if (node.character && game.ai.characters && game.ai.characters[node.character]) {
+          const char = game.ai.characters[node.character];
+          if (char.image_prompt) {
+            fullPrompt += `, ${char.image_prompt}`;
+          }
+        }
+    
+        // Include multiple characters descriptions
+        if (node.characters && node.characters.length > 0 && game.ai.characters) {
+          node.characters.forEach(charId => {
+            const char = game.ai?.characters?.[charId];
+            if (char && char.image_prompt) {
+              fullPrompt += `, ${char.image_prompt}`;
+            }
+          });
+        }
+        
+        fullPrompt += `, ${node.prompt}`;
     try {
       const { buffer: imageBuffer, type } = await generateImage(fullPrompt);
       const folder = slugify(game.title, {
