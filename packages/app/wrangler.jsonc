@@ -38,6 +38,10 @@
      {
        "binding": "NEXT_INC_CACHE_R2_BUCKET",
        "bucket_name": "baifo"
+     },
+     {
+       "binding": "ASSETS_BUCKET",
+       "bucket_name": "gamebook-assets"
      }
   ],
   "services": [
@@ -49,7 +53,10 @@
   ],
   "vars": {
     "ADMIN_SECRET": "",
+    "ASSETS_PUBLIC_DOMAIN": "",
     "BETTER_AUTH_SECRET": "farewell",
+    "GOOGLE_API_KEY": "",
+    "GOOGLE_IMAGE_MODEL": "",
     "NEXT_PUBLIC_SITE_URL": "https://mui-gamebook.meathill.workers.dev/"
   }
 }

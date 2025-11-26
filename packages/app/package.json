@@ -1,5 +1,5 @@
 {
-  "name": "my-app",
+  "name": "@mui-gamebook/app",
   "version": "0.1.1",
   "private": true,
   "scripts": {
@@ -13,6 +13,9 @@
     "seed-db": "tsx scripts/generate-seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.936.0",
+    "@google/genai": "^1.30.0",
+    "@mui-gamebook/core": "workspace:*",
     "@mui-gamebook/parser": "workspace:*",
     "@opennextjs/cloudflare": "^1.13.1",
     "@tanstack/react-query": "^5.90.11",
