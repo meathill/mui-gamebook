@@ -45,3 +45,20 @@ export const verification = sqliteTable("verification", {
 	createdAt: integer("created_at", { mode: "timestamp" }),
 	updatedAt: integer("updated_at", { mode: "timestamp" }),
 });
+
+export const games = sqliteTable("Games", {
+	slug: text("slug").primaryKey(),
+	title: text("title").notNull(),
+	description: text("description"),
+	coverImage: text("cover_image"),
+	tags: text("tags"), // JSON string
+	published: integer("published", { mode: "boolean" }).default(false),
+	ownerId: text("owner_id").references(() => user.id),
+	createdAt: integer("created_at", { mode: "timestamp" }),
+	updatedAt: integer("updated_at", { mode: "timestamp" }),
+});
+
+export const gameContent = sqliteTable("GameContent", {
+	slug: text("slug").primaryKey().references(() => games.slug, { onDelete: "cascade" }),
+	content: text("content").notNull(),
+});

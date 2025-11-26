@@ -8,8 +8,10 @@ CREATE TABLE IF NOT EXISTS Games (
     cover_image TEXT,
     tags TEXT, -- JSON string array
     published BOOLEAN DEFAULT 0,
+    owner_id text,
     created_at INTEGER,
-    updated_at INTEGER
+    updated_at INTEGER,
+    FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 
 CREATE TABLE IF NOT EXISTS GameContent (
