@@ -23,3 +23,31 @@ MUI Gamebook 是一个创新的平台，旨在创建、游玩和分发由 AI 辅
 ### 4. 可部署的独立游戏包
 
 最后，平台将支持已完成游戏的分发。作者能够将他们的互动故事导出为简单、独立且易于部署的单机游戏包。然后，这些游戏包可以通过网站或其他平台进行分发，让玩家无需复杂的安装或设置即可享受这些由 AI 增强的互动小说。
+
+## 用户系统初始化
+
+本项目采用邀请制用户系统。在部署后（或本地开发首次运行时），你需要手动初始化第一个管理员账户。
+
+### 1. 配置环境变量
+
+确保你的 `.env` 文件（本地）或 Cloudflare Pages 环境变量配置了以下项：
+
+```bash
+ADMIN_SECRET="your-secure-admin-secret"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000" # 本地开发
+# NEXT_PUBLIC_SITE_URL="https://your-production-domain.com" # 生产环境
+BETTER_AUTH_SECRET="random-string-for-session-encryption"
+```
+
+### 2. 创建首个管理员
+
+使用 `curl` 命令调用 API 创建用户：
+
+```bash
+curl -X POST http://localhost:3000/api/admin/invite \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer your-secure-admin-secret" \
+  -d '{"email": "admin@example.com", "password": "yourpassword", "name": "Admin"}'
+```
+
+创建成功后，你就可以访问 `/sign-in` 使用该账号登录，并通过 `/admin` 页面邀请更多用户。
