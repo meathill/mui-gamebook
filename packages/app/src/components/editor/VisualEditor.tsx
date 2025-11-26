@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
-import { 
-  ReactFlow, 
-  Controls, 
-  Background, 
-  useNodesState, 
-  useEdgesState, 
-  addEdge, 
-  Connection, 
+import {
+  ReactFlow,
+  Controls,
+  Background,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  Connection,
   Edge,
   MiniMap,
   useOnSelectionChange,
@@ -18,10 +18,11 @@ import {
   useReactFlow
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Save, ArrowLeft, ExternalLink, FileText, Network, PlusCircle } from 'lucide-react';
+import { Save, ArrowLeft, ExternalLink, FileText, Network, PlusCircle, Layout } from 'lucide-react';
 import Link from 'next/link';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
+import { getLayoutedElements } from '@/lib/editor/layout';
 import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
 import type { Game } from '@mui-gamebook/parser/src/types';
@@ -31,7 +32,7 @@ const nodeTypes = { scene: SceneNode };
 export default function VisualEditor({ slug }: { slug: string }) {
   const router = useRouter();
   const { data: session, isPending: isAuthPending } = authClient.useSession();
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
   
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -48,8 +49,8 @@ export default function VisualEditor({ slug }: { slug: string }) {
 
   useOnSelectionChange({
     onChange: ({ nodes, edges }) => {
-      setSelectedNode(nodes[0] || null);
-      setSelectedEdge(edges[0] || null);
+      setSelectedNode(nodes[ 0 ] || null);
+      setSelectedEdge(edges[ 0 ] || null);
     },
   });
 
@@ -137,11 +138,55 @@ export default function VisualEditor({ slug }: { slug: string }) {
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === id) {
-          return { ...node, data: { ...node.data, ...data } };
+          const updatedNode = { ...node, data: { ...node.data, ...data } };
+          if (selectedNode?.id === id) {
+            setSelectedNode(updatedNode);
+          }
+          return updatedNode;
         }
         return node;
       })
     );
+  };
+
+  const handleNodeIdChange = (oldId: string, newId: string) => {
+    if (!newId || oldId === newId) return;
+    
+    // Check for duplicate ID
+    if (nodes.some(n => n.id === newId)) {
+      alert(`Scene ID "${newId}" already exists.`);
+      return;
+    }
+
+    // Update Nodes
+    setNodes((nds) => nds.map(node => {
+      if (node.id === oldId) {
+        const updatedNode = { ...node, id: newId, data: { ...node.data, label: newId } };
+        if (selectedNode?.id === oldId) {
+          setSelectedNode(updatedNode);
+        }
+        return updatedNode;
+      }
+      return node;
+    }));
+
+    // Update Edges
+    setEdges((eds) =>eds.map(edge => {
+      let updated = false;
+      let newSource = edge.source;
+      let newTarget = edge.target;
+
+      if (edge.source === oldId) {
+        newSource = newId;
+        updated = true;
+      }
+      if (edge.target === oldId) {
+        newTarget = newId;
+        updated = true;
+      }
+
+      return updated ? { ...edge, source: newSource, target: newTarget } : edge;
+    }));
   };
 
   const handleEdgeChange = (id: string, changes: { label?: string; data?: any }) => {
@@ -170,6 +215,16 @@ export default function VisualEditor({ slug }: { slug: string }) {
     setNodes((nds) => nds.concat(newNode));
   };
 
+  const handleLayout = useCallback(() => {
+    const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(
+      nodes,
+      edges
+    );
+    setNodes([...layoutedNodes]);
+    setEdges([...layoutedEdges]);
+    window.requestAnimationFrame(() => fitView());
+  }, [nodes, edges, setNodes, setEdges, fitView]);
+
   if (isAuthPending || loading) return <div className="p-8 text-center">Loading...</div>;
   if (!session) { router.push('/sign-in'); return null; }
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
@@ -186,12 +241,21 @@ export default function VisualEditor({ slug }: { slug: string }) {
         </div>
         <div className="flex gap-3">
           {viewMode === 'visual' && (
-            <button
-              onClick={handleAddScene}
-              className="flex items-center gap-2 px-3 py-2 text-green-700 hover:bg-green-50 rounded-md text-sm border border-green-200"
-            >
-              <PlusCircle size={16} /> Add Scene
-            </button>
+            <>
+              <button
+                onClick={handleAddScene}
+                className="flex items-center gap-2 px-3 py-2 text-green-700 hover:bg-green-50 rounded-md text-sm border border-green-200"
+              >
+                <PlusCircle size={16} /> Add Scene
+              </button>
+              <button
+                onClick={handleLayout}
+                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md text-sm border border-gray-200"
+                title="Auto Layout"
+              >
+                <Layout size={16} /> Layout
+              </button>
+            </>
           )}
           <button
             onClick={toggleViewMode}
@@ -203,7 +267,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
           </button>
           
           <Link 
-            href={`/play/${slug}`} 
+            href={`/play/${slug}`}
             target="_blank"
             className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md text-sm"
           >
@@ -242,6 +306,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
               selectedNode={selectedNode} 
               selectedEdge={selectedEdge}
               onNodeChange={handleNodeChange}
+              onNodeIdChange={handleNodeIdChange}
               onEdgeChange={handleEdgeChange}
             />
           </>

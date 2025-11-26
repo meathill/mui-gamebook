@@ -3,62 +3,143 @@ import { SceneNodeData } from '@/lib/editor/transformers';
 import { Trash2, Plus, Image as ImageIcon } from 'lucide-react';
 
 interface InspectorProps {
+
   selectedNode: Node | null;
+
   selectedEdge: Edge | null;
+
   onNodeChange: (id: string, data: Partial<SceneNodeData>) => void;
+
+  onNodeIdChange: (oldId: string, newId: string) => void;
+
   onEdgeChange: (id: string, changes: { label?: string; data?: any }) => void;
+
 }
 
-export default function Inspector({ selectedNode, selectedEdge, onNodeChange, onEdgeChange }: InspectorProps) {
+
+
+export default function Inspector({ selectedNode, selectedEdge, onNodeChange, onNodeIdChange, onEdgeChange }: InspectorProps) {
+
   if (!selectedNode && !selectedEdge) {
+
     return (
+
       <div className="w-80 border-l border-gray-200 bg-white p-4 text-sm text-gray-500 hidden md:block">
+
         Select a node or edge to edit properties.
+
       </div>
+
     );
+
   }
 
+
+
   // Cast data for easier access
+
   const nodeData = selectedNode ? (selectedNode.data as unknown as SceneNodeData) : null;
 
+
+
   const handleAssetChange = (index: number, field: string, value: string) => {
+
     if (!selectedNode || !nodeData) return;
+
     const newAssets = [...(nodeData.assets || [])];
-    newAssets[index] = { ...newAssets[index], [field]: value };
+
+    newAssets[ index ] = { ...newAssets[ index ], [ field ]: value };
+
     onNodeChange(selectedNode.id, { assets: newAssets });
+
   };
+
+
 
   const handleAssetDelete = (index: number) => {
+
     if (!selectedNode || !nodeData) return;
+
     const newAssets = [...(nodeData.assets || [])];
+
     newAssets.splice(index, 1);
+
     onNodeChange(selectedNode.id, { assets: newAssets });
+
   };
+
+
 
   const handleAddAsset = (type: 'ai_image' | 'ai_audio') => {
+
     if (!selectedNode || !nodeData) return;
+
     const newAssets = [...(nodeData.assets || [])];
+
     if (type === 'ai_image') {
+
       newAssets.push({ type: 'ai_image', prompt: 'Describe the image...' });
+
     } else {
+
       newAssets.push({ type: 'ai_audio', audioType: 'sfx', prompt: 'Describe the sound...' });
+
     }
+
     onNodeChange(selectedNode.id, { assets: newAssets });
+
   };
 
+
+
   return (
+
     <div className="w-80 border-l border-gray-200 bg-white flex flex-col h-full overflow-y-auto shadow-xl z-20">
+
       <div className="p-4 border-b border-gray-200 bg-gray-50">
+
         <h2 className="font-semibold text-gray-700">Properties</h2>
+
         <p className="text-xs text-gray-500 truncate">
+
           {selectedNode ? `Scene: ${nodeData?.label}` : `Choice: ${selectedEdge?.label || 'Untitled'}`}
+
         </p>
+
       </div>
 
+
+
       <div className="p-4 space-y-6">
+
         {selectedNode && nodeData && (
+
           <>
+
             <div>
+
+              <label className="block text-xs font-medium text-gray-700 mb-1">Scene ID</label>
+
+              <input
+
+                type="text"
+
+                key={selectedNode.id} // Force re-render when selection changes to update defaultValue
+
+                defaultValue={nodeData.label}
+
+                onBlur={(e) => onNodeIdChange(selectedNode.id, e.target.value)}
+
+                className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+
+              />
+
+            </div>
+
+
+
+            <div>
+
               <label className="block text-xs font-medium text-gray-700 mb-1">Content</label>
               <textarea
                 value={nodeData.content}

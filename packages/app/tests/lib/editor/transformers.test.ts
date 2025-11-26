@@ -35,7 +35,7 @@ describe('Editor Transformers', () => {
     expect(startNode).toBeDefined();
     expect(startNode?.data.content).toBe('Hello');
 
-    const edge = edges[0];
+    const edge = edges[ 0 ];
     expect(edge.source).toBe('start');
     expect(edge.target).toBe('end');
     expect(edge.label).toBe('Go');
@@ -53,7 +53,7 @@ describe('Editor Transformers', () => {
     // Note: transformer logic puts assets/text/choices in a specific order
     // In this case: text ('Hello') -> choice ('Go')
     expect(startScene?.nodes).toHaveLength(2);
-    expect(startScene?.nodes[0].content).toBe('Hello');
-    expect((startScene?.nodes[1] as any).nextSceneId).toBe('end');
+    expect(startScene?.nodes[ 0 ].content).toBe('Hello');
+    expect((startScene?.nodes[ 1 ] as any).nextSceneId).toBe('end');
   });
 });

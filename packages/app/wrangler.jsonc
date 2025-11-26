@@ -48,6 +48,8 @@
     }
   ],
   "vars": {
+    "ADMIN_SECRET": "",
+    "BETTER_AUTH_SECRET": "farewell",
     "NEXT_PUBLIC_SITE_URL": "https://mui-gamebook.meathill.workers.dev/"
   }
 }
