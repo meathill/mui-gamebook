@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import useSWR, { mutate } from 'swr';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Edit, Eye, Lock, Globe } from 'lucide-react';
 import Link from 'next/link';
 
@@ -19,43 +19,60 @@ interface GameListItem {
 const fetcher = (url: string) => fetch(url).then((res) => res.json() as Promise<GameListItem[]>);
 
 export default function AdminPage() {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending: isAuthPending } = authClient.useSession();
   const router = useRouter();
-  const [isCreating, setIsCreating] = useState(false);
+  const queryClient = useQueryClient();
   const [newTitle, setNewTitle] = useState('');
 
-  // Use SWR to fetch games with explicit type
-  const { data: games, error } = useSWR<GameListItem[]>('/api/cms/games', fetcher);
+  // Use React Query to fetch games
+  const { data: games, isLoading, error } = useQuery({
+    queryKey: ['games'],
+    queryFn: () => fetcher('/api/cms/games'),
+  });
 
-  if (isPending) return <div className="p-8 text-center">Loading...</div>;
+  // Create Mutation
+  const createMutation = useMutation({
+    mutationFn: async (title: string) => {
+      const res = await fetch('/api/cms/games', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      if (!res.ok) throw new Error('Failed to create');
+      return res.json();
+    },
+    onSuccess: () => {
+      setNewTitle('');
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+    },
+  });
+
+  // Delete Mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (slug: string) => {
+      const res = await fetch(`/api/cms/games/${slug}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+    },
+  });
+
+  if (isAuthPending) return <div className="p-8 text-center">Loading...</div>;
 
   if (!session) {
     router.push('/sign-in');
     return null;
   }
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsCreating(true);
-    try {
-      const res = await fetch('/api/cms/games', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newTitle }),
-      });
-      if (res.ok) {
-        setNewTitle('');
-        mutate('/api/cms/games'); // Refresh list
-      }
-    } finally {
-      setIsCreating(false);
-    }
+    createMutation.mutate(newTitle);
   };
 
-  const handleDelete = async (slug: string) => {
+  const handleDelete = (slug: string) => {
     if (!confirm('Are you sure? This cannot be undone.')) return;
-    await fetch(`/api/cms/games/${slug}`, { method: 'DELETE' });
-    mutate('/api/cms/games');
+    deleteMutation.mutate(slug);
   };
 
   return (
@@ -85,24 +102,24 @@ export default function AdminPage() {
             />
             <button
               type="submit"
-              disabled={isCreating}
+              disabled={createMutation.isPending}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
             >
-              <Plus size={18} /> Create
+              <Plus size={18} /> {createMutation.isPending ? 'Creating...' : 'Create'}
             </button>
           </form>
         </div>
 
         {/* Games List */}
         {error && <div className="text-red-500">Failed to load games</div>}
-        {!games && !error && <div className="text-gray-500">Loading games...</div>}
+        {isLoading && <div className="text-gray-500">Loading games...</div>}
         
         <div className="grid gap-4">
           {games && games.length === 0 && (
             <p className="text-center text-gray-500 py-8">No games yet. Create one above!</p>
           )}
           
-          {games?.map((game: any) => (
+          {games?.map((game) => (
             <div key={game.slug} className="bg-white p-4 rounded-lg shadow flex items-center justify-between group">
               <div className="flex items-center gap-4">
                 <div className={`p-2 rounded-full ${game.published ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
