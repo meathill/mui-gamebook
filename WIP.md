@@ -9,31 +9,44 @@
 
 ## 开发计划
 
-### 1. 基础建设与数据转换 (Current)
-- [ ] 安装 `@xyflow/react`
-- [ ] 创建 `transformers.ts`: 实现 `gameToFlow` (Import) 和 `flowToGame` (Export)
-- [ ] 编写测试验证转换逻辑的正确性
+### 1. 基础建设与数据转换 (Completed)
+- [x] 安装 `@xyflow/react`
+- [x] 创建 `transformers.ts`: 实现 `gameToFlow` (Import) 和 `flowToGame` (Export)
+- [x] 编写测试验证转换逻辑的正确性
 
-### 2. 搭建画布
-- [ ] 创建可视化编辑器页面 `/admin/edit/[slug]/visual` (或直接替换)
-- [ ] 实现自定义节点组件 `SceneNode` (展示 ID, 缩略内容)
-- [ ] 集成数据加载：API -> Parser -> `gameToFlow` -> React Flow
+### 2. 搭建画布 (Completed)
+- [x] 创建可视化编辑器页面 `/admin/edit/[slug]` (直接替换)
+- [x] 实现自定义节点组件 `SceneNode`
+- [x] 集成数据加载：API -> Parser -> `gameToFlow` -> React Flow
+- [x] 实现 Visual/Text 模式双向切换与同步
 
-### 3. 节点交互与编辑
-- [ ] 实现“添加场景”功能
-- [ ] 开发**属性面板 (Inspector)**
-    - [ ] 编辑场景 ID
-    - [ ] 编辑场景描述 (Text)
-    - [ ] 编辑 AI 配置 (Image/Audio Prompts)
-- [ ] 实时同步：面板修改 -> 更新 Flow Node Data
+### 3. 节点交互与编辑 (Completed)
+- [x] 实现“添加场景”功能
+- [x] 开发**属性面板 (Inspector)**
+    - [x] 编辑场景 ID (只读)
+    - [x] 编辑场景描述 (Text)
+    - [x] 编辑 AI 配置 (Read-only view implemented)
+- [x] 实时同步：面板修改 -> 更新 Flow Node Data
 
-### 4. 连线交互与保存
-- [ ] 实现连线逻辑：连线 = 创建选项 (Choice)
-- [ ] 属性面板支持连线编辑：
-    - [ ] 选项文本 (Choice Text)
-    - [ ] 条件判断 (If)
-    - [ ] 状态更新 (Set)
-- [ ] 实现保存：React Flow -> `flowToGame` -> Stringify -> API PUT
+### 4. 连线交互与保存 (Completed)
+- [x] 实现连线逻辑：连线 = 创建选项 (Choice)
+- [x] 属性面板支持连线编辑：
+    - [x] 选项文本 (Choice Text)
+    - [x] 条件判断 (If)
+    - [x] 状态更新 (Set)
+- [x] 实现保存：React Flow -> `flowToGame` -> Stringify -> API PUT
+
+## 后续增强计划 (Enhancements)
+
+### 5. 资产管理 (Assets Management)
+- [ ] 在 Inspector 中支持添加/删除 `ai_image` / `ai_audio` / `video-gen`
+- [ ] 编辑 Asset Prompt 和属性
+- [ ] 支持预览 Asset 图片 URL
+
+### 6. 高级编辑功能
+- [ ] **场景重命名**：修改 Scene ID 并自动更新相关连线
+- [ ] **自动布局 (Auto Layout)**：一键整理节点位置 (dagre/elk)
+
 
 ## 数据映射设计
 
