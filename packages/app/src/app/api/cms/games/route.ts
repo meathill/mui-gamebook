@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { env } = await getCloudflareContext();
+  const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
   const userGames = await db.select()
@@ -29,7 +29,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { title } = await req.json();
+  const { title } = (await req.json()) as {
+    title: string;
+  };
   if (!title) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   }
@@ -47,7 +49,7 @@ published: false
 Welcome to your new game!
 `;
 
-  const { env } = await getCloudflareContext();
+  const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
   try {
@@ -66,7 +68,7 @@ Welcome to your new game!
     });
 
     return NextResponse.json({ slug, title });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

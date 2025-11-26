@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, SetStateAction } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import {
@@ -33,16 +33,16 @@ export default function VisualEditor({ slug }: { slug: string }) {
   const router = useRouter();
   const { data: session, isPending: isAuthPending } = authClient.useSession();
   const { screenToFlowPosition, fitView } = useReactFlow();
-  
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [originalGame, setOriginalGame] = useState<Game | null>(null);
   const [viewMode, setViewMode] = useState<'visual' | 'text'>('visual');
   const [textContent, setTextContent] = useState('');
-  
+
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -59,7 +59,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
       fetch(`/api/cms/games/${slug}`)
         .then(async (res) => {
           if (!res.ok) throw new Error('Failed to load game');
-          const data = await res.json();
+          const data = (await res.json()) as { content: string };
           const result = parse(data.content);
           if (result.success) {
             setOriginalGame(result.data);
@@ -79,8 +79,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
   const toggleViewMode = () => {
     if (viewMode === 'visual') {
       if (originalGame) {
-        // @ts-ignore
-        const newGame = flowToGame(nodes as any, edges, originalGame);
+        const newGame = flowToGame(nodes as Node<SceneNodeData>[], edges, originalGame);
         const content = stringify(newGame);
         setTextContent(content);
       }
@@ -103,10 +102,9 @@ export default function VisualEditor({ slug }: { slug: string }) {
     let contentToSave = textContent;
 
     if (viewMode === 'visual' && originalGame) {
-      // @ts-ignore
-      const newGame = flowToGame(nodes as any, edges, originalGame);
+      const newGame = flowToGame(nodes as Node<SceneNodeData>[], edges, originalGame);
       contentToSave = stringify(newGame);
-      setTextContent(contentToSave); 
+      setTextContent(contentToSave);
     }
 
     setSaving(true);
@@ -116,21 +114,26 @@ export default function VisualEditor({ slug }: { slug: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content: contentToSave }),
       });
-      
+
       if (!res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { error: string };
         throw new Error(data.error || 'Failed to save');
       }
       alert('Saved successfully!');
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert((err as Error).message);
     } finally {
       setSaving(false);
     }
   };
 
   const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, type: 'default', label: 'Choice' },eds)),
+    // ts-expect-error types
+    (params: Connection) => setEdges((edges: Edge[]) => addEdge({
+      ...params,
+      type: 'default',
+      label: 'Choice',
+    }, edges)),
     [setEdges],
   );
 
@@ -151,15 +154,15 @@ export default function VisualEditor({ slug }: { slug: string }) {
 
   const handleNodeIdChange = (oldId: string, newId: string) => {
     if (!newId || oldId === newId) return;
-    
+
     // Check for duplicate ID
-    if (nodes.some(n => n.id === newId)) {
+    if (nodes.some((n: Node) => n.id === newId)) {
       alert(`Scene ID "${newId}" already exists.`);
       return;
     }
 
     // Update Nodes
-    setNodes((nds) => nds.map(node => {
+    setNodes((nds: Node[]) => nds.map(node => {
       if (node.id === oldId) {
         const updatedNode = { ...node, id: newId, data: { ...node.data, label: newId } };
         if (selectedNode?.id === oldId) {
@@ -189,12 +192,12 @@ export default function VisualEditor({ slug }: { slug: string }) {
     }));
   };
 
-  const handleEdgeChange = (id: string, changes: { label?: string; data?: any }) => {
+  const handleEdgeChange = (id: string, changes: { label?: string; data?: Record<string, unknown> }) => {
     setEdges((eds) =>
       eds.map((edge) => {
         if (edge.id === id) {
-          return { 
-            ...edge, 
+          return {
+            ...edge,
             ...(changes.label ? { label: changes.label } : {}),
             ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {})
           };
@@ -265,8 +268,8 @@ export default function VisualEditor({ slug }: { slug: string }) {
             {viewMode === 'visual' ? <FileText size={16} /> : <Network size={16} />}
             {viewMode === 'visual' ? 'Text Mode' : 'Visual Mode'}
           </button>
-          
-          <Link 
+
+          <Link
             href={`/play/${slug}`}
             target="_blank"
             className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-md text-sm"
@@ -302,8 +305,8 @@ export default function VisualEditor({ slug }: { slug: string }) {
                 <MiniMap />
               </ReactFlow>
             </div>
-            <Inspector 
-              selectedNode={selectedNode} 
+            <Inspector
+              selectedNode={selectedNode}
               selectedEdge={selectedEdge}
               onNodeChange={handleNodeChange}
               onNodeIdChange={handleNodeIdChange}

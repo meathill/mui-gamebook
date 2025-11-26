@@ -7,7 +7,11 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { prompt, gameSlug, type } = await req.json();
+    const { prompt, gameSlug, type } = (await req.json()) satisfies {
+      prompt: string;
+      gameSlug: string;
+      type: string;
+    };
     if (!prompt || !gameSlug) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     if (type !== 'ai_image') {
@@ -18,8 +22,8 @@ export async function POST(req: Request) {
     const url = await generateAndUploadImage(prompt, fileName);
 
     return NextResponse.json({ url });
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Generate asset error:', e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: (e as Error).message || String(e) }, { status: 500 });
   }
 }

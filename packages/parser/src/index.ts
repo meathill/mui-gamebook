@@ -5,6 +5,7 @@ export {
   Game,
   SceneNode,
 }
+export * from './types';
 
 // Final, correct regexes
 const FRONT_MATTER_REGEX = /---\n([\s\S]*?)\n---/;

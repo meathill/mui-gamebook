@@ -21,34 +21,40 @@ export interface AICharacter {
 /**
  * 场景内容的原子节点。
  */
+export type SceneContentNode = { type: 'text'; content: string };
+export type SceneStaticImageNode = { type: 'static_image'; alt?: string; url: string };
+export type SceneAiImageNode = {
+  type: 'ai_image';
+  prompt: string;
+  character?: string;
+  characters?: string[];
+  url?: string;
+};
+export type SceneAiAudioNode = {
+  type: 'ai_audio';
+  audioType: 'sfx' | 'background_music';
+  prompt: string;
+  url?: string;
+};
+export type SceneAiVideoNode = {
+  type: 'ai_video';
+  prompt: string;
+  url?: string;
+};
+export type SceneChoiceNode = {
+  type: 'choice';
+  text: string;
+  nextSceneId: string;
+  condition?: string; // e.g., "has_key == true"
+  set?: string; // e.g., "gold = gold + 5, has_key = false"
+};
 export type SceneNode =
-  | { type: 'text'; content: string }
-  | { type: 'static_image'; alt?: string; url: string }
-  | {
-      type: 'ai_image';
-      prompt: string;
-      character?: string;
-      characters?: string[];
-      url?: string;
-    }
-  | {
-      type: 'ai_audio';
-      audioType: 'sfx' | 'background_music';
-      prompt: string;
-      url?: string;
-    }
-  | {
-      type: 'ai_video';
-      prompt: string;
-      url?: string;
-    }
-  | {
-      type: 'choice';
-      text: string;
-      nextSceneId: string;
-      condition?: string; // e.g., "has_key == true"
-      set?: string; // e.g., "gold = gold + 5, has_key = false"
-    };
+  | SceneContentNode
+  | SceneStaticImageNode
+  | SceneAiImageNode
+  | SceneAiAudioNode
+  | SceneAiVideoNode
+  | SceneChoiceNode;
 
 /**
  * 代表一个独立的场景。
