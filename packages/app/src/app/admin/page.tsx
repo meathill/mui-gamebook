@@ -7,7 +7,16 @@ import useSWR, { mutate } from 'swr';
 import { Plus, Trash2, Edit, Eye, Lock, Globe } from 'lucide-react';
 import Link from 'next/link';
 
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+interface GameListItem {
+  slug: string;
+  title: string;
+  description?: string;
+  cover_image?: string;
+  published: boolean;
+  updatedAt: string | number;
+}
+
+const fetcher = (url: string) => fetch(url).then((res) => res.json() as Promise<GameListItem[]>);
 
 export default function AdminPage() {
   const { data: session, isPending } = authClient.useSession();
@@ -15,8 +24,8 @@ export default function AdminPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
 
-  // Use SWR to fetch games
-  const { data: games, error } = useSWR('/api/cms/games', fetcher);
+  // Use SWR to fetch games with explicit type
+  const { data: games, error } = useSWR<GameListItem[]>('/api/cms/games', fetcher);
 
   if (isPending) return <div className="p-8 text-center">Loading...</div>;
 

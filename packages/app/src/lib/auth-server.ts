@@ -1,6 +1,6 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { createAuth } from "@/lib/auth-config";
-import { headers } from "next/headers";
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { createAuth } from '@/lib/auth-config';
+import { headers } from 'next/headers';
 
 export async function getSession() {
   const { env } = await getCloudflareContext();

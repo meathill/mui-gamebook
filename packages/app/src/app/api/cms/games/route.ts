@@ -1,15 +1,15 @@
-import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth-server";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { drizzle } from "drizzle-orm/d1";
-import { eq, desc } from "drizzle-orm";
-import * as schema from "@/db/schema";
-import slugify from "slugify";
+import { NextResponse } from 'next/server';
+import { getSession } from '@/lib/auth-server';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { drizzle } from 'drizzle-orm/d1';
+import { eq, desc } from 'drizzle-orm';
+import * as schema from '@/db/schema';
+import slugify from 'slugify';
 
 export async function GET() {
   const session = await getSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { env } = await getCloudflareContext();
@@ -26,12 +26,12 @@ export async function GET() {
 export async function POST(req: Request) {
   const session = await getSession();
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   const { title } = await req.json();
   if (!title) {
-    return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   }
 
   const slug = slugify(title, { lower: true, strict: true }) + '-' + Date.now().toString().slice(-4);
