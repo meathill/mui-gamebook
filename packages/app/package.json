@@ -20,6 +20,7 @@
     "@opennextjs/cloudflare": "^1.13.1",
     "@tanstack/react-query": "^5.90.11",
     "@types/dagre": "^0.7.53",
+    "@uiw/react-md-editor": "^4.0.8",
     "@xyflow/react": "^12.9.3",
     "better-auth": "^1.4.1",
     "dagre": "^0.8.5",

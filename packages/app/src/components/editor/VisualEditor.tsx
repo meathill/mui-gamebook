@@ -40,8 +40,8 @@ export default function VisualEditor({ slug }: { slug: string }) {
 
   const [activeTab, setActiveTab] = useState<Tab>('settings');
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
   // originalGame holds the metadata (settings) and initial content
   const [originalGame, setOriginalGame] = useState<Game | null>(null);
@@ -60,8 +60,8 @@ export default function VisualEditor({ slug }: { slug: string }) {
 
   useOnSelectionChange({
     onChange: ({ nodes, edges }) => {
-      setSelectedNode(nodes[0] || null);
-      setSelectedEdge(edges[0] || null);
+      setSelectedNode(nodes[ 0 ] || null);
+      setSelectedEdge(edges[ 0 ] || null);
     },
   });
 
@@ -70,10 +70,10 @@ export default function VisualEditor({ slug }: { slug: string }) {
       fetch(`/api/cms/games/${slug}`)
         .then(async (res) => {
           if (!res.ok) throw new Error('Failed to load game');
-          const data = await res.json();
+          const data = (await res.json()) as { content: string } & Game;
           const result = parse(data.content);
           if (result.success) {
-            // Merge API metadata (like slug) with parsed content if needed, 
+            // Merge API metadata (like slug) with parsed content if needed,
             // but mostly we trust the parsed content for structure.
             setOriginalGame({ ...result.data, ...data }); // data contains slug
             setTextContent(data.content);
@@ -92,8 +92,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
   const toggleViewMode = () => {
     if (viewMode === 'visual') {
       if (originalGame) {
-        // @ts-ignore
-        const newGame = flowToGame(nodes as any, edges, originalGame);
+        const newGame = flowToGame(nodes as Node<SceneNodeData>[], edges, originalGame);
         const content = stringify(newGame);
         setTextContent(content);
       }
@@ -119,12 +118,11 @@ export default function VisualEditor({ slug }: { slug: string }) {
 
     try {
       let gameToSave = originalGame;
-      
+
       // If we are in Story tab, we need to sync content to gameToSave
       if (activeTab === 'story') {
         if (viewMode === 'visual') {
-          // @ts-ignore
-          gameToSave = flowToGame(nodes as any, edges, originalGame);
+          gameToSave = flowToGame(nodes as Node<SceneNodeData>[], edges, originalGame);
         } else {
           const result = parse(textContent);
           if (result.success) {
@@ -138,8 +136,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
         // If in Settings tab, we need to ensure the content (nodes/edges or text) is preserved
         // Since originalGame holds metadata, we need to merge latest scenes into it.
         if (viewMode === 'visual') {
-           // @ts-ignore
-           const contentGame = flowToGame(nodes as any, edges, originalGame);
+           const contentGame = flowToGame(nodes as Node<SceneNodeData>[], edges, originalGame);
            gameToSave = { ...originalGame, scenes: contentGame.scenes };
         } else {
            const result = parse(textContent);
@@ -150,7 +147,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
       }
 
       const content = stringify(gameToSave);
-      
+
       // Update text content state to reflect saved state
       setTextContent(content);
 
@@ -159,14 +156,14 @@ export default function VisualEditor({ slug }: { slug: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),
       });
-      
+
       if (!res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as { error?: string };
         throw new Error(data.error || 'Failed to save');
       }
       alert('Saved successfully!');
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      alert((err as Error).message);
     } finally {
       setSaving(false);
     }
@@ -179,15 +176,18 @@ export default function VisualEditor({ slug }: { slug: string }) {
 
     try {
       const res = await fetch(`/api/cms/games/${slug}/batch-generate-assets`, { method: 'POST' });
-      const data = await res.json();
+      const data = (await res.json()) as {
+        updatedCount?: number;
+        error?: string;
+      };
       if (res.ok) {
         alert(`Generated ${data.updatedCount} assets successfully! Reloading...`);
-        window.location.reload(); 
+        window.location.reload();
       } else {
         throw new Error(data.error);
       }
-    } catch (e: any) {
-      alert(`Asset generation failed: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Asset generation failed: ${(e as Error).message}`);
     } finally {
       setAssetGenerating(false);
     }
@@ -233,7 +233,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
     }));
   };
 
-  const handleEdgeChange = (id: string, changes: { label?: string; data?: any }) => {
+  const handleEdgeChange = (id: string, changes: { label?: string; data?: Record<string, unknown> }) => {
     setEdges((eds) =>eds.map((edge) => edge.id === id ? { ...edge, ...(changes.label ? { label: changes.label } : {}), ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}) } : edge));
   };
 
@@ -268,7 +268,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
             <ArrowLeft size={20} />
           </Link>
           <h1 className="font-semibold text-gray-900 hidden md:block">{originalGame?.title || slug}</h1>
-          
+
           {/* Tabs */}
           <div className="flex bg-gray-100 p-1 rounded-lg ml-4">
             <button
@@ -297,7 +297,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
               </button>
             </>
           )}
-          
+
           {activeTab === 'story' && (
             <>
               <button onClick={() => setShowImporter(true)} className="flex items-center gap-2 px-3 py-2 text-purple-700 hover:bg-purple-50 rounded text-sm border border-purple-200">
@@ -312,7 +312,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
               </button>
             </>
           )}
-          
+
           <Link href={`/play/${slug}`} target="_blank" className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200" title="Preview">
             <ExternalLink size={18} />
           </Link>
@@ -326,9 +326,10 @@ export default function VisualEditor({ slug }: { slug: string }) {
       <div className="flex-1 overflow-hidden relative">
         {activeTab === 'settings' && originalGame && (
           <div className="h-full overflow-y-auto bg-gray-50 p-6">
-            <EditorSettingsTab 
-              game={originalGame} 
-              onChange={setOriginalGame} 
+            <EditorSettingsTab
+              game={originalGame}
+              onChange={setOriginalGame}
+              slug={slug}
             />
           </div>
         )}
@@ -352,8 +353,8 @@ export default function VisualEditor({ slug }: { slug: string }) {
                     <MiniMap />
                   </ReactFlow>
                 </div>
-                <Inspector 
-                  selectedNode={selectedNode} 
+                <Inspector
+                  selectedNode={selectedNode}
                   selectedEdge={selectedEdge}
                   onNodeChange={handleNodeChange}
                   onNodeIdChange={handleNodeIdChange}
@@ -376,10 +377,10 @@ export default function VisualEditor({ slug }: { slug: string }) {
       </div>
 
       {showImporter && (
-        <StoryImporter 
-          slug={slug} 
-          onImport={handleScriptImport} 
-          onClose={() => setShowImporter(false)} 
+        <StoryImporter
+          slug={slug}
+          onImport={handleScriptImport}
+          onClose={() => setShowImporter(false)}
         />
       )}
     </div>
