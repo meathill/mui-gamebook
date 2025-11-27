@@ -1,4 +1,4 @@
-import { GoogleGenAI, PartUnion } from "@google/genai";
+import { GoogleGenAI, PartUnion, ThinkingLevel } from "@google/genai";
 
 /**
  * Generates an image with Google AI.
@@ -47,7 +47,7 @@ export async function generateText(
   genAI: GoogleGenAI,
   model: string,
   prompt: String,
-  thinking: number = 0,
+  thinking?: ThinkingLevel,
 ): Promise<string> {
   console.log(`[AI] Generating text for prompt: "${prompt}"`);
   const response = await genAI.models.generateContent({
@@ -56,7 +56,7 @@ export async function generateText(
     ...thinking && {
       config: {
         thinkingConfig: {
-          thinkingBudget: thinking, // Disables thinking
+          thinkingLevel: thinking,
         },
       }
     },

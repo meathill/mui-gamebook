@@ -25,13 +25,19 @@ export async function GET(
     .where(and(eq(schema.games.slug, slug), eq(schema.games.ownerId, session.user.id)))
     .get();
 
-  if (!game) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+  if (!game) return NextResponse.json({ error: "Game not found" }, { status: 404 });
+
+  const parsedGame = {
+    ...game,
+    tags: game.tags ? JSON.parse(game.tags) : [],
+    published: Boolean(game.published)
+  };
 
   const content = await db.select().from(schema.gameContent)
     .where(eq(schema.gameContent.slug, slug))
     .get();
 
-  return NextResponse.json({ ...game, content: content?.content || '' });
+  return NextResponse.json({ ...parsedGame, content: content?.content || "" });
 }
 
 export async function PUT(

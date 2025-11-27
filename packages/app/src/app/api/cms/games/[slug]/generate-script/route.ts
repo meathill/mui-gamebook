@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { generateText } from '@mui-gamebook/core/lib/ai';
 
 const SYSTEM_PROMPT = `
@@ -35,7 +35,7 @@ ${dslSpec}
 
 ## User Story:
 
-"""${story}"""`);
+"""${story}"""`, ThinkingLevel.LOW);
     // Cleanup: Remove markdown code blocks if AI wrapped it
     const cleanScript = script
       .replace(/^```markdown\n/, '')
