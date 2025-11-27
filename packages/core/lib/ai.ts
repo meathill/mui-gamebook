@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, PartUnion } from "@google/genai";
 
 /**
  * Generates an image with Google AI.
@@ -41,4 +41,25 @@ export async function generateImage(
     }
   }
   throw new Error('No image data received from Google AI.');
+}
+
+export async function generateText(
+  genAI: GoogleGenAI,
+  model: string,
+  prompt: String,
+  thinking: number = 0,
+): Promise<string> {
+  console.log(`[AI] Generating text for prompt: "${prompt}"`);
+  const response = await genAI.models.generateContent({
+    model,
+    contents: prompt as PartUnion,
+    ...thinking && {
+      config: {
+        thinkingConfig: {
+          thinkingBudget: thinking, // Disables thinking
+        },
+      }
+    },
+  });
+  return response.text || '';
 }

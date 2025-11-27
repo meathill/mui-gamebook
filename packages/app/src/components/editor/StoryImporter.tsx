@@ -1,0 +1,77 @@
+import { useState } from 'react';
+import { X, Sparkles } from 'lucide-react';
+
+interface Props {
+  slug: string;
+  onImport: (script: string) => void;
+  onClose: () => void;
+}
+
+export default function StoryImporter({ slug, onImport, onClose }: Props) {
+  const [story, setStory] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleGenerate = async () => {
+    if (!story.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/cms/games/${slug}/generate-script`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ story }),
+      });
+
+      if (!res.ok) {
+        const data = (await res.json()) as {
+          error: string;
+        };
+        throw new Error(data.error || 'Generation failed');
+      }
+
+      const data = (await res.json()) as {
+        script: string;
+      };
+      onImport(data.script);
+      onClose();
+    } catch (e: unknown) {
+      alert((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Sparkles className="text-purple-500" />
+            AI Story Importer
+          </h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700"><X size={24} /></button>
+        </div>
+
+        <p className="text-sm text-gray-600 mb-4">
+          Paste your story or rough outline here. The AI will convert it into a playable game script with scenes and choices.
+        </p>
+
+        <textarea
+          value={story}
+          onChange={e => setStory(e.target.value)}
+          className="w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 resize-none mb-4"
+          placeholder="Once upon a time..."
+        />
+
+        <div className="flex justify-end">
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !story.trim()}
+            className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+          >
+            {loading ? 'Generating Script...' : 'Generate Game Script'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

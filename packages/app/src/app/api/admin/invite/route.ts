@@ -52,8 +52,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(res);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Invite failed:', e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

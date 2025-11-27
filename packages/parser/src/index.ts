@@ -125,6 +125,7 @@ export function parse(source: string): ParseResult {
       cover_image,
       tags,
       published,
+      background_story,
       state = {},
       ai = {},
     } = frontMatter;
@@ -154,6 +155,7 @@ export function parse(source: string): ParseResult {
     const game: Game = {
       title,
       description,
+      backgroundStory: background_story,
       cover_image,
       tags: tags || [],
       published: !!published,
@@ -190,6 +192,7 @@ export function stringify(game: Game): string {
     title: game.title,
   };
   if (game.description) frontMatter.description = game.description;
+  if (game.backgroundStory) frontMatter.background_story = game.backgroundStory;
   if (game.cover_image) frontMatter.cover_image = game.cover_image;
   if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
   if (game.published) frontMatter.published = true;

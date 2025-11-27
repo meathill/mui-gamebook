@@ -50,6 +50,7 @@ export const games = sqliteTable('Games', {
 	slug: text('slug').primaryKey(),
 	title: text('title').notNull(),
 	description: text('description'),
+	backgroundStory: text('background_story'),
 	coverImage: text('cover_image'),
 	tags: text('tags'), // JSON string
 	published: integer('published', { mode: 'boolean' }).default(false),

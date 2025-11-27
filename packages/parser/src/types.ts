@@ -71,6 +71,7 @@ export interface Game {
   // 元数据
   title: string;
   description?: string;
+  backgroundStory?: string;
   cover_image?: string;
   tags?: string[];
   published?: boolean;

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, SetStateAction } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import {
@@ -18,13 +18,15 @@ import {
   useReactFlow
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Save, ArrowLeft, ExternalLink, FileText, Network, PlusCircle, Layout } from 'lucide-react';
+import { Save, ArrowLeft, ExternalLink, FileText, Network, PlusCircle, Layout, Settings, Sparkles, ImagePlus } from 'lucide-react';
 import Link from 'next/link';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
 import { getLayoutedElements } from '@/lib/editor/layout';
 import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
+import GameSettings from '@/components/editor/GameSettings';
+import StoryImporter from '@/components/editor/StoryImporter';
 import type { Game } from '@mui-gamebook/parser/src/types';
 
 const nodeTypes = { scene: SceneNode };
@@ -45,7 +47,11 @@ export default function VisualEditor({ slug }: { slug: string }) {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [assetGenerating, setAssetGenerating] = useState(false);
   const [error, setError] = useState('');
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [showImporter, setShowImporter] = useState(false);
 
   useOnSelectionChange({
     onChange: ({ nodes, edges }) => {
@@ -127,13 +133,60 @@ export default function VisualEditor({ slug }: { slug: string }) {
     }
   };
 
+  const handleGenerateAssets = async () => {
+    if (!confirm('This will scan all nodes and generate missing AI assets. It might take a while. Continue?')) return;
+    setAssetGenerating(true);
+
+    // Ensure we save first to have latest state in DB
+    await handleSave();
+
+    try {
+      const res = await fetch(`/api/cms/games/${slug}/batch-generate-assets`, {
+        method: 'POST',
+      });
+      const data = (await res.json()) as {
+        error?: string;
+        updatedCount: string;
+      };
+      if (res.ok) {
+        alert(`Generated ${data.updatedCount} assets successfully! Reloading...`);
+        window.location.reload();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (e: unknown) {
+      alert(`Asset generation failed: ${(e as Error).message}`);
+    } finally {
+      setAssetGenerating(false);
+    }
+  };
+
+  const handleSettingsSave = (updatedGame: Game) => {
+    setOriginalGame(updatedGame);
+    if (viewMode === 'text') {
+       const content = stringify(updatedGame);
+       setTextContent(content);
+    }
+  };
+
+  const handleScriptImport = (script: string) => {
+    const result = parse(script);
+    if (result.success) {
+      setOriginalGame(result.data);
+      setTextContent(script);
+      const flow = gameToFlow(result.data);
+      setNodes(flow.nodes);
+      setEdges(flow.edges);
+      if (viewMode === 'text') {
+        setViewMode('visual');
+      }
+    } else {
+      alert(`Imported script is invalid: ${result.error}`);
+    }
+  };
+
   const onConnect = useCallback(
-    // ts-expect-error types
-    (params: Connection) => setEdges((edges: Edge[]) => addEdge({
-      ...params,
-      type: 'default',
-      label: 'Choice',
-    }, edges)),
+    (params: Connection) => setEdges((eds) => addEdge({ ...params, type: 'default', label: 'Choice' },eds)),
     [setEdges],
   );
 
@@ -156,13 +209,13 @@ export default function VisualEditor({ slug }: { slug: string }) {
     if (!newId || oldId === newId) return;
 
     // Check for duplicate ID
-    if (nodes.some((n: Node) => n.id === newId)) {
+    if (nodes.some(n => n.id === newId)) {
       alert(`Scene ID "${newId}" already exists.`);
       return;
     }
 
     // Update Nodes
-    setNodes((nds: Node[]) => nds.map(node => {
+    setNodes((nds) => nds.map(node => {
       if (node.id === oldId) {
         const updatedNode = { ...node, id: newId, data: { ...node.data, label: newId } };
         if (selectedNode?.id === oldId) {
@@ -241,6 +294,13 @@ export default function VisualEditor({ slug }: { slug: string }) {
             <ArrowLeft size={20} />
           </Link>
           <h1 className="font-semibold text-gray-900">Editor: {slug}</h1>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 text-gray-500 hover:bg-gray-100 rounded-full"
+            title="Game Settings"
+          >
+            <Settings size={20} />
+          </button>
         </div>
         <div className="flex gap-3">
           {viewMode === 'visual' && (
@@ -260,6 +320,22 @@ export default function VisualEditor({ slug }: { slug: string }) {
               </button>
             </>
           )}
+
+          <button
+            onClick={() => setShowImporter(true)}
+            className="flex items-center gap-2 px-3 py-2 text-purple-700 hover:bg-purple-50 rounded-md text-sm border border-purple-200"
+          >
+            <Sparkles size={16} /> AI Story
+          </button>
+
+          <button
+            onClick={handleGenerateAssets}
+            disabled={assetGenerating}
+            className="flex items-center gap-2 px-3 py-2 text-orange-700 hover:bg-orange-50 rounded-md text-sm border border-orange-200"
+          >
+            <ImagePlus size={16} /> {assetGenerating ? 'Generating...' : 'Gen Assets'}
+          </button>
+
           <button
             onClick={toggleViewMode}
             className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-md text-sm border border-gray-200"
@@ -325,6 +401,23 @@ export default function VisualEditor({ slug }: { slug: string }) {
           </div>
         )}
       </div>
+
+      {/* Modals */}
+      {showSettings && originalGame && (
+        <GameSettings
+          game={originalGame}
+          onSave={handleSettingsSave}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {showImporter && (
+        <StoryImporter
+          slug={slug}
+          onImport={handleScriptImport}
+          onClose={() => setShowImporter(false)}
+        />
+      )}
     </div>
   );
 }

@@ -56,7 +56,8 @@
     "ASSETS_PUBLIC_DOMAIN": "",
     "BETTER_AUTH_SECRET": "farewell",
     "GOOGLE_API_KEY": "",
+    "GOOGLE_MODEL": "",
     "GOOGLE_IMAGE_MODEL": "",
-    "NEXT_PUBLIC_SITE_URL": "https://mui-gamebook.meathill.workers.dev/"
+    "NEXT_PUBLIC_SITE_URL": "https://muistory.com/"
   }
 }

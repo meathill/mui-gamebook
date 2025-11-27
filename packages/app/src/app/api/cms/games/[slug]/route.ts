@@ -52,7 +52,7 @@ export async function PUT(
     return NextResponse.json({ error: `Invalid Markdown: ${parseResult.error}` }, { status: 400 });
   }
 
-  const { title, description, cover_image, tags, published } = parseResult.data;
+  const { title, description, backgroundStory, cover_image, tags, published } = parseResult.data;
   const now = new Date();
 
   const { env } = getCloudflareContext();
@@ -63,6 +63,7 @@ export async function PUT(
     .set({
       title,
       description,
+      backgroundStory,
       coverImage: cover_image,
       tags: JSON.stringify(tags),
       published: published,

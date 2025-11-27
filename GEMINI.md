@@ -36,8 +36,8 @@
 
 ## 代码规范
 
-- 使用 TypeScript
-- 不要谢 JSDoc，用类型系统
+- 使用 TypeScript，尽可能把类型写好
+- 不要用 JSDoc，用类型系统
 - 命名
   - 变量和函数使用驼峰命名法（camelCase）
   - 类和接口使用帕斯卡命名法（PascalCase）
@@ -45,8 +45,12 @@
   - 文件和目录使用小写加连字符（kebab-case）
   - 避免使用缩写，除非是广泛认可的缩写
   - 函数使用动词或动宾短语命名，类使用名词命名，bool 变量使用 is/has/can 开头
-- 能用异步函数就用异步函数
+- 使用图标时，应使用 `SaveIcon` 而不是 `Save`，避免引发歧义
 
-## 此项目特殊要求
+## 开发注意事项
 
-1. 你对 @google/genai 的使用是错的，不要修改我已经改好的 AI 生成代码
+1. 你对 `@google/genai` 的使用是错的，不要修改我已经改好的 AI 生成代码
+2. 在使用 `@google/genai` 生成时，请认真参考之前的代码
+2. `getCloudflareContext` 绝大部分时候不是异步函数，不需要 `await`
+3. 不要删掉已经写好的类型定义
+4. 我们当前使用的 Next.js 里，`params` 和 `searchParams` 都是 Promise 对象

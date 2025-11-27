@@ -3,7 +3,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
 
-export function createAuth(env: any, options: { disableHooks?: boolean } = {}) {
+export function createAuth(env: CloudflareEnv) {
   const db = drizzle(env.DB);
   return betterAuth({
     baseURL: process.env.NEXT_PUBLIC_SITE_URL,

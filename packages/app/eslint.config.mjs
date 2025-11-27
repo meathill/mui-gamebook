@@ -20,6 +20,7 @@ const eslintConfig = defineConfig([
     '.open-next/**',
     'out/**',
     'build/**',
+    'tests/**',
     'cloudflare-env.d.ts',
     'next-env.d.ts',
   ]),

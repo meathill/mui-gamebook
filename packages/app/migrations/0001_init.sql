@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS Games (
     slug TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     description TEXT,
+    `background_story` text,
     cover_image TEXT,
     tags TEXT, -- JSON string array
     published BOOLEAN DEFAULT 0,
