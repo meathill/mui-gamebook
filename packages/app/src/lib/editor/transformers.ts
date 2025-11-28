@@ -19,7 +19,7 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
     const assetNodes = scene.nodes.filter(n => n.type !== 'text' && n.type !== 'choice');
     const choiceNodes = scene.nodes.filter(n => n.type === 'choice');
 
-    const content = textNodes.map(n => (n as any).content).join('\n\n');
+    const content = textNodes.map(n => n.content).join('\n\n');
 
     nodes.push({
       id: id,
@@ -63,8 +63,8 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
     const sceneId = node.id;
     const sceneNodes: SceneNode[] = [];
 
-    // 1. Add Assets (Images, etc.) - Prepend or Append? 
-    // Convention: Assets first (like cover image), then text. 
+    // 1. Add Assets (Images, etc.) - Prepend or Append?
+    // Convention: Assets first (like cover image), then text.
     // But wait, Markdown usually has text then options.
     // Let's preserve the order from data.assets if possible, or put images top.
     // For simplicity: Assets -> Text -> Choices

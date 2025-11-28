@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { env } = await getCloudflareContext();
+  const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
   const userGames = await db.select()
@@ -29,13 +29,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { title } = await req.json();
+  const { title } = (await req.json()) as {
+    title: string;
+  };
   if (!title) {
     return NextResponse.json({ error: 'Title is required' }, { status: 400 });
   }
 
   const slug = slugify(title, { lower: true, strict: true }) + '-' + Date.now().toString().slice(-4);
   const now = new Date();
+  const id = crypto.randomUUID();
 
   const defaultContent = `---
 title: "${title}"
@@ -47,11 +50,12 @@ published: false
 Welcome to your new game!
 `;
 
-  const { env } = await getCloudflareContext();
+  const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
   try {
     await db.insert(schema.games).values({
+      id,
       slug,
       title,
       ownerId: session.user.id,
@@ -61,12 +65,12 @@ Welcome to your new game!
     });
 
     await db.insert(schema.gameContent).values({
-      slug,
+      gameId: id,
       content: defaultContent,
     });
 
-    return NextResponse.json({ slug, title });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ id, slug, title });
+  } catch (e: unknown) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

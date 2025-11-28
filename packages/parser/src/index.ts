@@ -1,10 +1,12 @@
 import * as yaml from 'js-yaml';
 import type {AICharacter, Game, ParseResult, Scene, SceneNode} from './types';
 import { omitBy } from "lodash-es";
+import slugify from "slugify";
 export {
   Game,
   SceneNode,
 }
+export * from './types';
 
 // Final, correct regexes
 const FRONT_MATTER_REGEX = /---\n([\s\S]*?)\n---/;
@@ -124,6 +126,7 @@ export function parse(source: string): ParseResult {
       cover_image,
       tags,
       published,
+      background_story,
       state = {},
       ai = {},
     } = frontMatter;
@@ -151,8 +154,10 @@ export function parse(source: string): ParseResult {
     }
 
     const game: Game = {
+      slug: slugify(title),
       title,
       description,
+      backgroundStory: background_story,
       cover_image,
       tags: tags || [],
       published: !!published,
@@ -189,6 +194,7 @@ export function stringify(game: Game): string {
     title: game.title,
   };
   if (game.description) frontMatter.description = game.description;
+  if (game.backgroundStory) frontMatter.backgroundStory = game.backgroundStory;
   if (game.cover_image) frontMatter.cover_image = game.cover_image;
   if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
   if (game.published) frontMatter.published = true;

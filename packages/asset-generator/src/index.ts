@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { readFile, writeFile } from 'node:fs/promises';
 import * as path from 'path';
+import { generateImage as _generateImage } from '@mui-gamebook/core/lib/ai';
 import {Game, parse, SceneNode, stringify} from '@mui-gamebook/parser';
 import {GoogleGenAI} from '@google/genai';
 import {PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
@@ -43,50 +44,17 @@ async function generateImage(prompt: string): Promise<{
   buffer: Buffer,
   type: string,
 }> {
+  const genAi = new GoogleGenAI({
+    apiKey: process.env.GOOGLE_API_KEY!,
+  });
   return retry<{
     buffer: Buffer,
     type: string,
-  }>(() => _generateImage(prompt));
-}
-/**
- * Generates an image with Google AI.
- */
-async function _generateImage(prompt: string): Promise<{
-  buffer: Buffer,
-  type: string,
-}> {
-  console.log(`[AI] Generating image for prompt: "${prompt}"`);
-
-  const model = process.env.GOOGLE_IMAGE_MODEL || 'gemini-3-pro-image-preview';
-  const response = await genAI.models.generateContent({
-    model,
-    contents: prompt,
-  });
-  let buffer: Buffer;
-  if (!response.candidates || response.candidates.length === 0) {
-    throw new Error('No candidates received from Google AI.');
-  }
-
-  const [candidate] = response.candidates;
-  if (!candidate.content || !candidate.content.parts) {
-    throw new Error('No content parts received from Google AI.');
-  }
-  for (const part of candidate.content.parts) {
-    if (part.text) {
-      console.log(part.text);
-    } else if (part.inlineData) {
-      const imageData = part.inlineData.data;
-      if (!imageData) {
-        continue;
-      }
-      buffer = Buffer.from(imageData, 'base64');
-      return {
-        type: part.inlineData.mimeType || '',
-        buffer,
-      };
-    }
-  }
-  throw new Error('No image data received from Google AI.');
+  }>(() => _generateImage(
+    genAI,
+    process.env.GOOGLE_IMAGE_MODEL!,
+    prompt,
+  ));
 }
 
 /**
@@ -171,7 +139,7 @@ async function processNode(node: SceneNode, game: Game, force: boolean = false):
             fullPrompt += `, ${char.image_prompt}`;
           }
         }
-    
+
         // Include multiple characters descriptions
         if (node.characters && node.characters.length > 0 && game.ai.characters) {
           node.characters.forEach(charId => {
@@ -181,7 +149,7 @@ async function processNode(node: SceneNode, game: Game, force: boolean = false):
             }
           });
         }
-        
+
         fullPrompt += `, ${node.prompt}`;
     try {
       const { buffer: imageBuffer, type } = await generateImage(fullPrompt);

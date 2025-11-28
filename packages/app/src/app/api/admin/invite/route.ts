@@ -17,14 +17,18 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { email, password, name } = body;
+    const { email, password, name } = body as {
+      email: string;
+      password: string;
+      name: string;
+    };
 
     if (!email || !password || !name) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
     }
 
     // Create auth instance with hooks disabled
-    const auth = createAuth(env, { disableHooks: true });
+    const auth = createAuth(env);
 
     // Use better-auth API to sign up
     const res = await auth.api.signUpEmail({
@@ -48,8 +52,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(res);
-  } catch (e: any) {
+  } catch (e: unknown) {
     console.error('Invite failed:', e);
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

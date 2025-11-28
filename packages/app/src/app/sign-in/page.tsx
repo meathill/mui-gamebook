@@ -29,7 +29,7 @@ export default function SignInPage() {
         router.refresh();
       }
     } catch (err) {
-      setError('发生未知错误');
+      setError('发生未知错误. ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
