@@ -2,54 +2,56 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { parse } from '@mui-gamebook/parser';
 
 type Props = {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ id: string }>;
 }
 export async function GET(
   req: Request,
-  { params }: Props
+  { params }: Props,
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { slug } = await params;
+  const { id } = await params;
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
   // Verify ownership
   const game = await db.select().from(schema.games)
-    .where(and(eq(schema.games.slug, slug), eq(schema.games.ownerId, session.user.id)))
+    .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
     .get();
 
   if (!game) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
 
+  const content = await db.select().from(schema.gameContent)
+    .where(eq(schema.gameContent.gameId, id))
+    .get();
+
+  // Parse tags and ensure published is boolean
   const parsedGame = {
     ...game,
     tags: game.tags ? JSON.parse(game.tags) : [],
     published: Boolean(game.published)
   };
 
-  const content = await db.select().from(schema.gameContent)
-    .where(eq(schema.gameContent.slug, slug))
-    .get();
-
   return NextResponse.json({ ...parsedGame, content: content?.content || '' });
 }
 
 export async function PUT(
   req: Request,
-  { params }: Props
+  { params }: Props,
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { slug } = await params;
-  const { content } = (await req.json()) as {
+  const { id } = await params;
+  const { content, slug: newSlug } = (await req.json()) as {
     content: string;
+    slug?: string;
   };
 
   // Validate content with parser
@@ -64,9 +66,30 @@ export async function PUT(
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  // Update both tables, ensuring user owns the game
-  const result = await db.update(schema.games)
+  // Check ownership first
+  const currentGame = await db.select().from(schema.games)
+    .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
+    .get();
+
+  if (!currentGame) {
+    return NextResponse.json({ error: 'Game not found or unauthorized' }, { status: 404 });
+  }
+
+  let finalSlug = currentGame.slug;
+
+  // Check for slug collision if changing
+  if (newSlug && newSlug !== currentGame.slug) {
+    const existing = await db.select().from(schema.games).where(and(eq(schema.games.slug, newSlug), ne(schema.games.id, id))).get();
+    if (existing) {
+      return NextResponse.json({ error: 'Slug already exists' }, { status: 409 });
+    }
+    finalSlug = newSlug;
+  }
+
+  // Update Games table
+  await db.update(schema.games)
     .set({
+      slug: finalSlug,
       title,
       description,
       backgroundStory,
@@ -75,34 +98,30 @@ export async function PUT(
       published: published,
       updatedAt: now
     })
-    .where(and(eq(schema.games.slug, slug), eq(schema.games.ownerId, session.user.id)))
-    .returning({ updatedSlug: schema.games.slug })
-    .get();
+    .where(eq(schema.games.id, id));
 
-  if (!result) return NextResponse.json({ error: 'Game not found or unauthorized' }, { status: 404 });
-
+  // Update GameContent table
   await db.update(schema.gameContent)
     .set({ content })
-    .where(eq(schema.gameContent.slug, slug));
+    .where(eq(schema.gameContent.gameId, id));
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, slug: finalSlug });
 }
 
 export async function DELETE(
   req: Request,
-  { params }: Props
+  { params }: Props,
 ) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { slug } = await params;
+  const { id } = await params;
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  // Cascading delete should handle GameContent, but we verify ownership first
   const result = await db.delete(schema.games)
-    .where(and(eq(schema.games.slug, slug), eq(schema.games.ownerId, session.user.id)))
-    .returning({ deletedSlug: schema.games.slug })
+    .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
+    .returning({ deletedId: schema.games.id })
     .get();
 
   if (!result) return NextResponse.json({ error: 'Game not found or unauthorized' }, { status: 404 });

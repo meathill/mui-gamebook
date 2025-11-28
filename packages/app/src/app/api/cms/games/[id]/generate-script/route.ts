@@ -9,10 +9,14 @@ You are an expert game designer for "MUI Gamebook". Your task is to convert a ra
 Output ONLY the raw Markdown content, no extra conversational text.
 `;
 
-export async function POST(req: Request) {
+type Props = {
+  params: Promise<{ id: string }>
+}
+export async function POST(req: Request, { params }: Props) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  const { id } = await params;
   const { story } = (await req.json()) as {
     story: string;
   };
@@ -41,6 +45,9 @@ ${dslSpec}
       .replace(/^```markdown\n/, '')
       .replace(/^```\n/, '')
       .replace(/\n```$/, '');
+
+    // TODO record token usage
+
     return NextResponse.json({ script: cleanScript });
   } catch (e) {
     console.error('AI Generation Error:', e);

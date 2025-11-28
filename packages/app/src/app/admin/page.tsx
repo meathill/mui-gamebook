@@ -8,6 +8,7 @@ import { Plus, Trash2, Edit, Eye, Lock, Globe } from 'lucide-react';
 import Link from 'next/link';
 
 interface GameListItem {
+  id: string;
   slug: string;
   title: string;
   description?: string;
@@ -49,8 +50,8 @@ export default function AdminPage() {
 
   // Delete Mutation
   const deleteMutation = useMutation({
-    mutationFn: async (slug: string) => {
-      const res = await fetch(`/api/cms/games/${slug}`, { method: 'DELETE' });
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/cms/games/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete');
     },
     onSuccess: () => {
@@ -70,9 +71,9 @@ export default function AdminPage() {
     createMutation.mutate(newTitle);
   };
 
-  const handleDelete = (slug: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm('Are you sure? This cannot be undone.')) return;
-    deleteMutation.mutate(slug);
+    deleteMutation.mutate(id);
   };
 
   return (
@@ -120,7 +121,7 @@ export default function AdminPage() {
           )}
           
           {games?.map((game) => (
-            <div key={game.slug} className="bg-white p-4 rounded-lg shadow flex items-center justify-between group">
+            <div key={game.id} className="bg-white p-4 rounded-lg shadow flex items-center justify-between group">
               <div className="flex items-center gap-4">
                 <div className={`p-2 rounded-full ${game.published ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
                   {game.published ? <Globe size={20} /> : <Lock size={20} />}
@@ -141,14 +142,14 @@ export default function AdminPage() {
                   <Eye size={18} />
                 </Link>
                 <Link 
-                  href={`/admin/edit/${game.slug}`} 
+                  href={`/admin/edit/${game.id}`} 
                   className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                   title="Edit"
                 >
                   <Edit size={18} />
                 </Link>
                 <button
-                  onClick={() => handleDelete(game.slug)}
+                  onClick={() => handleDelete(game.id)}
                   className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
                   title="Delete"
                 >

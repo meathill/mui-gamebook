@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     }
 
     // Create auth instance with hooks disabled
-    const auth = createAuth(env, { disableHooks: true });
+    const auth = createAuth(env);
 
     // Use better-auth API to sign up
     const res = await auth.api.signUpEmail({

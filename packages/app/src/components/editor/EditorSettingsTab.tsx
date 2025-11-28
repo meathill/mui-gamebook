@@ -16,7 +16,7 @@ export default function EditorSettingsTab({ game, onChange, slug }: Props) {
   const [showCoverGen, setShowCoverGen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleChange = (field: string, value: Record<string, unknown>) => {
+  const handleChange = (field: string, value: string | boolean | Record<string, unknown>) => {
     onChange({ ...game, [ field ]: value });
   };
 
@@ -162,7 +162,7 @@ export default function EditorSettingsTab({ game, onChange, slug }: Props) {
             <div data-color-mode="light">
               <MDEditor
                 value={game.backgroundStory || ''}
-                onChange={(val) => handleChange('backgroundStory', val)}
+                onChange={(val) => handleChange('backgroundStory', val || '')}
                 height={300}
                 preview="edit"
               />

@@ -47,7 +47,8 @@ export const verification = sqliteTable('verification', {
 });
 
 export const games = sqliteTable('Games', {
-	slug: text('slug').primaryKey(),
+	id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+	slug: text('slug').notNull().unique(),
 	title: text('title').notNull(),
 	description: text('description'),
 	backgroundStory: text('background_story'),
@@ -60,6 +61,6 @@ export const games = sqliteTable('Games', {
 });
 
 export const gameContent = sqliteTable('GameContent', {
-	slug: text('slug').primaryKey().references(() => games.slug, { onDelete: 'cascade' }),
+	gameId: text('game_id').primaryKey().references(() => games.id, { onDelete: 'cascade' }),
 	content: text('content').notNull(),
 });

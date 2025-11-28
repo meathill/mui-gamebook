@@ -2,7 +2,8 @@ DROP TABLE IF EXISTS Games;
 DROP TABLE IF EXISTS GameContent;
 
 CREATE TABLE IF NOT EXISTS Games (
-    slug TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    slug TEXT NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
     `background_story` text,
@@ -14,9 +15,12 @@ CREATE TABLE IF NOT EXISTS Games (
     updated_at INTEGER,
     FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX `Games_slug_unique` ON `Games` (`slug`);
 
 CREATE TABLE IF NOT EXISTS GameContent (
-    slug TEXT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    game_id id NOT NULL,
     content TEXT NOT NULL,
-    FOREIGN KEY (slug) REFERENCES Games(slug) ON DELETE CASCADE
+    FOREIGN KEY (game_id) REFERENCES Games(id) ON DELETE CASCADE
 );

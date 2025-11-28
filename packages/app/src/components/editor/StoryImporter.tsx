@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
 
 interface Props {
-  slug: string;
+  id: string;
   onImport: (script: string) => void;
   onClose: () => void;
 }
 
-export default function StoryImporter({ slug, onImport, onClose }: Props) {
+export default function StoryImporter({ id, onImport, onClose }: Props) {
   const [story, setStory] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -15,7 +15,7 @@ export default function StoryImporter({ slug, onImport, onClose }: Props) {
     if (!story.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/cms/games/${slug}/generate-script`, {
+      const res = await fetch(`/api/cms/games/${id}/generate-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ story }),

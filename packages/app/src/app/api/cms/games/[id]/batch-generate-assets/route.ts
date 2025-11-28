@@ -8,25 +8,25 @@ import { parse, SceneAiImageNode, stringify } from '@mui-gamebook/parser';
 import { generateAndUploadImage } from '@/lib/ai-service';
 
 type Props = {
-  params: Promise<{ slug: string }>;
+  params: Promise<{ id: string }>;
 };
 export async function POST(req: Request, { params }: Props) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { slug } = await params;
+  const { id } = await params;
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
   // 1. Fetch Game
   const gameRecord = await db.select().from(schema.games)
-    .where(and(eq(schema.games.slug, slug), eq(schema.games.ownerId, session.user.id)))
+    .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
     .get();
 
   if (!gameRecord) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
 
   const contentRecord = await db.select().from(schema.gameContent)
-    .where(eq(schema.gameContent.slug, slug))
+    .where(eq(schema.gameContent.gameId, id))
     .get();
 
   if (!contentRecord) return NextResponse.json({ error: 'Content not found' }, { status: 404 });
@@ -63,7 +63,7 @@ export async function POST(req: Request, { params }: Props) {
       if (node.type === 'ai_image' && !node.url) {
         try {
           const fullPrompt = getFullPrompt(node as SceneAiImageNode);
-          const fileName = `images/${slug}/${Date.now()}.png`;
+          const fileName = `images/${gameRecord.slug}/${Date.now()}.png`;
           node.url = await generateAndUploadImage(fullPrompt, fileName);
           updatedCount++;
         } catch (e) {
@@ -78,7 +78,7 @@ export async function POST(req: Request, { params }: Props) {
     const newContent = stringify(game);
     await db.update(schema.gameContent)
       .set({ content: newContent })
-      .where(eq(schema.gameContent.slug, slug));
+      .where(eq(schema.gameContent.gameId, id));
   }
 
   return NextResponse.json({ success: true, updatedCount });

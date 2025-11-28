@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { parse } from '@mui-gamebook/parser';
+import slugify from 'slugify';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -45,7 +46,7 @@ function generateSeed() {
     const result = parse(content);
 
     if (result.success) {
-      const slug = file.replace('.md', '');
+      const slug = slugify(file.replace('.md', ''));
       const { title, description, cover_image, tags, published } = result.data;
       const now = Date.now();
 
@@ -54,7 +55,7 @@ function generateSeed() {
 
       sql += `INSERT OR REPLACE INTO Games (slug, title, description, cover_image, tags, published, created_at, updated_at) VALUES (${escapeSql(slug)}, ${escapeSql(title)}, ${escapeSql(description)}, ${escapeSql(cover_image)}, ${escapeSql(tagsJson)}, ${publishedInt}, ${now}, ${now});\n`;
 
-      sql += `INSERT OR REPLACE INTO GameContent (slug, content) VALUES (${escapeSql(slug)}, ${escapeSql(content)});\n\n`;
+      sql += `INSERT OR REPLACE INTO GameContent (gameId, content) VALUES (last_insert_rowid(), ${escapeSql(content)});\n\n`;
 
       console.log(`Processed: ${slug}`);
     } else {

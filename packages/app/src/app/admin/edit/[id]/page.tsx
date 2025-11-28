@@ -1,12 +1,15 @@
 import { ReactFlowProvider } from '@xyflow/react';
 import VisualEditor from '@/components/editor/VisualEditor';
 
-export default async function EditorPage({ params }: { params: { slug: string } }) {
-  const { slug } = await params;
+type Props = {
+  params: Promise<{ id: string }>;
+};
+export default async function EditorPage({ params }: Props) {
+  const { id } = await params;
 
   return (
     <ReactFlowProvider>
-      <VisualEditor slug={slug} />
+      <VisualEditor id={id} />
     </ReactFlowProvider>
   );
 }

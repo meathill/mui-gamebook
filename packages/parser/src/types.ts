@@ -69,6 +69,7 @@ export interface Scene {
  */
 export interface Game {
   // 元数据
+  slug: string;
   title: string;
   description?: string;
   backgroundStory?: string;

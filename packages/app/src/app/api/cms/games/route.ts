@@ -38,6 +38,7 @@ export async function POST(req: Request) {
 
   const slug = slugify(title, { lower: true, strict: true }) + '-' + Date.now().toString().slice(-4);
   const now = new Date();
+  const id = crypto.randomUUID();
 
   const defaultContent = `---
 title: "${title}"
@@ -54,6 +55,7 @@ Welcome to your new game!
 
   try {
     await db.insert(schema.games).values({
+      id,
       slug,
       title,
       ownerId: session.user.id,
@@ -63,11 +65,11 @@ Welcome to your new game!
     });
 
     await db.insert(schema.gameContent).values({
-      slug,
+      gameId: id,
       content: defaultContent,
     });
 
-    return NextResponse.json({ slug, title });
+    return NextResponse.json({ id, slug, title });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

@@ -39,7 +39,9 @@ export async function getGameBySlug(slug: string) {
 
     // Fetch content
     const contentRecord = await DB.prepare(
-      'SELECT content FROM GameContent WHERE slug = ?'
+      `SELECT content 
+FROM GameContent c JOIN Games g ON c.game_id = g.id
+WHERE g.slug = ?`
     ).bind(slug).first();
 
     if (contentRecord) {

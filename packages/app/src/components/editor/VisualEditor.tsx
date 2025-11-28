@@ -33,7 +33,7 @@ const nodeTypes = { scene: SceneNode };
 
 type Tab = 'settings' | 'story';
 
-export default function VisualEditor({ slug }: { slug: string }) {
+export default function VisualEditor({ id }: { id: string }) {
   const router = useRouter();
   const { data: session, isPending: isAuthPending } = authClient.useSession();
   const { screenToFlowPosition, fitView } = useReactFlow();
@@ -66,28 +66,26 @@ export default function VisualEditor({ slug }: { slug: string }) {
   });
 
   useEffect(() => {
-    if (slug) {
-      fetch(`/api/cms/games/${slug}`)
-        .then(async (res) => {
-          if (!res.ok) throw new Error('Failed to load game');
-          const data = (await res.json()) as { content: string } & Game;
-          const result = parse(data.content);
-          if (result.success) {
-            // Merge API metadata (like slug) with parsed content if needed,
-            // but mostly we trust the parsed content for structure.
-            setOriginalGame({ ...result.data, ...data }); // data contains slug
-            setTextContent(data.content);
-            const flow = gameToFlow(result.data);
-            setNodes(flow.nodes);
-            setEdges(flow.edges);
-          } else {
-            throw new Error(`Parse error: ${result.error}`);
-          }
-        })
-        .catch((err) => setError(err.message))
-        .finally(() => setLoading(false));
-    }
-  }, [slug, setNodes, setEdges]);
+    if (!id) return;
+
+    fetch(`/api/cms/games/${id}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to load game');
+        const data = (await res.json()) as { content: string } & Game;
+        const result = parse(data.content);
+        if (result.success) {
+          setOriginalGame({ ...result.data, ...data });
+          setTextContent(data.content);
+          const flow = gameToFlow(result.data);
+          setNodes(flow.nodes);
+          setEdges(flow.edges);
+        } else {
+          throw new Error(`Parse error: ${result.error}`);
+        }
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [id, setNodes, setEdges]);
 
   const toggleViewMode = () => {
     if (viewMode === 'visual') {
@@ -151,7 +149,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
       // Update text content state to reflect saved state
       setTextContent(content);
 
-      const res = await fetch(`/api/cms/games/${slug}`, {
+      const res = await fetch(`/api/cms/games/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),
@@ -175,7 +173,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
     await handleSave(); // Save first
 
     try {
-      const res = await fetch(`/api/cms/games/${slug}/batch-generate-assets`, { method: 'POST' });
+      const res = await fetch(`/api/cms/games/${id}/batch-generate-assets`, { method: 'POST' });
       const data = (await res.json()) as {
         updatedCount?: number;
         error?: string;
@@ -267,7 +265,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
           <Link href="/admin" className="text-gray-500 hover:text-gray-700">
             <ArrowLeft size={20} />
           </Link>
-          <h1 className="font-semibold text-gray-900 hidden md:block">{originalGame?.title || slug}</h1>
+          <h1 className="font-semibold text-gray-900 hidden md:block">{originalGame?.title || originalGame?.slug}</h1>
 
           {/* Tabs */}
           <div className="flex bg-gray-100 p-1 rounded-lg ml-4">
@@ -313,7 +311,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
             </>
           )}
 
-          <Link href={`/play/${slug}`} target="_blank" className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200" title="Preview">
+          <Link href={`/play/${originalGame?.slug}`} target="_blank" className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200" title="Preview">
             <ExternalLink size={18} />
           </Link>
           <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-medium">
@@ -329,7 +327,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
             <EditorSettingsTab
               game={originalGame}
               onChange={setOriginalGame}
-              slug={slug}
+              slug={originalGame?.slug}
             />
           </div>
         )}
@@ -378,7 +376,7 @@ export default function VisualEditor({ slug }: { slug: string }) {
 
       {showImporter && (
         <StoryImporter
-          slug={slug}
+          id={id}
           onImport={handleScriptImport}
           onClose={() => setShowImporter(false)}
         />
