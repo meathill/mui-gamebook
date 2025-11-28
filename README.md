@@ -24,22 +24,30 @@ MUI Gamebook 是一个创新的平台，旨在创建、游玩和分发由 AI 辅
 
 最后，平台将支持已完成游戏的分发。作者能够将他们的互动故事导出为简单、独立且易于部署的单机游戏包。然后，这些游戏包可以通过网站或其他平台进行分发，让玩家无需复杂的安装或设置即可享受这些由 AI 增强的互动小说。
 
+## 开发环境设置
+
+本项目完全基于 Cloudflare D1 数据库运行。
+
+### 1. 数据库初始化
+
+首次运行时，需要初始化 D1 数据库：
+
+```bash
+# 安装依赖
+pnpm install
+
+# 创建数据库（如果尚未创建）
+# wrangler d1 create mui-gamebook
+
+# 执行 Schema 迁移
+pnpm --filter=my-app exec drizzle-kit generate
+wrangler d1 execute mui-gamebook --file=packages/app/migrations/0000_loose_doorman.sql # Auth tables
+wrangler d1 execute mui-gamebook --file=packages/app/migrations/0001_init.sql # Game tables (latest)
+```
+
 ## 用户系统初始化
 
 本项目采用邀请制用户系统。在部署后（或本地开发首次运行时），你需要手动初始化第一个管理员账户。
-
-### 1. 配置环境变量
-
-确保你的 `.env` 文件（本地）或 Cloudflare Pages 环境变量配置了以下项：
-
-```bash
-ADMIN_SECRET="your-secure-admin-secret"
-NEXT_PUBLIC_SITE_URL="http://localhost:3000" # 本地开发
-# NEXT_PUBLIC_SITE_URL="https://your-production-domain.com" # 生产环境
-BETTER_AUTH_SECRET="random-string-for-session-encryption"
-```
-
-### 2. 创建首个管理员
 
 使用 `curl` 命令调用 API 创建用户：
 
