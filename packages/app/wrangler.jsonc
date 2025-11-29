@@ -52,12 +52,10 @@
     }
   ],
   "vars": {
-    "ADMIN_SECRET": "",
-    "ASSETS_PUBLIC_DOMAIN": "",
+    "ASSETS_PUBLIC_DOMAIN": "https://i.muistory.com",
     "BETTER_AUTH_SECRET": "farewell",
-    "GOOGLE_API_KEY": "",
-    "GOOGLE_MODEL": "",
-    "GOOGLE_IMAGE_MODEL": "",
+    "GOOGLE_MODEL": "gemini-3-pro-preview",
+    "GOOGLE_IMAGE_MODEL": "gemini-3-pro-image-preview",
     "NEXT_PUBLIC_SITE_URL": "https://muistory.com/"
   }
 }

@@ -8,7 +8,7 @@ import * as schema from '@/db/schema';
 export async function POST(req: Request) {
   try {
     const { env } = getCloudflareContext();
-    const secret = env.ADMIN_SECRET || process.env.ADMIN_SECRET;
+    const secret = env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
 
     // Security Check
     const authHeader = req.headers.get('Authorization');

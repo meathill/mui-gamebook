@@ -19,7 +19,7 @@ const s3Client = new S3Client({
 });
 
 const genAI = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_API_KEY!
+  apiKey: process.env.GOOGLE_API_KEY_NEW!
 });
 
 /**
@@ -44,9 +44,6 @@ async function generateImage(prompt: string): Promise<{
   buffer: Buffer,
   type: string,
 }> {
-  const genAi = new GoogleGenAI({
-    apiKey: process.env.GOOGLE_API_KEY!,
-  });
   return retry<{
     buffer: Buffer,
     type: string,
