@@ -119,14 +119,14 @@ export default function AdminPage() {
         {/* Games List */}
         {error && <div className="text-red-500">加载游戏失败</div>}
         {isLoading && <div className="text-gray-500">加载游戏中...</div>}
-        
+
         <div className="grid gap-4">
           {games && games.length === 0 && (
             <p className="text-center text-gray-500 py-8">还没有游戏，在上方创建一个吧！</p>
           )}
-          
+
           {games?.map((game) => (
-            <div key={game.id} className="bg-white p-4 rounded-lg shadow flex items-center justify-between group">
+            <div key={game.id} className="bg-white p-4 rounded-lg shadow flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className={`p-2 rounded-full ${game.published ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
                   {game.published ? <Globe size={20} /> : <Lock size={20} />}
@@ -136,18 +136,18 @@ export default function AdminPage() {
                   <p className="text-xs text-gray-500">/{game.slug} • 更新于：{new Date(game.updatedAt).toLocaleDateString('zh-CN')}</p>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <Link 
-                  href={`/play/${game.slug}`} 
+
+              <div className="flex items-center gap-2 transition-opacity">
+                <Link
+                  href={`/play/${game.slug}`}
                   target="_blank"
                   className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
                   title="预览"
                 >
                   <Eye size={18} />
                 </Link>
-                <Link 
-                  href={`/admin/edit/${game.id}`} 
+                <Link
+                  href={`/admin/edit/${game.id}`}
                   className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                   title="编辑"
                 >
