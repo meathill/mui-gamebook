@@ -38,7 +38,6 @@ export async function POST(req: Request) {
 
   const slug = slugify(title, { lower: true, strict: true }) + '-' + Date.now().toString().slice(-4);
   const now = new Date();
-  const id = crypto.randomUUID();
 
   const defaultContent = `---
 title: "${title}"
@@ -54,21 +53,22 @@ Welcome to your new game!
   const db = drizzle(env.DB);
 
   try {
-    await db.insert(schema.games).values({
-      id,
-      slug,
-      title,
-      ownerId: session.user.id,
-      createdAt: now,
-      updatedAt: now,
-      published: false,
-    });
+    const result = await db.insert(schema.games)
+      .values({
+        slug,
+        title,
+        ownerId: session.user.id,
+        createdAt: now,
+        updatedAt: now,
+        published: false,
+      })
+      .returning();
 
+    const id = result[ 0 ].id;
     await db.insert(schema.gameContent).values({
       gameId: id,
       content: defaultContent,
     });
-
     return NextResponse.json({ id, slug, title });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });

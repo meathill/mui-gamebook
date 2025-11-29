@@ -3,7 +3,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { createAuth } from '@/lib/auth-config';
 
 const handler = toNextJsHandler(async (req) => {
-  const { env } = await getCloudflareContext();
+  const { env } = getCloudflareContext();
   const auth = createAuth(env);
   return auth.handler(req);
 });
