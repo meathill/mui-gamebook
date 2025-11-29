@@ -25,10 +25,11 @@ import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
 import EditorVariablesTab from '@/components/editor/EditorVariablesTab';
+import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
 import EditorToolbar, { Tab } from '@/components/editor/EditorToolbar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import { useDialog } from '@/components/Dialog';
-import type { Game, GameState } from '@mui-gamebook/parser/src/types';
+import type { Game, GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
 const nodeTypes = { scene: SceneNode };
 
@@ -317,6 +318,18 @@ export default function VisualEditor({ id }: { id: string }) {
               state={originalGame.initialState}
               onChange={(newState: GameState) => setOriginalGame({ ...originalGame, initialState: newState })}
               scenes={originalGame.scenes}
+            />
+          </div>
+        )}
+
+        {activeTab === 'characters' && originalGame && (
+          <div className="h-full overflow-y-auto bg-gray-50 p-6">
+            <EditorCharactersTab
+              characters={originalGame.ai.characters || {}}
+              onChange={(chars: Record<string, AICharacter>) =>
+                setOriginalGame({ ...originalGame, ai: { ...originalGame.ai, characters: chars } })
+              }
+              gameId={id}
             />
           </div>
         )}
