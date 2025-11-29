@@ -56,6 +56,43 @@ published: true
     }
   });
 
+  it('should correctly parse backgroundStory (camelCase)', () => {
+    const source = `---
+title: "带背景故事的游戏"
+description: "简短描述"
+backgroundStory: |
+  # 第一章：起源
+  
+  很久很久以前，在一个遥远的王国里...
+  
+  勇士踏上了冒险的旅程。
+---
+# start
+游戏开始。
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.backgroundStory).toContain('第一章：起源');
+      expect(result.data.backgroundStory).toContain('很久很久以前');
+    }
+  });
+
+  it('should correctly parse background_story (snake_case for backward compatibility)', () => {
+    const source = `---
+title: "旧格式背景故事"
+background_story: "这是一个使用旧格式的背景故事。"
+---
+# start
+游戏开始。
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.backgroundStory).toBe('这是一个使用旧格式的背景故事。');
+    }
+  });
+
   it('should return an error if title is missing', () => {
     const source = `---
 description: "没有标题"

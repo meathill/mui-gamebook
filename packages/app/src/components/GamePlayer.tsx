@@ -3,10 +3,99 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
+import { Share2, Copy, Check } from 'lucide-react';
 import type { Game, RuntimeState, VariableMeta } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/types';
 import { evaluateCondition, executeSet } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
+
+// 分享按钮组件
+function ShareButton({ title, url }: { title: string; url: string }) {
+  const [copied, setCopied] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleShare = async () => {
+    // 尝试使用原生分享 API
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${title} | 姆伊游戏书`,
+          text: `来玩《${title}》吧！`,
+          url,
+        });
+        return;
+      } catch {
+        // 用户取消分享或不支持
+      }
+    }
+    // 回退到显示菜单
+    setShowMenu(!showMenu);
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => {
+        setCopied(false);
+        setShowMenu(false);
+      }, 2000);
+    } catch {
+      // 复制失败
+    }
+  };
+
+  const shareToWeibo = () => {
+    const weiboUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(`来玩《${title}》吧！`)}`;
+    window.open(weiboUrl, '_blank', 'width=600,height=400');
+    setShowMenu(false);
+  };
+
+  const shareToTwitter = () => {
+    const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(`来玩《${title}》吧！`)}`;
+    window.open(twitterUrl, '_blank', 'width=600,height=400');
+    setShowMenu(false);
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={handleShare}
+        className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        title="分享游戏"
+      >
+        <Share2 className="w-4 h-4" />
+        <span>分享</span>
+      </button>
+      
+      {showMenu && (
+        <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
+          <button
+            onClick={copyToClipboard}
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            {copied ? '已复制！' : '复制链接'}
+          </button>
+          <button
+            onClick={shareToWeibo}
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            <span className="w-4 h-4 flex items-center justify-center text-red-500 font-bold">微</span>
+            分享到微博
+          </button>
+          <button
+            onClick={shareToTwitter}
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+          >
+            <span className="w-4 h-4 flex items-center justify-center">𝕏</span>
+            分享到 Twitter
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function GamePlayer({ game, slug }: { game: Game; slug: string }) {
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
@@ -121,6 +210,8 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
 
   // --- Title Screen ---
   if (!isGameStarted) {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    
     return (
       <div className="flex flex-col min-h-[600px] bg-white">
         <div className="relative w-full h-64 md:h-80 bg-gray-200 overflow-hidden">
@@ -137,7 +228,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
             </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-            <div className="p-6 md:p-8 text-white">
+            <div className="p-6 md:p-8 text-white flex-1">
               <h1 className="text-3xl md:text-4xl font-bold mb-2">{game.title}</h1>
               {game.tags && (
                 <div className="flex gap-2">
@@ -149,6 +240,10 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
                 </div>
               )}
             </div>
+          </div>
+          {/* 分享按钮 - 右上角 */}
+          <div className="absolute top-4 right-4">
+            <ShareButton title={game.title} url={shareUrl} />
           </div>
         </div>
         
@@ -261,12 +356,15 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
     );
   };
 
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+
   return (
     <div className="flex flex-col min-h-[600px]">
       {/* Header */}
       <div className="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10 bg-opacity-90 backdrop-blur-sm">
         <h1 className="text-lg font-bold truncate text-gray-800">{game.title}</h1>
-        <div className="flex gap-2 text-sm">
+        <div className="flex gap-2 text-sm items-center">
+          <ShareButton title={game.title} url={shareUrl} />
           <button 
             onClick={handleRestart}
             className="px-3 py-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -335,7 +433,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
             <div className="mt-12 p-6 bg-gray-50 rounded-xl border border-gray-200 text-center animate-fade-in">
               <h3 className="text-2xl font-bold text-gray-800 mb-2">剧终</h3>
               <p className="text-gray-500 mb-6">感谢你的游玩！</p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <button
                   onClick={handleRestart}
                   className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow transition-transform hover:-translate-y-0.5 font-medium"
@@ -348,6 +446,13 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
                 >
                   返回游戏库
                 </Link>
+              </div>
+              {/* 分享提示 */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <p className="text-sm text-gray-500 mb-3">喜欢这个故事吗？分享给朋友！</p>
+                <div className="flex justify-center">
+                  <ShareButton title={game.title} url={shareUrl} />
+                </div>
               </div>
             </div>
           )}

@@ -16,7 +16,7 @@
 
 - **`title`** (必须): 游戏的标题。
 - **`description`** (可选): 游戏的简短介绍。
-- **`background_story`** (可选): 游戏的背景故事，支持 Markdown 格式。
+- **`backgroundStory`** (可选): 游戏的背景故事，支持 Markdown 格式。如果设置了背景故事，游戏启动页面将显示渲染后的背景故事而非简短描述。
 - **`cover_image`** (可选): 游戏的封面图片链接。
 - **`tags`** (可选): 一个用于分类的标签列表。
 - **`published`** (可选): 布尔值，标记游戏是否已发布。默认为 `false`。
@@ -26,6 +26,13 @@
 ---
 title: "小红帽"
 description: "一个关于小女孩和一只狡猾大灰狼的经典童话故事。"
+backgroundStory: |
+  # 第一章：起源
+  
+  很久很久以前，在一个宁静的小村庄边，住着一个可爱的小女孩。
+  她总是穿着奶奶送给她的红色斗篷，因此大家都叫她"小红帽"。
+  
+  有一天，妈妈让她去看望住在森林那边的奶奶...
 cover_image: "/assets/covers/lrrh_cover.png"
 tags: ["童话", "经典", "多分支"]
 published: true
