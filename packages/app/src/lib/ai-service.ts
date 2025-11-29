@@ -19,9 +19,7 @@ export async function generateAndUploadImage(prompt: string, fileName: string): 
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error('R2 Bucket \'ASSETS_BUCKET\' not found');
 
-  await bucket.put(fileName, buffer, {
-    httpMetadata: { contentType: type },
-  });
+  await bucket.put(fileName, buffer);
 
   // 3. Return Public URL
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;

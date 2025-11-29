@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, Loader2Icon } from 'lucide-react';
 import { useDialog } from '@/components/Dialog';
 
 interface Props {
@@ -69,7 +69,9 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
             onClick={handleGenerate}
             disabled={loading || !story.trim()}
             className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+            type="button"
           >
+            {loading && <Loader2Icon className="animate-spin size-4" />}
             {loading ? '生成中...' : '生成游戏脚本'}
           </button>
         </div>

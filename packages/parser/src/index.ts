@@ -16,6 +16,8 @@ const CHOICE_REGEX = /^\s*\*\s*\[(.*?)\]\s*->\s*([\w-]+)\s*(.*?)\s*$/;
 const IF_REGEX = /\(if:\s*(.*?)\)/;
 const SET_REGEX = /\(set:\s*(.*?)\)/;
 const STATIC_IMAGE_REGEX = /^\s*!\[(.*?)\]\((.*?)\)$/;
+const STATIC_AUDIO_REGEX = /^\s*\[audio\]\((.*?)\)$/;
+const STATIC_VIDEO_REGEX = /^\s*\[video\]\((.*?)\)$/;
 const BLOCK_START_REGEX = /^```([\w-]+)$/;
 const BLOCK_END_REGEX = /^```$/;
 
@@ -61,6 +63,8 @@ function parseSceneContent(content: string): SceneNode[] {
     } else {
       const blockStartMatch = line.match(BLOCK_START_REGEX);
       const staticImageMatch = line.match(STATIC_IMAGE_REGEX);
+      const staticAudioMatch = line.match(STATIC_AUDIO_REGEX);
+      const staticVideoMatch = line.match(STATIC_VIDEO_REGEX);
       const choiceMatch = line.match(CHOICE_REGEX);
 
       if (blockStartMatch) {
@@ -70,6 +74,12 @@ function parseSceneContent(content: string): SceneNode[] {
       } else if (staticImageMatch) {
         flushTextBuffer();
         nodes.push({ type: 'static_image', alt: staticImageMatch[1], url: staticImageMatch[2] });
+      } else if (staticAudioMatch) {
+        flushTextBuffer();
+        nodes.push({ type: 'static_audio', url: staticAudioMatch[1] });
+      } else if (staticVideoMatch) {
+        flushTextBuffer();
+        nodes.push({ type: 'static_video', url: staticVideoMatch[1] });
       } else if (choiceMatch) {
         flushTextBuffer();
         const [, text, nextSceneId, clausesStr] = choiceMatch;
@@ -249,6 +259,12 @@ export function stringify(game: Game): string {
           break;
         case 'static_image':
           markdown += `![${node.alt || ''}](${node.url})\n`;
+          break;
+        case 'static_audio':
+          markdown += `[audio](${node.url})\n`;
+          break;
+        case 'static_video':
+          markdown += `[video](${node.url})\n`;
           break;
         case 'choice':
           let choiceLine = `* [${node.text}] -> ${node.nextSceneId}`;

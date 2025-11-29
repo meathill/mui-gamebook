@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import {
   ReactFlow,
@@ -34,6 +34,7 @@ const nodeTypes = { scene: SceneNode };
 
 export default function VisualEditor({ id }: { id: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending: isAuthPending } = authClient.useSession();
   const { screenToFlowPosition, fitView } = useReactFlow();
   const dialog = useDialog();
@@ -58,6 +59,17 @@ export default function VisualEditor({ id }: { id: string }) {
   const [error, setError] = useState('');
 
   const [showImporter, setShowImporter] = useState(false);
+  const [importerAutoOpened, setImporterAutoOpened] = useState(false);
+
+  // 当加载完成后，检查 URL 参数决定是否自动打开导入器
+  useEffect(() => {
+    if (!loading && !importerAutoOpened && searchParams.get('showImporter') === 'true') {
+      setShowImporter(true);
+      setImporterAutoOpened(true);
+      // 清除 URL 参数
+      router.replace(`/admin/edit/${id}`);
+    }
+  }, [loading, importerAutoOpened, searchParams, router, id]);
 
   useOnSelectionChange({
     onChange: ({ nodes, edges }) => {

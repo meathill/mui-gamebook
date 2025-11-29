@@ -1,6 +1,5 @@
 import { Handle, Position, NodeProps } from '@xyflow/react';
 import { SceneNodeData } from '@/lib/editor/transformers';
-import { ImageIcon } from 'lucide-react';
 
 export default function SceneNode({ data }: NodeProps) {
   const { label, content, assets } = data as unknown as SceneNodeData;
@@ -13,8 +12,8 @@ export default function SceneNode({ data }: NodeProps) {
     <div className="bg-white border-2 border-gray-200 rounded-lg shadow-sm min-w-[200px] max-w-[300px] overflow-hidden">
       <Handle type="target" position={Position.Top} className="w-3 h-3 bg-blue-500" />
       
-      {/* 场景图片 */}
-      {imageUrl ? (
+      {/* 场景图片 - 只在有图片时显示 */}
+      {imageUrl && (
         <div className="w-full h-24 bg-gray-100 overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
@@ -22,10 +21,6 @@ export default function SceneNode({ data }: NodeProps) {
             alt={label}
             className="w-full h-full object-cover"
           />
-        </div>
-      ) : (
-        <div className="w-full h-16 bg-gray-100 flex items-center justify-center">
-          <ImageIcon className="w-6 h-6 text-gray-300" />
         </div>
       )}
       

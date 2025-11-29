@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS Games (
     tags TEXT, -- JSON string array
     published BOOLEAN DEFAULT 0,
     owner_id text,
-    created_at INTEGER,
-    updated_at INTEGER,
+    created_at INTEGER default current_timestamp,
+    updated_at INTEGER default current_timestamp,
     FOREIGN KEY (`owner_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint

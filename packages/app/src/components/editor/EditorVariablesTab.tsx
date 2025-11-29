@@ -36,7 +36,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
   const handleSelectVariable = (name: string) => {
     setSelectedVar(name);
     setIsCreating(false);
-    setFormData(variableToFormData(name, state[name]));
+    setFormData(variableToFormData(name, state[ name ]));
   };
 
   const handleCreateNew = () => {
@@ -55,19 +55,19 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     const newState = { ...state };
     
     if (selectedVar && formData.name !== selectedVar) {
-      if (state[formData.name] !== undefined) {
+      if (state[ formData.name ] !== undefined) {
         await dialog.alert('变量名已存在');
         return;
       }
-      delete newState[selectedVar];
+      delete newState[ selectedVar ];
     }
     
-    if (isCreating && state[formData.name] !== undefined) {
+    if (isCreating && state[ formData.name ] !== undefined) {
       await dialog.alert('变量名已存在');
       return;
     }
     
-    newState[formData.name] = formDataToVariable(formData);
+    newState[ formData.name ] = formDataToVariable(formData);
     onChange(newState);
     
     setSelectedVar(formData.name);
@@ -78,7 +78,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     const confirmed = await dialog.confirm(`确定删除变量 "${name}" 吗？`);
     if (!confirmed) return;
     const newState = { ...state };
-    delete newState[name];
+    delete newState[ name ];
     onChange(newState);
     
     if (selectedVar === name) {
@@ -94,14 +94,14 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     if (selectedVar && !isCreating) {
       const newState = { ...state };
       if (updates.name && updates.name !== selectedVar) {
-        if (state[updates.name] !== undefined) {
+        if (state[ updates.name ] !== undefined) {
           await dialog.alert('变量名已存在');
           return;
         }
-        delete newState[selectedVar];
+        delete newState[ selectedVar ];
         setSelectedVar(updates.name);
       }
-      newState[newFormData.name] = formDataToVariable(newFormData);
+      newState[ newFormData.name ] = formDataToVariable(newFormData);
       onChange(newState);
     }
   };

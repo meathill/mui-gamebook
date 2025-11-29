@@ -23,7 +23,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
   const checkTriggers = useCallback((state: RuntimeState): string | null => {
     for (const [key, val] of Object.entries(game.initialState)) {
       if (isVariableMeta(val) && val.trigger) {
-        const currentValue = state[key];
+        const currentValue = state[ key ];
         const condition = `${currentValue} ${val.trigger.condition}`;
         if (evaluateCondition(condition, {})) {
           return val.trigger.scene;
@@ -178,7 +178,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
                 key={key}
                 varKey={key}
                 meta={meta}
-                currentValue={runtimeState[key]}
+                currentValue={runtimeState[ key ]}
               />
             ))}
           </div>
