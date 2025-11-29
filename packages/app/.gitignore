@@ -44,5 +44,4 @@ next-env.d.ts
 .next
 .wrangler
 migrations/*_seed.sql
-cloudflare-env.d.ts
 public/DSL_SPEC.md
