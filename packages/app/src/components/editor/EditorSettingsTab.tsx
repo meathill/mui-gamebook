@@ -7,9 +7,10 @@ interface Props {
   game: Game;
   onChange: (updatedGame: Game) => void;
   slug: string; // Need slug for upload/generate paths
+  onSlugChange: (newSlug: string) => void;
 }
 
-export default function EditorSettingsTab({ game, onChange, slug }: Props) {
+export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }: Props) {
   const [generatingCover, setGeneratingCover] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [coverPrompt, setCoverPrompt] = useState('');
@@ -122,10 +123,12 @@ export default function EditorSettingsTab({ game, onChange, slug }: Props) {
               <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
               <input
                 type="text"
-                disabled
                 value={slug}
-                className="block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm p-2 text-gray-500 cursor-not-allowed border"
+                onChange={e => onSlugChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                placeholder="game-url-slug"
               />
+              <p className="mt-1 text-xs text-gray-500">URL 路径标识，仅支持小写字母、数字和连字符</p>
             </div>
           </div>
 

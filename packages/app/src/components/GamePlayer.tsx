@@ -1,17 +1,36 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game, RuntimeState, VariableMeta } from '@mui-gamebook/parser/src/types';
+import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/types';
 import { evaluateCondition, executeSet } from '@/lib/evaluator';
 
 export default function GamePlayer({ game, slug }: { game: Game; slug: string }) {
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
-  const [gameState, setGameState] = useState(game.initialState);
+  // runtimeState 存储实际运行值
+  const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
   const [isLoaded, setIsLoaded] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
   const [imageLoading, setImageLoading] = useState(false);
+
+  // 获取可见变量及其元数据
+  const visibleVariables = getVisibleVariables(game.initialState);
+
+  // 检查变量触发器
+  const checkTriggers = useCallback((state: RuntimeState): string | null => {
+    for (const [key, val] of Object.entries(game.initialState)) {
+      if (isVariableMeta(val) && val.trigger) {
+        const currentValue = state[key];
+        const condition = `${currentValue} ${val.trigger.condition}`;
+        if (evaluateCondition(condition, {})) {
+          return val.trigger.scene;
+        }
+      }
+    }
+    return null;
+  }, [game.initialState]);
 
   // Load progress from localStorage on mount
   useEffect(() => {
@@ -21,9 +40,9 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
         const { sceneId, state, imageUrl } = JSON.parse(savedProgress);
         if (game.scenes.has(sceneId)) {
           setCurrentSceneId(sceneId);
-          setIsGameStarted(true); // If progress exists, we are started
+          setIsGameStarted(true);
         }
-        setGameState(state);
+        setRuntimeState(state);
         if (imageUrl) setCurrentImageUrl(imageUrl);
       } catch (e) {
         console.error('Failed to load progress', e);
@@ -60,18 +79,18 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
     if (isLoaded && isGameStarted) {
       localStorage.setItem(`game_progress_${slug}`, JSON.stringify({
         sceneId: currentSceneId,
-        state: gameState,
+        state: runtimeState,
         imageUrl: currentImageUrl
       }));
     }
-  }, [currentSceneId, gameState, slug, isLoaded, currentImageUrl, isGameStarted]);
+  }, [currentSceneId, runtimeState, slug, isLoaded, currentImageUrl, isGameStarted]);
 
   const handleStartGame = () => {
     setIsGameStarted(true);
     // Ensure we start from the beginning if no progress was loaded
     if (!localStorage.getItem(`game_progress_${slug}`)) {
         setCurrentSceneId(game.startSceneId || 'start');
-        setGameState(game.initialState);
+        setRuntimeState(extractRuntimeState(game.initialState));
     }
   };
 
@@ -79,7 +98,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
     if (confirm('Are you sure you want to restart? Your progress will be lost.')) {
       localStorage.removeItem(`game_progress_${slug}`);
       setCurrentSceneId(game.startSceneId || 'start');
-      setGameState(game.initialState);
+      setRuntimeState(extractRuntimeState(game.initialState));
       setCurrentImageUrl(undefined);
       setIsGameStarted(false);
       
@@ -167,10 +186,70 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
   }
 
   // Check if it's an end scene (no choices visible)
-  const visibleChoices = currentScene.nodes.filter(node => 
-    node.type === 'choice' && evaluateCondition(node.condition, gameState)
+  const availableChoices = currentScene.nodes.filter(node => 
+    node.type === 'choice' && evaluateCondition(node.condition, runtimeState)
   );
-  const hasChoices = visibleChoices.length > 0;
+  const hasChoices = availableChoices.length > 0;
+
+  // 处理选项点击
+  const handleChoice = (nextSceneId: string, setInstruction?: string) => {
+    let newState = runtimeState;
+    if (setInstruction) {
+      newState = executeSet(setInstruction, runtimeState);
+      setRuntimeState(newState);
+    }
+    
+    // 检查触发器
+    const triggerScene = checkTriggers(newState);
+    if (triggerScene && game.scenes.has(triggerScene)) {
+      setCurrentSceneId(triggerScene);
+    } else {
+      setCurrentSceneId(nextSceneId);
+    }
+  };
+
+  // 渲染变量指示器
+  const renderVariableIndicator = (varKey: string, meta: VariableMeta) => {
+    const currentValue = runtimeState[varKey];
+    const label = meta.label || varKey;
+    const display = meta.display || 'value';
+
+    if (display === 'progress') {
+      const max = meta.max || 100;
+      const percentage = Math.max(0, Math.min(100, (Number(currentValue) / max) * 100));
+      return (
+        <div key={varKey} className="flex items-center gap-2">
+          <span className="text-xs text-gray-600 min-w-[60px]">{label}</span>
+          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className={`h-full transition-all duration-300 ${percentage < 30 ? 'bg-red-500' : percentage < 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+          <span className="text-xs text-gray-500 min-w-[40px] text-right">{currentValue}/{max}</span>
+        </div>
+      );
+    }
+
+    if (display === 'icon') {
+      const isActive = Boolean(currentValue);
+      const icon = meta.icon || '❤️';
+      return (
+        <div key={varKey} className="flex items-center gap-1">
+          <span className={`text-lg ${isActive ? 'opacity-100' : 'opacity-30 grayscale'}`}>{icon}</span>
+          <span className="text-xs text-gray-600">{label}</span>
+        </div>
+      );
+    }
+
+    // value display
+    return (
+      <div key={varKey} className="flex items-center gap-2">
+        <span className="text-xs text-gray-600">{label}:</span>
+        <span className="text-sm font-medium text-gray-900">{String(currentValue)}</span>
+      </div>
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-[600px]">
@@ -186,6 +265,15 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
           </button>
         </div>
       </div>
+
+      {/* 可见变量状态栏 */}
+      {visibleVariables.length > 0 && (
+        <div className="bg-gray-50 border-b px-4 py-2">
+          <div className="max-w-2xl mx-auto flex flex-wrap gap-4">
+            {visibleVariables.map(({ key, meta }) => renderVariableIndicator(key, meta))}
+          </div>
+        </div>
+      )}
 
       {/* Persistent Image Display */}
       {currentImageUrl && (
@@ -214,20 +302,14 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
                 return null;
               
               case 'choice':
-                if (!evaluateCondition(node.condition, gameState)) {
+                if (!evaluateCondition(node.condition, runtimeState)) {
                   return null;
                 }
                 return (
                   <button 
                     key={index}
                     className="w-full text-left p-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md"
-                    onClick={() => {
-                      if (node.set) {
-                        const newState = executeSet(node.set, gameState);
-                        setGameState(newState);
-                      }
-                      setCurrentSceneId(node.nextSceneId);
-                    }}
+                    onClick={() => handleChoice(node.nextSceneId, node.set)}
                   >
                     <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg">{node.text}</span>
                   </button>

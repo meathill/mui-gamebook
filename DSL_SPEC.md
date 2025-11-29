@@ -34,16 +34,64 @@ published: true
 
 ### 2.2 游戏状态 (`state`)
 
-该对象持有游戏范围内的变量，如统计数据、物品栏或环境条件。
+该对象持有游戏范围内的变量。每个变量可以是简单值，也可以是包含元数据的对象。
+
+#### 2.2.1 简单变量
+
+直接定义变量名和初始值：
+
+```yaml
+---
+state:
+  has_key: false
+  gold: 10
+---
+```
+
+#### 2.2.2 带元数据的变量
+
+变量可以配置以下属性：
+
+- **`value`** (必须): 变量的初始值（数字、字符串或布尔值）
+- **`visible`** (可选): 是否在游戏界面显示，默认 `false`
+- **`display`** (可选): 展示方式，可选值：
+  - `value`: 直接显示数值（默认）
+  - `progress`: 显示为进度条
+  - `icon`: 显示为图标（适用于布尔值或物品）
+- **`max`** (可选): 最大值，用于进度条展示
+- **`label`** (可选): 显示名称，默认使用变量名
+- **`trigger`** (可选): 触发器配置，当条件满足时跳转到指定场景
+  - `condition`: 触发条件（如 `<= 0`、`== true`）
+  - `scene`: 跳转的场景 ID
 
 **示例：**
 
 ```yaml
 ---
 state:
-  has_key: false
-  health: 100
-  gold: 10
+  health:
+    value: 100
+    visible: true
+    display: progress
+    max: 100
+    label: "生命值"
+    trigger:
+      condition: "<= 0"
+      scene: game_over
+  gold:
+    value: 10
+    visible: true
+    display: value
+    label: "金币"
+  has_key:
+    value: false
+    visible: false
+  reputation:
+    value: 50
+    visible: true
+    display: progress
+    max: 100
+    label: "声望"
 ---
 ```
 

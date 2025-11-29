@@ -1,5 +1,6 @@
 import * as yaml from 'js-yaml';
-import type {AICharacter, Game, ParseResult, Scene, SceneNode} from './types';
+import type {AICharacter, Game, GameState, ParseResult, Scene, SceneNode, VariableMeta} from './types';
+import { isVariableMeta } from './types';
 import { omitBy } from "lodash-es";
 import slugify from "slugify";
 export {
@@ -198,7 +199,18 @@ export function stringify(game: Game): string {
   if (game.cover_image) frontMatter.cover_image = game.cover_image;
   if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
   if (game.published) frontMatter.published = true;
-  if (Object.keys(game.initialState).length > 0) frontMatter.state = game.initialState;
+  if (Object.keys(game.initialState).length > 0) {
+    // 清理变量元数据中的 undefined 字段
+    const cleanedState: GameState = {};
+    for (const [key, val] of Object.entries(game.initialState)) {
+      if (isVariableMeta(val)) {
+        cleanedState[key] = omitBy(val, v => v === undefined) as VariableMeta;
+      } else {
+        cleanedState[key] = val;
+      }
+    }
+    frontMatter.state = cleanedState;
+  }
   if (Object.keys(game.ai.style || {}).length > 0 || Object.keys(game.ai.characters || {}).length > 0) {
     frontMatter.ai = {};
     if (Object.keys(game.ai.style || {}).length > 0) frontMatter.ai.style = game.ai.style;

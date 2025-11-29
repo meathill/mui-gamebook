@@ -18,7 +18,7 @@ import {
   useReactFlow
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Save, ArrowLeft, ExternalLink, FileText, Network, PlusCircle, Layout, Sparkles, ImagePlus, Settings, BookOpen } from 'lucide-react';
+import { Save, ArrowLeft, ExternalLink, FileText, Network, PlusCircle, Layout, Sparkles, ImagePlus, Settings, BookOpen, Variable } from 'lucide-react';
 import Link from 'next/link';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
@@ -26,12 +26,13 @@ import { getLayoutedElements } from '@/lib/editor/layout';
 import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
+import EditorVariablesTab from '@/components/editor/EditorVariablesTab';
 import StoryImporter from '@/components/editor/StoryImporter';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game, GameState } from '@mui-gamebook/parser/src/types';
 
 const nodeTypes = { scene: SceneNode };
 
-type Tab = 'settings' | 'story';
+type Tab = 'settings' | 'variables' | 'story';
 
 export default function VisualEditor({ id }: { id: string }) {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function VisualEditor({ id }: { id: string }) {
 
   // originalGame holds the metadata (settings) and initial content
   const [originalGame, setOriginalGame] = useState<Game | null>(null);
+  const [slug, setSlug] = useState('');
   const [viewMode, setViewMode] = useState<'visual' | 'text'>('visual');
   const [textContent, setTextContent] = useState('');
 
@@ -71,10 +73,11 @@ export default function VisualEditor({ id }: { id: string }) {
     fetch(`/api/cms/games/${id}`)
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to load game');
-        const data = (await res.json()) as { content: string } & Game;
+        const data = (await res.json()) as { content: string; slug: string } & Game;
         const result = parse(data.content);
         if (result.success) {
           setOriginalGame({ ...result.data, ...data });
+          setSlug(data.slug);
           setTextContent(data.content);
           const flow = gameToFlow(result.data);
           setNodes(flow.nodes);
@@ -152,12 +155,16 @@ export default function VisualEditor({ id }: { id: string }) {
       const res = await fetch(`/api/cms/games/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ content, slug }),
       });
 
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error || 'Failed to save');
+      }
+      const result = (await res.json()) as { slug?: string };
+      if (result.slug) {
+        setSlug(result.slug);
       }
       alert('Saved successfully!');
     } catch (err: unknown) {
@@ -276,6 +283,12 @@ export default function VisualEditor({ id }: { id: string }) {
               <Settings size={16} /> Settings
             </button>
             <button
+              onClick={() => setActiveTab('variables')}
+              className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'variables' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+            >
+              <Variable size={16} /> Variables
+            </button>
+            <button
               onClick={() => setActiveTab('story')}
               className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'story' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
             >
@@ -311,7 +324,7 @@ export default function VisualEditor({ id }: { id: string }) {
             </>
           )}
 
-          <Link href={`/play/${originalGame?.slug}`} target="_blank" className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200" title="Preview">
+          <Link href={`/play/${slug}`} target="_blank" className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200" title="Preview">
             <ExternalLink size={18} />
           </Link>
           <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-medium">
@@ -327,7 +340,18 @@ export default function VisualEditor({ id }: { id: string }) {
             <EditorSettingsTab
               game={originalGame}
               onChange={setOriginalGame}
-              slug={originalGame?.slug}
+              slug={slug}
+              onSlugChange={setSlug}
+            />
+          </div>
+        )}
+
+        {activeTab === 'variables' && originalGame && (
+          <div className="h-full overflow-y-auto bg-gray-50 p-6">
+            <EditorVariablesTab
+              state={originalGame.initialState}
+              onChange={(newState: GameState) => setOriginalGame({ ...originalGame, initialState: newState })}
+              scenes={originalGame.scenes}
             />
           </div>
         )}

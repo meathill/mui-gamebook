@@ -7,6 +7,7 @@ import type { Game } from '@mui-gamebook/parser/src/types';
 window.scrollTo = vi.fn();
 
 const mockGame: Game = {
+  slug: 'test-game',
   title: 'Test Adventure',
   description: 'A test game',
   initialState: {
@@ -50,10 +51,18 @@ const mockGame: Game = {
 };
 
 describe('GamePlayer Component', () => {
-  it('should render the start scene correctly', () => {
+  it('should render the title screen and start game correctly', () => {
     render(<GamePlayer game={mockGame} slug="test-game" />);
     
-    expect(screen.getByText('Test Adventure')).toBeInTheDocument();
+    // 检查标题页
+    expect(screen.getAllByText('Test Adventure').length).toBeGreaterThan(0);
+    expect(screen.getByText('A test game')).toBeInTheDocument();
+    expect(screen.getByText('Start Adventure')).toBeInTheDocument();
+    
+    // 点击开始
+    fireEvent.click(screen.getByText('Start Adventure'));
+    
+    // 现在应该看到游戏内容
     expect(screen.getByText('You are at the start.')).toBeInTheDocument();
     expect(screen.getByText('Buy Key (Cost 5)')).toBeInTheDocument();
     expect(screen.getByText('Go to Door')).toBeInTheDocument();
@@ -61,6 +70,9 @@ describe('GamePlayer Component', () => {
 
   it('should update state and navigate on choice click', () => {
     render(<GamePlayer game={mockGame} slug="test-game-2" />);
+    
+    // 开始游戏
+    fireEvent.click(screen.getByText('Start Adventure'));
     
     // Click "Buy Key"
     fireEvent.click(screen.getByText('Buy Key (Cost 5)'));
@@ -71,6 +83,9 @@ describe('GamePlayer Component', () => {
 
   it('should handle conditional choices correctly', () => {
     render(<GamePlayer game={mockGame} slug="test-game-3" />);
+    
+    // 开始游戏
+    fireEvent.click(screen.getByText('Start Adventure'));
     
     // Go to door without key
     fireEvent.click(screen.getByText('Go to Door'));

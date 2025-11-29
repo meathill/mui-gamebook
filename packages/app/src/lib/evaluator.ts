@@ -1,4 +1,4 @@
-import type { GameState } from '@mui-gamebook/parser/src/types';
+import type { RuntimeState } from '@mui-gamebook/parser/src/types';
 
 /**
  * Evaluates a condition string against the current game state.
@@ -13,7 +13,7 @@ import type { GameState } from '@mui-gamebook/parser/src/types';
  * - "has_key == true"
  * - "name == 'Hero'"
  */
-export function evaluateCondition(condition: string | undefined, state: GameState): boolean {
+export function evaluateCondition(condition: string | undefined, state: RuntimeState): boolean {
   if (!condition) return true;
 
   // Simple parser for "A op B"
@@ -57,7 +57,7 @@ export function evaluateCondition(condition: string | undefined, state: GameStat
  * - "has_key = true"
  * - "count = 1"
  */
-export function executeSet(instruction: string | undefined, state: GameState): GameState {
+export function executeSet(instruction: string | undefined, state: RuntimeState): RuntimeState {
   if (!instruction) return state;
 
   const newState = { ...state };
@@ -91,14 +91,17 @@ export function executeSet(instruction: string | undefined, state: GameState): G
       }
     } else {
       // Direct assignment
-      newState[ key ] = getValue(expression, newState);
+      const val = getValue(expression, newState);
+      if (val !== undefined) {
+        newState[ key ] = val;
+      }
     }
   }
 
   return newState;
 }
 
-function getValue(token: string, state: GameState): boolean | number | string | undefined {
+function getValue(token: string, state: RuntimeState): boolean | number | string | undefined {
   // Boolean literals
   if (token === 'true') return true;
   if (token === 'false') return false;
@@ -112,7 +115,7 @@ function getValue(token: string, state: GameState): boolean | number | string | 
   }
 
   // Variable lookup
-  if (state.hasOwnProperty(token)) {
+  if (Object.prototype.hasOwnProperty.call(state, token)) {
     return state[ token ];
   }
 
