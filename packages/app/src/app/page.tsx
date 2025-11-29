@@ -11,7 +11,7 @@ export default async function Home() {
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-extrabold text-gray-900 text-center mb-10">
-          MUI Gamebook Library
+          游戏库
         </h1>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -28,7 +28,7 @@ export default async function Home() {
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-400">
-                      No Cover
+                      暂无封面
                     </div>
                   )}
                 </div>
@@ -54,7 +54,7 @@ export default async function Home() {
 
         {games.length === 0 && (
           <div className="text-center text-gray-500 mt-10">
-            No published games found. Check back later!
+            暂无已发布的游戏，请稍后再来！
           </div>
         )}
       </div>

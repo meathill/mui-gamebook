@@ -1,12 +1,19 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import GamePlayer from '../../src/components/GamePlayer';
+import { DialogProvider } from '../../src/components/Dialog';
 import type { Game } from '@mui-gamebook/parser/src/types';
 
 // Mock scrollIntoView
 window.scrollTo = vi.fn();
 
+// Helper to render with DialogProvider
+const renderWithDialog = (component: React.ReactElement) => {
+  return render(<DialogProvider>{component}</DialogProvider>);
+};
+
 const mockGame: Game = {
+  slug: 'test-game',
   title: 'Test Adventure',
   description: 'A test game',
   initialState: {
@@ -50,17 +57,28 @@ const mockGame: Game = {
 };
 
 describe('GamePlayer Component', () => {
-  it('should render the start scene correctly', () => {
-    render(<GamePlayer game={mockGame} slug="test-game" />);
+  it('should render the title screen and start game correctly', () => {
+    renderWithDialog(<GamePlayer game={mockGame} slug="test-game" />);
     
-    expect(screen.getByText('Test Adventure')).toBeInTheDocument();
+    // 检查标题页
+    expect(screen.getAllByText('Test Adventure').length).toBeGreaterThan(0);
+    expect(screen.getByText('A test game')).toBeInTheDocument();
+    expect(screen.getByText('开始冒险')).toBeInTheDocument();
+    
+    // 点击开始
+    fireEvent.click(screen.getByText('开始冒险'));
+    
+    // 现在应该看到游戏内容
     expect(screen.getByText('You are at the start.')).toBeInTheDocument();
     expect(screen.getByText('Buy Key (Cost 5)')).toBeInTheDocument();
     expect(screen.getByText('Go to Door')).toBeInTheDocument();
   });
 
   it('should update state and navigate on choice click', () => {
-    render(<GamePlayer game={mockGame} slug="test-game-2" />);
+    renderWithDialog(<GamePlayer game={mockGame} slug="test-game-2" />);
+    
+    // 开始游戏
+    fireEvent.click(screen.getByText('开始冒险'));
     
     // Click "Buy Key"
     fireEvent.click(screen.getByText('Buy Key (Cost 5)'));
@@ -70,7 +88,10 @@ describe('GamePlayer Component', () => {
   });
 
   it('should handle conditional choices correctly', () => {
-    render(<GamePlayer game={mockGame} slug="test-game-3" />);
+    renderWithDialog(<GamePlayer game={mockGame} slug="test-game-3" />);
+    
+    // 开始游戏
+    fireEvent.click(screen.getByText('开始冒险'));
     
     // Go to door without key
     fireEvent.click(screen.getByText('Go to Door'));

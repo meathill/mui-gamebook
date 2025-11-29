@@ -48,6 +48,7 @@ export async function GET(
     ...result.data,
     title: game.title,
     description: game.description,
+    backgroundStory: game.backgroundStory,
     cover_image: game.coverImage,
     tags: game.tags ? JSON.parse(game.tags) : [],
     published: true,
