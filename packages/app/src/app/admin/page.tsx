@@ -42,11 +42,13 @@ export default function AdminPage() {
         body: JSON.stringify({ title }),
       });
       if (!res.ok) throw new Error('Failed to create');
-      return res.json();
+      return res.json() as Promise<{ id: string }>;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setNewTitle('');
       queryClient.invalidateQueries({ queryKey: ['games'] });
+      // 创建成功后立刻跳转到编辑页面，并带上 showImporter 参数
+      router.push(`/admin/edit/${data.id}?showImporter=true`);
     },
   });
 

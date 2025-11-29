@@ -56,6 +56,8 @@ export interface AICharacter {
  */
 export type SceneContentNode = { type: 'text'; content: string };
 export type SceneStaticImageNode = { type: 'static_image'; alt?: string; url: string };
+export type SceneStaticAudioNode = { type: 'static_audio'; url: string };
+export type SceneStaticVideoNode = { type: 'static_video'; url: string };
 export type SceneAiImageNode = {
   type: 'ai_image';
   prompt: string;
@@ -84,6 +86,8 @@ export type SceneChoiceNode = {
 export type SceneNode =
   | SceneContentNode
   | SceneStaticImageNode
+  | SceneStaticAudioNode
+  | SceneStaticVideoNode
   | SceneAiImageNode
   | SceneAiAudioNode
   | SceneAiVideoNode

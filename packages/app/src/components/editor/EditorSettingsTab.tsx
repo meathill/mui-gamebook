@@ -76,13 +76,14 @@ export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }
 
   const handleGenerateCover = async () => {
     if (!coverPrompt) return;
+
     setGeneratingCover(true);
     try {
       const res = await fetch('/api/cms/assets/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: coverPrompt,
+          prompt: [(game.ai?.style?.image || ''), coverPrompt].filter(Boolean).join('\n'),
           gameSlug: slug,
           type: 'ai_image'
         }),
@@ -179,7 +180,7 @@ export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">封面图片</label>
-            <div className="relative w-full aspect-[3/4] bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-blue-400 transition-colors group">
+            <div className="relative w-full aspect-[3/2] bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-blue-400 transition-colors group">
               {game.cover_image && !game.cover_image.startsWith('prompt:') ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
