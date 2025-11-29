@@ -19,7 +19,7 @@ const s3Client = new S3Client({
 });
 
 const genAI = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_API_KEY!
+  apiKey: process.env.GOOGLE_API_KEY_NEW!
 });
 
 /**

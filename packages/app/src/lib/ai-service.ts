@@ -6,8 +6,8 @@ export async function generateAndUploadImage(prompt: string, fileName: string): 
   const { env } = getCloudflareContext();
 
   // 1. Generate
-  const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
-  if (!apiKey) throw new Error('GOOGLE_API_KEY not configured');
+  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  if (!apiKey) throw new Error('GOOGLE_API_KEY_NEW not configured');
 
   const genAI = new GoogleGenAI({
     apiKey: apiKey,
