@@ -16,13 +16,13 @@ export async function GET(
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id } = await params;
+  const id = Number((await params).id);
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
   // Verify ownership
   const game = await db.select().from(schema.games)
-    .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
+    .where(and(eq(schema.games.id, Number(id)), eq(schema.games.ownerId, session.user.id)))
     .get();
 
   if (!game) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
@@ -48,7 +48,7 @@ export async function PUT(
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id } = await params;
+  const id = Number((await params).id);
   const { content, slug: newSlug } = (await req.json()) as {
     content: string;
     slug?: string;
@@ -115,7 +115,7 @@ export async function DELETE(
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { id } = await params;
+  const id = Number((await params).id);
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
