@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { Game } from '@mui-gamebook/parser/src/types';
 import MDEditor from '@uiw/react-md-editor';
 import { Upload, Sparkles, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { useDialog } from '@/components/Dialog';
 
 interface Props {
   game: Game;
@@ -16,6 +17,7 @@ export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }
   const [coverPrompt, setCoverPrompt] = useState('');
   const [showCoverGen, setShowCoverGen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const dialog = useDialog();
 
   const handleChange = (field: string, value: string | boolean | Record<string, unknown>) => {
     onChange({ ...game, [ field ]: value });
@@ -63,10 +65,10 @@ export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }
       if (res.ok) {
         handleChange('cover_image', data.url);
       } else {
-        alert(data.error);
+        await dialog.error(data.error || '上传失败');
       }
     } catch (e) {
-      alert('Upload failed: ' + (e as Error).message);
+      await dialog.error('上传失败：' + (e as Error).message);
     } finally {
       setUploadingCover(false);
     }
@@ -93,10 +95,10 @@ export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }
         handleChange('cover_image', data.url);
         setShowCoverGen(false);
       } else {
-        alert(data.error);
+        await dialog.error(data.error || '生成失败');
       }
     } catch (e) {
-      alert('Generation failed: ' + (e as Error).message);
+      await dialog.error('生成失败：' + (e as Error).message);
     } finally {
       setGeneratingCover(false);
     }

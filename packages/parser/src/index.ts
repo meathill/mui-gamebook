@@ -127,7 +127,8 @@ export function parse(source: string): ParseResult {
       cover_image,
       tags,
       published,
-      background_story,
+      backgroundStory,
+      background_story, // 兼容旧格式
       state = {},
       ai = {},
     } = frontMatter;
@@ -158,7 +159,7 @@ export function parse(source: string): ParseResult {
       slug: slugify(title),
       title,
       description,
-      backgroundStory: background_story,
+      backgroundStory: backgroundStory || background_story, // 兼容两种格式
       cover_image,
       tags: tags || [],
       published: !!published,

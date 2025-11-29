@@ -1,10 +1,16 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import GamePlayer from '../../src/components/GamePlayer';
+import { DialogProvider } from '../../src/components/Dialog';
 import type { Game } from '@mui-gamebook/parser/src/types';
 
 // Mock scrollIntoView
 window.scrollTo = vi.fn();
+
+// Helper to render with DialogProvider
+const renderWithDialog = (component: React.ReactElement) => {
+  return render(<DialogProvider>{component}</DialogProvider>);
+};
 
 const mockGame: Game = {
   slug: 'test-game',
@@ -52,7 +58,7 @@ const mockGame: Game = {
 
 describe('GamePlayer Component', () => {
   it('should render the title screen and start game correctly', () => {
-    render(<GamePlayer game={mockGame} slug="test-game" />);
+    renderWithDialog(<GamePlayer game={mockGame} slug="test-game" />);
     
     // 检查标题页
     expect(screen.getAllByText('Test Adventure').length).toBeGreaterThan(0);
@@ -69,7 +75,7 @@ describe('GamePlayer Component', () => {
   });
 
   it('should update state and navigate on choice click', () => {
-    render(<GamePlayer game={mockGame} slug="test-game-2" />);
+    renderWithDialog(<GamePlayer game={mockGame} slug="test-game-2" />);
     
     // 开始游戏
     fireEvent.click(screen.getByText('开始冒险'));
@@ -82,7 +88,7 @@ describe('GamePlayer Component', () => {
   });
 
   it('should handle conditional choices correctly', () => {
-    render(<GamePlayer game={mockGame} slug="test-game-3" />);
+    renderWithDialog(<GamePlayer game={mockGame} slug="test-game-3" />);
     
     // 开始游戏
     fireEvent.click(screen.getByText('开始冒险'));

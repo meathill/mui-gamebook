@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Edit, Eye, Lock, Globe } from 'lucide-react';
 import Link from 'next/link';
+import { useDialog } from '@/components/Dialog';
 
 interface GameListItem {
   id: string;
@@ -24,6 +25,7 @@ export default function AdminPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [newTitle, setNewTitle] = useState('');
+  const dialog = useDialog();
 
   // Use React Query to fetch games
   const { data: games, isLoading, error } = useQuery({
@@ -71,8 +73,9 @@ export default function AdminPage() {
     createMutation.mutate(newTitle);
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm('确定要删除吗？此操作无法撤销。')) return;
+  const handleDelete = async (id: string) => {
+    const confirmed = await dialog.confirm('确定要删除吗？此操作无法撤销。');
+    if (!confirmed) return;
     deleteMutation.mutate(id);
   };
 

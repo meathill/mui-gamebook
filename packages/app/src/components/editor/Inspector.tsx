@@ -4,6 +4,7 @@ import { SceneNodeData } from '@/lib/editor/transformers';
 import { Trash2, Image as ImageIcon, RefreshCw, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { SceneNode, SceneAiImageNode } from '@mui-gamebook/parser';
+import { useDialog } from '@/components/Dialog';
 
 interface InspectorProps {
   selectedNode: Node | null;
@@ -16,11 +17,12 @@ interface InspectorProps {
 export default function Inspector({ selectedNode, selectedEdge, onNodeChange, onNodeIdChange, onEdgeChange }: InspectorProps) {
   const { slug } = useParams();
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
+  const dialog = useDialog();
 
   if (!selectedNode && !selectedEdge) {
     return (
       <div className="w-80 border-l border-gray-200 bg-white p-4 text-sm text-gray-500 hidden md:block">
-        Select a node or edge to edit properties.
+        选择一个节点或边来编辑属性。
       </div>
     );
   }
@@ -72,7 +74,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
         const error = (await res.json()) as {
           error: string;
         };
-        alert(`Generation failed: ${error.error}`);
+        await dialog.error(`生成失败：${error.error}`);
         return;
       }
 
@@ -81,7 +83,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
       };
       handleAssetChange(index, 'url', data.url);
     } catch (e: unknown) {
-      alert(`Error: ${(e as Error).message}`);
+      await dialog.error(`错误：${(e as Error).message}`);
     } finally {
       setGeneratingIndex(null);
     }
@@ -90,9 +92,9 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
   return (
     <div className="w-80 border-l border-gray-200 bg-white flex flex-col h-full overflow-y-auto shadow-xl z-20">
       <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h2 className="font-semibold text-gray-700">Properties</h2>
+        <h2 className="font-semibold text-gray-700">属性</h2>
         <p className="text-xs text-gray-500 truncate">
-          {selectedNode ? `Scene: ${nodeData?.label}` : `Choice: ${selectedEdge?.label || 'Untitled'}`}
+          {selectedNode ? `场景：${nodeData?.label}` : `选项：${selectedEdge?.label || '未命名'}`}
         </p>
       </div>
 

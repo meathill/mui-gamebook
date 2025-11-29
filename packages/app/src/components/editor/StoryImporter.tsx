@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
+import { useDialog } from '@/components/Dialog';
 
 interface Props {
   id: string;
@@ -10,6 +11,7 @@ interface Props {
 export default function StoryImporter({ id, onImport, onClose }: Props) {
   const [story, setStory] = useState('');
   const [loading, setLoading] = useState(false);
+  const dialog = useDialog();
 
   const handleGenerate = async () => {
     if (!story.trim()) return;
@@ -34,7 +36,7 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
       onImport(data.script);
       onClose();
     } catch (e: unknown) {
-      alert((e as Error).message);
+      await dialog.error((e as Error).message);
     } finally {
       setLoading(false);
     }

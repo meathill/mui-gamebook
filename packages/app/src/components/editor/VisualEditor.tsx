@@ -28,6 +28,7 @@ import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
 import EditorVariablesTab from '@/components/editor/EditorVariablesTab';
 import StoryImporter from '@/components/editor/StoryImporter';
+import { useDialog } from '@/components/Dialog';
 import type { Game, GameState } from '@mui-gamebook/parser/src/types';
 
 const nodeTypes = { scene: SceneNode };
@@ -38,6 +39,7 @@ export default function VisualEditor({ id }: { id: string }) {
   const router = useRouter();
   const { data: session, isPending: isAuthPending } = authClient.useSession();
   const { screenToFlowPosition, fitView } = useReactFlow();
+  const dialog = useDialog();
 
   const [activeTab, setActiveTab] = useState<Tab>('settings');
 
@@ -90,7 +92,7 @@ export default function VisualEditor({ id }: { id: string }) {
       .finally(() => setLoading(false));
   }, [id, setNodes, setEdges]);
 
-  const toggleViewMode = () => {
+  const toggleViewMode = async () => {
     if (viewMode === 'visual') {
       if (originalGame) {
         const newGame = flowToGame(nodes as Node<SceneNodeData>[], edges, originalGame);
@@ -108,7 +110,7 @@ export default function VisualEditor({ id }: { id: string }) {
         setEdges(flow.edges);
         setViewMode('visual');
       } else {
-        alert(`Cannot switch to visual mode: Invalid Markdown.\n\n${result.error}`);
+        await dialog.error(`无法切换到可视化模式：Markdown 格式无效。\n\n${result.error}`);
       }
     }
   };
@@ -166,16 +168,17 @@ export default function VisualEditor({ id }: { id: string }) {
       if (result.slug) {
         setSlug(result.slug);
       }
-      alert('保存成功！');
+      await dialog.success('保存成功！');
     } catch (err: unknown) {
-      alert((err as Error).message);
+      await dialog.error((err as Error).message);
     } finally {
       setSaving(false);
     }
   };
 
   const handleGenerateAssets = async () => {
-    if (!confirm('This will scan all nodes and generate missing AI assets. It might take a while. Continue?')) return;
+    const confirmed = await dialog.confirm('这将扫描所有节点并生成缺失的 AI 素材。可能需要一些时间，确定继续吗？');
+    if (!confirmed) return;
     setAssetGenerating(true);
     await handleSave(); // Save first
 
@@ -186,19 +189,19 @@ export default function VisualEditor({ id }: { id: string }) {
         error?: string;
       };
       if (res.ok) {
-        alert(`Generated ${data.updatedCount} assets successfully! Reloading...`);
+        await dialog.success(`成功生成 ${data.updatedCount} 个素材！页面即将刷新...`);
         window.location.reload();
       } else {
         throw new Error(data.error);
       }
     } catch (e: unknown) {
-      alert(`Asset generation failed: ${(e as Error).message}`);
+      await dialog.error(`素材生成失败：${(e as Error).message}`);
     } finally {
       setAssetGenerating(false);
     }
   };
 
-  const handleScriptImport = (script: string) => {
+  const handleScriptImport = async (script: string) => {
     const result = parse(script);
     if (result.success) {
       // Merge imported script with current metadata? Or overwrite?
@@ -212,7 +215,7 @@ export default function VisualEditor({ id }: { id: string }) {
         setViewMode('visual');
       }
     } else {
-      alert(`Imported script is invalid: ${result.error}`);
+      await dialog.error(`导入的脚本无效：${result.error}`);
     }
   };
 
@@ -226,9 +229,12 @@ export default function VisualEditor({ id }: { id: string }) {
     setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...data } } : node));
   };
 
-  const handleNodeIdChange = (oldId: string, newId: string) => {
+  const handleNodeIdChange = async (oldId: string, newId: string) => {
     if (!newId || oldId === newId) return;
-    if (nodes.some(n => n.id === newId)) { alert(`Scene ID "${newId}" already exists.`); return; }
+    if (nodes.some(n => n.id === newId)) { 
+      await dialog.alert(`场景 ID "${newId}" 已存在。`); 
+      return; 
+    }
     setNodes((nds) => nds.map(node => node.id === oldId ? { ...node, id: newId, data: { ...node.data, label: newId } } : node));
     setEdges((eds) => eds.map(edge => {
       let u = false, s = edge.source, t = edge.target;

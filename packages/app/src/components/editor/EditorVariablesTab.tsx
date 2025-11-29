@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Plus, Trash2, Eye, EyeOff, Search } from 'lucide-react';
 import type { GameState, VariableMeta, VariableDisplay } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta } from '@mui-gamebook/parser/src/types';
+import { useDialog } from '@/components/Dialog';
 
 interface Props {
   state: GameState;
@@ -125,6 +126,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
   const [selectedVar, setSelectedVar] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState<VariableFormData>(defaultFormData);
+  const dialog = useDialog();
 
   const variables = Object.entries(state);
   const sceneList = Array.from(scenes.keys());
@@ -149,9 +151,9 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     setFormData({ ...defaultFormData, name: newName });
   };
 
-  const handleSaveVariable = () => {
+  const handleSaveVariable = async () => {
     if (!formData.name.trim()) {
-      alert('变量名不能为空');
+      await dialog.alert('变量名不能为空');
       return;
     }
 
@@ -160,7 +162,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     // 如果是编辑现有变量且变量名改变
     if (selectedVar && formData.name !== selectedVar) {
       if (state[formData.name] !== undefined) {
-        alert('变量名已存在');
+        await dialog.alert('变量名已存在');
         return;
       }
       delete newState[selectedVar];
@@ -168,7 +170,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     
     // 如果是新建变量
     if (isCreating && state[formData.name] !== undefined) {
-      alert('变量名已存在');
+      await dialog.alert('变量名已存在');
       return;
     }
     
@@ -180,8 +182,9 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     setIsCreating(false);
   };
 
-  const handleDeleteVariable = (name: string) => {
-    if (!confirm(`确定删除变量 "${name}" 吗？`)) return;
+  const handleDeleteVariable = async (name: string) => {
+    const confirmed = await dialog.confirm(`确定删除变量 "${name}" 吗？`);
+    if (!confirmed) return;
     const newState = { ...state };
     delete newState[name];
     onChange(newState);
@@ -203,7 +206,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     return isVariableMeta(val) && val.visible === true;
   };
 
-  const updateFormData = (updates: Partial<VariableFormData>) => {
+  const updateFormData = async (updates: Partial<VariableFormData>) => {
     const newFormData = { ...formData, ...updates };
     setFormData(newFormData);
     
@@ -212,7 +215,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
       const newState = { ...state };
       if (updates.name && updates.name !== selectedVar) {
         if (state[updates.name] !== undefined) {
-          alert('变量名已存在');
+          await dialog.alert('变量名已存在');
           return;
         }
         delete newState[selectedVar];

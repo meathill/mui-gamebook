@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
 import type { Game, RuntimeState, VariableMeta } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/types';
 import { evaluateCondition, executeSet } from '@/lib/evaluator';
+import { useDialog } from '@/components/Dialog';
 
 export default function GamePlayer({ game, slug }: { game: Game; slug: string }) {
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
@@ -13,6 +15,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
   const [isLoaded, setIsLoaded] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
+  const dialog = useDialog();
   const [imageLoading, setImageLoading] = useState(false);
 
   // 获取可见变量及其元数据
@@ -94,8 +97,9 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
     }
   };
 
-  const handleRestart = () => {
-    if (confirm('Are you sure you want to restart? Your progress will be lost.')) {
+  const handleRestart = async () => {
+    const confirmed = await dialog.confirm('确定要重新开始吗？游戏进度将会丢失。');
+    if (confirmed) {
       localStorage.removeItem(`game_progress_${slug}`);
       setCurrentSceneId(game.startSceneId || 'start');
       setRuntimeState(extractRuntimeState(game.initialState));
@@ -149,9 +153,15 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
         </div>
         
         <div className="flex-1 p-6 md:p-8 flex flex-col items-center text-center">
-          <p className="text-gray-600 text-lg mb-8 max-w-xl leading-relaxed">
-            {game.description || '一场互动冒险等待着你。'}
-          </p>
+          {game.backgroundStory ? (
+            <div className="text-gray-600 text-base mb-8 max-w-2xl leading-relaxed text-left prose prose-gray prose-sm">
+              <ReactMarkdown>{game.backgroundStory}</ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-gray-600 text-lg mb-8 max-w-xl leading-relaxed">
+              {game.description || '一场互动冒险等待着你。'}
+            </p>
+          )}
           
           <button
             onClick={handleStartGame}
