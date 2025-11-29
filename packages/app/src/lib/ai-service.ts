@@ -25,7 +25,5 @@ export async function generateAndUploadImage(prompt: string, fileName: string): 
 
   // 3. Return Public URL
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
-  if (!publicDomain) return `R2://${fileName}`;
-
   return `${publicDomain}/${fileName}`;
 }

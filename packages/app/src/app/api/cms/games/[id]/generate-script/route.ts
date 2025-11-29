@@ -23,7 +23,7 @@ export async function POST(req: Request, { params }: Props) {
   if (!story) return NextResponse.json({ error: 'Story is required' }, { status: 400 });
 
   const { env } = getCloudflareContext();
-  const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
+  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
   if (!apiKey) return NextResponse.json({ error: 'AI API Key not configured' }, { status: 500 });
 
   // fetch DSL
