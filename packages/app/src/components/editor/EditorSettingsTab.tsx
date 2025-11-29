@@ -6,12 +6,13 @@ import { useDialog } from '@/components/Dialog';
 
 interface Props {
   game: Game;
+  id: string;
   onChange: (updatedGame: Game) => void;
-  slug: string; // Need slug for upload/generate paths
   onSlugChange: (newSlug: string) => void;
+  slug: string;
 }
 
-export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }: Props) {
+export default function EditorSettingsTab({ game, id, onChange, onSlugChange, slug }: Props) {
   const [generatingCover, setGeneratingCover] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [coverPrompt, setCoverPrompt] = useState('');
@@ -51,7 +52,8 @@ export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }
     setUploadingCover(true);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('slug', slug);
+    formData.append('id', id);
+    formData.append('type', 'game_cover');
 
     try {
       const res = await fetch('/api/cms/assets/upload', {
@@ -84,7 +86,7 @@ export default function EditorSettingsTab({ game, onChange, slug, onSlugChange }
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: [(game.ai?.style?.image || ''), coverPrompt].filter(Boolean).join('\n'),
-          gameSlug: slug,
+          gameId: id,
           type: 'ai_image'
         }),
       });

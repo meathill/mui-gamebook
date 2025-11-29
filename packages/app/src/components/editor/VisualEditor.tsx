@@ -25,10 +25,11 @@ import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
 import EditorVariablesTab from '@/components/editor/EditorVariablesTab';
+import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
 import EditorToolbar, { Tab } from '@/components/editor/EditorToolbar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import { useDialog } from '@/components/Dialog';
-import type { Game, GameState } from '@mui-gamebook/parser/src/types';
+import type { Game, GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
 const nodeTypes = { scene: SceneNode };
 
@@ -236,13 +237,17 @@ export default function VisualEditor({ id }: { id: string }) {
 
   const handleNodeChange = (id: string, data: Partial<SceneNodeData>) => {
     setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...data } } : node));
+    // 同步更新 selectedNode，确保 Inspector 显示最新数据
+    if (selectedNode && selectedNode.id === id) {
+      setSelectedNode((prev) => prev ? { ...prev, data: { ...prev.data, ...data } } : null);
+    }
   };
 
   const handleNodeIdChange = async (oldId: string, newId: string) => {
     if (!newId || oldId === newId) return;
-    if (nodes.some(n => n.id === newId)) { 
-      await dialog.alert(`场景 ID "${newId}" 已存在。`); 
-      return; 
+    if (nodes.some(n => n.id === newId)) {
+      await dialog.alert(`场景 ID "${newId}" 已存在。`);
+      return;
     }
     setNodes((nds) => nds.map(node => node.id === oldId ? { ...node, id: newId, data: { ...node.data, label: newId } } : node));
     setEdges((eds) => eds.map(edge => {
@@ -304,9 +309,10 @@ export default function VisualEditor({ id }: { id: string }) {
           <div className="h-full overflow-y-auto bg-gray-50 p-6">
             <EditorSettingsTab
               game={originalGame}
+              id={id}
               onChange={setOriginalGame}
-              slug={slug}
               onSlugChange={setSlug}
+              slug={slug}
             />
           </div>
         )}
@@ -317,6 +323,18 @@ export default function VisualEditor({ id }: { id: string }) {
               state={originalGame.initialState}
               onChange={(newState: GameState) => setOriginalGame({ ...originalGame, initialState: newState })}
               scenes={originalGame.scenes}
+            />
+          </div>
+        )}
+
+        {activeTab === 'characters' && originalGame && (
+          <div className="h-full overflow-y-auto bg-gray-50 p-6">
+            <EditorCharactersTab
+              characters={originalGame.ai.characters || {}}
+              onChange={(chars: Record<string, AICharacter>) =>
+                setOriginalGame({ ...originalGame, ai: { ...originalGame.ai, characters: chars } })
+              }
+              gameId={id}
             />
           </div>
         )}

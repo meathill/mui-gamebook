@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import { Save, ArrowLeft, ExternalLink, FileText, Network, PlusCircle, Layout, Sparkles, ImagePlus, Settings, BookOpen, Variable } from 'lucide-react';
+import { Save, ArrowLeft, ExternalLink, FileText, Network, PlusCircle, Layout, Sparkles, ImagePlus, Settings, BookOpen, Variable, Users } from 'lucide-react';
 
-export type Tab = 'settings' | 'variables' | 'story';
+export type Tab = 'settings' | 'variables' | 'characters' | 'story';
 
 interface EditorToolbarProps {
   title?: string;
@@ -55,6 +55,12 @@ export default function EditorToolbar({
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'variables' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
           >
             <Variable size={16} /> 变量
+          </button>
+          <button
+            onClick={() => onTabChange('characters')}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'characters' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            <Users size={16} /> 角色
           </button>
           <button
             onClick={() => onTabChange('story')}

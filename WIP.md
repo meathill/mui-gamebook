@@ -2,6 +2,14 @@
 
 ## 最近完成
 
+### 角色管理和 AI 引导功能 (2024-11-29)
+- [x] 添加"角色"Tab 到编辑器
+- [x] 角色编辑器（两列布局）
+- [x] 角色头像 AI 生成 API
+- [x] 角色头像上传功能
+- [x] 解析剧本自动填充角色、变量、设置（已在 handleScriptImport 中实现）
+- [x] AI 故事生成引导提示（5个示例）
+
 ### Dialog 组件优化 (2024-11-29)
 - [x] 使用 Radix UI 重写 Dialog 组件
 - [x] 替换所有 alert/confirm 调用为 React Dialog

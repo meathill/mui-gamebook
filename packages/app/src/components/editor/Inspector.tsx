@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, ChangeEvent } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { SceneNodeData } from '@/lib/editor/transformers';
 import { Trash2, Image as ImageIcon, Loader2, Upload, Sparkles, Music, Video } from 'lucide-react';
@@ -15,11 +15,12 @@ interface InspectorProps {
 }
 
 export default function Inspector({ selectedNode, selectedEdge, onNodeChange, onNodeIdChange, onEdgeChange }: InspectorProps) {
-  const { slug } = useParams();
+  const { id } = useParams();
   const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pendingUploadIndex, setPendingUploadIndex] = useState<number | null>(null);
+  const pendingUploadIndexRef = useRef<number | null>(null);
+  const pendingAssetsRef = useRef<SceneNode[] | null>(null);
   const dialog = useDialog();
 
   if (!selectedNode && !selectedEdge) {
@@ -50,6 +51,8 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
   const handleAddAsset = (type: 'ai_image' | 'ai_audio' | 'ai_video' | 'static_image' | 'static_audio' | 'static_video') => {
     if (!selectedNode || !nodeData) return;
     const newAssets = [...(nodeData.assets || [])];
+    const newIndex = newAssets.length;
+
     if (type === 'ai_image') {
       newAssets.push({ type: 'ai_image', prompt: '描述图片内容...' });
     } else if (type === 'ai_audio') {
@@ -64,54 +67,93 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
       newAssets.push({ type: 'static_video', url: '' });
     }
     onNodeChange(selectedNode.id, { assets: newAssets });
+
+    // 对于静态资源，立即触发文件选择器
+    if (type.startsWith('static_')) {
+      const accept = type === 'static_image' ? 'image/*' : type === 'static_audio' ? 'audio/*' : 'video/*';
+      // 保存新的 assets 数组到 ref，以便上传完成后使用
+      pendingAssetsRef.current = newAssets;
+      // 使用 setTimeout 确保 DOM 更新后再触发
+      setTimeout(() => triggerUpload(newIndex, accept), 0);
+    }
   };
 
   const handleUpload = async (file: File, index: number) => {
-    if (!slug) return;
+    console.log('[Inspector] handleUpload called', { file: file.name, index, id, hasSelectedNode: !!selectedNode });
+    if (!id || !selectedNode) {
+      console.log('[Inspector] handleUpload early return - missing id or selectedNode');
+      return;
+    }
     setUploadingIndex(index);
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('slug', slug as string);
+    formData.append('id', id as string);
+    formData.append('type', 'asset');
 
+    console.log('[Inspector] Sending upload request...');
     try {
       const res = await fetch('/api/cms/assets/upload', {
         method: 'POST',
         body: formData,
       });
+      console.log('[Inspector] Upload response received', { status: res.status });
       const data = (await res.json()) as { url: string; error?: string };
       if (res.ok) {
-        handleAssetChange(index, 'url', data.url);
+        // 使用 pendingAssetsRef 如果存在，否则使用当前的 nodeData.assets
+        const currentAssets = pendingAssetsRef.current || nodeData?.assets || [];
+        const newAssets = [...currentAssets];
+        if (newAssets[ index ]) {
+          newAssets[ index ] = { ...newAssets[ index ], url: data.url } as SceneNode;
+          onNodeChange(selectedNode.id, { assets: newAssets });
+        }
+        pendingAssetsRef.current = null;
       } else {
         await dialog.error(data.error || '上传失败');
       }
     } catch (e) {
+      console.error('[Inspector] Upload error:', e);
       await dialog.error('上传失败：' + (e as Error).message);
     } finally {
       setUploadingIndex(null);
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
+    console.log('[Inspector] handleFileSelect triggered', {
+      files: e.target.files,
+      pendingIndex: pendingUploadIndexRef.current,
+    });
     const file = e.target.files?.[ 0 ];
-    if (file && pendingUploadIndex !== null) {
-      handleUpload(file, pendingUploadIndex);
+    if (file && pendingUploadIndexRef.current !== null) {
+      console.log('[Inspector] Calling handleUpload with file:', file.name);
+      await handleUpload(file, pendingUploadIndexRef.current);
+    } else {
+      console.log('[Inspector] No file or pendingIndex is null');
     }
-    setPendingUploadIndex(null);
+    pendingUploadIndexRef.current = null;
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   const triggerUpload = (index: number, accept: string) => {
+    console.log('[Inspector] triggerUpload called', { index, accept, hasRef: !!fileInputRef.current });
     if (fileInputRef.current) {
       fileInputRef.current.accept = accept;
-      setPendingUploadIndex(index);
+      pendingUploadIndexRef.current = index;
+      // 如果没有设置 pendingAssetsRef，使用当前的 assets
+      if (!pendingAssetsRef.current && nodeData?.assets) {
+        pendingAssetsRef.current = [...nodeData.assets];
+      }
+      console.log('[Inspector] Clicking file input');
       fileInputRef.current.click();
+    } else {
+      console.log('[Inspector] fileInputRef.current is null');
     }
   };
 
   const handleRegenerate = async (index: number, asset: SceneNode) => {
-    if (!('prompt' in asset) || !slug) return;
+    if (!('prompt' in asset) || !id) return;
     setGeneratingIndex(index);
 
     try {
@@ -120,7 +162,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: asset.prompt,
-          gameSlug: slug,
+          gameId: id,
           type: asset.type
         }),
       });
@@ -244,7 +286,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                     const isImage = asset.type.includes('image');
                     const isAudio = asset.type.includes('audio');
                     const isVideo = asset.type.includes('video');
-                    
+
                     return (
                       <div key={i} className="p-3 bg-gray-50 rounded border border-gray-200 text-sm relative group">
                         <div className="flex justify-between items-center mb-2">
@@ -312,7 +354,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
 
                         {/* 静态素材显示 URL 或无文件提示 */}
                         {isStaticAsset && !assetUrl && (
-                          <div 
+                          <div
                             className="text-xs text-gray-400 text-center py-4 border-2 border-dashed border-gray-200 rounded cursor-pointer hover:border-blue-400 hover:text-blue-400"
                             onClick={() => triggerUpload(i, isImage ? 'image/*' : isAudio ? 'audio/*' : 'video/*')}
                           >
