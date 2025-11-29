@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
 import { ReactNode } from 'react';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export const metadata: Metadata = {
   title: {
@@ -20,11 +22,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const { env } = await getCloudflareContext({ async: true });
+
   return (
     <html lang="zh-CN">
       <head>
@@ -32,6 +36,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/favicon.png" type="image/png" />
       </head>
+      <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
       <body className="antialiased flex flex-col min-h-screen">
         <Providers>
           <Header />
