@@ -2,11 +2,11 @@
 
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import ShareButton from '@/components/ShareButton';
 
 interface TitleScreenProps {
-  game: Game;
+  game: PlayableGame;
   onStart: () => void;
 }
 

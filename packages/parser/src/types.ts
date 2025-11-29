@@ -132,6 +132,53 @@ export interface Game {
 }
 
 /**
+ * 玩家可见的角色信息（过滤敏感数据）
+ */
+export interface PlayableCharacter {
+  name: string;
+  image_url?: string;
+}
+
+/**
+ * 玩家可见的场景节点（过滤 AI prompt）
+ */
+export type PlayableSceneNode =
+  | SceneContentNode
+  | SceneStaticImageNode
+  | SceneStaticAudioNode
+  | SceneStaticVideoNode
+  | { type: 'ai_image'; url?: string; alt?: string }
+  | { type: 'ai_audio'; audioType: 'sfx' | 'background_music'; url?: string }
+  | { type: 'ai_video'; url?: string }
+  | SceneChoiceNode;
+
+/**
+ * 玩家可见的场景（过滤敏感数据）
+ */
+export interface PlayableScene {
+  id: string;
+  nodes: PlayableSceneNode[];
+}
+
+/**
+ * 玩家可见的游戏数据（过滤敏感信息）
+ * 不包含：AI prompt、角色描述、style 配置等创作者私有数据
+ */
+export interface PlayableGame {
+  slug: string;
+  title: string;
+  description?: string;
+  backgroundStory?: string;
+  cover_image?: string;
+  tags?: string[];
+
+  initialState: GameState;
+  characters?: Record<string, PlayableCharacter>;
+  scenes: Map<string, PlayableScene>;
+  startSceneId?: 'start';
+}
+
+/**
  * 判断值是否为变量元数据对象
  */
 export function isVariableMeta(value: GameStateValue): value is VariableMeta {
@@ -171,6 +218,52 @@ export function getVisibleVariables(state: GameState): Array<{ key: string; meta
     }
   }
   return result;
+}
+
+/**
+ * 将完整游戏数据转换为玩家可见的版本（过滤敏感信息）
+ */
+export function toPlayableGame(game: Game): PlayableGame {
+  // 过滤角色信息
+  const characters: Record<string, PlayableCharacter> | undefined = game.ai.characters
+    ? Object.fromEntries(
+        Object.entries(game.ai.characters).map(([key, char]) => [
+          key,
+          { name: char.name, image_url: char.image_url }
+        ])
+      )
+    : undefined;
+
+  // 过滤场景节点
+  const scenes = new Map<string, PlayableScene>();
+  for (const [sceneId, scene] of game.scenes) {
+    const filteredNodes: PlayableSceneNode[] = scene.nodes.map(node => {
+      switch (node.type) {
+        case 'ai_image':
+          return { type: 'ai_image' as const, url: node.url, alt: node.character };
+        case 'ai_audio':
+          return { type: 'ai_audio' as const, audioType: node.audioType, url: node.url };
+        case 'ai_video':
+          return { type: 'ai_video' as const, url: node.url };
+        default:
+          return node;
+      }
+    });
+    scenes.set(sceneId, { id: scene.id, nodes: filteredNodes });
+  }
+
+  return {
+    slug: game.slug,
+    title: game.title,
+    description: game.description,
+    backgroundStory: game.backgroundStory,
+    cover_image: game.cover_image,
+    tags: game.tags,
+    initialState: game.initialState,
+    characters,
+    scenes,
+    startSceneId: game.startSceneId,
+  };
 }
 
 /**

@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Game, RuntimeState } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/types';
 import { evaluateCondition, executeSet } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
 import { TitleScreen, EndScreen, VariableIndicator } from '@/components/game-player';
 
-export default function GamePlayer({ game, slug }: { game: Game; slug: string }) {
+export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: string }) {
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
   const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
   const [isLoaded, setIsLoaded] = useState(false);

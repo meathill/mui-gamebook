@@ -1,4 +1,5 @@
 import { parse } from '@mui-gamebook/parser';
+import { toPlayableGame } from '@mui-gamebook/parser/src/types';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GameRow } from '@/types';
 import { cache } from 'react';
@@ -50,7 +51,8 @@ WHERE g.slug = ?`
         // Double check published status from the parsed content (or we could trust the DB query if we joined tables)
         // For consistency with previous logic, let's check the parsed metadata
         if (result.data.published) {
-          return result.data;
+          // 返回过滤后的游戏数据，不暴露敏感信息给玩家
+          return toPlayableGame(result.data);
         }
       }
     }
