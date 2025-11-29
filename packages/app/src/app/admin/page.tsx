@@ -59,7 +59,7 @@ export default function AdminPage() {
     },
   });
 
-  if (isAuthPending) return <div className="p-8 text-center">Loading...</div>;
+  if (isAuthPending) return <div className="p-8 text-center">加载中...</div>;
 
   if (!session) {
     router.push('/sign-in');
@@ -72,7 +72,7 @@ export default function AdminPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (!confirm('Are you sure? This cannot be undone.')) return;
+    if (!confirm('确定要删除吗？此操作无法撤销。')) return;
     deleteMutation.mutate(id);
   };
 
@@ -81,8 +81,8 @@ export default function AdminPage() {
       <div className="max-w-5xl mx-auto">
         <header className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Games</h1>
-            <p className="text-gray-500 mt-1">Manage your interactive stories</p>
+            <h1 className="text-3xl font-bold text-gray-900">我的游戏</h1>
+            <p className="text-gray-500 mt-1">管理你的互动故事</p>
           </div>
           <div className="text-sm text-gray-600">
             {session.user.email}
@@ -91,13 +91,13 @@ export default function AdminPage() {
 
         {/* Create New Game */}
         <div className="bg-white p-6 rounded-lg shadow mb-8">
-          <h2 className="text-lg font-semibold mb-4">Create New Game</h2>
+          <h2 className="text-lg font-semibold mb-4">创建新游戏</h2>
           <form onSubmit={handleCreate} className="flex gap-4">
             <input
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Game Title (e.g. The Lost City)"
+              placeholder="游戏标题（如：迷失之城）"
               className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
               required
             />
@@ -106,18 +106,18 @@ export default function AdminPage() {
               disabled={createMutation.isPending}
               className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
             >
-              <Plus size={18} /> {createMutation.isPending ? 'Creating...' : 'Create'}
+              <Plus size={18} /> {createMutation.isPending ? '创建中...' : '创建'}
             </button>
           </form>
         </div>
 
         {/* Games List */}
-        {error && <div className="text-red-500">Failed to load games</div>}
-        {isLoading && <div className="text-gray-500">Loading games...</div>}
+        {error && <div className="text-red-500">加载游戏失败</div>}
+        {isLoading && <div className="text-gray-500">加载游戏中...</div>}
         
         <div className="grid gap-4">
           {games && games.length === 0 && (
-            <p className="text-center text-gray-500 py-8">No games yet. Create one above!</p>
+            <p className="text-center text-gray-500 py-8">还没有游戏，在上方创建一个吧！</p>
           )}
           
           {games?.map((game) => (
@@ -128,7 +128,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <h3 className="font-medium text-gray-900">{game.title}</h3>
-                  <p className="text-xs text-gray-500">/{game.slug} • Last updated: {new Date(game.updatedAt).toLocaleDateString()}</p>
+                  <p className="text-xs text-gray-500">/{game.slug} • 更新于：{new Date(game.updatedAt).toLocaleDateString('zh-CN')}</p>
                 </div>
               </div>
               
@@ -137,21 +137,21 @@ export default function AdminPage() {
                   href={`/play/${game.slug}`} 
                   target="_blank"
                   className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-                  title="Preview"
+                  title="预览"
                 >
                   <Eye size={18} />
                 </Link>
                 <Link 
                   href={`/admin/edit/${game.id}`} 
                   className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
-                  title="Edit"
+                  title="编辑"
                 >
                   <Edit size={18} />
                 </Link>
                 <button
                   onClick={() => handleDelete(game.id)}
                   className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
-                  title="Delete"
+                  title="删除"
                 >
                   <Trash2 size={18} />
                 </button>

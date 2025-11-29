@@ -166,7 +166,7 @@ export default function VisualEditor({ id }: { id: string }) {
       if (result.slug) {
         setSlug(result.slug);
       }
-      alert('Saved successfully!');
+      alert('保存成功！');
     } catch (err: unknown) {
       alert((err as Error).message);
     } finally {
@@ -260,7 +260,7 @@ export default function VisualEditor({ id }: { id: string }) {
     window.requestAnimationFrame(() => fitView());
   }, [nodes, edges, setNodes, setEdges, fitView]);
 
-  if (isAuthPending || loading) return <div className="p-8 text-center">Loading...</div>;
+  if (isAuthPending || loading) return <div className="p-8 text-center">加载中...</div>;
   if (!session) { router.push('/sign-in'); return null; }
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
 
@@ -280,19 +280,19 @@ export default function VisualEditor({ id }: { id: string }) {
               onClick={() => setActiveTab('settings')}
               className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'settings' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
             >
-              <Settings size={16} /> Settings
+              <Settings size={16} /> 设置
             </button>
             <button
               onClick={() => setActiveTab('variables')}
               className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'variables' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
             >
-              <Variable size={16} /> Variables
+              <Variable size={16} /> 变量
             </button>
             <button
               onClick={() => setActiveTab('story')}
               className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'story' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
             >
-              <BookOpen size={16} /> Story
+              <BookOpen size={16} /> 故事
             </button>
           </div>
         </div>
@@ -300,10 +300,10 @@ export default function VisualEditor({ id }: { id: string }) {
         <div className="flex gap-2">
           {activeTab === 'story' && viewMode === 'visual' && (
             <>
-              <button onClick={handleAddScene} className="p-2 text-green-700 hover:bg-green-50 rounded border border-green-200" title="Add Scene">
+              <button onClick={handleAddScene} className="p-2 text-green-700 hover:bg-green-50 rounded border border-green-200" title="添加场景">
                 <PlusCircle size={18} />
               </button>
-              <button onClick={handleLayout} className="p-2 text-gray-700 hover:bg-gray-100 rounded border border-gray-200" title="Auto Layout">
+              <button onClick={handleLayout} className="p-2 text-gray-700 hover:bg-gray-100 rounded border border-gray-200" title="自动布局">
                 <Layout size={18} />
               </button>
             </>
@@ -312,23 +312,23 @@ export default function VisualEditor({ id }: { id: string }) {
           {activeTab === 'story' && (
             <>
               <button onClick={() => setShowImporter(true)} className="flex items-center gap-2 px-3 py-2 text-purple-700 hover:bg-purple-50 rounded text-sm border border-purple-200">
-                <Sparkles size={16} /> <span className="hidden sm:inline">AI Story</span>
+                <Sparkles size={16} /> <span className="hidden sm:inline">AI 故事</span>
               </button>
               <button onClick={handleGenerateAssets} disabled={assetGenerating} className="flex items-center gap-2 px-3 py-2 text-orange-700 hover:bg-orange-50 rounded text-sm border border-orange-200">
-                <ImagePlus size={16} /> <span className="hidden sm:inline">{assetGenerating ? '...' : 'Assets'}</span>
+                <ImagePlus size={16} /> <span className="hidden sm:inline">{assetGenerating ? '...' : '素材'}</span>
               </button>
               <button onClick={toggleViewMode} className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm border border-gray-200">
                 {viewMode === 'visual' ? <FileText size={16} /> : <Network size={16} />}
-                <span className="hidden sm:inline">{viewMode === 'visual' ? 'Text' : 'Visual'}</span>
+                <span className="hidden sm:inline">{viewMode === 'visual' ? '文本' : '可视化'}</span>
               </button>
             </>
           )}
 
-          <Link href={`/play/${slug}`} target="_blank" className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200" title="Preview">
+          <Link href={`/play/${slug}`} target="_blank" className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200" title="预览">
             <ExternalLink size={18} />
           </Link>
           <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-medium">
-            <Save size={16} /> {saving ? 'Saving...' : 'Save'}
+            <Save size={16} /> {saving ? '保存中...' : '保存'}
           </button>
         </div>
       </header>

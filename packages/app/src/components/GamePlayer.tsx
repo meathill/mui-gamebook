@@ -112,7 +112,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
   };
 
   if (!isLoaded) {
-    return <div className="p-8 text-center">Loading...</div>;
+    return <div className="p-8 text-center">加载中...</div>;
   }
 
   // --- Title Screen ---
@@ -150,18 +150,18 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
         
         <div className="flex-1 p-6 md:p-8 flex flex-col items-center text-center">
           <p className="text-gray-600 text-lg mb-8 max-w-xl leading-relaxed">
-            {game.description || 'An interactive adventure awaits.'}
+            {game.description || '一场互动冒险等待着你。'}
           </p>
           
           <button
             onClick={handleStartGame}
             className="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5"
           >
-            Start Adventure
+            开始冒险
           </button>
           
           <Link href="/" className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
-            Back to Library
+            返回游戏库
           </Link>
         </div>
       </div>
@@ -171,14 +171,14 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
   if (!currentScene) {
     return (
       <div className="p-8 text-center">
-        <h2 className="text-xl font-bold text-red-600 mb-4">Scene Not Found</h2>
-        <p className="mb-6">Could not find scene: {currentSceneId}</p>
+        <h2 className="text-xl font-bold text-red-600 mb-4">场景未找到</h2>
+        <p className="mb-6">找不到场景：{currentSceneId}</p>
         <div className="flex justify-center gap-4">
           <button 
             onClick={handleRestart}
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
           >
-            Back to Title
+            返回标题
           </button>
         </div>
       </div>
@@ -261,7 +261,7 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
             onClick={handleRestart}
             className="px-3 py-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
           >
-            Quit
+            退出
           </button>
         </div>
       </div>
@@ -323,20 +323,20 @@ export default function GamePlayer({ game, slug }: { game: Game; slug: string })
           {/* End Screen Actions */}
           {!hasChoices && (
             <div className="mt-12 p-6 bg-gray-50 rounded-xl border border-gray-200 text-center animate-fade-in">
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">The End</h3>
-              <p className="text-gray-500 mb-6">Thank you for playing!</p>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">剧终</h3>
+              <p className="text-gray-500 mb-6">感谢你的游玩！</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button
                   onClick={handleRestart}
                   className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow transition-transform hover:-translate-y-0.5 font-medium"
                 >
-                  Play Again
+                  再玩一次
                 </button>
                 <Link 
                   href="/"
                   className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 shadow-sm transition-transform hover:-translate-y-0.5 font-medium"
                 >
-                  Back to Library
+                  返回游戏库
                 </Link>
               </div>
             </div>

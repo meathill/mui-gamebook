@@ -25,7 +25,7 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
         const data = (await res.json()) as {
           error: string;
         };
-        throw new Error(data.error || 'Generation failed');
+        throw new Error(data.error || '生成失败');
       }
 
       const data = (await res.json()) as {
@@ -46,20 +46,20 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
             <Sparkles className="text-purple-500" />
-            AI Story Importer
+            AI 故事导入器
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700"><X size={24} /></button>
         </div>
 
         <p className="text-sm text-gray-600 mb-4">
-          Paste your story or rough outline here. The AI will convert it into a playable game script with scenes and choices.
+          在此粘贴你的故事或大纲。AI 会将其转换为可玩的游戏脚本，包含场景和选项。
         </p>
 
         <textarea
           value={story}
           onChange={e => setStory(e.target.value)}
           className="w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 resize-none mb-4"
-          placeholder="Once upon a time..."
+          placeholder="从前有座山..."
         />
 
         <div className="flex justify-end">
@@ -68,7 +68,7 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
             disabled={loading || !story.trim()}
             className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
           >
-            {loading ? 'Generating Script...' : 'Generate Game Script'}
+            {loading ? '生成中...' : '生成游戏脚本'}
           </button>
         </div>
       </div>

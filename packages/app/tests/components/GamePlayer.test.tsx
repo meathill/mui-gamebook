@@ -57,10 +57,10 @@ describe('GamePlayer Component', () => {
     // 检查标题页
     expect(screen.getAllByText('Test Adventure').length).toBeGreaterThan(0);
     expect(screen.getByText('A test game')).toBeInTheDocument();
-    expect(screen.getByText('Start Adventure')).toBeInTheDocument();
+    expect(screen.getByText('开始冒险')).toBeInTheDocument();
     
     // 点击开始
-    fireEvent.click(screen.getByText('Start Adventure'));
+    fireEvent.click(screen.getByText('开始冒险'));
     
     // 现在应该看到游戏内容
     expect(screen.getByText('You are at the start.')).toBeInTheDocument();
@@ -72,7 +72,7 @@ describe('GamePlayer Component', () => {
     render(<GamePlayer game={mockGame} slug="test-game-2" />);
     
     // 开始游戏
-    fireEvent.click(screen.getByText('Start Adventure'));
+    fireEvent.click(screen.getByText('开始冒险'));
     
     // Click "Buy Key"
     fireEvent.click(screen.getByText('Buy Key (Cost 5)'));
@@ -85,7 +85,7 @@ describe('GamePlayer Component', () => {
     render(<GamePlayer game={mockGame} slug="test-game-3" />);
     
     // 开始游戏
-    fireEvent.click(screen.getByText('Start Adventure'));
+    fireEvent.click(screen.getByText('开始冒险'));
     
     // Go to door without key
     fireEvent.click(screen.getByText('Go to Door'));
