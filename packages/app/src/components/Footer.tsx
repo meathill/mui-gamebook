@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 export default function Footer() {
   return (
     <footer className="bg-white border-t border-gray-200 mt-auto">
@@ -9,14 +11,20 @@ export default function Footer() {
           <div className="text-xs text-gray-400 mt-2 md:mt-0">
             v{process.env.NEXT_PUBLIC_APP_VERSION || 'dev'}
           </div>
-          <a
-            href="https://github.com/meathill/mui-gamebook"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-500 hover:text-gray-700 px-3 rounded-md text-sm font-medium ms-auto"
-          >
-            GitHub
-          </a>
+          <div className="flex items-center gap-4 ms-auto">
+            <Link
+              href="/privacy"
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              隐私政策
+            </Link>
+            <Link
+              href="/terms"
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              服务条款
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
