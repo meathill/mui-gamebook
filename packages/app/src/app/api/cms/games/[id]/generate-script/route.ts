@@ -3,6 +3,7 @@ import { getSession } from '@/lib/auth-server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { generateText } from '@mui-gamebook/core/lib/ai';
+import { recordAiUsage } from '@/lib/ai-usage';
 
 const SYSTEM_PROMPT = `
 You are an expert game designer for "MUI Gamebook". Your task is to convert a raw story provided by the user into a specific Gamebook DSL (Markdown-based) format. Convert the user's story into a playable game with multiple scenes (at least 3-5), choices, and basic state management if applicable.
@@ -33,7 +34,7 @@ export async function POST(req: Request, { params }: Props) {
   const model = env.GOOGLE_MODEL || process.env.GOOGLE_MODEL || 'gemini-3-pro';
 
   try {
-    const script = await generateText(genAI, model, `${SYSTEM_PROMPT}
+    const { text: script, usage } = await generateText(genAI, model, `${SYSTEM_PROMPT}
 
 ${dslSpec}
 
@@ -46,7 +47,14 @@ ${dslSpec}
       .replace(/^```\n/, '')
       .replace(/\n```$/, '');
 
-    // TODO record token usage
+    // 记录 AI 用量
+    await recordAiUsage({
+      userId: session.user.id,
+      type: 'text_generation',
+      model,
+      usage,
+      gameId: Number(id),
+    });
 
     return NextResponse.json({ script: cleanScript });
   } catch (e) {

@@ -1,21 +1,52 @@
 import { GoogleGenAI, PartUnion, ThinkingLevel } from "@google/genai";
 
 /**
+ * AI 用量信息
+ */
+export interface AiUsageInfo {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+/**
+ * 图片生成结果
+ */
+export interface ImageGenerationResult {
+  buffer: Buffer;
+  type: string;
+  usage: AiUsageInfo;
+}
+
+/**
+ * 文本生成结果
+ */
+export interface TextGenerationResult {
+  text: string;
+  usage: AiUsageInfo;
+}
+
+/**
  * Generates an image with Google AI.
  */
 export async function generateImage(
   genAI: GoogleGenAI,
   model: string,
   prompt: string,
-): Promise<{
-  buffer: Buffer,
-  type: string,
-}> {
+): Promise<ImageGenerationResult> {
   console.log(`[AI] Generating image for prompt: "${prompt}"`);
   const response = await genAI.models.generateContent({
     model,
     contents: prompt,
   });
+
+  // 提取用量信息
+  const usage: AiUsageInfo = {
+    promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
+    completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
+    totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
+  };
+
   let buffer: Buffer;
   if (!response.candidates || response.candidates.length === 0) {
     throw new Error('No candidates received from Google AI.');
@@ -37,6 +68,7 @@ export async function generateImage(
       return {
         type: part.inlineData.mimeType || '',
         buffer,
+        usage,
       };
     }
   }
@@ -48,7 +80,7 @@ export async function generateText(
   model: string,
   prompt: String,
   thinking?: ThinkingLevel,
-): Promise<string> {
+): Promise<TextGenerationResult> {
   console.log(`[AI] Generating text for prompt: "${prompt}"`);
   const response = await genAI.models.generateContent({
     model,
@@ -61,5 +93,16 @@ export async function generateText(
       }
     },
   });
-  return response.text || '';
+
+  // 提取用量信息
+  const usage: AiUsageInfo = {
+    promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
+    completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
+    totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
+  };
+
+  return {
+    text: response.text || '',
+    usage,
+  };
 }

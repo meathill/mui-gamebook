@@ -65,3 +65,23 @@ export const gameContent = sqliteTable('GameContent', {
 	gameId: integer('game_id').references(() => games.id, { onDelete: 'cascade' }),
 	content: text('content').notNull(),
 });
+
+// AI 用量记录表
+export const aiUsage = sqliteTable('AiUsage', {
+	id: integer('id').primaryKey(),
+	userId: text('user_id').notNull().references(() => user.id),
+	// 用量类型：text_generation, image_generation, audio_generation 等
+	type: text('type').notNull(),
+	// 使用的模型
+	model: text('model').notNull(),
+	// 输入 token 数
+	promptTokens: integer('prompt_tokens').default(0),
+	// 输出 token 数
+	completionTokens: integer('completion_tokens').default(0),
+	// 总 token 数
+	totalTokens: integer('total_tokens').default(0),
+	// 关联的游戏 ID（可选）
+	gameId: integer('game_id').references(() => games.id),
+	// 创建时间
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});

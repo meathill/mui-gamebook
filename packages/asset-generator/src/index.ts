@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { readFile, writeFile } from 'node:fs/promises';
 import * as path from 'path';
-import { generateImage as _generateImage } from '@mui-gamebook/core/lib/ai';
+import { generateImage as _generateImage, type AiUsageInfo } from '@mui-gamebook/core/lib/ai';
 import {Game, parse, SceneNode, stringify} from '@mui-gamebook/parser';
 import {GoogleGenAI} from '@google/genai';
 import {PutObjectCommand, S3Client} from '@aws-sdk/client-s3';
@@ -21,6 +21,13 @@ const s3Client = new S3Client({
 const genAI = new GoogleGenAI({
   apiKey: process.env.GOOGLE_API_KEY_NEW!
 });
+
+// 用量统计
+let totalUsage: AiUsageInfo = {
+  promptTokens: 0,
+  completionTokens: 0,
+  totalTokens: 0,
+};
 
 /**
  * Helper function to retry an async operation with exponential backoff.
@@ -43,10 +50,12 @@ async function retry<T>(
 async function generateImage(prompt: string): Promise<{
   buffer: Buffer,
   type: string,
+  usage: AiUsageInfo,
 }> {
   return retry<{
     buffer: Buffer,
     type: string,
+    usage: AiUsageInfo,
   }>(() => _generateImage(
     genAI,
     process.env.GOOGLE_IMAGE_MODEL!,
@@ -93,7 +102,12 @@ async function processGlobalAssets(game: Game, force: boolean): Promise<boolean>
       if (char.image_prompt && (!char.image_url || force)) {
         const fullPrompt = `${game.ai.style?.image || ''}, character portrait of ${char.image_prompt}`;
         try {
-          const { buffer, type } = await generateImage(fullPrompt);
+          const { buffer, type, usage } = await generateImage(fullPrompt);
+          // 累计用量
+          totalUsage.promptTokens += usage.promptTokens;
+          totalUsage.completionTokens += usage.completionTokens;
+          totalUsage.totalTokens += usage.totalTokens;
+          
           const fileName = `images/${game.title}/characters/${id}-${Date.now()}.png`;
           const publicUrl = await uploadToR2(fileName, buffer, type);
           char.image_url = publicUrl;
@@ -111,7 +125,12 @@ async function processGlobalAssets(game: Game, force: boolean): Promise<boolean>
     const prompt = game.cover_image.replace(/^prompt:\s*/, '');
     const fullPrompt = `${game.ai.style?.image || ''}, cover art, ${prompt}`;
     try {
-      const { buffer, type } = await generateImage(fullPrompt);
+      const { buffer, type, usage } = await generateImage(fullPrompt);
+      // 累计用量
+      totalUsage.promptTokens += usage.promptTokens;
+      totalUsage.completionTokens += usage.completionTokens;
+      totalUsage.totalTokens += usage.totalTokens;
+      
       const fileName = `images/${game.title}/cover-${Date.now()}.png`;
       const publicUrl = await uploadToR2(fileName, buffer, type);
       game.cover_image = publicUrl;
@@ -149,7 +168,12 @@ async function processNode(node: SceneNode, game: Game, force: boolean = false):
 
         fullPrompt += `, ${node.prompt}`;
     try {
-      const { buffer: imageBuffer, type } = await generateImage(fullPrompt);
+      const { buffer: imageBuffer, type, usage } = await generateImage(fullPrompt);
+      // 累计用量
+      totalUsage.promptTokens += usage.promptTokens;
+      totalUsage.completionTokens += usage.completionTokens;
+      totalUsage.totalTokens += usage.totalTokens;
+      
       const folder = slugify(game.title, {
         lower: true,
         trim: true,
@@ -216,6 +240,12 @@ async function main() {
   } else {
     console.log('No new assets needed to be generated. File is up to date.');
   }
+
+  // 输出用量统计
+  console.log('\n[AI 用量统计]');
+  console.log(`  输入 Token: ${totalUsage.promptTokens}`);
+  console.log(`  输出 Token: ${totalUsage.completionTokens}`);
+  console.log(`  总计 Token: ${totalUsage.totalTokens}`);
 }
 
 main().catch(error => {
