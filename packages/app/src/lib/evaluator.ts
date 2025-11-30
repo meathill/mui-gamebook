@@ -140,7 +140,7 @@ export function interpolateVariables(text: string, state: RuntimeState): string 
   // 匹配 {{变量名}} 格式，变量名可以包含字母、数字、下划线
   return text.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
     if (Object.prototype.hasOwnProperty.call(state, varName)) {
-      const value = state[varName];
+      const value = state[ varName ];
       return String(value);
     }
     // 如果变量不存在，保留原始文本

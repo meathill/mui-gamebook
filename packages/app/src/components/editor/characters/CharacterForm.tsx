@@ -43,7 +43,7 @@ export default function CharacterForm({
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[ 0 ];
     if (!file) return;
     setUploadingImage(true);
     try {

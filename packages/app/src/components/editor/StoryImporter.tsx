@@ -45,7 +45,7 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
   // 随机选择一个提示
   const randomPrompt = useMemo(() => {
     const index = Math.floor(Math.random() * STORY_PROMPTS.length);
-    return STORY_PROMPTS[index];
+    return STORY_PROMPTS[ index ];
   }, []);
 
   const handleGenerate = async () => {

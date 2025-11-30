@@ -1,7 +1,9 @@
 import type { NextConfig } from 'next';
+import createMDX from '@next/mdx';
 import packageJson from './package.json';
 
 const nextConfig: NextConfig = {
+  pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   transpilePackages: ['@mui-gamebook/parser'],
   env: {
     NEXT_PUBLIC_APP_VERSION: packageJson.version,
@@ -22,7 +24,9 @@ const nextConfig: NextConfig = {
   }
 };
 
-export default nextConfig;
+const withMDX = createMDX({});
+
+export default withMDX(nextConfig);
 
 import { initOpenNextCloudflareForDev } from '@opennextjs/cloudflare';
 initOpenNextCloudflareForDev();

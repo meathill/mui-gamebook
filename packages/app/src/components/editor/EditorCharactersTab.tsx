@@ -38,7 +38,7 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
   const handleSelectCharacter = (id: string) => {
     setSelectedId(id);
     setIsCreating(false);
-    setFormData(characterToFormData(id, characters[id]));
+    setFormData(characterToFormData(id, characters[ id ]));
   };
 
   const handleCreateNew = () => {
@@ -61,21 +61,21 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
     const newCharacters = { ...characters };
 
     // 检查 ID 重复
-    if (isCreating && characters[formData.id]) {
+    if (isCreating && characters[ formData.id ]) {
       await dialog.alert('角色 ID 已存在');
       return;
     }
 
     // 如果是编辑且修改了 ID
     if (selectedId && formData.id !== selectedId) {
-      if (characters[formData.id]) {
+      if (characters[ formData.id ]) {
         await dialog.alert('角色 ID 已存在');
         return;
       }
-      delete newCharacters[selectedId];
+      delete newCharacters[ selectedId ];
     }
 
-    newCharacters[formData.id] = formDataToCharacter(formData);
+    newCharacters[ formData.id ] = formDataToCharacter(formData);
     onChange(newCharacters);
 
     setSelectedId(formData.id);
@@ -83,11 +83,11 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
   };
 
   const handleDeleteCharacter = async (id: string) => {
-    const confirmed = await dialog.confirm(`确定删除角色 "${characters[id].name}" 吗？`);
+    const confirmed = await dialog.confirm(`确定删除角色 "${characters[ id ].name}" 吗？`);
     if (!confirmed) return;
 
     const newCharacters = { ...characters };
-    delete newCharacters[id];
+    delete newCharacters[ id ];
     onChange(newCharacters);
 
     if (selectedId === id) {
@@ -104,14 +104,14 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
     if (selectedId && !isCreating) {
       const newCharacters = { ...characters };
       if (updates.id && updates.id !== selectedId) {
-        if (characters[updates.id]) {
+        if (characters[ updates.id ]) {
           await dialog.alert('角色 ID 已存在');
           return;
         }
-        delete newCharacters[selectedId];
+        delete newCharacters[ selectedId ];
         setSelectedId(updates.id);
       }
-      newCharacters[newFormData.id] = formDataToCharacter(newFormData);
+      newCharacters[ newFormData.id ] = formDataToCharacter(newFormData);
       onChange(newCharacters);
     }
   };

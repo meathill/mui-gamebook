@@ -1,6 +1,6 @@
 {
   "name": "@mui-gamebook/app",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack --port 3020",
@@ -15,8 +15,11 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.936.0",
     "@google/genai": "^1.30.0",
+    "@mdx-js/loader": "^3.1.1",
+    "@mdx-js/react": "^3.1.1",
     "@mui-gamebook/core": "workspace:*",
     "@mui-gamebook/parser": "workspace:*",
+    "@next/mdx": "^16.0.5",
     "@next/third-parties": "^16.0.5",
     "@opennextjs/cloudflare": "^1.13.1",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -38,6 +41,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
+    "@types/mdx": "^2.0.13",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
