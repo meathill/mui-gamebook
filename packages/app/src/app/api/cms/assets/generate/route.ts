@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
 import { generateAndUploadImage } from '@/lib/ai-service';
+import { recordAiUsage } from '@/lib/ai-usage';
 
 export async function POST(req: Request) {
   const session = await getSession();
@@ -19,7 +20,15 @@ export async function POST(req: Request) {
     }
 
     const fileName = `images/${gameSlug}/${Date.now()}.png`;
-    const url = await generateAndUploadImage(prompt, fileName);
+    const { url, usage, model } = await generateAndUploadImage(prompt, fileName);
+
+    // 记录 AI 用量
+    await recordAiUsage({
+      userId: session.user.id,
+      type: 'image_generation',
+      model,
+      usage,
+    });
 
     return NextResponse.json({ url });
   } catch (e: unknown) {

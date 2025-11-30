@@ -1,8 +1,14 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GoogleGenAI } from '@google/genai';
-import { generateImage } from '@mui-gamebook/core/lib/ai';
+import { generateImage, type AiUsageInfo } from '@mui-gamebook/core/lib/ai';
 
-export async function generateAndUploadImage(prompt: string, fileName: string): Promise<string> {
+export interface GenerateImageResult {
+  url: string;
+  usage: AiUsageInfo;
+  model: string;
+}
+
+export async function generateAndUploadImage(prompt: string, fileName: string): Promise<GenerateImageResult> {
   const { env } = getCloudflareContext();
 
   // 1. Generate
@@ -13,7 +19,7 @@ export async function generateAndUploadImage(prompt: string, fileName: string): 
     apiKey: apiKey,
   });
   const model = env.GOOGLE_IMAGE_MODEL || process.env.GOOGLE_IMAGE_MODEL || 'gemini-3-pro-image-preview';
-  const { buffer, type } = await generateImage(genAI, model, prompt);
+  const { buffer, type, usage } = await generateImage(genAI, model, prompt);
 
   // 2. Upload to R2
   const bucket = env.ASSETS_BUCKET;
@@ -21,7 +27,11 @@ export async function generateAndUploadImage(prompt: string, fileName: string): 
 
   await bucket.put(fileName, buffer);
 
-  // 3. Return Public URL
+  // 3. Return Public URL and usage info
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
-  return `${publicDomain}/${fileName}`;
+  return {
+    url: `${publicDomain}/${fileName}`,
+    usage,
+    model,
+  };
 }

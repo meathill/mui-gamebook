@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
       },
       {
         'protocol': 'https',
-        'hostname': 'pub-27a92d3774f9427887d368783622ce37.r2.dev',
+        'hostname': 'i.muistory.com',
         'port': '',
       }
     ]

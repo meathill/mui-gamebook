@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateCondition, executeSet } from '../src/lib/evaluator';
+import { evaluateCondition, executeSet, interpolateVariables } from '../src/lib/evaluator';
 
 describe('evaluator', () => {
   describe('evaluateCondition', () => {
@@ -73,6 +73,41 @@ describe('evaluator', () => {
       const newState = executeSet('gold = 5, has_key = true', state);
       expect(newState.gold).toBe(5);
       expect(newState.has_key).toBe(true);
+    });
+  });
+
+  describe('interpolateVariables', () => {
+    it('应返回原文本（空或无变量）', () => {
+      expect(interpolateVariables('', {})).toBe('');
+      expect(interpolateVariables('普通文本', {})).toBe('普通文本');
+    });
+
+    it('应替换单个变量', () => {
+      const state = { gold: 100 };
+      expect(interpolateVariables('你有 {{gold}} 金币', state)).toBe('你有 100 金币');
+    });
+
+    it('应替换多个变量', () => {
+      const state = { player_name: '勇者', gold: 50, level: 5 };
+      expect(interpolateVariables('{{player_name}}，等级{{level}}，金币{{gold}}', state))
+        .toBe('勇者，等级5，金币50');
+    });
+
+    it('应保留不存在的变量原样', () => {
+      const state = { gold: 100 };
+      expect(interpolateVariables('你有 {{gold}} 金币和 {{silver}} 银币', state))
+        .toBe('你有 100 金币和 {{silver}} 银币');
+    });
+
+    it('应处理布尔值', () => {
+      const state = { has_key: true, is_dead: false };
+      expect(interpolateVariables('钥匙: {{has_key}}, 死亡: {{is_dead}}', state))
+        .toBe('钥匙: true, 死亡: false');
+    });
+
+    it('应处理字符串值', () => {
+      const state = { weapon: '魔剑' };
+      expect(interpolateVariables('你装备了{{weapon}}', state)).toBe('你装备了魔剑');
     });
   });
 });

@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { generateAndUploadImage } from '@/lib/ai-service';
+import { recordAiUsage } from '@/lib/ai-usage';
 import { parse } from '@mui-gamebook/parser';
 import slugify from 'slugify';
 
@@ -60,7 +61,16 @@ export async function POST(req: Request, { params }: Props) {
     const fullPrompt = `${stylePrompt}character portrait, ${prompt}`;
     const gameSlug = slugify(game.slug || game.title, { lower: true });
     const fileName = `images/${gameSlug}/characters/${characterId}-${Date.now()}.png`;
-    const url = await generateAndUploadImage(fullPrompt, fileName);
+    const { url, usage, model } = await generateAndUploadImage(fullPrompt, fileName);
+
+    // 记录 AI 用量
+    await recordAiUsage({
+      userId: session.user.id,
+      type: 'image_generation',
+      model,
+      usage,
+      gameId: id,
+    });
 
     return NextResponse.json({ url });
   } catch (e: unknown) {

@@ -125,3 +125,25 @@ function getValue(token: string, state: RuntimeState): boolean | number | string
   // Better: undefined.
   return undefined;
 }
+
+/**
+ * 在文本中插值变量。
+ * 支持 {{变量名}} 语法，将其替换为变量的当前值。
+ *
+ * 示例:
+ * - "你现在有 {{gold}} 金币" -> "你现在有 100 金币"
+ * - "{{player_name}}，欢迎回来！" -> "勇者，欢迎回来！"
+ */
+export function interpolateVariables(text: string, state: RuntimeState): string {
+  if (!text) return text;
+  
+  // 匹配 {{变量名}} 格式，变量名可以包含字母、数字、下划线
+  return text.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+    if (Object.prototype.hasOwnProperty.call(state, varName)) {
+      const value = state[varName];
+      return String(value);
+    }
+    // 如果变量不存在，保留原始文本
+    return match;
+  });
+}
