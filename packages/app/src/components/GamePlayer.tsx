@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/types';
-import { evaluateCondition, executeSet } from '@/lib/evaluator';
+import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
 import { TitleScreen, EndScreen, VariableIndicator } from '@/components/game-player';
@@ -204,7 +204,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
           {currentScene.nodes.map((node, index) => {
             switch (node.type) {
               case 'text':
-                return <p key={index} className="text-lg leading-relaxed text-gray-800 font-serif">{node.content}</p>;
+                return <p key={index} className="text-lg leading-relaxed text-gray-800 font-serif">{interpolateVariables(node.content, runtimeState)}</p>;
               
               case 'static_image':
               case 'ai_image':
@@ -220,7 +220,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
                     className="w-full text-left p-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md"
                     onClick={() => handleChoice(node.nextSceneId, node.set)}
                   >
-                    <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg">{node.text}</span>
+                    <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg">{interpolateVariables(node.text, runtimeState)}</span>
                   </button>
                 );
                 
