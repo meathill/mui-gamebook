@@ -8,18 +8,18 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const { prompt, gameSlug, type } = (await req.json()) satisfies {
+    const { prompt, gameId, type } = (await req.json()) satisfies {
       prompt: string;
-      gameSlug: string;
+      gameId: string;
       type: string;
     };
-    if (!prompt || !gameSlug) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    if (!prompt || !gameId) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     if (type !== 'ai_image') {
         return NextResponse.json({ error: 'Only ai_image is supported currently' }, { status: 400 });
     }
 
-    const fileName = `images/${gameSlug}/${Date.now()}.png`;
+    const fileName = `images/${gameId}/${Date.now()}.png`;
     const { url, usage, model } = await generateAndUploadImage(prompt, fileName);
 
     // 记录 AI 用量
