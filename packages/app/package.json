@@ -23,17 +23,17 @@
     "@next/third-parties": "^16.0.7",
     "@opennextjs/cloudflare": "^1.14.3",
     "@radix-ui/react-dialog": "^1.1.15",
-    "@tanstack/react-query": "^5.90.11",
+    "@tanstack/react-query": "^5.90.12",
     "@types/dagre": "^0.7.53",
-    "@uiw/react-md-editor": "^4.0.10",
-    "@xyflow/react": "^12.9.3",
+    "@uiw/react-md-editor": "^4.0.11",
+    "@xyflow/react": "^12.10.0",
     "better-auth": "^1.4.5",
     "dagre": "^0.8.5",
     "drizzle-orm": "^0.44.7",
     "lucide-react": "^0.554.0",
-    "next": "16.0.3",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
+    "next": "^16.0.7",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "react-markdown": "^10.1.0"
   },
   "devDependencies": {
@@ -46,14 +46,14 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitest/ui": "^4.0.15",
-    "baseline-browser-mapping": "^2.9.0",
-    "drizzle-kit": "^0.31.7",
+    "baseline-browser-mapping": "^2.9.2",
+    "drizzle-kit": "^0.31.8",
     "eslint": "^9.39.1",
     "eslint-config-next": "16.0.3",
     "jsdom": "^27.2.0",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15",
-    "wrangler": "^4.52.1"
+    "wrangler": "^4.53.0"
   }
 }
