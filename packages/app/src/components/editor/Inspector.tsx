@@ -1,7 +1,7 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { SceneNodeData } from '@/lib/editor/transformers';
-import { Trash2, Image as ImageIcon, Loader2, Upload, Sparkles, Music, Video } from 'lucide-react';
+import { CheckIcon, Trash2, ImageIcon, Loader2, Upload, Sparkles, Music, Video } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { SceneNode } from '@mui-gamebook/parser';
 import { useDialog } from '@/components/Dialog';
@@ -16,10 +16,11 @@ interface InspectorProps {
 
 export default function Inspector({ selectedNode, selectedEdge, onNodeChange, onNodeIdChange, onEdgeChange }: InspectorProps) {
   const { id } = useParams();
-  const [generatingIndex, setGeneratingIndex] = useState<number | null>(null);
-  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [generatingIndex, setGeneratingIndex] = useState<number>(-1);
+  const [openGeneratorIndex, setOpenGeneratorIndex] = useState<number>(-1);
+  const [uploadingIndex, setUploadingIndex] = useState<number>(-1);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const pendingUploadIndexRef = useRef<number | null>(null);
+  const pendingUploadIndexRef = useRef<number>(-1);
   const pendingAssetsRef = useRef<SceneNode[] | null>(null);
   const dialog = useDialog();
 
@@ -48,34 +49,17 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
     onNodeChange(selectedNode.id, { assets: newAssets });
   };
 
-  const handleAddAsset = (type: 'ai_image' | 'ai_audio' | 'ai_video' | 'static_image' | 'static_audio' | 'static_video') => {
+  // 添加空白素材（统一入口，支持上传和 AI 生成）
+  const handleAddAsset = (mediaType: 'image' | 'audio' | 'video') => {
     if (!selectedNode || !nodeData) return;
     const newAssets = [...(nodeData.assets || [])];
-    const newIndex = newAssets.length;
-
-    if (type === 'ai_image') {
-      newAssets.push({ type: 'ai_image', prompt: '描述图片内容...' });
-    } else if (type === 'ai_audio') {
-      newAssets.push({ type: 'ai_audio', audioType: 'sfx', prompt: '描述音效内容...' });
-    } else if (type === 'ai_video') {
-      newAssets.push({ type: 'ai_video', prompt: '描述视频内容...' });
-    } else if (type === 'static_image') {
-      newAssets.push({ type: 'static_image', url: '' });
-    } else if (type === 'static_audio') {
-      newAssets.push({ type: 'static_audio', url: '' });
-    } else if (type === 'static_video') {
-      newAssets.push({ type: 'static_video', url: '' });
+    // 使用 AI 类型，因为它同时支持 prompt 和 url
+    if (mediaType === 'audio') {
+      newAssets.push({ type: 'ai_audio', prompt: '', audioType: 'sfx' });
+    } else {
+      newAssets.push({ type: `ai_${mediaType}` as 'ai_image' | 'ai_video', prompt: '' });
     }
     onNodeChange(selectedNode.id, { assets: newAssets });
-
-    // 对于静态资源，立即触发文件选择器
-    if (type.startsWith('static_')) {
-      const accept = type === 'static_image' ? 'image/*' : type === 'static_audio' ? 'audio/*' : 'video/*';
-      // 保存新的 assets 数组到 ref，以便上传完成后使用
-      pendingAssetsRef.current = newAssets;
-      // 使用 setTimeout 确保 DOM 更新后再触发
-      setTimeout(() => triggerUpload(newIndex, accept), 0);
-    }
   };
 
   const handleUpload = async (file: File, index: number) => {
@@ -114,7 +98,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
       console.error('[Inspector] Upload error:', e);
       await dialog.error('上传失败：' + (e as Error).message);
     } finally {
-      setUploadingIndex(null);
+      setUploadingIndex(-1);
     }
   };
 
@@ -130,7 +114,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
     } else {
       console.log('[Inspector] No file or pendingIndex is null');
     }
-    pendingUploadIndexRef.current = null;
+    pendingUploadIndexRef.current = -1;
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -153,8 +137,13 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
   };
 
   const handleRegenerate = async (index: number, asset: SceneNode) => {
-    if (!('prompt' in asset) || !id) return;
+    if (!('prompt' in asset) || !asset.prompt || !id) return;
     setGeneratingIndex(index);
+
+    // 确定媒体类型
+    const mediaType = asset.type.includes('image') ? 'image' : asset.type.includes('audio') ? 'audio' : 'video';
+    // API 需要 ai_ 类型
+    const apiType = `ai_${mediaType}`;
 
     try {
       const res = await fetch('/api/cms/assets/generate', {
@@ -163,7 +152,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
         body: JSON.stringify({
           prompt: asset.prompt,
           gameId: id,
-          type: asset.type
+          type: apiType
         }),
       });
 
@@ -182,13 +171,13 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
     } catch (e: unknown) {
       await dialog.error(`错误：${(e as Error).message}`);
     } finally {
-      setGeneratingIndex(null);
+      setGeneratingIndex(-1);
     }
   };
 
   return (
-    <div className="w-80 border-l border-gray-200 bg-white flex flex-col h-full overflow-y-auto shadow-xl z-20">
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+    <div className="w-80 border-l border-gray-200 bg-white flex flex-col overflow-y-auto z-20">
+      <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
         <h2 className="font-semibold text-gray-700">属性</h2>
         <p className="text-xs text-gray-500 truncate">
           {selectedNode ? `场景：${nodeData?.label}` : `选项：${selectedEdge?.label || '未命名'}`}
@@ -224,47 +213,30 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-xs font-medium text-gray-700">素材</label>
                 <div className="flex gap-1">
-                  {/* AI 生成按钮组 */}
-                  <div className="flex items-center border-r border-gray-300 pr-1 mr-1">
-                    <button
-                      onClick={() => handleAddAsset('ai_image')}
-                      className="p-1 text-purple-600 hover:bg-purple-50 rounded"
-                      title="AI 生成图片"
-                    >
-                      <Sparkles size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleAddAsset('ai_audio')}
-                      className="p-1 text-purple-600 hover:bg-purple-50 rounded"
-                      title="AI 生成音频"
-                    >
-                      <Music size={14} />
-                    </button>
-                  </div>
-                  {/* 上传按钮组 */}
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => handleAddAsset('static_image')}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                      title="上传图片"
-                    >
-                      <ImageIcon size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleAddAsset('static_audio')}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                      title="上传音频"
-                    >
-                      <Music size={14} />
-                    </button>
-                    <button
-                      onClick={() => handleAddAsset('static_video')}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                      title="上传视频"
-                    >
-                      <Video size={14} />
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => handleAddAsset('image')}
+                    className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-0.5"
+                    title="添加图片"
+                  >
+                    <ImageIcon size={14} />
+                    <span className="text-xs">图片</span>
+                  </button>
+                  <button
+                    onClick={() => handleAddAsset('audio')}
+                    className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-0.5"
+                    title="添加音频"
+                  >
+                    <Music size={14} />
+                    <span className="text-xs">音频</span>
+                  </button>
+                  <button
+                    onClick={() => handleAddAsset('video')}
+                    className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-0.5"
+                    title="添加视频"
+                  >
+                    <Video size={14} />
+                    <span className="text-xs">视频</span>
+                  </button>
                 </div>
               </div>
 
@@ -279,8 +251,6 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
               <div className="space-y-3">
                 {nodeData.assets && nodeData.assets.length > 0 ? (
                   nodeData.assets.map((asset: SceneNode, i: number) => {
-                    const isAiAsset = asset.type.startsWith('ai_');
-                    const isStaticAsset = asset.type.startsWith('static_');
                     const assetUrl = 'url' in asset ? asset.url : undefined;
                     const assetPrompt = 'prompt' in asset ? asset.prompt : undefined;
                     const isImage = asset.type.includes('image');
@@ -289,40 +259,77 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
 
                     return (
                       <div key={i} className="p-3 bg-gray-50 rounded border border-gray-200 text-sm relative group">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className={`font-bold uppercase text-xs ${isAiAsset ? 'text-purple-600' : 'text-blue-600'}`}>
-                            {isAiAsset ? 'AI ' : ''}{asset.type.replace('ai_', '').replace('static_', '')}
+                        <div className="flex items-center gap-1 mb-2">
+                          {isImage && <ImageIcon size={16} className="text-gray-500" />}
+                          <span className="font-bold uppercase text-xs">
+                            {asset.type.replace('ai_', '').replace('static_', '')}
                           </span>
-                          <div className="flex gap-1">
-                            {/* 上传按钮 - 对所有类型都可用 */}
+                          <div className="flex gap-1 ms-auto">
                             <button
                               onClick={() => triggerUpload(i, isImage ? 'image/*' : isAudio ? 'audio/*' : 'video/*')}
                               disabled={uploadingIndex === i}
-                              className={`p-1 text-gray-400 hover:text-blue-500 ${uploadingIndex === i ? 'text-blue-500' : ''}`}
-                              title="上传文件"
+                              className="p-1 text-xs rounded disabled:text-gray-300 hover:bg-blue-100 flex items-center justify-center"
+                              title="上传素材"
+                              type="button"
                             >
-                              {uploadingIndex === i ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                              {uploadingIndex === i ? (
+                                <>
+                                  <Loader2 size={14} className="animate-spin" />
+                                  <span className="sr-only">上传中...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload size={14} />
+                                  <span className="sr-only">上传</span>
+                                </>
+                              )}
                             </button>
-                            {/* AI 生成按钮 - 仅对 AI 类型可用 */}
-                            {isAiAsset && (
-                              <button
-                                onClick={() => handleRegenerate(i, asset)}
-                                disabled={generatingIndex === i}
-                                className={`p-1 text-gray-400 hover:text-purple-500 ${generatingIndex === i ? 'text-purple-500' : ''}`}
-                                title="AI 生成"
-                              >
-                                {generatingIndex === i ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                              </button>
-                            )}
+                            <button
+                              className="p-1 text-xs text-purple-600  rounded hover:bg-purple-100 disabled:text-purple-300 flex items-center justify-center"
+                              disabled={generatingIndex > -1}
+                              onClick={() => setOpenGeneratorIndex(i === openGeneratorIndex ? -1 : i)}
+                              title="AI 生成素材"
+                              type="button"
+                            >
+                              <Sparkles size={14} />
+                            </button>
                             <button
                               onClick={() => handleAssetDelete(i)}
-                              className="p-1 text-gray-400 hover:text-red-500"
+                              className="p-1 text-red-600 hover:text-red-500 hover:bg-red-100"
                               title="删除素材"
                             >
                               <Trash2 size={14} />
                             </button>
                           </div>
                         </div>
+                        {/* AI 生成区域 */}
+                        {openGeneratorIndex === i && <div className="relative">
+                          <textarea
+                            value={assetPrompt || ''}
+                            onChange={(e) => handleAssetChange(i, 'prompt', e.target.value)}
+                            className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 resize-none h-16 block"
+                            placeholder="输入 AI 生成提示词..."
+                          />
+                          <button
+                            className="size-6 bg-purple-600 text-white hover:bg-purple-500 absolute right-2 bottom-2 rounded flex items-center justify-center p-1"
+                            disabled={generatingIndex === i || !assetPrompt}
+                            onClick={() => handleRegenerate(i, asset)}
+                            title="生成素材"
+                            type="button"
+                          >
+                            {generatingIndex === i ? (
+                              <>
+                                <Loader2 size={16} className="animate-spin" />
+                                <span className="sr-only">生成中...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CheckIcon size={16} />
+                                <span className="sr-only">AI 生成</span>
+                              </>
+                            )}
+                          </button>
+                        </div>}
 
                         {/* 预览区域 */}
                         {assetUrl && isImage && (
@@ -339,26 +346,6 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                         {assetUrl && isVideo && (
                           <div className="mb-2 relative w-full h-24 bg-gray-100 rounded overflow-hidden">
                             <video src={assetUrl} controls className="w-full h-full object-cover" />
-                          </div>
-                        )}
-
-                        {/* AI 素材显示提示词输入框 */}
-                        {isAiAsset && (
-                          <textarea
-                            value={assetPrompt || ''}
-                            onChange={(e) => handleAssetChange(i, 'prompt', e.target.value)}
-                            className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 resize-none h-16"
-                            placeholder="输入 AI 生成提示词..."
-                          />
-                        )}
-
-                        {/* 静态素材显示 URL 或无文件提示 */}
-                        {isStaticAsset && !assetUrl && (
-                          <div
-                            className="text-xs text-gray-400 text-center py-4 border-2 border-dashed border-gray-200 rounded cursor-pointer hover:border-blue-400 hover:text-blue-400"
-                            onClick={() => triggerUpload(i, isImage ? 'image/*' : isAudio ? 'audio/*' : 'video/*')}
-                          >
-                            点击上传文件
                           </div>
                         )}
                       </div>

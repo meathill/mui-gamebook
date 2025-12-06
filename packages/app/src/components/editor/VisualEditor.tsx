@@ -285,7 +285,7 @@ export default function VisualEditor({ id }: { id: string }) {
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="grow flex flex-col bg-gray-50">
       {/* Toolbar */}
       <EditorToolbar
         title={originalGame?.title || originalGame?.slug}
@@ -304,82 +304,80 @@ export default function VisualEditor({ id }: { id: string }) {
       />
 
       {/* Main Content */}
-      <div className="flex-1 overflow-hidden relative">
-        {activeTab === 'settings' && originalGame && (
-          <div className="h-full overflow-y-auto bg-gray-50 p-6">
-            <EditorSettingsTab
-              game={originalGame}
-              id={id}
-              onChange={setOriginalGame}
-              onSlugChange={setSlug}
-              slug={slug}
-            />
-          </div>
-        )}
+      {activeTab === 'settings' && originalGame && (
+        <div className="grow overflow-y-auto bg-gray-50 p-6">
+          <EditorSettingsTab
+            game={originalGame}
+            id={id}
+            onChange={setOriginalGame}
+            onSlugChange={setSlug}
+            slug={slug}
+          />
+        </div>
+      )}
 
-        {activeTab === 'variables' && originalGame && (
-          <div className="h-full overflow-y-auto bg-gray-50 p-6">
-            <EditorVariablesTab
-              state={originalGame.initialState}
-              onChange={(newState: GameState) => setOriginalGame({ ...originalGame, initialState: newState })}
-              scenes={originalGame.scenes}
-            />
-          </div>
-        )}
+      {activeTab === 'variables' && originalGame && (
+        <div className="grow overflow-y-auto bg-gray-50 p-6">
+          <EditorVariablesTab
+            state={originalGame.initialState}
+            onChange={(newState: GameState) => setOriginalGame({ ...originalGame, initialState: newState })}
+            scenes={originalGame.scenes}
+          />
+        </div>
+      )}
 
-        {activeTab === 'characters' && originalGame && (
-          <div className="h-full overflow-y-auto bg-gray-50 p-6">
-            <EditorCharactersTab
-              characters={originalGame.ai.characters || {}}
-              onChange={(chars: Record<string, AICharacter>) =>
-                setOriginalGame({ ...originalGame, ai: { ...originalGame.ai, characters: chars } })
-              }
-              gameId={id}
-            />
-          </div>
-        )}
+      {activeTab === 'characters' && originalGame && (
+        <div className="grow overflow-y-auto bg-gray-50 p-6">
+          <EditorCharactersTab
+            characters={originalGame.ai.characters || {}}
+            onChange={(chars: Record<string, AICharacter>) =>
+              setOriginalGame({ ...originalGame, ai: { ...originalGame.ai, characters: chars } })
+            }
+            gameId={id}
+          />
+        </div>
+      )}
 
-        {activeTab === 'story' && (
-          <div className="flex h-full">
-            {viewMode === 'visual' ? (
-              <>
-                <div className="flex-1 h-full relative">
-                  <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    nodeTypes={nodeTypes}
-                    fitView
-                  >
-                    <Background />
-                    <Controls />
-                    <MiniMap />
-                  </ReactFlow>
-                </div>
-                <Inspector
-                  selectedNode={selectedNode}
-                  selectedEdge={selectedEdge}
-                  onNodeChange={handleNodeChange}
-                  onNodeIdChange={handleNodeIdChange}
-                  onEdgeChange={handleEdgeChange}
-                />
-              </>
-            ) : (
-              <div className="w-full h-full p-6 overflow-hidden">
-                <textarea
-                  value={textContent}
-                  onChange={(e) => setTextContent(e.target.value)}
-                  className="w-full h-full p-4 font-mono text-sm bg-white border border-gray-200 rounded-lg shadow-inner focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none outline-none"
-                  spellCheck={false}
-                  placeholder="Markdown content..."
-                />
+      {activeTab === 'story' && (
+        <div className="flex grow">
+          {viewMode === 'visual' ? (
+            <>
+              <div className="flex-1 relative">
+                <ReactFlow
+                  nodes={nodes}
+                  edges={edges}
+                  onNodesChange={onNodesChange}
+                  onEdgesChange={onEdgesChange}
+                  onConnect={onConnect}
+                  nodeTypes={nodeTypes}
+                  fitView
+                >
+                  <Background />
+                  <Controls />
+                  <MiniMap />
+                </ReactFlow>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+              <Inspector
+                selectedNode={selectedNode}
+                selectedEdge={selectedEdge}
+                onNodeChange={handleNodeChange}
+                onNodeIdChange={handleNodeIdChange}
+                onEdgeChange={handleEdgeChange}
+              />
+            </>
+          ) : (
+            <div className="w-full h-full p-6 overflow-hidden">
+              <textarea
+                value={textContent}
+                onChange={(e) => setTextContent(e.target.value)}
+                className="w-full h-full p-4 font-mono text-sm bg-white border border-gray-200 rounded-lg shadow-inner focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none outline-none"
+                spellCheck={false}
+                placeholder="Markdown content..."
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {showImporter && (
         <StoryImporter
