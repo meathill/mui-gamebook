@@ -6,7 +6,7 @@ import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-g
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
-import { TitleScreen, EndScreen, VariableIndicator } from '@/components/game-player';
+import { TitleScreen, EndScreen, VariableIndicator, usePreload } from '@/components/game-player';
 
 export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: string }) {
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
@@ -18,6 +18,9 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
   const dialog = useDialog();
 
   const visibleVariables = getVisibleVariables(game.initialState);
+
+  // 预加载下一个可能场景的素材
+  usePreload(game, currentSceneId);
 
   // 检查变量触发器
   const checkTriggers = useCallback((state: RuntimeState): string | null => {
