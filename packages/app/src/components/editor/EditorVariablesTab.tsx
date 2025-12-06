@@ -2,13 +2,13 @@ import { useState, useMemo } from 'react';
 import { Plus, Search } from 'lucide-react';
 import type { GameState } from '@mui-gamebook/parser/src/types';
 import { useDialog } from '@/components/Dialog';
-import { 
-  VariableForm, 
-  VariableList, 
-  VariableFormData, 
-  defaultFormData, 
-  variableToFormData, 
-  formDataToVariable 
+import {
+  VariableForm,
+  VariableList,
+  VariableFormData,
+  defaultFormData,
+  variableToFormData,
+  formDataToVariable
 } from './variables';
 
 interface Props {
@@ -53,7 +53,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     }
 
     const newState = { ...state };
-    
+
     if (selectedVar && formData.name !== selectedVar) {
       if (state[ formData.name ] !== undefined) {
         await dialog.alert('变量名已存在');
@@ -61,15 +61,15 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
       }
       delete newState[ selectedVar ];
     }
-    
+
     if (isCreating && state[ formData.name ] !== undefined) {
       await dialog.alert('变量名已存在');
       return;
     }
-    
+
     newState[ formData.name ] = formDataToVariable(formData);
     onChange(newState);
-    
+
     setSelectedVar(formData.name);
     setIsCreating(false);
   };
@@ -80,7 +80,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     const newState = { ...state };
     delete newState[ name ];
     onChange(newState);
-    
+
     if (selectedVar === name) {
       setSelectedVar(null);
       setFormData(defaultFormData);
@@ -90,7 +90,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
   const updateFormData = async (updates: Partial<VariableFormData>) => {
     const newFormData = { ...formData, ...updates };
     setFormData(newFormData);
-    
+
     if (selectedVar && !isCreating) {
       const newState = { ...state };
       if (updates.name && updates.name !== selectedVar) {
@@ -107,12 +107,12 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mt-6 h-[calc(100vh-200px)] flex">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex">
       {/* 左侧列表 */}
       <div className="w-64 border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-100">
           <h2 className="text-lg font-bold text-gray-900 mb-3">变量管理</h2>
-          
+
           {/* 搜索和新建 */}
           <div className="flex gap-2">
             <div className="flex-1 relative">

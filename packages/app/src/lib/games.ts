@@ -15,7 +15,7 @@ export async function getPublishedGames() {
     }
 
     const { results } = (await DB.prepare(
-      'SELECT slug, title, description, cover_image, tags FROM Games WHERE published = 1'
+      'SELECT slug, title, description, cover_image, tags FROM Games WHERE published = 1 ORDER BY updated_at DESC'
     ).all() as { results: GameRow[] });
 
     return results.map((row: GameRow) => ({

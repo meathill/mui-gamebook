@@ -35,7 +35,7 @@ export default function EditorToolbar({
   onSave,
 }: EditorToolbarProps) {
   return (
-    <header className="bg-white border-b px-6 py-3 flex justify-between items-center z-10 shadow-sm">
+    <header className="bg-white border-b px-6 py-3 flex justify-between items-center z-10 shadow-sm sticky top-16">
       <div className="flex items-center gap-4">
         <Link href="/admin" className="text-gray-500 hover:text-gray-700">
           <ArrowLeft size={20} />

@@ -108,7 +108,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+    <div className="p-6 max-w-5xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200">
       <h2 className="text-xl font-bold text-gray-900 mb-8 pb-4 border-b">游戏配置</h2>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -265,7 +265,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
 
           {/* AI Style Config */}
           <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">AI 风格</h3>
+            <h3 className="text-sm font-medium text-blue-900 mb-2">AI 风格（作用于全篇故事）</h3>
             <textarea
               value={game.ai?.style?.image || ''}
               onChange={e => handleChange('ai', { ...game.ai, style: { ...game.ai.style, image: e.target.value } })}

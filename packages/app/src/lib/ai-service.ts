@@ -19,7 +19,7 @@ export async function generateAndUploadImage(prompt: string, fileName: string): 
     apiKey: apiKey,
   });
   const model = env.GOOGLE_IMAGE_MODEL || process.env.GOOGLE_IMAGE_MODEL || 'gemini-3-pro-image-preview';
-  const { buffer, type, usage } = await generateImage(genAI, model, prompt);
+  const { buffer, usage } = await generateImage(genAI, model, prompt);
 
   // 2. Upload to R2
   const bucket = env.ASSETS_BUCKET;

@@ -117,7 +117,7 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mt-6 h-[calc(100vh-200px)] flex">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 flex">
       {/* 左侧列表 */}
       <div className="w-64 border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-100">
