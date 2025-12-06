@@ -23,6 +23,13 @@
       "database_id": "f1e05f17-9197-4344-a106-1fe0f906586f"
     }
   ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "a9863dd8de514dc8940e0da4cf5c76da",
+      "preview_id": "a9863dd8de514dc8940e0da4cf5c76da"
+    },
+  ],
   "observability": {
     "logs": {
       "enabled": true,

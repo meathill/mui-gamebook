@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 import { parse } from '@mui-gamebook/parser';
 import slugify from 'slugify';
 
@@ -16,6 +17,12 @@ type Props = {
 export async function POST(req: Request, { params }: Props) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // 检查用量限制
+  const usageCheck = await checkUserUsageLimit(session.user.id);
+  if (!usageCheck.allowed) {
+    return NextResponse.json({ error: usageCheck.message }, { status: 429 });
+  }
 
   const id = Number((await params).id);
   const { characterId, prompt } = (await req.json()) as {

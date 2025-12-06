@@ -2,10 +2,17 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
 import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 export async function POST(req: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // 检查用量限制
+  const usageCheck = await checkUserUsageLimit(session.user.id);
+  if (!usageCheck.allowed) {
+    return NextResponse.json({ error: usageCheck.message }, { status: 429 });
+  }
 
   try {
     const { prompt, gameId, type } = (await req.json()) satisfies {
