@@ -4,6 +4,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GoogleGenAI, ThinkingLevel } from '@google/genai';
 import { generateText } from '@mui-gamebook/core/lib/ai';
 import { recordAiUsage } from '@/lib/ai-usage';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 const SYSTEM_PROMPT = `
 You are an expert game designer for "MUI Gamebook". Your task is to convert a raw story provided by the user into a specific Gamebook DSL (Markdown-based) format. Convert the user's story into a playable game with multiple scenes (at least 3-5), choices, and basic state management if applicable.
@@ -16,6 +17,12 @@ type Props = {
 export async function POST(req: Request, { params }: Props) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // 检查用量限制
+  const usageCheck = await checkUserUsageLimit(session.user.id);
+  if (!usageCheck.allowed) {
+    return NextResponse.json({ error: usageCheck.message }, { status: 429 });
+  }
 
   const { id } = await params;
   const { story } = (await req.json()) as {
