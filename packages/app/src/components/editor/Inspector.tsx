@@ -1,7 +1,7 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { SceneNodeData } from '@/lib/editor/transformers';
-import { CheckIcon, Trash2, ImageIcon, Loader2, Upload, Sparkles, Music, Video } from 'lucide-react';
+import { CheckIcon, Trash2, ImageIcon, Loader2, Upload, Sparkles, Music, Video, Clock } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { SceneNode } from '@mui-gamebook/parser';
 import { useDialog } from '@/components/Dialog';
@@ -24,6 +24,9 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
   const pendingAssetsRef = useRef<SceneNode[] | null>(null);
   const dialog = useDialog();
 
+  // Cast data for easier access
+  const nodeData = selectedNode ? (selectedNode.data as unknown as SceneNodeData) : null;
+
   if (!selectedNode && !selectedEdge) {
     return (
       <div className="w-80 border-l border-gray-200 bg-white p-4 text-sm text-gray-500 hidden md:block">
@@ -31,9 +34,6 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
       </div>
     );
   }
-
-  // Cast data for easier access
-  const nodeData = selectedNode ? (selectedNode.data as unknown as SceneNodeData) : null;
 
   const handleAssetChange = (index: number, field: string, value: string) => {
     if (!selectedNode || !nodeData) return;
@@ -146,28 +146,49 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
     const apiType = `ai_${mediaType}`;
 
     try {
-      const res = await fetch('/api/cms/assets/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: asset.prompt,
-          gameId: id,
-          type: apiType
-        }),
-      });
+      // 视频使用异步生成
+      if (mediaType === 'video') {
+        const res = await fetch('/api/cms/assets/generate-async', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: asset.prompt,
+            gameId: id,
+            type: apiType
+          }),
+        });
 
-      if (!res.ok) {
-        const error = (await res.json()) as {
-          error: string;
-        };
-        await dialog.error(`生成失败：${error.error}`);
-        return;
+        if (!res.ok) {
+          const error = (await res.json()) as { error: string };
+          await dialog.error(`生成失败：${error.error}`);
+          return;
+        }
+
+        const data = (await res.json()) as { url: string; operationId: number };
+        // 设置占位符 URL，后续会轮询更新
+        handleAssetChange(index, 'url', data.url);
+        await dialog.alert('视频生成已启动，请稍等几分钟。生成完成后会自动更新。');
+      } else {
+        // 图片和音频使用同步生成
+        const res = await fetch('/api/cms/assets/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: asset.prompt,
+            gameId: id,
+            type: apiType
+          }),
+        });
+
+        if (!res.ok) {
+          const error = (await res.json()) as { error: string };
+          await dialog.error(`生成失败：${error.error}`);
+          return;
+        }
+
+        const data = (await res.json()) as { url: string };
+        handleAssetChange(index, 'url', data.url);
       }
-
-      const data = (await res.json()) as {
-        url: string;
-      };
-      handleAssetChange(index, 'url', data.url);
     } catch (e: unknown) {
       await dialog.error(`错误：${(e as Error).message}`);
     } finally {
@@ -303,49 +324,60 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                           </div>
                         </div>
                         {/* AI 生成区域 */}
-                        {openGeneratorIndex === i && <div className="relative">
-                          <textarea
-                            value={assetPrompt || ''}
-                            onChange={(e) => handleAssetChange(i, 'prompt', e.target.value)}
-                            className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 resize-none h-16 block"
-                            placeholder="输入 AI 生成提示词..."
-                          />
-                          <button
-                            className="size-6 bg-purple-600 text-white hover:bg-purple-500 absolute right-2 bottom-2 rounded flex items-center justify-center p-1"
-                            disabled={generatingIndex === i || !assetPrompt}
-                            onClick={() => handleRegenerate(i, asset)}
-                            title="生成素材"
-                            type="button"
-                          >
-                            {generatingIndex === i ? (
-                              <>
-                                <Loader2 size={16} className="animate-spin" />
-                                <span className="sr-only">生成中...</span>
-                              </>
-                            ) : (
-                              <>
-                                <CheckIcon size={16} />
-                                <span className="sr-only">AI 生成</span>
-                              </>
-                            )}
-                          </button>
-                        </div>}
+                        {(openGeneratorIndex === i || !assetUrl && assetPrompt) && (
+                          <div className="relative">
+                            <textarea
+                              value={assetPrompt || ''}
+                              onChange={(e) => handleAssetChange(i, 'prompt', e.target.value)}
+                              className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 resize-none h-16 block"
+                              placeholder="输入 AI 生成提示词..."
+                            />
+                            <button
+                              className="size-6 bg-purple-600 text-white hover:bg-purple-500 absolute right-2 bottom-2 rounded flex items-center justify-center p-1"
+                              disabled={generatingIndex === i || !assetPrompt}
+                              onClick={() => handleRegenerate(i, asset)}
+                              title="生成素材"
+                              type="button"
+                            >
+                              {generatingIndex === i ? (
+                                <>
+                                  <Loader2 size={16} className="animate-spin" />
+                                  <span className="sr-only">生成中...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CheckIcon size={16} />
+                                  <span className="sr-only">AI 生成</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
 
                         {/* 预览区域 */}
-                        {assetUrl && isImage && (
+                        {assetUrl && isImage && !assetUrl.startsWith('pending://') && (
                           <div className="mb-2 relative w-full h-24 bg-gray-100 rounded overflow-hidden">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={assetUrl} alt="预览" className="w-full h-full object-cover" />
                           </div>
                         )}
-                        {assetUrl && isAudio && (
+                        {assetUrl && isAudio && !assetUrl.startsWith('pending://') && (
                           <div className="mb-2">
                             <audio src={assetUrl} controls className="w-full h-8" />
                           </div>
                         )}
-                        {assetUrl && isVideo && (
+                        {assetUrl && isVideo && !assetUrl.startsWith('pending://') && (
                           <div className="mb-2 relative w-full h-24 bg-gray-100 rounded overflow-hidden">
                             <video src={assetUrl} controls className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        {/* 待处理状态显示 */}
+                        {assetUrl && assetUrl.startsWith('pending://') && (
+                          <div className="mb-2 relative w-full h-24 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
+                            <div className="text-center">
+                              <Clock size={24} className="mx-auto text-gray-400 animate-pulse" />
+                              <p className="text-xs text-gray-500 mt-1">生成中...</p>
+                            </div>
                           </div>
                         )}
                       </div>

@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     if (!prompt || !gameId) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     if (type !== 'ai_image') {
-        return NextResponse.json({ error: 'Only ai_image is supported currently' }, { status: 400 });
+      return NextResponse.json({ error: 'Only ai_image is supported currently' }, { status: 400 });
     }
 
     const fileName = `images/${gameId}/${Date.now()}.png`;

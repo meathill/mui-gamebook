@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import {
@@ -29,7 +29,9 @@ import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
 import EditorToolbar, { Tab } from '@/components/editor/EditorToolbar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import { useDialog } from '@/components/Dialog';
+import { pendingOperationsManager, isPlaceholderUrl, extractOperationId } from '@/lib/pending-operations-manager';
 import type { Game, GameState, AICharacter } from '@mui-gamebook/parser/src/types';
+import type { SceneNode as SceneNodeType } from '@mui-gamebook/parser';
 
 const nodeTypes = { scene: SceneNode };
 
@@ -61,6 +63,74 @@ export default function VisualEditor({ id }: { id: string }) {
 
   const [showImporter, setShowImporter] = useState(false);
   const [importerAutoOpened, setImporterAutoOpened] = useState(false);
+
+  // 追踪已注册的 pending 操作，避免重复注册
+  const registeredOperationsRef = useRef<Set<number>>(new Set());
+
+  // 处理 pending 操作完成的回调
+  const handleOperationComplete = useCallback((operationId: number, result: { status: 'completed' | 'failed'; url?: string; error?: string }) => {
+    const pendingUrl = `pending://${operationId}`;
+
+    // 在所有节点中查找并更新包含此 operationId 的资源
+    setNodes((currentNodes) => {
+      return currentNodes.map((node) => {
+        const nodeData = node.data as SceneNodeData;
+        if (!nodeData.assets) return node;
+
+        const hasThisOperation = nodeData.assets.some((asset: SceneNodeType) =>
+          'url' in asset && asset.url === pendingUrl
+        );
+
+        if (!hasThisOperation) return node;
+
+        const newAssets = nodeData.assets.map((asset: SceneNodeType) => {
+          if ('url' in asset && asset.url === pendingUrl) {
+            if (result.status === 'completed' && result.url) {
+              // 成功：更新为实际 URL
+              return { ...asset, url: result.url };
+            } else {
+              // 失败：清除 URL，让用户可以重新生成
+              return { ...asset, url: undefined };
+            }
+          }
+          return asset;
+        });
+
+        return { ...node, data: { ...nodeData, assets: newAssets } };
+      });
+    });
+
+    // 如果失败，显示错误提示
+    if (result.status === 'failed') {
+      dialog.error(`视频生成失败：${result.error || '未知错误'}`);
+    }
+
+    // 从已注册集合中移除
+    registeredOperationsRef.current.delete(operationId);
+  }, [setNodes, dialog]);
+
+  // 扫描节点中的 pending URL 并注册到管理器
+  const scanAndRegisterPendingOperations = useCallback(() => {
+    nodes.forEach((node) => {
+      const nodeData = node.data as SceneNodeData;
+      if (!nodeData.assets) return;
+
+      nodeData.assets.forEach((asset: SceneNodeType) => {
+        if ('url' in asset && asset.url && isPlaceholderUrl(asset.url)) {
+          const operationId = extractOperationId(asset.url);
+          if (operationId && !registeredOperationsRef.current.has(operationId)) {
+            registeredOperationsRef.current.add(operationId);
+            pendingOperationsManager.register(operationId, handleOperationComplete);
+          }
+        }
+      });
+    });
+  }, [nodes, handleOperationComplete]);
+
+  // 当节点变化时，扫描并注册 pending 操作
+  useEffect(() => {
+    scanAndRegisterPendingOperations();
+  }, [scanAndRegisterPendingOperations]);
 
   // 当加载完成后，检查 URL 参数决定是否自动打开导入器
   useEffect(() => {
