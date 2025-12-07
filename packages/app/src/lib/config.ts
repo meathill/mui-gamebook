@@ -6,6 +6,8 @@ const DEFAULT_CONFIG = {
   dailyTokenLimit: 100000,
   // 管理员用户（无限制）
   adminUserIds: [] as string[],
+  // 允许生成视频的用户邮箱白名单
+  videoWhitelist: [] as string[],
 };
 
 export type AppConfig = typeof DEFAULT_CONFIG;
@@ -50,4 +52,36 @@ export async function updateConfig(config: Partial<AppConfig>): Promise<void> {
     console.error('[Config] 更新配置失败:', error);
     throw error;
   }
+}
+
+/**
+ * 检查用户是否有权限生成视频
+ * 只有白名单中的用户才能生成视频
+ */
+export async function checkVideoGenerationPermission(userEmail: string | null | undefined): Promise<{
+  allowed: boolean;
+  message?: string;
+}> {
+  if (!userEmail) {
+    return { allowed: false, message: '无法获取用户邮箱' };
+  }
+
+  const config = await getConfig();
+  
+  // 如果白名单为空，则不允许任何人使用
+  if (!config.videoWhitelist || config.videoWhitelist.length === 0) {
+    return { allowed: false, message: '视频生成功能暂未开放' };
+  }
+  
+  // 检查用户邮箱是否在白名单中（不区分大小写）
+  const normalizedEmail = userEmail.toLowerCase();
+  const isAllowed = config.videoWhitelist.some(
+    (email) => email.toLowerCase() === normalizedEmail
+  );
+  
+  if (!isAllowed) {
+    return { allowed: false, message: '您没有权限使用视频生成功能' };
+  }
+  
+  return { allowed: true };
 }

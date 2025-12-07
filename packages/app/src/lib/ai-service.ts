@@ -1,11 +1,29 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GoogleGenAI } from '@google/genai';
-import { generateImage, type AiUsageInfo } from '@mui-gamebook/core/lib/ai';
+import { generateImage, generateVideo, startVideoGeneration, checkVideoGenerationStatus, type AiUsageInfo } from '@mui-gamebook/core/lib/ai';
 
 export interface GenerateImageResult {
   url: string;
   usage: AiUsageInfo;
   model: string;
+}
+
+export interface GenerateVideoResult {
+  url: string;
+  usage: AiUsageInfo;
+  model: string;
+}
+
+export interface StartVideoGenerationResult {
+  operationName: string;
+  usage: AiUsageInfo;
+  model: string;
+}
+
+export interface CheckVideoStatusResult {
+  done: boolean;
+  url?: string;
+  error?: string;
 }
 
 export async function generateAndUploadImage(prompt: string, fileName: string): Promise<GenerateImageResult> {
@@ -33,5 +51,78 @@ export async function generateAndUploadImage(prompt: string, fileName: string): 
     url: `${publicDomain}/${fileName}`,
     usage,
     model,
+  };
+}
+
+/**
+ * 启动异步视频生成（不等待完成）
+ * 返回 operation name，可用于后续检查状态
+ */
+export async function startAsyncVideoGeneration(
+  prompt: string,
+  config?: { durationSeconds?: number; aspectRatio?: string },
+): Promise<StartVideoGenerationResult> {
+  const { env } = getCloudflareContext();
+
+  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  if (!apiKey) throw new Error('GOOGLE_API_KEY_NEW not configured');
+
+  const genAI = new GoogleGenAI({ apiKey });
+  const model = env.GOOGLE_VIDEO_MODEL || process.env.GOOGLE_VIDEO_MODEL || 'veo-3.1-fast-generate-preview';
+  const { operationName, usage } = await startVideoGeneration(genAI, model, prompt, config);
+
+  return {
+    operationName,
+    usage,
+    model,
+  };
+}
+
+/**
+ * 检查视频生成状态并在完成时上传到 R2
+ */
+export async function checkAndCompleteVideoGeneration(
+  operationName: string,
+  fileName: string,
+): Promise<CheckVideoStatusResult> {
+  const { env } = getCloudflareContext();
+
+  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  if (!apiKey) throw new Error('GOOGLE_API_KEY_NEW not configured');
+
+  const status = await checkVideoGenerationStatus(apiKey, operationName);
+
+  if (!status.done) {
+    return { done: false };
+  }
+
+  if (status.error) {
+    return { done: true, error: status.error };
+  }
+
+  if (!status.uri) {
+    return { done: true, error: '视频 URI 不存在' };
+  }
+
+  // 下载视频并上传到 R2
+  const bucket = env.ASSETS_BUCKET;
+  if (!bucket) throw new Error('R2 Bucket \'ASSETS_BUCKET\' not found');
+
+  const videoResponse = await fetch(status.uri as string, {
+    method: 'GET',
+    headers: {
+      'x-goog-api-key': env.GOOGLE_API_KEY
+    }
+  });
+  const video = await videoResponse.arrayBuffer();
+
+  await bucket.put(fileName, video, {
+    httpMetadata: { contentType: 'video/mp4' },
+  });
+
+  const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
+  return {
+    done: true,
+    url: `${publicDomain}/${fileName}`,
   };
 }
