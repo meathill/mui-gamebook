@@ -59,3 +59,40 @@ curl -X POST http://localhost:3000/api/admin/invite \
 ```
 
 创建成功后，你就可以访问 `/sign-in` 使用该账号登录，并通过 `/admin` 页面邀请更多用户。
+
+## 核心特性
+
+### 小游戏系统
+
+平台支持在游戏场景中嵌入互动小游戏，为玩家带来更丰富的游戏体验。
+
+**特点：**
+- 由 AI 自动生成简单的 JavaScript 小游戏
+- 支持点击、记忆、反应等多种游戏类型
+- 小游戏可读取和修改游戏变量
+- 根据小游戏结果跳转到不同场景
+
+**DSL 语法示例：**
+
+```markdown
+# quidditch_match
+
+魁地奇比赛开始了！
+
+\`\`\`minigame-gen
+prompt: 创建一个点击金色飞贼的游戏，10秒内点击10次即可获胜
+variables:
+  - snitch_caught: 捕获的飞贼数量
+\`\`\`
+
+* [查看结果] -> win (if: snitch_caught >= 10)
+* [查看结果] -> lose (if: snitch_caught < 10)
+```
+
+详细的 DSL 规范请参阅 [DSL_SPEC.md](./DSL_SPEC.md)。
+
+### 运行测试
+
+```bash
+pnpm test
+```

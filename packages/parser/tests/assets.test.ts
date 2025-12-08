@@ -114,4 +114,53 @@ Welcome to the scene.
     expect(nodes?.[2].type).toBe('static_image');
     expect(nodes?.[3].type).toBe('choice');
   });
+
+  it('should parse a minigame-gen block', () => {
+    const source = `---
+title: "Minigame Test"
+---
+# start
+\`\`\`minigame-gen
+prompt: 创建一个点击金色飞贼的游戏
+variables:
+  - snitch_caught: 捕获的飞贼数量
+url: https://example.com/minigames/1
+\`\`\`
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    expect(node.type).toBe('minigame');
+    if (node.type !== 'minigame') return;
+
+    expect(node.prompt).toBe('创建一个点击金色飞贼的游戏');
+    expect(node.variables).toEqual({ snitch_caught: '捕获的飞贼数量' });
+    expect(node.url).toBe('https://example.com/minigames/1');
+  });
+
+  it('should parse a minigame-gen block with object-style variables', () => {
+    const source = `---
+title: "Minigame Object Vars"
+---
+# start
+\`\`\`minigame-gen
+prompt: 记忆配对游戏
+variables:
+  score: 得分
+  time_left: 剩余时间
+\`\`\`
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    expect(node.type).toBe('minigame');
+    if (node.type !== 'minigame') return;
+
+    expect(node.prompt).toBe('记忆配对游戏');
+    expect(node.variables).toEqual({ score: '得分', time_left: '剩余时间' });
+  });
 });

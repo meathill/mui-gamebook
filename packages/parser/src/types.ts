@@ -76,6 +76,12 @@ export type SceneAiVideoNode = {
   prompt: string;
   url?: string;
 };
+export type SceneMiniGameNode = {
+  type: 'minigame';
+  prompt: string;
+  variables?: Record<string, string>; // 变量名 -> 用途说明
+  url?: string; // 生成后的 JS 链接，或 pending:operationId
+};
 export type SceneChoiceNode = {
   type: 'choice';
   text: string;
@@ -91,6 +97,7 @@ export type SceneNode =
   | SceneAiImageNode
   | SceneAiAudioNode
   | SceneAiVideoNode
+  | SceneMiniGameNode
   | SceneChoiceNode;
 
 /**
@@ -150,6 +157,7 @@ export type PlayableSceneNode =
   | { type: 'ai_image'; url?: string; alt?: string }
   | { type: 'ai_audio'; audioType: 'sfx' | 'background_music'; url?: string }
   | { type: 'ai_video'; url?: string }
+  | { type: 'minigame'; url?: string; variables?: string[] } // 只保留 url 和变量名列表
   | SceneChoiceNode;
 
 /**
@@ -175,6 +183,24 @@ export interface PlayableGame {
   initialState: GameState;
   characters?: Record<string, PlayableCharacter>;
   scenes: Map<string, PlayableScene>;
+  startSceneId?: 'start';
+}
+
+/**
+ * 可序列化的 PlayableGame（用于服务端到客户端传输）
+ * Map 无法被 JSON 序列化，所以转换为 Record
+ */
+export interface SerializablePlayableGame {
+  slug: string;
+  title: string;
+  description?: string;
+  backgroundStory?: string;
+  cover_image?: string;
+  tags?: string[];
+
+  initialState: GameState;
+  characters?: Record<string, PlayableCharacter>;
+  scenes: Record<string, PlayableScene>;
   startSceneId?: 'start';
 }
 
@@ -245,6 +271,12 @@ export function toPlayableGame(game: Game): PlayableGame {
           return { type: 'ai_audio' as const, audioType: node.audioType, url: node.url };
         case 'ai_video':
           return { type: 'ai_video' as const, url: node.url };
+        case 'minigame':
+          return {
+            type: 'minigame' as const,
+            url: node.url,
+            variables: node.variables ? Object.keys(node.variables) : undefined,
+          };
         default:
           return node;
       }
@@ -263,6 +295,34 @@ export function toPlayableGame(game: Game): PlayableGame {
     characters,
     scenes,
     startSceneId: game.startSceneId,
+  };
+}
+
+/**
+ * 将 PlayableGame 转换为可序列化格式（用于服务端到客户端传输）
+ */
+export function toSerializablePlayableGame(game: PlayableGame): SerializablePlayableGame {
+  const scenes: Record<string, PlayableScene> = {};
+  for (const [sceneId, scene] of game.scenes) {
+    scenes[sceneId] = scene;
+  }
+  return {
+    ...game,
+    scenes,
+  };
+}
+
+/**
+ * 从可序列化格式恢复 PlayableGame（在客户端使用）
+ */
+export function fromSerializablePlayableGame(game: SerializablePlayableGame): PlayableGame {
+  const scenes = new Map<string, PlayableScene>();
+  for (const [sceneId, scene] of Object.entries(game.scenes)) {
+    scenes.set(sceneId, scene);
+  }
+  return {
+    ...game,
+    scenes,
   };
 }
 

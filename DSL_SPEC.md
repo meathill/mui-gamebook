@@ -217,8 +217,6 @@ prompt: 一段紧张、悬疑的洞穴探索背景音乐
 
 #### 4.2.3 视频生成 (`video-gen`)
 
-*注意：这是一个前瞻性功能。*
-
 **语法：**
 ````
 ```video-gen
@@ -226,6 +224,85 @@ prompt: A descriptive prompt for the video.
 url: https://... (optional, auto-filled after generation)
 ```
 ````
+
+#### 4.2.4 小游戏生成 (`minigame-gen`)
+
+小游戏是一种特殊的互动内容，由 AI 生成简单的 JavaScript 游戏。小游戏可以读取和修改游戏变量，但不直接控制场景跳转——场景跳转仍由选项的条件判断处理。
+
+**语法：**
+````
+```minigame-gen
+prompt: 描述小游戏的玩法和规则
+variables:
+  - variable_name: 变量用途说明
+url: https://... (optional, auto-filled after generation)
+```
+````
+
+**参数说明：**
+- **`prompt`** (必须): 描述小游戏的详细规则和玩法
+- **`variables`** (可选): 小游戏会使用和修改的变量列表，键为变量名，值为用途说明
+- **`url`** (可选): 生成后的小游戏 JS 链接，或 `pending:operationId` 表示正在生成中
+
+**示例：**
+````
+```minigame-gen
+prompt: 创建一个点击金色飞贼的游戏。屏幕上会随机出现金色小球，玩家需要在10秒内点击10次金色飞贼才算成功。每次点击成功增加 snitch_caught 变量。
+variables:
+  - snitch_caught: 捕获的飞贼数量
+url: https://assets.example.com/minigames/snitch-game.js
+```
+````
+
+**小游戏 JS 接口规范：**
+
+生成的小游戏 JS 文件必须导出以下接口：
+
+```typescript
+interface MiniGameAPI {
+  // 初始化游戏，传入 DOM 容器和当前变量值
+  init(container: HTMLElement, variables: Record<string, number | string | boolean>): void;
+  // 注册游戏完成回调，返回修改后的变量
+  onComplete(callback: (variables: Record<string, number | string | boolean>) => void): void;
+  // 销毁游戏，清理资源
+  destroy(): void;
+}
+```
+
+**使用示例：**
+
+结合变量触发器和条件选项，可以实现根据小游戏结果跳转到不同场景：
+
+```markdown
+# quidditch_match
+
+魁地奇比赛开始了！你需要抓住金色飞贼！
+
+```minigame-gen
+prompt: 创建一个点击金色飞贼的游戏，10秒内点击10次随机出现的金色小球即可获胜
+variables:
+  - snitch_caught: 捕获的飞贼数量
+```
+
+* [比赛结束] -> quidditch_win (if: snitch_caught >= 10)
+* [比赛结束] -> quidditch_lose (if: snitch_caught < 10)
+```
+
+**小游戏开发指南：**
+
+1. **简单原则**：小游戏应该是简单的互动，如点击、拖拽、记忆配对等，不应依赖外部库
+2. **使用 Canvas**：推荐使用 Canvas API 进行绘制，确保跨浏览器兼容性
+3. **变量交互**：通过 `variables` 参数接收初始值，通过 `onComplete` 回调返回修改后的值
+4. **资源清理**：`destroy()` 方法必须清理所有事件监听器、定时器和动画帧
+5. **响应式设计**：游戏应适应容器大小，支持不同屏幕尺寸
+
+**支持的小游戏类型示例：**
+
+- 点击类：点击目标、打地鼠
+- 记忆类：翻牌配对、记忆序列
+- 反应类：快速反应测试
+- 收集类：限时收集物品
+- 简单射击：击中移动目标
 
 ### 4.3 描述性文本
 

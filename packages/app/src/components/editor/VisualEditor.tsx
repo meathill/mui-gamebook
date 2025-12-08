@@ -436,7 +436,7 @@ export default function VisualEditor({ id }: { id: string }) {
               />
             </>
           ) : (
-            <div className="w-full h-full p-6 overflow-hidden">
+            <div className="flex-1 p-6 overflow-hidden">
               <textarea
                 value={textContent}
                 onChange={(e) => setTextContent(e.target.value)}

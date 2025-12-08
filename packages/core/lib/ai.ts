@@ -43,6 +43,86 @@ export interface VideoGenerationStartResult {
 }
 
 /**
+ * 小游戏生成结果
+ */
+export interface MiniGameGenerationResult {
+  code: string;
+  usage: AiUsageInfo;
+}
+
+/**
+ * 小游戏 API 接口规范（用于生成提示）
+ */
+export const MINIGAME_API_SPEC = `
+interface MiniGameAPI {
+  // 初始化游戏，传入 DOM 容器和当前变量值
+  init(container: HTMLElement, variables: Record<string, number | string | boolean>): void;
+  // 注册游戏完成回调，返回修改后的变量
+  onComplete(callback: (variables: Record<string, number | string | boolean>) => void): void;
+  // 销毁游戏，清理资源
+  destroy(): void;
+}
+`;
+
+/**
+ * 生成小游戏 JS 代码
+ */
+export async function generateMiniGame(
+  genAI: GoogleGenAI,
+  model: string,
+  prompt: string,
+  variables?: Record<string, string>,
+): Promise<MiniGameGenerationResult> {
+  console.log(\`[AI] Generating minigame for prompt: "\${prompt}"\`);
+
+  const variablesList = variables
+    ? Object.entries(variables).map(([key, desc]) => \`- \${key}: \${desc}\`).join('\\n')
+    : '无特定变量';
+
+  const systemPrompt = \`你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。
+
+要求：
+1. 生成的代码必须是一个 ES Module，导出默认对象实现以下接口：
+\${MINIGAME_API_SPEC}
+
+2. 游戏必须是简单的，不依赖任何外部库
+3. 使用原生 Canvas 或 DOM 操作
+4. 游戏应该在 container 元素内渲染
+5. 游戏结束时调用 onComplete 回调，传入修改后的变量
+6. destroy 方法必须清理所有事件监听器和定时器
+
+可用的变量：
+\${variablesList}
+
+只输出 JavaScript 代码，不要包含 markdown 代码块标记。代码必须可以直接作为 ES Module 执行。\`;
+
+  const response = await genAI.models.generateContent({
+    model,
+    contents: [
+      { role: 'user', parts: [{ text: systemPrompt }] },
+      { role: 'user', parts: [{ text: \`游戏需求：\${prompt}\` }] },
+    ],
+  });
+
+  const usage: AiUsageInfo = {
+    promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
+    completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
+    totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
+  };
+
+  let code = response.text || '';
+  
+  // 清理可能的 markdown 代码块标记
+  code = code.replace(/^\`\`\`(?:javascript|js)?\\n?/i, '').replace(/\\n?\`\`\`$/i, '').trim();
+
+  if (!code) {
+    throw new Error('AI 未返回有效的游戏代码');
+  }
+
+  return { code, usage };
+}
+
+/**
  * Generates an image with Google AI.
  */
 export async function generateImage(

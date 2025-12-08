@@ -85,3 +85,27 @@ export const aiUsage = sqliteTable('AiUsage', {
 	// 创建时间
 	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
+
+// 小游戏存储表（用户级别资源，可在多个游戏/场景中复用）
+export const minigames = sqliteTable('Minigames', {
+	id: integer('id').primaryKey(),
+	// 所有者 ID
+	ownerId: text('owner_id').references(() => user.id, { onDelete: 'cascade' }),
+	// 小游戏名称
+	name: text('name').notNull(),
+	// 小游戏描述
+	description: text('description'),
+	// 原始 prompt
+	prompt: text('prompt').notNull(),
+	// 生成的 JS 代码
+	code: text('code'),
+	// 涉及的变量（JSON 数组）
+	variables: text('variables'),
+	// 状态：pending, completed, failed
+	status: text('status').default('pending'),
+	// 失败时的错误信息
+	errorMessage: text('error_message'),
+	// 创建时间
+	createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updated_at', { mode: 'timestamp' }),
+});

@@ -1,20 +1,23 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
-import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/types';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import type { PlayableGame, RuntimeState, SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
+import { isVariableMeta, extractRuntimeState, getVisibleVariables, fromSerializablePlayableGame } from '@mui-gamebook/parser/src/types';
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
-import { TitleScreen, EndScreen, VariableIndicator, usePreload } from '@/components/game-player';
+import { TitleScreen, EndScreen, VariableIndicator, MiniGamePlayer, usePreload } from '@/components/game-player';
 
-export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: string }) {
+export default function GamePlayer({ game: serializedGame, slug }: { game: SerializablePlayableGame; slug: string }) {
+  // 将可序列化的游戏数据转换回 PlayableGame（恢复 Map）
+  const game: PlayableGame = useMemo(() => fromSerializablePlayableGame(serializedGame), [serializedGame]);
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
   const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
   const [isLoaded, setIsLoaded] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
   const [imageLoading, setImageLoading] = useState(false);
+  const [minigameCompleted, setMinigameCompleted] = useState(false);
   const dialog = useDialog();
 
   const visibleVariables = getVisibleVariables(game.initialState);
@@ -125,6 +128,22 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
     } else {
       setCurrentSceneId(nextSceneId);
     }
+    // 切换场景时重置小游戏完成状态
+    setMinigameCompleted(false);
+  };
+
+  // 处理小游戏完成后的变量更新
+  const handleMiniGameComplete = (updatedVars: Record<string, number | string | boolean>) => {
+    const newState = { ...runtimeState, ...updatedVars };
+    setRuntimeState(newState);
+    setMinigameCompleted(true);
+    
+    // 检查触发器
+    const triggerScene = checkTriggers(newState);
+    if (triggerScene && game.scenes.has(triggerScene)) {
+      setCurrentSceneId(triggerScene);
+      setMinigameCompleted(false);
+    }
   };
 
   if (!isLoaded) {
@@ -150,10 +169,13 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
     );
   }
 
-  const availableChoices = currentScene.nodes.filter(node => 
-    node.type === 'choice' && evaluateCondition(node.condition, runtimeState)
-  );
-  const hasChoices = availableChoices.length > 0;
+  // 检查作者是否配置了任何选项（不管条件是否满足）
+  const hasConfiguredChoices = currentScene.nodes.some(node => node.type === 'choice');
+  // 检查场景是否有小游戏
+  const hasMinigame = currentScene.nodes.some(node => node.type === 'minigame' && node.url);
+  // 只有当作者没有配置任何选项时才显示"剧终"，而不是基于选项是否可见
+  // 如果有小游戏且未完成，也不显示结局
+  const showEndScreen = !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   return (
@@ -213,6 +235,18 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
               case 'ai_image':
                 return null;
               
+              case 'minigame':
+                if (!node.url) return null;
+                return (
+                  <MiniGamePlayer
+                    key={index}
+                    url={node.url}
+                    variables={node.variables || []}
+                    runtimeState={runtimeState}
+                    onComplete={handleMiniGameComplete}
+                  />
+                );
+              
               case 'choice':
                 if (!evaluateCondition(node.condition, runtimeState)) {
                   return null;
@@ -233,7 +267,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
           })}
 
           {/* End Screen */}
-          {!hasChoices && (
+          {showEndScreen && (
             <EndScreen 
               title={game.title}
               shareUrl={shareUrl}

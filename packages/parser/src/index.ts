@@ -53,6 +53,25 @@ function parseSceneContent(content: string): SceneNode[] {
             nodes.push({ type: 'ai_audio', audioType, ...rest });
           } else if (blockType === 'video-gen') {
             nodes.push({ ...blockContent, type: 'ai_video'  } as SceneNode);
+          } else if (blockType === 'minigame-gen') {
+            // 解析小游戏节点
+            const { prompt, variables, url } = blockContent as any;
+            // variables 可能是数组形式 ['key: desc'] 或对象形式 {key: desc}
+            let parsedVariables: Record<string, string> | undefined;
+            if (Array.isArray(variables)) {
+              parsedVariables = {};
+              for (const item of variables) {
+                if (typeof item === 'string') {
+                  const [key, ...rest] = item.split(':');
+                  parsedVariables[key.trim()] = rest.join(':').trim();
+                } else if (typeof item === 'object') {
+                  Object.assign(parsedVariables, item);
+                }
+              }
+            } else if (typeof variables === 'object') {
+              parsedVariables = variables;
+            }
+            nodes.push({ type: 'minigame', prompt, variables: parsedVariables, url } as SceneNode);
           }
         }
         mode = 'default';
@@ -294,6 +313,18 @@ export function stringify(game: Game): string {
         case 'ai_video':
           markdown += `\`\`\`video-gen\n`;
           markdown += `prompt: ${node.prompt}\n`;
+          if (node.url) markdown += `url: ${node.url}\n`;
+          markdown += `\`\`\`\n`;
+          break;
+        case 'minigame':
+          markdown += `\`\`\`minigame-gen\n`;
+          markdown += `prompt: ${node.prompt}\n`;
+          if (node.variables && Object.keys(node.variables).length > 0) {
+            markdown += `variables:\n`;
+            for (const [key, desc] of Object.entries(node.variables)) {
+              markdown += `  - ${key}: ${desc}\n`;
+            }
+          }
           if (node.url) markdown += `url: ${node.url}\n`;
           markdown += `\`\`\`\n`;
           break;

@@ -126,4 +126,46 @@ What will you do?`;
     const result = stringify(game);
     expect(result.trim()).toBe(expected.trim());
   });
+
+  it('should correctly stringify a minigame node', () => {
+    const game: Game = {
+      title: 'Minigame Test',
+      initialState: { snitch_caught: 0 },
+      ai: {},
+      scenes: new Map([
+        ['start', {
+          id: 'start',
+          nodes: [
+            { type: 'text', content: '魁地奇比赛开始了！' },
+            {
+              type: 'minigame',
+              prompt: '创建一个点击金色飞贼的游戏',
+              variables: { snitch_caught: '捕获的飞贼数量' },
+              url: 'https://example.com/minigames/1',
+            },
+            { type: 'choice', text: '比赛结束', nextSceneId: 'result', condition: 'snitch_caught >= 10' },
+          ],
+        }],
+      ]),
+    };
+
+    const expected = `---
+title: Minigame Test
+state:
+  snitch_caught: 0
+---
+
+# start
+魁地奇比赛开始了！
+\`\`\`minigame-gen
+prompt: 创建一个点击金色飞贼的游戏
+variables:
+  - snitch_caught: 捕获的飞贼数量
+url: https://example.com/minigames/1
+\`\`\`
+* [比赛结束] -> result (if: snitch_caught >= 10)`;
+
+    const result = stringify(game);
+    expect(result.trim()).toBe(expected.trim());
+  });
 });
