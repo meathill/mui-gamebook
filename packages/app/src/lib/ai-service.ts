@@ -174,7 +174,7 @@ export async function generateAndStoreMiniGame(
   const minigameId = result.meta.last_row_id as number;
 
   // 返回访问 URL
-  const baseUrl = env.BASE_URL || process.env.BASE_URL || '';
+  const baseUrl = env.NEXT_PUBLIC_SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || '';
   return {
     id: minigameId,
     url: `${baseUrl}/api/cms/minigames/${minigameId}`,
