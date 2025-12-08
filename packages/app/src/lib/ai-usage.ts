@@ -4,7 +4,11 @@ import * as schema from '@/db/schema';
 import type { AiUsageInfo } from '@mui-gamebook/core/lib/ai';
 import { incrementUserDailyUsage } from './usage-limit';
 
-export type AiUsageType = 'text_generation' | 'image_generation' | 'audio_generation' | 'video_generation';
+export type AiUsageType = 'text_generation'
+  | 'image_generation'
+  | 'audio_generation'
+  | 'video_generation'
+  | 'minigame_generation';
 
 interface RecordUsageParams {
   userId: string;
