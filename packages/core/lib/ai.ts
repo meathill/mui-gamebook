@@ -1,4 +1,4 @@
-import {GenerateVideosOperation, GoogleGenAI, Operations, PartUnion, ThinkingLevel} from "@google/genai";
+import { GoogleGenAI, PartUnion, ThinkingLevel } from "@google/genai";
 
 /**
  * AI 用量信息
@@ -23,14 +23,6 @@ export interface ImageGenerationResult {
  */
 export interface TextGenerationResult {
   text: string;
-  usage: AiUsageInfo;
-}
-
-/**
- * 视频生成结果（同步模式）
- */
-export interface VideoGenerationResult {
-  uri: string;
   usage: AiUsageInfo;
 }
 
@@ -73,17 +65,17 @@ export async function generateMiniGame(
   prompt: string,
   variables?: Record<string, string>,
 ): Promise<MiniGameGenerationResult> {
-  console.log(\`[AI] Generating minigame for prompt: "\${prompt}"\`);
+  console.log(`[AI] Generating minigame for prompt: "\${prompt}"`);
 
   const variablesList = variables
-    ? Object.entries(variables).map(([key, desc]) => \`- \${key}: \${desc}\`).join('\\n')
+    ? Object.entries(variables).map(([key, desc]) => `- ${key}: ${desc}`).join('\n')
     : '无特定变量';
 
-  const systemPrompt = \`你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。
+  const systemPrompt = `你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。
 
 要求：
 1. 生成的代码必须是一个 ES Module，导出默认对象实现以下接口：
-\${MINIGAME_API_SPEC}
+${MINIGAME_API_SPEC}
 
 2. 游戏必须是简单的，不依赖任何外部库
 3. 使用原生 Canvas 或 DOM 操作
@@ -92,15 +84,15 @@ export async function generateMiniGame(
 6. destroy 方法必须清理所有事件监听器和定时器
 
 可用的变量：
-\${variablesList}
+${variablesList}
 
-只输出 JavaScript 代码，不要包含 markdown 代码块标记。代码必须可以直接作为 ES Module 执行。\`;
+只输出 JavaScript 代码，不要包含 markdown 代码块标记。代码必须可以直接作为 ES Module 执行。`;
 
   const response = await genAI.models.generateContent({
     model,
     contents: [
       { role: 'user', parts: [{ text: systemPrompt }] },
-      { role: 'user', parts: [{ text: \`游戏需求：\${prompt}\` }] },
+      { role: 'user', parts: [{ text: `游戏需求：${prompt}` }] },
     ],
   });
 
@@ -111,9 +103,9 @@ export async function generateMiniGame(
   };
 
   let code = response.text || '';
-  
+
   // 清理可能的 markdown 代码块标记
-  code = code.replace(/^\`\`\`(?:javascript|js)?\\n?/i, '').replace(/\\n?\`\`\`$/i, '').trim();
+  code = code.replace(/^```(?:javascript|js)?\\n?/i, '').replace(/\\n?```$/i, '').trim();
 
   if (!code) {
     throw new Error('AI 未返回有效的游戏代码');
@@ -315,68 +307,4 @@ export async function checkVideoGenerationStatus(
   } catch (error) {
     return { done: false, error: '轮询请求出错' };
   }
-}
-
-/**
- * 生成视频（同步模式）
- * 视频生成是异步的，需要轮询直到完成
- */
-export async function generateVideo(
-  genAI: GoogleGenAI,
-  model: string,
-  prompt: string,
-  config?: {
-    durationSeconds?: number;
-    aspectRatio?: string;
-  },
-): Promise<VideoGenerationResult> {
-  console.log(`[AI] Generating video for prompt: "${prompt}"`);
-
-  // 发起视频生成请求
-  let operation = await genAI.models.generateVideos({
-    model,
-    source: {
-      prompt,
-    },
-    config: {
-      numberOfVideos: 1,
-      durationSeconds: config?.durationSeconds ?? 5,
-      aspectRatio: config?.aspectRatio ?? '16:9',
-    },
-  });
-
-  // 轮询等待生成完成
-  const maxWaitTime = 5 * 60 * 1000; // 最多等待 5 分钟
-  const pollInterval = 10000; // 每 10 秒轮询一次
-  const startTime = Date.now();
-
-  while (!operation.done) {
-    if (Date.now() - startTime > maxWaitTime) {
-      throw new Error('视频生成超时');
-    }
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
-    operation = await genAI.operations.getVideosOperation({ operation });
-  }
-
-  const generatedVideos = operation.response?.generatedVideos;
-  if (!generatedVideos || generatedVideos.length === 0) {
-    throw new Error('未能生成视频');
-  }
-
-  const videoUri = generatedVideos[0].video?.uri;
-  if (!videoUri) {
-    throw new Error('视频 URI 不存在');
-  }
-
-  // 视频生成 API 没有提供 token 用量，使用估计值
-  const usage: AiUsageInfo = {
-    promptTokens: prompt.length,
-    completionTokens: 0,
-    totalTokens: prompt.length,
-  };
-
-  return {
-    uri: videoUri,
-    usage,
-  };
 }
