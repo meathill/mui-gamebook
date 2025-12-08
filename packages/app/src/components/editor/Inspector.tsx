@@ -1,10 +1,11 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { SceneNodeData } from '@/lib/editor/transformers';
-import { CheckIcon, Trash2, ImageIcon, Loader2, Upload, Sparkles, Music, Video, Clock } from 'lucide-react';
+import { CheckIcon, Trash2, ImageIcon, Loader2, Upload, Sparkles, Music, Video, Clock, Gamepad2, List } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { SceneNode } from '@mui-gamebook/parser';
 import { useDialog } from '@/components/Dialog';
+import MiniGameSelector from './MiniGameSelector';
 
 interface InspectorProps {
   selectedNode: Node | null;
@@ -19,6 +20,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
   const [generatingIndex, setGeneratingIndex] = useState<number>(-1);
   const [openGeneratorIndex, setOpenGeneratorIndex] = useState<number>(-1);
   const [uploadingIndex, setUploadingIndex] = useState<number>(-1);
+  const [showMinigameSelector, setShowMinigameSelector] = useState<number>(-1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingUploadIndexRef = useRef<number>(-1);
   const pendingAssetsRef = useRef<SceneNode[] | null>(null);
@@ -50,12 +52,14 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
   };
 
   // 添加空白素材（统一入口，支持上传和 AI 生成）
-  const handleAddAsset = (mediaType: 'image' | 'audio' | 'video') => {
+  const handleAddAsset = (mediaType: 'image' | 'audio' | 'video' | 'minigame') => {
     if (!selectedNode || !nodeData) return;
     const newAssets = [...(nodeData.assets || [])];
     // 使用 AI 类型，因为它同时支持 prompt 和 url
     if (mediaType === 'audio') {
       newAssets.push({ type: 'ai_audio', prompt: '', audioType: 'sfx' });
+    } else if (mediaType === 'minigame') {
+      newAssets.push({ type: 'minigame', prompt: '', variables: {} });
     } else {
       newAssets.push({ type: `ai_${mediaType}` as 'ai_image' | 'ai_video', prompt: '' });
     }
@@ -141,13 +145,35 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
     setGeneratingIndex(index);
 
     // 确定媒体类型
-    const mediaType = asset.type.includes('image') ? 'image' : asset.type.includes('audio') ? 'audio' : 'video';
+    const isMinigame = asset.type === 'minigame';
+    const mediaType = isMinigame ? 'minigame' : asset.type.includes('image') ? 'image' : asset.type.includes('audio') ? 'audio' : 'video';
     // API 需要 ai_ 类型
-    const apiType = `ai_${mediaType}`;
+    const apiType = isMinigame ? 'minigame' : `ai_${mediaType}`;
 
     try {
-      // 视频使用异步生成
-      if (mediaType === 'video') {
+      // 小游戏生成
+      if (isMinigame) {
+        const variables = 'variables' in asset ? asset.variables : undefined;
+        const res = await fetch('/api/cms/minigames', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: asset.prompt,
+            variables,
+          }),
+        });
+
+        if (!res.ok) {
+          const error = (await res.json()) as { error: string };
+          await dialog.error(`生成失败：${error.error}`);
+          return;
+        }
+
+        const data = (await res.json()) as { id: number; url: string; name: string };
+        handleAssetChange(index, 'url', data.url);
+        await dialog.alert('小游戏生成成功！');
+      } else if (mediaType === 'video') {
+        // 视频使用异步生成
         const res = await fetch('/api/cms/assets/generate-async', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -258,6 +284,14 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                     <Video size={14} />
                     <span className="text-xs">视频</span>
                   </button>
+                  <button
+                    onClick={() => handleAddAsset('minigame')}
+                    className="p-1 text-purple-600 hover:bg-purple-50 rounded flex items-center gap-0.5"
+                    title="添加小游戏"
+                  >
+                    <Gamepad2 size={14} />
+                    <span className="text-xs">小游戏</span>
+                  </button>
                 </div>
               </div>
 
@@ -277,34 +311,49 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                     const isImage = asset.type.includes('image');
                     const isAudio = asset.type.includes('audio');
                     const isVideo = asset.type.includes('video');
+                    const isMinigame = asset.type === 'minigame';
 
                     return (
                       <div key={i} className="p-3 bg-gray-50 rounded border border-gray-200 text-sm relative group">
                         <div className="flex items-center gap-1 mb-2">
                           {isImage && <ImageIcon size={16} className="text-gray-500" />}
+                          {isMinigame && <Gamepad2 size={16} className="text-purple-500" />}
                           <span className="font-bold uppercase text-xs">
                             {asset.type.replace('ai_', '').replace('static_', '')}
                           </span>
                           <div className="flex gap-1 ms-auto">
-                            <button
-                              onClick={() => triggerUpload(i, isImage ? 'image/*' : isAudio ? 'audio/*' : 'video/*')}
-                              disabled={uploadingIndex === i}
-                              className="p-1 text-xs rounded disabled:text-gray-300 hover:bg-blue-100 flex items-center justify-center"
-                              title="上传素材"
-                              type="button"
-                            >
-                              {uploadingIndex === i ? (
-                                <>
-                                  <Loader2 size={14} className="animate-spin" />
-                                  <span className="sr-only">上传中...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Upload size={14} />
-                                  <span className="sr-only">上传</span>
-                                </>
-                              )}
-                            </button>
+                            {/* 小游戏不支持上传，但支持从已有列表选择 */}
+                            {isMinigame && (
+                              <button
+                                onClick={() => setShowMinigameSelector(showMinigameSelector === i ? -1 : i)}
+                                className="p-1 text-xs text-blue-600 rounded hover:bg-blue-100 flex items-center justify-center"
+                                title="选择已有小游戏"
+                                type="button"
+                              >
+                                <List size={14} />
+                              </button>
+                            )}
+                            {!isMinigame && (
+                              <button
+                                onClick={() => triggerUpload(i, isImage ? 'image/*' : isAudio ? 'audio/*' : 'video/*')}
+                                disabled={uploadingIndex === i}
+                                className="p-1 text-xs rounded disabled:text-gray-300 hover:bg-blue-100 flex items-center justify-center"
+                                title="上传素材"
+                                type="button"
+                              >
+                                {uploadingIndex === i ? (
+                                  <>
+                                    <Loader2 size={14} className="animate-spin" />
+                                    <span className="sr-only">上传中...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Upload size={14} />
+                                    <span className="sr-only">上传</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
                             <button
                               className="p-1 text-xs text-purple-600  rounded hover:bg-purple-100 disabled:text-purple-300 flex items-center justify-center"
                               disabled={generatingIndex > -1}
@@ -323,6 +372,24 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                             </button>
                           </div>
                         </div>
+
+                        {/* 小游戏选择器 */}
+                        {isMinigame && showMinigameSelector === i && (
+                          <div className="mb-2">
+                            <MiniGameSelector
+                              onSelect={(mg) => {
+                                handleAssetChange(i, 'url', `/api/cms/minigames/${mg.id}`);
+                                setShowMinigameSelector(-1);
+                              }}
+                              onGenerate={() => {
+                                setShowMinigameSelector(-1);
+                                setOpenGeneratorIndex(i);
+                              }}
+                              isGenerating={generatingIndex === i}
+                            />
+                          </div>
+                        )}
+
                         {/* AI 生成区域 */}
                         {(openGeneratorIndex === i || !assetUrl && assetPrompt) && (
                           <div className="relative">
@@ -369,6 +436,15 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                         {assetUrl && isVideo && !assetUrl.startsWith('pending://') && (
                           <div className="mb-2 relative w-full h-24 bg-gray-100 rounded overflow-hidden">
                             <video src={assetUrl} controls className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                        {/* 小游戏已生成状态 */}
+                        {assetUrl && isMinigame && (
+                          <div className="mb-2 relative w-full h-16 bg-purple-50 rounded overflow-hidden flex items-center justify-center border border-purple-200">
+                            <div className="text-center">
+                              <Gamepad2 size={20} className="mx-auto text-purple-500" />
+                              <p className="text-xs text-purple-600 mt-1">小游戏已生成</p>
+                            </div>
                           </div>
                         )}
                         {/* 待处理状态显示 */}

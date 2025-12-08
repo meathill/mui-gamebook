@@ -5,7 +5,7 @@
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-export type OperationType = 'video_generation' | 'audio_generation';
+export type OperationType = 'video_generation' | 'audio_generation' | 'minigame_generation';
 export type OperationStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
 export interface PendingOperation {

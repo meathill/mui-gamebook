@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Inter, JetBrains_Mono } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import './globals.css';
 import Header from '@/components/Header';
@@ -6,6 +7,16 @@ import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
 import { ReactNode } from 'react';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { cn } from '@/lib';
+
+const interSans = Inter({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+});
+const jetBrainsMono = JetBrains_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -37,7 +48,7 @@ export default async function RootLayout({
         <link rel="icon" href="/favicon.png" type="image/png" />
       </head>
       <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
-      <body className="antialiased flex flex-col min-h-screen">
+      <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
         <Providers>
           <Header />
           <main className="flex-grow flex flex-col">

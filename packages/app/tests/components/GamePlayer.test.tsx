@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import GamePlayer from '../../src/components/GamePlayer';
 import { DialogProvider } from '../../src/components/Dialog';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
 
 // Mock scrollIntoView
 window.scrollTo = vi.fn();
@@ -12,7 +12,7 @@ const renderWithDialog = (component: React.ReactElement) => {
   return render(<DialogProvider>{component}</DialogProvider>);
 };
 
-const mockGame: Game = {
+const mockGame: SerializablePlayableGame = {
   slug: 'test-game',
   title: 'Test Adventure',
   description: 'A test game',
@@ -20,40 +20,38 @@ const mockGame: Game = {
     gold: 10,
     has_key: false,
   },
-  ai: {},
-  published: true,
   startSceneId: 'start',
-  scenes: new Map([
-    ['start', {
+  scenes: {
+    'start': {
       id: 'start',
       nodes: [
         { type: 'text', content: 'You are at the start.' },
         { type: 'choice', text: 'Buy Key (Cost 5)', nextSceneId: 'shop', set: 'gold = gold - 5, has_key = true' },
         { type: 'choice', text: 'Go to Door', nextSceneId: 'door' },
       ]
-    }],
-    ['shop', {
+    },
+    'shop': {
       id: 'shop',
       nodes: [
         { type: 'text', content: 'You bought the key.' },
         { type: 'choice', text: 'Back to Start', nextSceneId: 'start' },
       ]
-    }],
-    ['door', {
+    },
+    'door': {
       id: 'door',
       nodes: [
         { type: 'text', content: 'You are at the door.' },
         { type: 'choice', text: 'Unlock Door', nextSceneId: 'win', condition: 'has_key == true' },
         { type: 'choice', text: 'Go Back', nextSceneId: 'start' },
       ]
-    }],
-    ['win', {
+    },
+    'win': {
       id: 'win',
       nodes: [
         { type: 'text', content: 'You Win!' },
       ]
-    }]
-  ])
+    }
+  }
 };
 
 describe('GamePlayer Component', () => {

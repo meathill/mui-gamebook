@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { parse } from '@mui-gamebook/parser';
+import { getSession } from '@/lib/auth-server';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -20,12 +21,29 @@ export async function GET(
     return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
   }
 
+  // 获取当前用户 session
+  let currentUserId: string | null = null;
+  try {
+    const session = await getSession();
+    currentUserId = session?.user?.id || null;
+  } catch {
+    // 未登录用户，继续
+  }
+
   // 1. Find Game by Slug
   const game = await db.select().from(schema.games)
     .where(eq(schema.games.slug, slug))
     .get();
 
-  if (!game || !game.published) {
+  if (!game) {
+    return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+  }
+
+  const isOwner = currentUserId && game.ownerId === currentUserId;
+  const isPublished = game.published;
+
+  // 如果游戏未发布且当前用户不是所有者，拒绝访问
+  if (!isPublished && !isOwner) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 });
   }
 
@@ -51,7 +69,7 @@ export async function GET(
     backgroundStory: game.backgroundStory,
     cover_image: game.coverImage,
     tags: game.tags ? JSON.parse(game.tags) : [],
-    published: true,
+    published: game.published,
     slug: game.slug // Inject slug for frontend use
   };
 
