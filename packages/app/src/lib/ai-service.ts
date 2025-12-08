@@ -149,8 +149,8 @@ export async function generateAndStoreMiniGame(
   if (!apiKey) throw new Error('GOOGLE_API_KEY_NEW not configured');
 
   const genAI = new GoogleGenAI({ apiKey });
-  const model = env.GOOGLE_TEXT_MODEL || process.env.GOOGLE_TEXT_MODEL || 'gemini-2.5-flash';
-  
+  const model = env.GOOGLE_MODEL || process.env.GOOGLE_MODEL || 'gemini-2.5-flash';
+
   const { code, usage } = await generateMiniGame(genAI, model, prompt, variables);
 
   // 存储到数据库
