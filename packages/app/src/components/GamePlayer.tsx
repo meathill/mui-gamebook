@@ -98,20 +98,20 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     }
   };
 
-  const handleRestart = async () => {
-    const confirmed = await dialog.confirm('确定要重新开始吗？游戏进度将会丢失。');
-    if (confirmed) {
-      localStorage.removeItem(`game_progress_${slug}`);
-      setCurrentSceneId(game.startSceneId || 'start');
-      setRuntimeState(extractRuntimeState(game.initialState));
-      setCurrentImageUrl(undefined);
-      setIsGameStarted(false);
-      
-      const startScene = game.scenes.get(game.startSceneId || 'start');
-      const firstImage = startScene?.nodes.find(n => n.type === 'static_image' || n.type === 'ai_image');
-      if (firstImage && 'url' in firstImage && firstImage.url) {
-        setCurrentImageUrl(firstImage.url);
-      }
+  const handleRestart = async (noConfirm = false) => {
+    const confirmed = noConfirm || await dialog.confirm('确定要重新开始吗？游戏进度将会丢失。');
+    if (!confirmed) return;
+
+    localStorage.removeItem(`game_progress_${slug}`);
+    setCurrentSceneId(game.startSceneId || 'start');
+    setRuntimeState(extractRuntimeState(game.initialState));
+    setCurrentImageUrl(undefined);
+    setIsGameStarted(false);
+
+    const startScene = game.scenes.get(game.startSceneId || 'start');
+    const firstImage = startScene?.nodes.find(n => n.type === 'static_image' || n.type === 'ai_image');
+    if (firstImage && 'url' in firstImage && firstImage.url) {
+      setCurrentImageUrl(firstImage.url);
     }
   };
 
@@ -121,7 +121,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
       newState = executeSet(setInstruction, runtimeState);
       setRuntimeState(newState);
     }
-    
+
     const triggerScene = checkTriggers(newState);
     if (triggerScene && game.scenes.has(triggerScene)) {
       setCurrentSceneId(triggerScene);
@@ -137,7 +137,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     const newState = { ...runtimeState, ...updatedVars };
     setRuntimeState(newState);
     setMinigameCompleted(true);
-    
+
     // 检查触发器
     const triggerScene = checkTriggers(newState);
     if (triggerScene && game.scenes.has(triggerScene)) {
@@ -159,8 +159,8 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
       <div className="p-8 text-center">
         <h2 className="text-xl font-bold text-red-600 mb-4">场景未找到</h2>
         <p className="mb-6">找不到场景：{currentSceneId}</p>
-        <button 
-          onClick={handleRestart}
+        <button
+          onClick={() => handleRestart()}
           className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
         >
           返回标题
@@ -185,8 +185,8 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
         <h1 className="text-lg font-bold truncate text-gray-800">{game.title}</h1>
         <div className="flex gap-2 text-sm items-center">
           <ShareButton title={game.title} url={shareUrl} />
-          <button 
-            onClick={handleRestart}
+          <button
+            onClick={() => handleRestart()}
             className="px-3 py-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
           >
             退出
@@ -199,7 +199,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
         <div className="bg-gray-50 border-b px-4 py-2">
           <div className="max-w-2xl mx-auto flex flex-wrap gap-4">
             {visibleVariables.map(({ key, meta }) => (
-              <VariableIndicator 
+              <VariableIndicator
                 key={key}
                 varKey={key}
                 meta={meta}
@@ -230,11 +230,11 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
             switch (node.type) {
               case 'text':
                 return <p key={index} className="text-lg leading-relaxed text-gray-800 font-serif">{interpolateVariables(node.content, runtimeState)}</p>;
-              
+
               case 'static_image':
               case 'ai_image':
                 return null;
-              
+
               case 'minigame':
                 if (!node.url) return null;
                 return (
@@ -246,13 +246,13 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
                     onComplete={handleMiniGameComplete}
                   />
                 );
-              
+
               case 'choice':
                 if (!evaluateCondition(node.condition, runtimeState)) {
                   return null;
                 }
                 return (
-                  <button 
+                  <button
                     key={index}
                     className="w-full text-left p-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md"
                     onClick={() => handleChoice(node.nextSceneId, node.set)}
@@ -260,7 +260,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
                     <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg">{interpolateVariables(node.text, runtimeState)}</span>
                   </button>
                 );
-                
+
               default:
                 return null;
             }
@@ -268,7 +268,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
 
           {/* End Screen */}
           {showEndScreen && (
-            <EndScreen 
+            <EndScreen
               title={game.title}
               shareUrl={shareUrl}
               onRestart={handleRestart}

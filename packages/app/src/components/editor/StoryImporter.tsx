@@ -93,9 +93,9 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
         </div>
 
         {/* 创作引导 */}
-        <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4 border border-purple-100">
+        <div className="bg-linear-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4 border border-purple-100">
           <div className="flex items-start gap-3">
-            <Lightbulb className="text-purple-500 flex-shrink-0 mt-0.5" size={20} />
+            <Lightbulb className="text-purple-500 shrink-0 mt-0.5" size={20} />
             <div className="flex-1">
               <h3 className="font-semibold text-purple-900 mb-1">{randomPrompt.title}</h3>
               <p className="text-sm text-purple-700 mb-3">{randomPrompt.description}</p>
