@@ -13,8 +13,8 @@
     "seed-db": "tsx scripts/generate-seed.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.947.0",
-    "@google/genai": "^1.32.0",
+    "@aws-sdk/client-s3": "^3.948.0",
+    "@google/genai": "^1.33.0",
     "@mdx-js/loader": "^3.1.1",
     "@mdx-js/react": "^3.1.1",
     "@mui-gamebook/core": "workspace:*",
@@ -44,11 +44,11 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@types/mdx": "^2.0.13",
-    "@types/node": "^24.10.2",
+    "@types/node": "^24.10.3",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitest/ui": "^4.0.15",
-    "baseline-browser-mapping": "^2.9.5",
+    "baseline-browser-mapping": "^2.9.6",
     "drizzle-kit": "^0.31.8",
     "eslint": "^9.39.1",
     "eslint-config-next": "16.0.3",
@@ -56,6 +56,6 @@
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15",
-    "wrangler": "^4.53.0"
+    "wrangler": "^4.54.0"
   }
 }
