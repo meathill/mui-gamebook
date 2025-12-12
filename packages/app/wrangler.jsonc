@@ -64,6 +64,7 @@
     "GOOGLE_IMAGE_MODEL": "gemini-2.5-flash-image",
     "GOOGLE_VIDEO_MODEL": "veo-3.1-fast-generate-preview",
     "NEXT_PUBLIC_GA_ID": "G-244NXPS1H0",
-    "NEXT_PUBLIC_SITE_URL": "https://muistory.com/"
+    "NEXT_PUBLIC_SITE_URL": "https://muistory.com/",
+    "ROOT_USER_EMAIL": "meathill@gmail.com"
   }
 }
