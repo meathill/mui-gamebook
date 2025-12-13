@@ -1,4 +1,5 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
 
 // 默认配置
 const DEFAULT_CONFIG = {
@@ -8,6 +9,18 @@ const DEFAULT_CONFIG = {
   adminUserIds: [] as string[],
   // 允许生成视频的用户邮箱白名单
   videoWhitelist: [] as string[],
+  // 默认 AI 提供者
+  defaultAiProvider: 'google' as AiProviderType,
+  // Google AI 文本模型
+  googleTextModel: 'gemini-2.5-flash',
+  // Google AI 图片模型
+  googleImageModel: 'gemini-3-pro-image-preview',
+  // Google AI 视频模型
+  googleVideoModel: 'veo-3.1-fast-generate-preview',
+  // OpenAI 文本模型
+  openaiTextModel: 'gpt-4o',
+  // OpenAI 图片模型
+  openaiImageModel: 'gpt-image-1',
 };
 
 export type AppConfig = typeof DEFAULT_CONFIG;
@@ -84,4 +97,13 @@ export async function checkVideoGenerationPermission(userEmail: string | null | 
   }
   
   return { allowed: true };
+}
+
+/**
+ * 检查用户是否是管理员（ROOT_USER）
+ */
+export function isRootUser(userEmail: string | null | undefined): boolean {
+  if (!userEmail) return false;
+  const rootEmails = process.env.ROOT_USER_EMAIL?.split(',').map(e => e.trim().toLowerCase()) || [];
+  return rootEmails.includes(userEmail.toLowerCase());
 }
