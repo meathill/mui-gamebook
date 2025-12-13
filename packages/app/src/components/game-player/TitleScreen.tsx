@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import ShareButton from '@/components/ShareButton';
@@ -12,6 +13,7 @@ interface TitleScreenProps {
 
 export default function TitleScreen({ game, onStart }: TitleScreenProps) {
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const t = useTranslations('game');
 
   return (
     <div className="flex flex-col min-h-[600px] bg-white">
@@ -55,7 +57,7 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
           </div>
         ) : (
           <p className="text-gray-600 text-lg mb-8 max-w-xl leading-relaxed">
-            {game.description || '一场互动冒险等待着你。'}
+            {game.description || t('defaultDescription')}
           </p>
         )}
         
@@ -63,11 +65,11 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
           onClick={onStart}
           className="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5"
         >
-          开始冒险
+          {t('startAdventure')}
         </button>
         
         <Link href="/" className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
-          返回游戏库
+          {t('backToLibrary')}
         </Link>
       </div>
     </div>

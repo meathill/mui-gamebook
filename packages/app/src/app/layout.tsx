@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -39,9 +41,11 @@ export default async function RootLayout({
   children: ReactNode;
 }>) {
   const { env } = await getCloudflareContext({ async: true });
+  const locale = await getLocale();
+  const messages = await getMessages();
 
   return (
-    <html lang="zh-CN">
+    <html lang={locale}>
       <head>
         <meta charSet="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -49,13 +53,15 @@ export default async function RootLayout({
       </head>
       <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
       <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
-        <Providers>
-          <Header />
-          <main className="flex-grow flex flex-col">
-            {children}
-          </main>
-          <Footer />
-        </Providers>
+        <NextIntlClientProvider messages={messages}>
+          <Providers>
+            <Header />
+            <main className="flex-grow flex flex-col">
+              {children}
+            </main>
+            <Footer />
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

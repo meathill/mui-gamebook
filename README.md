@@ -91,6 +91,26 @@ variables:
 
 详细的 DSL 规范请参阅 [DSL_SPEC.md](./DSL_SPEC.md)。
 
+### IP 版权保护 (Story Protocol)
+
+平台集成了 Story Protocol，允许创作者将作品注册为区块链上的 IP Asset。
+
+**特点：**
+- 在区块链上永久记录作品版权
+- 自动铸造代表作品的 NFT
+- 元数据存储在 IPFS 上
+- 支持查看 IP 详情和区块链浏览器链接
+
+**环境变量配置：**
+
+```bash
+# Story Protocol 私钥（用于签名交易）
+STORY_PRIVATE_KEY=0x...
+
+# Pinata JWT（用于上传元数据到 IPFS）
+PINATA_JWT=eyJ...
+```
+
 ### 运行测试
 
 ```bash
