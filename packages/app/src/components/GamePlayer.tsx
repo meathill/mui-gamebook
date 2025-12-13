@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import type { PlayableGame, RuntimeState, SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables, fromSerializablePlayableGame } from '@mui-gamebook/parser/src/types';
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
@@ -19,6 +20,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   const [imageLoading, setImageLoading] = useState(false);
   const [minigameCompleted, setMinigameCompleted] = useState(false);
   const dialog = useDialog();
+  const t = useTranslations('game');
 
   const visibleVariables = getVisibleVariables(game.initialState);
 
@@ -99,7 +101,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   };
 
   const handleRestart = async (noConfirm = false) => {
-    const confirmed = noConfirm || await dialog.confirm('确定要重新开始吗？游戏进度将会丢失。');
+    const confirmed = noConfirm || await dialog.confirm(t('restartConfirm'));
     if (!confirmed) return;
 
     localStorage.removeItem(`game_progress_${slug}`);
@@ -147,7 +149,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   };
 
   if (!isLoaded) {
-    return <div className="p-8 text-center">加载中...</div>;
+    return <div className="p-8 text-center">{t('loading')}</div>;
   }
 
   if (!isGameStarted) {
@@ -157,13 +159,13 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   if (!currentScene) {
     return (
       <div className="p-8 text-center">
-        <h2 className="text-xl font-bold text-red-600 mb-4">场景未找到</h2>
-        <p className="mb-6">找不到场景：{currentSceneId}</p>
+        <h2 className="text-xl font-bold text-red-600 mb-4">{t('sceneNotFound')}</h2>
+        <p className="mb-6">{t('cannotFindScene', { sceneId: currentSceneId })}</p>
         <button
           onClick={() => handleRestart()}
           className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
         >
-          返回标题
+          {t('backToTitle')}
         </button>
       </div>
     );
@@ -189,7 +191,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
             onClick={() => handleRestart()}
             className="px-3 py-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
           >
-            退出
+            {t('exit')}
           </button>
         </div>
       </div>

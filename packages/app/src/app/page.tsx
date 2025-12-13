@@ -1,34 +1,36 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { getTranslations } from 'next-intl/server';
 import { getPublishedGames } from '@/lib/games';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const games = await getPublishedGames();
+  const t = await getTranslations('home');
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 mb-8 p-6 shadow">
-          <h2 className="text-2xl font-medium mb-4">关于“姆伊故事书”</h2>
+          <h2 className="text-2xl font-medium mb-4">{t('aboutTitle')}</h2>
           <p className="mb-2">
-            你好，欢迎来到姆伊故事书。有一天我突然想到，利用 AI 可以把互动小说/文字冒险游戏的开发门槛降到最低，让更多人能够创作和分享自己的故事。同时，开发得当的话，让作者控制 AI 而不是受制于 AI，还能保证故事质量和游戏性。于是，我就在 AI 开发工具的帮助下，创造出这个平台。
+            {t('aboutContent')}
           </p>
           <p className="mb-2">
-            目前这里仍在早创阶段，功能和内容都比较有限，但我会持续改进和完善。如果你有任何建议或想法，欢迎随时联系我！
+            {t('aboutContent2')}
             <Link
               className="text-sky-600 underline ml-1"
               href="mailto:meathill@gmail.com"
               target="_blank"
-            >邮件联系，获得创作资格</Link>
+            >{t('contactLink')}</Link>
           </p>
           <p className="mb-4 text-end">
-            —— Meathill
+            {t('signature')}
           </p>
         </div>
         <h2 className="text-4xl font-extrabold text-gray-900 text-center mb-10">
-          游戏库
+          {t('gameLibrary')}
         </h2>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -45,7 +47,7 @@ export default async function Home() {
                     />
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-400">
-                      暂无封面
+                      {t('noCover')}
                     </div>
                   )}
                 </div>
@@ -71,7 +73,7 @@ export default async function Home() {
 
         {games.length === 0 && (
           <div className="text-center text-gray-500 mt-10">
-            暂无已发布的游戏，请稍后再来！
+            {t('noGames')}
           </div>
         )}
       </div>

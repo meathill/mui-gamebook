@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Share2, Copy, Check } from 'lucide-react';
 
 interface ShareButtonProps {
@@ -12,14 +13,16 @@ interface ShareButtonProps {
 export default function ShareButton({ title, url, className = '' }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const t = useTranslations('share');
+  const tHeader = useTranslations('header');
 
   const handleShare = async () => {
     // 尝试使用原生分享 API
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${title} | 姆伊游戏书`,
-          text: `来玩《${title}》吧！`,
+          title: `${title} | ${tHeader('title')}`,
+          text: t('shareTitle', { title }),
           url,
         });
         return;
@@ -45,13 +48,13 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
   };
 
   const shareToWeibo = () => {
-    const weiboUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(`来玩《${title}》吧！`)}`;
+    const weiboUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(t('shareTitle', { title }))}`;
     window.open(weiboUrl, '_blank', 'width=600,height=400');
     setShowMenu(false);
   };
 
   const shareToTwitter = () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(`来玩《${title}》吧！`)}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(t('shareTitle', { title }))}`;
     window.open(twitterUrl, '_blank', 'width=600,height=400');
     setShowMenu(false);
   };
@@ -61,10 +64,10 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
       <button
         onClick={handleShare}
         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        title="分享游戏"
+        title={t('share')}
       >
         <Share2 className="w-4 h-4" />
-        <span>分享</span>
+        <span>{t('share')}</span>
       </button>
       
       {showMenu && (
@@ -74,21 +77,21 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-            {copied ? '已复制！' : '复制链接'}
+            {copied ? t('copied') : t('copyLink')}
           </button>
           <button
             onClick={shareToWeibo}
             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             <span className="w-4 h-4 flex items-center justify-center text-red-500 font-bold">微</span>
-            分享到微博
+            Weibo
           </button>
           <button
             onClick={shareToTwitter}
             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
           >
             <span className="w-4 h-4 flex items-center justify-center">𝕏</span>
-            分享到 Twitter
+            Twitter
           </button>
         </div>
       )}
