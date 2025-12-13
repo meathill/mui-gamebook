@@ -1,8 +1,17 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Game } from '@mui-gamebook/parser/src/types';
 import MDEditor from '@uiw/react-md-editor';
-import { Upload, Sparkles, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { Upload, Sparkles, X, Image as ImageIcon, Loader2, Shield, ExternalLink } from 'lucide-react';
 import { useDialog } from '@/components/Dialog';
+
+interface IpStatus {
+  registered: boolean;
+  ipId?: string;
+  txHash?: string;
+  tokenId?: string;
+  registeredAt?: string;
+  explorerUrl?: string;
+}
 
 interface Props {
   game: Game;
@@ -17,8 +26,64 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
   const [uploadingCover, setUploadingCover] = useState(false);
   const [coverPrompt, setCoverPrompt] = useState('');
   const [showCoverGen, setShowCoverGen] = useState(false);
+  const [ipStatus, setIpStatus] = useState<IpStatus | null>(null);
+  const [registeringIp, setRegisteringIp] = useState(false);
+  const [loadingIpStatus, setLoadingIpStatus] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dialog = useDialog();
+
+  // 加载 IP 注册状态
+  useEffect(() => {
+    const fetchIpStatus = async () => {
+      try {
+        const res = await fetch(`/api/cms/games/${id}/register-ip`);
+        if (res.ok) {
+          const data = await res.json() as IpStatus;
+          setIpStatus(data);
+        }
+      } catch (e) {
+        console.error('获取 IP 状态失败:', e);
+      } finally {
+        setLoadingIpStatus(false);
+      }
+    };
+    fetchIpStatus();
+  }, [id]);
+
+  // 注册 IP
+  const handleRegisterIp = async () => {
+    const confirmed = await dialog.confirm(
+      '注册 IP 将把您的作品记录在 Story Protocol 区块链上，这个操作不可撤销。确定要继续吗？'
+    );
+    if (!confirmed) return;
+
+    setRegisteringIp(true);
+    try {
+      const res = await fetch(`/api/cms/games/${id}/register-ip`, {
+        method: 'POST',
+      });
+      const data = await res.json() as {
+        success?: boolean;
+        ipId?: string;
+        explorerUrl?: string;
+        error?: string;
+      };
+      if (res.ok && data.success) {
+        await dialog.success('IP 注册成功！您的作品已被记录在区块链上。');
+        setIpStatus({
+          registered: true,
+          ipId: data.ipId,
+          explorerUrl: data.explorerUrl,
+        });
+      } else {
+        await dialog.error(data.error || 'IP 注册失败');
+      }
+    } catch (e) {
+      await dialog.error('IP 注册失败：' + (e as Error).message);
+    } finally {
+      setRegisteringIp(false);
+    }
+  };
 
   const handleChange = (field: string, value: string | boolean | Record<string, unknown>) => {
     onChange({ ...game, [ field ]: value });
@@ -272,6 +337,62 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
               placeholder="全局艺术风格提示词（如：水彩画风，奇幻风格）..."
               className="w-full p-2 text-sm border border-blue-200 rounded h-20 resize-none"
             />
+          </div>
+
+          {/* IP 注册 - Story Protocol */}
+          <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
+            <h3 className="text-sm font-medium text-purple-900 mb-2 flex items-center gap-2">
+              <Shield size={16} />
+              IP 版权保护
+            </h3>
+            {loadingIpStatus ? (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 size={14} className="animate-spin" />
+                加载中...
+              </div>
+            ) : ipStatus?.registered ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                    已注册
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600 break-all">
+                  IP ID: {ipStatus.ipId}
+                </p>
+                <a
+                  href={ipStatus.explorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800"
+                >
+                  在区块链浏览器查看 <ExternalLink size={12} />
+                </a>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs text-gray-600">
+                  通过 Story Protocol 将您的作品注册为 IP Asset，在区块链上永久记录您的版权。
+                </p>
+                <button
+                  onClick={handleRegisterIp}
+                  disabled={registeringIp}
+                  className="w-full py-2 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2"
+                >
+                  {registeringIp ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      注册中...
+                    </>
+                  ) : (
+                    <>
+                      <Shield size={14} />
+                      注册 IP 版权
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

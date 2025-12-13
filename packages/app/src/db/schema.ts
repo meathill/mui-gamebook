@@ -56,6 +56,11 @@ export const games = sqliteTable('Games', {
 	tags: text('tags'), // JSON string
 	published: integer('published', { mode: 'boolean' }).default(false),
 	ownerId: text('owner_id').references(() => user.id),
+	// Story Protocol IP 注册信息
+	ipId: text('ip_id'), // IP Asset ID
+	ipTxHash: text('ip_tx_hash'), // 注册交易哈希
+	ipTokenId: text('ip_token_id'), // NFT Token ID
+	ipRegisteredAt: integer('ip_registered_at', { mode: 'timestamp' }), // 注册时间
 	createdAt: integer('created_at', { mode: 'timestamp' }),
 	updatedAt: integer('updated_at', { mode: 'timestamp' }),
 });
