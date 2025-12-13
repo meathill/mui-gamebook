@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Edit, Eye, Lock, Globe } from 'lucide-react';
+import { Plus, Trash2, Edit, Eye, Lock, Globe, Settings } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
@@ -90,8 +90,17 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold text-gray-900">我的游戏</h1>
             <p className="text-gray-500 mt-1">管理你的互动故事</p>
           </div>
-          <div className="text-sm text-gray-600">
-            {session.user.email}
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin/config"
+              className="text-gray-500 hover:text-blue-600 p-2 rounded hover:bg-blue-50"
+              title="系统配置"
+            >
+              <Settings size={20} />
+            </Link>
+            <span className="text-sm text-gray-600">
+              {session.user.email}
+            </span>
           </div>
         </header>
 

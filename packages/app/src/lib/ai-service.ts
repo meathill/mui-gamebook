@@ -1,6 +1,8 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { GoogleGenAI } from '@google/genai';
-import { generateImage, startVideoGeneration, checkVideoGenerationStatus, generateMiniGame, type AiUsageInfo } from '@mui-gamebook/core/lib/ai';
+import type { AiUsageInfo } from '@mui-gamebook/core/lib/ai-provider';
+import { createAiProvider, createGoogleAiProvider } from './ai-provider-factory';
+
+export type { AiUsageInfo };
 
 export interface GenerateImageResult {
   url: string;
@@ -36,52 +38,47 @@ export interface GenerateMiniGameResult {
 export async function generateAndUploadImage(prompt: string, fileName: string): Promise<GenerateImageResult> {
   const { env } = getCloudflareContext();
 
-  // 1. Generate
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
-  if (!apiKey) throw new Error('GOOGLE_API_KEY_NEW not configured');
+  // 使用 AI 提供者工厂创建提供者
+  const provider = await createAiProvider();
+  const { buffer, usage } = await provider.generateImage(prompt);
 
-  const genAI = new GoogleGenAI({
-    apiKey: apiKey,
-  });
-  const model = env.GOOGLE_IMAGE_MODEL || process.env.GOOGLE_IMAGE_MODEL || 'gemini-3-pro-image-preview';
-  const { buffer, usage } = await generateImage(genAI, model, prompt);
-
-  // 2. Upload to R2
+  // 上传到 R2
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error('R2 Bucket \'ASSETS_BUCKET\' not found');
 
   await bucket.put(fileName, buffer);
 
-  // 3. Return Public URL and usage info
+  // 返回公开 URL 和用量信息
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
   return {
     url: `${publicDomain}/${fileName}`,
     usage,
-    model,
+    model: provider.type,
   };
 }
 
 /**
  * 启动异步视频生成（不等待完成）
  * 返回 operation name，可用于后续检查状态
+ * 注意：视频生成始终使用 Google AI，因为 OpenAI 不支持
  */
 export async function startAsyncVideoGeneration(
   prompt: string,
   config?: { durationSeconds?: number; aspectRatio?: string },
 ): Promise<StartVideoGenerationResult> {
-  const { env } = getCloudflareContext();
-
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
-  if (!apiKey) throw new Error('GOOGLE_API_KEY_NEW not configured');
-
-  const genAI = new GoogleGenAI({ apiKey });
-  const model = env.GOOGLE_VIDEO_MODEL || process.env.GOOGLE_VIDEO_MODEL || 'veo-3.1-fast-generate-preview';
-  const { operationName, usage } = await startVideoGeneration(genAI, model, prompt, config);
+  // 视频生成始终使用 Google AI
+  const provider = await createGoogleAiProvider();
+  
+  if (!provider.startVideoGeneration) {
+    throw new Error('视频生成功能不可用');
+  }
+  
+  const { operationName, usage } = await provider.startVideoGeneration(prompt, config);
 
   return {
     operationName,
     usage,
-    model,
+    model: 'google-video',
   };
 }
 
@@ -94,10 +91,14 @@ export async function checkAndCompleteVideoGeneration(
 ): Promise<CheckVideoStatusResult> {
   const { env } = getCloudflareContext();
 
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
-  if (!apiKey) throw new Error('GOOGLE_API_KEY_NEW not configured');
-
-  const status = await checkVideoGenerationStatus(apiKey, operationName);
+  // 视频状态检查始终使用 Google AI
+  const provider = await createGoogleAiProvider();
+  
+  if (!provider.checkVideoGenerationStatus) {
+    throw new Error('视频状态检查功能不可用');
+  }
+  
+  const status = await provider.checkVideoGenerationStatus(operationName);
 
   if (!status.done) {
     return { done: false };
@@ -115,11 +116,12 @@ export async function checkAndCompleteVideoGeneration(
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error('R2 Bucket \'ASSETS_BUCKET\' not found');
 
-  const videoResponse = await fetch(status.uri as string, {
+  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  const videoResponse = await fetch(status.uri, {
     method: 'GET',
     headers: {
-      'x-goog-api-key': env.GOOGLE_API_KEY
-    }
+      'x-goog-api-key': apiKey || '',
+    },
   });
   const video = await videoResponse.arrayBuffer();
 
@@ -145,13 +147,9 @@ export async function generateAndStoreMiniGame(
 ): Promise<GenerateMiniGameResult> {
   const { env } = getCloudflareContext();
 
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
-  if (!apiKey) throw new Error('GOOGLE_API_KEY_NEW not configured');
-
-  const genAI = new GoogleGenAI({ apiKey });
-  const model = env.GOOGLE_MODEL || process.env.GOOGLE_MODEL || 'gemini-2.5-flash';
-
-  const { code, usage } = await generateMiniGame(genAI, model, prompt, variables);
+  // 使用 AI 提供者工厂
+  const provider = await createAiProvider();
+  const { code, usage } = await provider.generateMiniGame(prompt, variables);
 
   // 存储到数据库
   const DB = env.DB;
@@ -179,6 +177,6 @@ export async function generateAndStoreMiniGame(
     id: minigameId,
     url: `${baseUrl}/api/cms/minigames/${minigameId}`,
     usage,
-    model,
+    model: provider.type,
   };
 }

@@ -1,19 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getConfig, updateConfig, type AppConfig } from '@/lib/config';
+import { auth } from '@/lib/auth-server';
+import { getConfig, updateConfig, isRootUser, type AppConfig } from '@/lib/config';
 
 /**
  * 获取全局配置
  */
-export async function GET(req: Request) {
+export async function GET() {
   try {
-    const { env } = getCloudflareContext();
-    const secret = env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
-
-    // 验证管理员密码
-    const authHeader = req.headers.get('Authorization');
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const session = await auth.api.getSession({ headers: new Headers() });
+    if (!session?.user?.email || !isRootUser(session.user.email)) {
+      return NextResponse.json({ error: '无权限访问' }, { status: 403 });
     }
 
     const config = await getConfig();
@@ -29,13 +25,9 @@ export async function GET(req: Request) {
  */
 export async function PUT(req: Request) {
   try {
-    const { env } = getCloudflareContext();
-    const secret = env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
-
-    // 验证管理员密码
-    const authHeader = req.headers.get('Authorization');
-    if (!secret || authHeader !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const session = await auth.api.getSession({ headers: new Headers() });
+    if (!session?.user?.email || !isRootUser(session.user.email)) {
+      return NextResponse.json({ error: '无权限访问' }, { status: 403 });
     }
 
     const body = (await req.json()) as Partial<AppConfig>;
