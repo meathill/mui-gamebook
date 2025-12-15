@@ -118,7 +118,9 @@ export interface AiProvider {
  */
 export function buildMiniGamePrompt(minigameApiSpec: string, variables?: Record<string, string>): string {
   const variablesList = variables
-    ? Object.entries(variables).map(([key, desc]) => `- ${key}: ${desc}`).join('\n')
+    ? Object.entries(variables)
+        .map(([key, desc]) => `- ${key}: ${desc}`)
+        .join('\n')
     : '无特定变量';
 
   return `你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。

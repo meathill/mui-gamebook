@@ -10,8 +10,8 @@ import type {
   TextGenerationResult,
   VideoGenerationStartResult,
   VideoGenerationStatusResult,
+  buildMiniGamePrompt,
 } from './ai-provider';
-import { buildMiniGamePrompt } from "./ai-provider";
 import { MINIGAME_API_SPEC } from './ai';
 
 export class GoogleAiProvider implements AiProvider {
