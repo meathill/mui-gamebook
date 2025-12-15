@@ -2,6 +2,14 @@
   "name": "@mui-gamebook/app",
   "version": "0.4.0",
   "private": true,
+  "exports": {
+    "./components/GamePlayer": "./src/components/GamePlayer.tsx",
+    "./components/Dialog": "./src/components/Dialog.tsx",
+    "./components/ShareButton": "./src/components/ShareButton.tsx",
+    "./components/game-player": "./src/components/game-player/index.ts",
+    "./lib/evaluator": "./src/lib/evaluator.ts",
+    "./lib/games": "./src/lib/games.ts"
+  },
   "scripts": {
     "dev": "next dev --turbopack --port 3020",
     "build": "next build",

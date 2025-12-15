@@ -235,6 +235,80 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/site-common:
+    dependencies:
+      '@mui-gamebook/core':
+        specifier: workspace:*
+        version: link:../core
+      '@mui-gamebook/parser':
+        specifier: workspace:*
+        version: link:../parser
+      next:
+        specifier: ^16.0.0
+        version: 16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react:
+        specifier: ^19.2.3
+        version: 19.2.3
+    devDependencies:
+      '@types/react':
+        specifier: ^19.2.7
+        version: 19.2.7
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  sites/jianjian:
+    dependencies:
+      '@mui-gamebook/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@mui-gamebook/parser':
+        specifier: workspace:*
+        version: link:../../packages/parser
+      '@opennextjs/cloudflare':
+        specifier: ^1.14.6
+        version: 1.14.6(next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(wrangler@4.54.0)
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
+      lucide-react:
+        specifier: ^0.554.0
+        version: 0.554.0(react@19.2.3)
+      next:
+        specifier: ^16.0.10
+        version: 16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react:
+        specifier: ^19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: ^19.2.3
+        version: 19.2.3(react@19.2.3)
+      tailwind-merge:
+        specifier: ^3.4.0
+        version: 3.4.0
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4.1.18
+        version: 4.1.18
+      '@types/node':
+        specifier: ^24.10.4
+        version: 24.10.4
+      '@types/react':
+        specifier: ^19.2.7
+        version: 19.2.7
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.7)
+      tailwindcss:
+        specifier: ^4.1.18
+        version: 4.1.18
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      wrangler:
+        specifier: ^4.54.0
+        version: 4.54.0
+
 packages:
 
   '@acemir/cssom@0.9.29':
