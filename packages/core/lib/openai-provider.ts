@@ -8,8 +8,8 @@ import type {
   ImageGenerationResult,
   MiniGameGenerationResult,
   TextGenerationResult,
-  buildMiniGamePrompt,
 } from './ai-provider';
+import { buildMiniGamePrompt } from './ai-provider';
 import { extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
 
 export class OpenAiProvider implements AiProvider {
