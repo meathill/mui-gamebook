@@ -38,7 +38,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
       try {
         const res = await fetch(`/api/cms/games/${id}/register-ip`);
         if (res.ok) {
-          const data = await res.json() as IpStatus;
+          const data = (await res.json()) as IpStatus;
           setIpStatus(data);
         }
       } catch (e) {
@@ -53,7 +53,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
   // 注册 IP
   const handleRegisterIp = async () => {
     const confirmed = await dialog.confirm(
-      '注册 IP 将把您的作品记录在 Story Protocol 区块链上，这个操作不可撤销。确定要继续吗？'
+      '注册 IP 将把您的作品记录在 Story Protocol 区块链上，这个操作不可撤销。确定要继续吗？',
     );
     if (!confirmed) return;
 
@@ -62,7 +62,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
       const res = await fetch(`/api/cms/games/${id}/register-ip`, {
         method: 'POST',
       });
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         success?: boolean;
         ipId?: string;
         explorerUrl?: string;
@@ -367,7 +367,10 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
             </h3>
             {loadingIpStatus ? (
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Loader2 size={14} className="animate-spin" />
+                <Loader2
+                  size={14}
+                  className="animate-spin"
+                />
                 加载中...
               </div>
             ) : ipStatus?.registered ? (
@@ -377,15 +380,12 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                     已注册
                   </span>
                 </div>
-                <p className="text-xs text-gray-600 break-all">
-                  IP ID: {ipStatus.ipId}
-                </p>
+                <p className="text-xs text-gray-600 break-all">IP ID: {ipStatus.ipId}</p>
                 <a
                   href={ipStatus.explorerUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800"
-                >
+                  className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800">
                   在区块链浏览器查看 <ExternalLink size={12} />
                 </a>
               </div>
@@ -397,11 +397,13 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                 <button
                   onClick={handleRegisterIp}
                   disabled={registeringIp}
-                  className="w-full py-2 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2"
-                >
+                  className="w-full py-2 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2">
                   {registeringIp ? (
                     <>
-                      <Loader2 size={14} className="animate-spin" />
+                      <Loader2
+                        size={14}
+                        className="animate-spin"
+                      />
                       注册中...
                     </>
                   ) : (

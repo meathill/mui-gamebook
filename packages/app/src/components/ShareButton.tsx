@@ -61,8 +61,7 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
       <button
         onClick={handleShare}
         className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-        title={t('share')}
-      >
+        title={t('share')}>
         <Share2 className="w-4 h-4" />
         <span>分享</span>
       </button>
@@ -71,22 +70,19 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
         <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-10">
           <button
             onClick={copyToClipboard}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
             {copied ? '已复制！' : '复制链接'}
           </button>
           <button
             onClick={shareToWeibo}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <span className="w-4 h-4 flex items-center justify-center text-red-500 font-bold">微</span>
             分享到微博
           </button>
           <button
             onClick={shareToTwitter}
-            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
+            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
             <span className="w-4 h-4 flex items-center justify-center">𝕏</span>
             分享到 Twitter
           </button>

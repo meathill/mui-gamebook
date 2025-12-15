@@ -11,7 +11,7 @@ export default getRequestConfig(async () => {
   if (!locale || !locales.includes(locale)) {
     const headersList = await headers();
     const acceptLanguage = headersList.get('accept-language') || '';
-    
+
     // 简单解析 Accept-Language
     if (acceptLanguage.includes('zh')) {
       locale = 'zh';
@@ -22,6 +22,6 @@ export default getRequestConfig(async () => {
 
   return {
     locale,
-    messages: (await import(`./messages/${locale}.json`)).default
+    messages: (await import(`./messages/${locale}.json`)).default,
   };
 });

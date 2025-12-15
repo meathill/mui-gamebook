@@ -33,8 +33,10 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{game.title}</h1>
             {game.tags && (
               <div className="flex gap-2">
-                {game.tags.map(tag => (
-                  <span key={tag} className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded text-xs">
+                {game.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded text-xs">
                     {tag}
                   </span>
                 ))}
@@ -44,7 +46,10 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
         </div>
         {/* 分享按钮 - 右上角 */}
         <div className="absolute top-4 right-4">
-          <ShareButton title={game.title} url={shareUrl} />
+          <ShareButton
+            title={game.title}
+            url={shareUrl}
+          />
         </div>
       </div>
 
@@ -61,12 +66,13 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
 
         <button
           onClick={onStart}
-          className="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5"
-        >
+          className="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5">
           {t('startAdventure')}
         </button>
 
-        <Link href="/" className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
+        <Link
+          href="/"
+          className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
           {t('backToLibrary')}
         </Link>
       </div>

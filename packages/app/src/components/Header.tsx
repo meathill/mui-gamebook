@@ -13,17 +13,16 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
-            <Link href="/" className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold text-gray-900 tracking-tight">
-                {t('title')}
-              </span>
+            <Link
+              href="/"
+              className="flex-shrink-0 flex items-center">
+              <span className="text-xl font-bold text-gray-900 tracking-tight">{t('title')}</span>
             </Link>
           </div>
           <div className="flex items-center gap-4">
             <Link
               href="/"
-              className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"
-            >
+              className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
               {t('home')}
             </Link>
 
@@ -31,28 +30,23 @@ export default function Header() {
               <div className="flex items-center gap-4">
                 <Link
                   href="/admin"
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                >
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                   {t('admin')}
                 </Link>
-                <span className="text-sm text-gray-600">
-                  {session.user.name}
-                </span>
+                <span className="text-sm text-gray-600">{session.user.name}</span>
                 <button
                   onClick={async () => {
                     await authClient.signOut();
                     router.refresh();
                   }}
-                  className="text-gray-500 hover:text-red-600 text-sm font-medium"
-                >
+                  className="text-gray-500 hover:text-red-600 text-sm font-medium">
                   {t('signOut')}
                 </button>
               </div>
             ) : (
               <Link
                 href="/sign-in"
-                className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-              >
+                className="bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">
                 {t('signIn')}
               </Link>
             )}
