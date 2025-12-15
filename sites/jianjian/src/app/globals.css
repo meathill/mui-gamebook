@@ -1,0 +1,269 @@
+@import "tailwindcss";
+
+/*
+ * 简简 - 儿童友好的温暖童趣主题
+ * 特点：大字体、大圆角、粗边框、温暖色彩
+ */
+
+:root {
+  /* 温暖的背景色 */
+  --background: #fff9f0;
+  --foreground: #4a3728;
+
+  /* 主色调 - 温暖的橙色 */
+  --primary: #ff8c42;
+  --primary-hover: #ff7a2a;
+  --primary-light: #ffe4d0;
+
+  /* 辅助色 - 活泼的颜色组合 */
+  --accent-pink: #ff6b9d;
+  --accent-purple: #9b7eff;
+  --accent-green: #6dd58c;
+  --accent-blue: #5db9ff;
+  --accent-yellow: #ffd93d;
+
+  /* 卡片样式 */
+  --card-bg: #ffffff;
+  --card-border: #ffd4b8;
+  --card-shadow: rgba(255, 140, 66, 0.15);
+
+  /* 文字大小 - 更大更清晰 */
+  --text-base: 1.125rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.75rem;
+  --text-2xl: 2.25rem;
+  --text-3xl: 3rem;
+
+  /* 圆角 - 更圆润可爱 */
+  --radius-sm: 1rem;
+  --radius-md: 1.5rem;
+  --radius-lg: 2rem;
+  --radius-xl: 2.5rem;
+  --radius-full: 9999px;
+
+  /* 边框宽度 - 更粗更明显 */
+  --border-width: 3px;
+  --border-width-thick: 4px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-accent-pink: var(--accent-pink);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-green: var(--accent-green);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-yellow: var(--accent-yellow);
+  --color-card-bg: var(--card-bg);
+  --color-card-border: var(--card-border);
+}
+
+* {
+  /* 确保触摸友好 */
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  /* 移动端大字体基准 */
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 18px;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Noto Sans SC", "PingFang SC", system-ui, -apple-system, sans-serif;
+  font-size: var(--text-base);
+  line-height: 1.8;
+  /* 确保在移动设备上平滑滚动 */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 通用按钮样式 - 大而圆润 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 2rem;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  border: var(--border-width-thick) solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  /* 最小触摸目标 44px */
+  min-height: 56px;
+  min-width: 120px;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary-hover);
+  box-shadow: 0 4px 0 var(--primary-hover);
+}
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 var(--primary-hover);
+}
+
+.btn-primary:active {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
+/* 选项按钮 - 童趣风格 */
+.choice-btn {
+  display: block;
+  width: 100%;
+  padding: 1.25rem 1.5rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  text-align: left;
+  background: var(--card-bg);
+  color: var(--foreground);
+  border: var(--border-width-thick) solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 0 var(--card-border);
+  transition: all 0.15s ease;
+  cursor: pointer;
+  /* 确保足够的触摸区域 */
+  min-height: 64px;
+}
+
+.choice-btn:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 0 var(--primary);
+  background: var(--primary-light);
+}
+
+.choice-btn:active {
+  transform: translateY(4px);
+  box-shadow: none;
+}
+
+/* 卡片样式 */
+.card {
+  background: var(--card-bg);
+  border: var(--border-width) solid var(--card-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 6px 0 var(--card-shadow);
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 0 var(--card-shadow);
+}
+
+/* 游戏文本 - 更大更易读 */
+.game-text {
+  font-size: var(--text-xl);
+  line-height: 2;
+  margin-bottom: 1.5rem;
+}
+
+/* 标题样式 */
+.title-fun {
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary), var(--accent-pink), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 标签样式 */
+.tag {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  border: 2px solid currentColor;
+}
+
+.tag-pink {
+  color: var(--accent-pink);
+  background: rgba(255, 107, 157, 0.1);
+}
+
+.tag-purple {
+  color: var(--accent-purple);
+  background: rgba(155, 126, 255, 0.1);
+}
+
+.tag-green {
+  color: var(--accent-green);
+  background: rgba(109, 213, 140, 0.1);
+}
+
+/* 安全区域适配 (iPhone X 等) */
+@supports (padding: max(0px)) {
+  .safe-area-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+/* 变量显示条 - 可爱风格 */
+.var-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--primary-light);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-full);
+}
+
+/* 动画效果 */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.4s ease-out;
+}
+
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+
+  50% {
+    transform: rotate(3deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.3s ease-in-out;
+}

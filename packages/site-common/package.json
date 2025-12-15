@@ -1,0 +1,24 @@
+{
+  "name": "@mui-gamebook/site-common",
+  "version": "0.1.0",
+  "private": true,
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./game-player": "./src/game-player/index.ts",
+    "./components": "./src/components/index.ts",
+    "./utils": "./src/utils/index.ts"
+  },
+  "dependencies": {
+    "@mui-gamebook/core": "workspace:*",
+    "@mui-gamebook/parser": "workspace:*",
+    "react": "^19.2.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "next": "^16.0.0",
+    "react": "^19.0.0"
+  }
+}
