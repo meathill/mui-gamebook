@@ -1,4 +1,4 @@
-import { GoogleGenAI, PartUnion, ThinkingLevel } from "@google/genai";
+import { GoogleGenAI, PartUnion, ThinkingLevel } from '@google/genai';
 
 /**
  * AI 用量信息
@@ -68,7 +68,9 @@ export async function generateMiniGame(
   console.log(`[AI] Generating minigame for prompt: "\${prompt}"`);
 
   const variablesList = variables
-    ? Object.entries(variables).map(([key, desc]) => `- ${key}: ${desc}`).join('\n')
+    ? Object.entries(variables)
+        .map(([key, desc]) => `- ${key}: ${desc}`)
+        .join('\n')
     : '无特定变量';
 
   const systemPrompt = `你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。
@@ -105,7 +107,10 @@ ${variablesList}
   let code = response.text || '';
 
   // 清理可能的 markdown 代码块标记
-  code = code.replace(/^```(?:javascript|js)?\\n?/i, '').replace(/\\n?```$/i, '').trim();
+  code = code
+    .replace(/^```(?:javascript|js)?\\n?/i, '')
+    .replace(/\\n?```$/i, '')
+    .trim();
 
   if (!code) {
     throw new Error('AI 未返回有效的游戏代码');
@@ -117,11 +122,7 @@ ${variablesList}
 /**
  * Generates an image with Google AI.
  */
-export async function generateImage(
-  genAI: GoogleGenAI,
-  model: string,
-  prompt: string,
-): Promise<ImageGenerationResult> {
+export async function generateImage(genAI: GoogleGenAI, model: string, prompt: string): Promise<ImageGenerationResult> {
   console.log(`[AI] Generating image for prompt: "${prompt}"`);
   const response = await genAI.models.generateContent({
     model,
@@ -173,13 +174,13 @@ export async function generateText(
   const response = await genAI.models.generateContent({
     model,
     contents: prompt as PartUnion,
-    ...thinking && {
+    ...(thinking && {
       config: {
         thinkingConfig: {
           thinkingLevel: thinking,
         },
-      }
-    },
+      },
+    }),
   });
 
   // 提取用量信息
@@ -256,14 +257,14 @@ export async function checkVideoGenerationStatus(
       headers: {
         'Content-type': 'application/json',
         'x-goog-api-key': apiKey,
-      }
+      },
     });
     if (!response.ok) {
       const errorText = await response.text();
       return {
         done: false,
         error: `HTTP error! status: ${response.status} ${errorText}`,
-      }
+      };
     }
 
     const data = (await response.json()) as {
@@ -271,7 +272,7 @@ export async function checkVideoGenerationStatus(
       response?: {
         generateVideoResponse: {
           generatedSamples: {
-            video: { uri: string; }
+            video: { uri: string };
           }[];
         };
       };
@@ -288,12 +289,12 @@ export async function checkVideoGenerationStatus(
     // - "error": 存在则表示失败
     // - "response": 存在则表示成功的返回值 (如果是视频，通常在 metadata 或 response 里有 uri)
     if (!data.done) {
-      console.log("任务进行中... 进度:", data.metadata?.progressPercent || "未知");
+      console.log('任务进行中... 进度:', data.metadata?.progressPercent || '未知');
       return { done: false };
     }
 
     if (data.error) {
-      console.error("任务失败:", data.error);
+      console.error('任务失败:', data.error);
       return { done: true, error: data.error.message || '视频生成失败' };
     }
 
@@ -303,8 +304,14 @@ export async function checkVideoGenerationStatus(
     }
 
     return { done: true, uri: videoUri };
-
   } catch (error) {
     return { done: false, error: '轮询请求出错' };
   }
+}
+
+export function extractMiniGameCode(rawCode: string): string {
+  return rawCode
+    .replace(/^```(?:javascript|js)?\n?/i, '')
+    .replace(/\n?```$/i, '')
+    .trim();
 }

@@ -44,7 +44,7 @@ export async function generateAndUploadImage(prompt: string, fileName: string): 
 
   // 上传到 R2
   const bucket = env.ASSETS_BUCKET;
-  if (!bucket) throw new Error('R2 Bucket \'ASSETS_BUCKET\' not found');
+  if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
   await bucket.put(fileName, buffer);
 
@@ -68,11 +68,11 @@ export async function startAsyncVideoGeneration(
 ): Promise<StartVideoGenerationResult> {
   // 视频生成始终使用 Google AI
   const provider = await createGoogleAiProvider();
-  
+
   if (!provider.startVideoGeneration) {
     throw new Error('视频生成功能不可用');
   }
-  
+
   const { operationName, usage } = await provider.startVideoGeneration(prompt, config);
 
   return {
@@ -93,11 +93,11 @@ export async function checkAndCompleteVideoGeneration(
 
   // 视频状态检查始终使用 Google AI
   const provider = await createGoogleAiProvider();
-  
+
   if (!provider.checkVideoGenerationStatus) {
     throw new Error('视频状态检查功能不可用');
   }
-  
+
   const status = await provider.checkVideoGenerationStatus(operationName);
 
   if (!status.done) {
@@ -114,7 +114,7 @@ export async function checkAndCompleteVideoGeneration(
 
   // 下载视频并上传到 R2
   const bucket = env.ASSETS_BUCKET;
-  if (!bucket) throw new Error('R2 Bucket \'ASSETS_BUCKET\' not found');
+  if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
   const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
   const videoResponse = await fetch(status.uri, {
@@ -159,15 +159,9 @@ export async function generateAndStoreMiniGame(
   const result = await DB.prepare(`
     INSERT INTO Minigames (owner_id, name, prompt, code, variables, status, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, 'completed', ?, ?)
-  `).bind(
-    ownerId,
-    name,
-    prompt,
-    code,
-    variables ? JSON.stringify(Object.keys(variables)) : null,
-    now,
-    now
-  ).run();
+  `)
+    .bind(ownerId, name, prompt, code, variables ? JSON.stringify(Object.keys(variables)) : null, now, now)
+    .run();
 
   const minigameId = result.meta.last_row_id as number;
 

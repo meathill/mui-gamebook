@@ -1,12 +1,9 @@
 import * as yaml from 'js-yaml';
-import type {AICharacter, Game, GameState, ParseResult, Scene, SceneNode, VariableMeta} from './types';
+import type { AICharacter, Game, GameState, ParseResult, Scene, SceneNode, VariableMeta } from './types';
 import { isVariableMeta } from './types';
-import { omitBy } from "lodash-es";
-import slugify from "slugify";
-export {
-  Game,
-  SceneNode,
-}
+import { omitBy } from 'lodash-es';
+import slugify from 'slugify';
+export { Game, SceneNode };
 export * from './types';
 
 // Final, correct regexes
@@ -44,7 +41,7 @@ function parseSceneContent(content: string): SceneNode[] {
     if (mode === 'in_block') {
       if (BLOCK_END_REGEX.test(line)) {
         const blockContentStr = blockContentBuffer.join('\n');
-        const blockContent = blockContentStr ? yaml.load(blockContentStr) as SceneNode : null;
+        const blockContent = blockContentStr ? (yaml.load(blockContentStr) as SceneNode) : null;
         if (blockContent && typeof blockContent === 'object') {
           if (blockType === 'image-gen') {
             nodes.push({ ...blockContent, type: 'ai_image' } as SceneNode);
@@ -52,7 +49,7 @@ function parseSceneContent(content: string): SceneNode[] {
             const { type: audioType, ...rest } = blockContent as any;
             nodes.push({ type: 'ai_audio', audioType, ...rest });
           } else if (blockType === 'video-gen') {
-            nodes.push({ ...blockContent, type: 'ai_video'  } as SceneNode);
+            nodes.push({ ...blockContent, type: 'ai_video' } as SceneNode);
           } else if (blockType === 'minigame-gen') {
             // 解析小游戏节点
             const { prompt, variables, url } = blockContent as any;
@@ -120,7 +117,6 @@ function parseSceneContent(content: string): SceneNode[] {
   return nodes;
 }
 
-
 /**
  * Parses a gamebook source string.
  * @param source The string content of the gamebook file.
@@ -131,7 +127,10 @@ export function parse(source: string): ParseResult {
     return { success: false, error: 'Source input must be a string.' };
   }
 
-  source = source.split('\n').map(item => item.trimEnd()).join('\n');
+  source = source
+    .split('\n')
+    .map((item) => item.trimEnd())
+    .join('\n');
   const match = source.match(FRONT_MATTER_REGEX);
   if (!match) {
     return {
@@ -234,7 +233,7 @@ export function stringify(game: Game): string {
     const cleanedState: GameState = {};
     for (const [key, val] of Object.entries(game.initialState)) {
       if (isVariableMeta(val)) {
-        cleanedState[key] = omitBy(val, v => v === undefined) as VariableMeta;
+        cleanedState[key] = omitBy(val, (v) => v === undefined) as VariableMeta;
       } else {
         cleanedState[key] = val;
       }
@@ -255,10 +254,7 @@ export function stringify(game: Game): string {
           voice_sample_url: char.voice_sample_url,
         };
         // Clean up undefined fields
-        frontMatter.ai.characters[id] = omitBy(
-          frontMatter.ai.characters[id],
-          v => v === undefined
-        ) as AICharacter;
+        frontMatter.ai.characters[id] = omitBy(frontMatter.ai.characters[id], (v) => v === undefined) as AICharacter;
       }
     }
   }
@@ -299,7 +295,8 @@ export function stringify(game: Game): string {
           markdown += `\`\`\`image-gen\n`;
           markdown += `prompt: ${node.prompt}\n`;
           if (node.character) markdown += `character: ${node.character}\n`;
-          if (node.characters && node.characters.length > 0) markdown += `characters: [${node.characters.join(', ')}]\n`;
+          if (node.characters && node.characters.length > 0)
+            markdown += `characters: [${node.characters.join(', ')}]\n`;
           if (node.url) markdown += `url: ${node.url}\n`;
           markdown += `\`\`\`\n`;
           break;

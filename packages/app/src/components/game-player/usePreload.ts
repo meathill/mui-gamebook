@@ -51,10 +51,10 @@ export function collectPreloadUrls(
   game: PlayableGame,
   currentSceneId: string,
   processedScenes: Set<string>,
-  preloadedUrls: Set<string>
+  preloadedUrls: Set<string>,
 ): string[] {
   if (processedScenes.has(currentSceneId)) return [];
-  
+
   const currentScene = game.scenes.get(currentSceneId);
   if (!currentScene) return [];
 
@@ -146,22 +146,25 @@ export function usePreload(game: PlayableGame, currentSceneId: string) {
   // 使用 state 跟踪统计信息，避免在渲染时访问 ref
   const [stats, setStats] = useState({ preloadedCount: 0, processedScenesCount: 0 });
 
-  const preloadScene = useCallback((sceneId: string) => {
-    const scene = game.scenes.get(sceneId);
-    if (!scene) return;
+  const preloadScene = useCallback(
+    (sceneId: string) => {
+      const scene = game.scenes.get(sceneId);
+      if (!scene) return;
 
-    const urls = extractMediaUrls(scene.nodes);
+      const urls = extractMediaUrls(scene.nodes);
 
-    for (const url of urls) {
-      if (preloadedUrls.current.has(url)) continue;
+      for (const url of urls) {
+        if (preloadedUrls.current.has(url)) continue;
 
-      preloadedUrls.current.add(url);
-      preloadMedia(url).catch(err => {
-        // 预加载失败不影响游戏进行，只记录日志
-        console.warn('预加载失败:', err.message);
-      });
-    }
-  }, [game.scenes]);
+        preloadedUrls.current.add(url);
+        preloadMedia(url).catch((err) => {
+          // 预加载失败不影响游戏进行，只记录日志
+          console.warn('预加载失败:', err.message);
+        });
+      }
+    },
+    [game.scenes],
+  );
 
   useEffect(() => {
     // 如果当前场景已处理过，跳过

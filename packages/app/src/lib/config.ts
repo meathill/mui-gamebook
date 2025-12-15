@@ -35,12 +35,12 @@ export async function getConfig(): Promise<AppConfig> {
   try {
     const { env } = getCloudflareContext();
     const kv = env.KV;
-    
+
     const stored = await kv.get<AppConfig>(CONFIG_KEY, 'json');
     if (stored) {
       return { ...DEFAULT_CONFIG, ...stored };
     }
-    
+
     return DEFAULT_CONFIG;
   } catch (error) {
     console.error('[Config] 获取配置失败:', error);
@@ -55,10 +55,10 @@ export async function updateConfig(config: Partial<AppConfig>): Promise<void> {
   try {
     const { env } = getCloudflareContext();
     const kv = env.KV;
-    
+
     const current = await getConfig();
     const newConfig = { ...current, ...config };
-    
+
     await kv.put(CONFIG_KEY, JSON.stringify(newConfig));
     console.log('[Config] 配置已更新:', newConfig);
   } catch (error) {
@@ -80,22 +80,20 @@ export async function checkVideoGenerationPermission(userEmail: string | null | 
   }
 
   const config = await getConfig();
-  
+
   // 如果白名单为空，则不允许任何人使用
   if (!config.videoWhitelist || config.videoWhitelist.length === 0) {
     return { allowed: false, message: '视频生成功能暂未开放' };
   }
-  
+
   // 检查用户邮箱是否在白名单中（不区分大小写）
   const normalizedEmail = userEmail.toLowerCase();
-  const isAllowed = config.videoWhitelist.some(
-    (email) => email.toLowerCase() === normalizedEmail
-  );
-  
+  const isAllowed = config.videoWhitelist.some((email) => email.toLowerCase() === normalizedEmail);
+
   if (!isAllowed) {
     return { allowed: false, message: '您没有权限使用视频生成功能' };
   }
-  
+
   return { allowed: true };
 }
 
@@ -104,6 +102,6 @@ export async function checkVideoGenerationPermission(userEmail: string | null | 
  */
 export function isRootUser(userEmail: string | null | undefined): boolean {
   if (!userEmail) return false;
-  const rootEmails = process.env.ROOT_USER_EMAIL?.split(',').map(e => e.trim().toLowerCase()) || [];
+  const rootEmails = process.env.ROOT_USER_EMAIL?.split(',').map((e) => e.trim().toLowerCase()) || [];
   return rootEmails.includes(userEmail.toLowerCase());
 }

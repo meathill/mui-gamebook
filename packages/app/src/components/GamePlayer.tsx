@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { PlayableGame, RuntimeState, SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
-import { isVariableMeta, extractRuntimeState, getVisibleVariables, fromSerializablePlayableGame } from '@mui-gamebook/parser/src/types';
+import {
+  isVariableMeta,
+  extractRuntimeState,
+  getVisibleVariables,
+  fromSerializablePlayableGame,
+} from '@mui-gamebook/parser/src/types';
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
@@ -26,18 +31,21 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   usePreload(game, currentSceneId);
 
   // 检查变量触发器
-  const checkTriggers = useCallback((state: RuntimeState): string | null => {
-    for (const [key, val] of Object.entries(game.initialState)) {
-      if (isVariableMeta(val) && val.trigger) {
-        const currentValue = state[ key ];
-        const condition = `${currentValue} ${val.trigger.condition}`;
-        if (evaluateCondition(condition, {})) {
-          return val.trigger.scene;
+  const checkTriggers = useCallback(
+    (state: RuntimeState): string | null => {
+      for (const [key, val] of Object.entries(game.initialState)) {
+        if (isVariableMeta(val) && val.trigger) {
+          const currentValue = state[key];
+          const condition = `${currentValue} ${val.trigger.condition}`;
+          if (evaluateCondition(condition, {})) {
+            return val.trigger.scene;
+          }
         }
       }
-    }
-    return null;
-  }, [game.initialState]);
+      return null;
+    },
+    [game.initialState],
+  );
 
   // Load progress from localStorage on mount
   useEffect(() => {
@@ -56,7 +64,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
       }
     } else {
       const startScene = game.scenes.get(game.startSceneId || 'start');
-      const firstImage = startScene?.nodes.find(n => n.type === 'static_image' || n.type === 'ai_image');
+      const firstImage = startScene?.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
       if (firstImage && 'url' in firstImage && firstImage.url) {
         setCurrentImageUrl(firstImage.url);
       }
@@ -69,7 +77,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   // Update image when scene changes
   useEffect(() => {
     if (isGameStarted && currentScene) {
-      const newImageNode = currentScene.nodes.find(n => n.type === 'static_image' || n.type === 'ai_image');
+      const newImageNode = currentScene.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
       if (newImageNode && 'url' in newImageNode && newImageNode.url) {
         if (newImageNode.url !== currentImageUrl) {
           setImageLoading(true);
@@ -82,11 +90,14 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   // Save progress whenever state changes
   useEffect(() => {
     if (isLoaded && isGameStarted) {
-      localStorage.setItem(`game_progress_${slug}`, JSON.stringify({
-        sceneId: currentSceneId,
-        state: runtimeState,
-        imageUrl: currentImageUrl
-      }));
+      localStorage.setItem(
+        `game_progress_${slug}`,
+        JSON.stringify({
+          sceneId: currentSceneId,
+          state: runtimeState,
+          imageUrl: currentImageUrl,
+        }),
+      );
     }
   }, [currentSceneId, runtimeState, slug, isLoaded, currentImageUrl, isGameStarted]);
 
@@ -99,7 +110,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   };
 
   const handleRestart = async (noConfirm = false) => {
-    const confirmed = noConfirm || await dialog.confirm('确定要重新开始吗？游戏进度将会丢失。');
+    const confirmed = noConfirm || (await dialog.confirm('确定要重新开始吗？游戏进度将会丢失。'));
     if (!confirmed) return;
 
     localStorage.removeItem(`game_progress_${slug}`);
@@ -109,7 +120,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     setIsGameStarted(false);
 
     const startScene = game.scenes.get(game.startSceneId || 'start');
-    const firstImage = startScene?.nodes.find(n => n.type === 'static_image' || n.type === 'ai_image');
+    const firstImage = startScene?.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
     if (firstImage && 'url' in firstImage && firstImage.url) {
       setCurrentImageUrl(firstImage.url);
     }
@@ -151,7 +162,12 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   }
 
   if (!isGameStarted) {
-    return <TitleScreen game={game} onStart={handleStartGame} />;
+    return (
+      <TitleScreen
+        game={game}
+        onStart={handleStartGame}
+      />
+    );
   }
 
   if (!currentScene) {
@@ -161,8 +177,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
         <p className="mb-6">找不到场景：{currentSceneId}</p>
         <button
           onClick={() => handleRestart()}
-          className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-        >
+          className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
           返回标题
         </button>
       </div>
@@ -170,9 +185,9 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   }
 
   // 检查作者是否配置了任何选项（不管条件是否满足）
-  const hasConfiguredChoices = currentScene.nodes.some(node => node.type === 'choice');
+  const hasConfiguredChoices = currentScene.nodes.some((node) => node.type === 'choice');
   // 检查场景是否有小游戏
-  const hasMinigame = currentScene.nodes.some(node => node.type === 'minigame' && node.url);
+  const hasMinigame = currentScene.nodes.some((node) => node.type === 'minigame' && node.url);
   // 只有当作者没有配置任何选项时才显示"剧终"，而不是基于选项是否可见
   // 如果有小游戏且未完成，也不显示结局
   const showEndScreen = !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
@@ -184,11 +199,13 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
       <div className="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10 bg-opacity-90 backdrop-blur-sm">
         <h1 className="text-lg font-bold truncate text-gray-800">{game.title}</h1>
         <div className="flex gap-2 text-sm items-center">
-          <ShareButton title={game.title} url={shareUrl} />
+          <ShareButton
+            title={game.title}
+            url={shareUrl}
+          />
           <button
             onClick={() => handleRestart()}
-            className="px-3 py-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-          >
+            className="px-3 py-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
             退出
           </button>
         </div>
@@ -203,7 +220,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
                 key={key}
                 varKey={key}
                 meta={meta}
-                currentValue={runtimeState[ key ]}
+                currentValue={runtimeState[key]}
               />
             ))}
           </div>
@@ -229,7 +246,13 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
           {currentScene.nodes.map((node, index) => {
             switch (node.type) {
               case 'text':
-                return <p key={index} className="text-lg leading-relaxed text-gray-800 font-serif">{interpolateVariables(node.content, runtimeState)}</p>;
+                return (
+                  <p
+                    key={index}
+                    className="text-lg leading-relaxed text-gray-800 font-serif">
+                    {interpolateVariables(node.content, runtimeState)}
+                  </p>
+                );
 
               case 'static_image':
               case 'ai_image':
@@ -255,9 +278,10 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
                   <button
                     key={index}
                     className="w-full text-left p-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md"
-                    onClick={() => handleChoice(node.nextSceneId, node.set)}
-                  >
-                    <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg">{interpolateVariables(node.text, runtimeState)}</span>
+                    onClick={() => handleChoice(node.nextSceneId, node.set)}>
+                    <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg">
+                      {interpolateVariables(node.text, runtimeState)}
+                    </span>
                   </button>
                 );
 

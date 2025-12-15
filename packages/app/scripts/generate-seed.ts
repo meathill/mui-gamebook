@@ -11,7 +11,7 @@ const outputFile = path.resolve(__dirname, '../migrations/0002_seed.sql');
 
 function escapeSql(str: string | undefined): string {
   if (!str) return 'NULL';
-  return '\'' + str.replace(/'/g, '\'\'') + '\'';
+  return "'" + str.replace(/'/g, "''") + "'";
 }
 
 function generateSeed() {
@@ -21,7 +21,7 @@ function generateSeed() {
   }
 
   // Check for command line argument
-  const targetFile = process.argv[ 2 ];
+  const targetFile = process.argv[2];
   let files: string[] = [];
 
   if (targetFile) {
@@ -35,7 +35,7 @@ function generateSeed() {
       process.exit(1);
     }
   } else {
-    files = fs.readdirSync(demoDir).filter(file => file.endsWith('.md'));
+    files = fs.readdirSync(demoDir).filter((file) => file.endsWith('.md'));
     console.log(`Targeting all .md files in ${demoDir}`);
   }
 

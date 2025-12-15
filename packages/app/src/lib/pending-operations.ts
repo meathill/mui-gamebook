@@ -48,15 +48,17 @@ export async function createPendingOperation(input: CreateOperationInput): Promi
   const result = await DB.prepare(`
     INSERT INTO PendingOperations (user_id, game_id, type, status, operation_name, input_data, created_at, updated_at)
     VALUES (?, ?, ?, 'pending', ?, ?, ?, ?)
-  `).bind(
-    input.userId,
-    input.gameId ?? null,
-    input.type,
-    input.operationName,
-    JSON.stringify(input.inputData),
-    now,
-    now
-  ).run();
+  `)
+    .bind(
+      input.userId,
+      input.gameId ?? null,
+      input.type,
+      input.operationName,
+      JSON.stringify(input.inputData),
+      now,
+      now,
+    )
+    .run();
 
   return result.meta.last_row_id as number;
 }
@@ -68,7 +70,7 @@ export async function updateOperationStatus(
   operationId: number,
   status: OperationStatus,
   outputData?: OperationResult,
-  errorMessage?: string
+  errorMessage?: string,
 ): Promise<void> {
   const { env } = getCloudflareContext();
   const DB = env.DB;
@@ -81,14 +83,9 @@ export async function updateOperationStatus(
     UPDATE PendingOperations 
     SET status = ?, output_data = ?, error_message = ?, updated_at = ?, completed_at = ?
     WHERE id = ?
-  `).bind(
-    status,
-    outputData ? JSON.stringify(outputData) : null,
-    errorMessage ?? null,
-    now,
-    completedAt,
-    operationId
-  ).run();
+  `)
+    .bind(status, outputData ? JSON.stringify(outputData) : null, errorMessage ?? null, now, completedAt, operationId)
+    .run();
 }
 
 /**
@@ -101,7 +98,9 @@ export async function getOperationById(operationId: number): Promise<PendingOper
 
   return await DB.prepare(`
     SELECT * FROM PendingOperations WHERE id = ?
-  `).bind(operationId).first<PendingOperation>();
+  `)
+    .bind(operationId)
+    .first<PendingOperation>();
 }
 
 /**
@@ -116,7 +115,9 @@ export async function getUserPendingOperations(userId: string): Promise<PendingO
     SELECT * FROM PendingOperations 
     WHERE user_id = ? AND status IN ('pending', 'processing')
     ORDER BY created_at DESC
-  `).bind(userId).all<PendingOperation>();
+  `)
+    .bind(userId)
+    .all<PendingOperation>();
 
   return result.results;
 }

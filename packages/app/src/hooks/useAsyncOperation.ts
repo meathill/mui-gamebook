@@ -16,7 +16,7 @@ export interface OperationState {
 interface UseAsyncOperationOptions {
   minPollInterval?: number; // 最小轮询间隔，默认 3000ms
   maxPollInterval?: number; // 最大轮询间隔，默认 30000ms
-  maxAttempts?: number;  // 最大尝试次数，默认 120
+  maxAttempts?: number; // 最大尝试次数，默认 120
   onComplete?: (url: string) => void;
   onError?: (error: string) => void;
 }
@@ -28,17 +28,8 @@ function isPlaceholderUrl(url: string): boolean {
   return url.startsWith('pending://');
 }
 
-export function useAsyncOperation(
-  placeholderUrl: string | undefined,
-  options: UseAsyncOperationOptions = {}
-) {
-  const {
-    minPollInterval = 3000,
-    maxPollInterval = 30000,
-    maxAttempts = 120,
-    onComplete,
-    onError,
-  } = options;
+export function useAsyncOperation(placeholderUrl: string | undefined, options: UseAsyncOperationOptions = {}) {
+  const { minPollInterval = 3000, maxPollInterval = 30000, maxAttempts = 120, onComplete, onError } = options;
 
   const [state, setState] = useState<OperationState>({ status: 'pending' });
   const [isPolling, setIsPolling] = useState(false);
@@ -54,7 +45,7 @@ export function useAsyncOperation(
     const startTime = Date.now();
     try {
       const res = await fetch(`/api/cms/operations?url=${encodeURIComponent(placeholderUrl)}`);
-      const data = await res.json() as { status: string; url?: string; error?: string };
+      const data = (await res.json()) as { status: string; url?: string; error?: string };
 
       // 记录请求耗时
       lastDurationRef.current = Date.now() - startTime;
@@ -104,10 +95,7 @@ export function useAsyncOperation(
       const done = await checkStatus();
       if (!done) {
         // 使用上次请求耗时作为间隔，限制在 [min, max] 范围内
-        const interval = Math.min(
-          Math.max(lastDurationRef.current, minPollInterval),
-          maxPollInterval
-        );
+        const interval = Math.min(Math.max(lastDurationRef.current, minPollInterval), maxPollInterval);
         timeoutRef.current = setTimeout(poll, interval);
       }
     };
@@ -138,9 +126,7 @@ export function useAsyncOperation(
  * 批量检查多个占位符 URL
  * 返回需要更新的 URL 映射
  */
-export async function batchCheckPlaceholders(
-  urls: string[]
-): Promise<Map<string, string>> {
+export async function batchCheckPlaceholders(urls: string[]): Promise<Map<string, string>> {
   const results = new Map<string, string>();
   const placeholders = urls.filter(isPlaceholderUrl);
 
@@ -148,14 +134,14 @@ export async function batchCheckPlaceholders(
     placeholders.map(async (url) => {
       try {
         const res = await fetch(`/api/cms/operations?url=${encodeURIComponent(url)}`);
-        const data = await res.json() as { status: string; url?: string };
+        const data = (await res.json()) as { status: string; url?: string };
         if (data.status === 'completed' && data.url) {
           results.set(url, data.url);
         }
       } catch (e) {
         console.error('Check placeholder error:', e);
       }
-    })
+    }),
   );
 
   return results;

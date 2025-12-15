@@ -11,17 +11,17 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        'protocol': 'https',
-        'hostname': 'picsum.photos',
-        'port': '',
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        port: '',
       },
       {
-        'protocol': 'https',
-        'hostname': 'i.muistory.com',
-        'port': '',
-      }
-    ]
-  }
+        protocol: 'https',
+        hostname: 'i.muistory.com',
+        port: '',
+      },
+    ],
+  },
 };
 
 const withMDX = createMDX({});

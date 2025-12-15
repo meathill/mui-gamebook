@@ -7,7 +7,7 @@
  */
 export interface VariableTrigger {
   condition: string; // e.g., "<= 0", "== true"
-  scene: string;     // 目标场景 ID
+  scene: string; // 目标场景 ID
 }
 
 /**
@@ -253,17 +253,14 @@ export function toPlayableGame(game: Game): PlayableGame {
   // 过滤角色信息
   const characters: Record<string, PlayableCharacter> | undefined = game.ai.characters
     ? Object.fromEntries(
-        Object.entries(game.ai.characters).map(([key, char]) => [
-          key,
-          { name: char.name, image_url: char.image_url }
-        ])
+        Object.entries(game.ai.characters).map(([key, char]) => [key, { name: char.name, image_url: char.image_url }]),
       )
     : undefined;
 
   // 过滤场景节点
   const scenes = new Map<string, PlayableScene>();
   for (const [sceneId, scene] of game.scenes) {
-    const filteredNodes: PlayableSceneNode[] = scene.nodes.map(node => {
+    const filteredNodes: PlayableSceneNode[] = scene.nodes.map((node) => {
       switch (node.type) {
         case 'ai_image':
           return { type: 'ai_image' as const, url: node.url, alt: node.character };
@@ -329,6 +326,4 @@ export function fromSerializablePlayableGame(game: SerializablePlayableGame): Pl
 /**
  * 解析器的返回结果。
  */
-export type ParseResult =
-  | { success: true; data: Game }
-  | { success: false; error: string };
+export type ParseResult = { success: true; data: Game } | { success: false; error: string };

@@ -44,16 +44,21 @@ export default async function RootLayout({
     <html lang="zh-CN">
       <head>
         <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" href="/favicon.png" type="image/png" />
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0"
+        />
+        <link
+          rel="icon"
+          href="/favicon.png"
+          type="image/png"
+        />
       </head>
       <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
       <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
         <Providers>
           <Header />
-          <main className="flex-grow flex flex-col">
-            {children}
-          </main>
+          <main className="flex-grow flex flex-col">{children}</main>
           <Footer />
         </Providers>
       </body>

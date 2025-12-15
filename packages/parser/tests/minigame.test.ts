@@ -124,18 +124,21 @@ prompt: 简单的点击游戏，不需要变量
         initialState: { snitch_caught: 0 },
         ai: {},
         scenes: new Map([
-          ['start', {
-            id: 'start',
-            nodes: [
-              { type: 'text', content: '准备开始游戏！' },
-              {
-                type: 'minigame',
-                prompt: '抓住金色飞贼',
-                variables: { snitch_caught: '捕获数量' },
-                url: 'https://example.com/game.js',
-              } as SceneMiniGameNode,
-            ],
-          }],
+          [
+            'start',
+            {
+              id: 'start',
+              nodes: [
+                { type: 'text', content: '准备开始游戏！' },
+                {
+                  type: 'minigame',
+                  prompt: '抓住金色飞贼',
+                  variables: { snitch_caught: '捕获数量' },
+                  url: 'https://example.com/game.js',
+                } as SceneMiniGameNode,
+              ],
+            },
+          ],
         ]),
       };
 
@@ -153,15 +156,18 @@ prompt: 简单的点击游戏，不需要变量
         initialState: {},
         ai: {},
         scenes: new Map([
-          ['start', {
-            id: 'start',
-            nodes: [
-              {
-                type: 'minigame',
-                prompt: '简单游戏',
-              } as SceneMiniGameNode,
-            ],
-          }],
+          [
+            'start',
+            {
+              id: 'start',
+              nodes: [
+                {
+                  type: 'minigame',
+                  prompt: '简单游戏',
+                } as SceneMiniGameNode,
+              ],
+            },
+          ],
         ]),
       };
 
@@ -180,26 +186,29 @@ prompt: 简单的点击游戏，不需要变量
         initialState: { score: 0 },
         ai: {},
         scenes: new Map([
-          ['start', {
-            id: 'start',
-            nodes: [
-              {
-                type: 'minigame',
-                prompt: '这是创作者的 prompt，玩家不应该看到',
-                variables: { score: '玩家得分，这是敏感描述' },
-                url: 'https://example.com/game.js',
-              } as SceneMiniGameNode,
-            ],
-          }],
+          [
+            'start',
+            {
+              id: 'start',
+              nodes: [
+                {
+                  type: 'minigame',
+                  prompt: '这是创作者的 prompt，玩家不应该看到',
+                  variables: { score: '玩家得分，这是敏感描述' },
+                  url: 'https://example.com/game.js',
+                } as SceneMiniGameNode,
+              ],
+            },
+          ],
         ]),
       };
 
       const playable = toPlayableGame(game);
       const node = playable.scenes.get('start')?.nodes[0];
-      
+
       expect(node).toBeDefined();
       expect(node?.type).toBe('minigame');
-      
+
       // 应该有 url 和变量名列表，但没有 prompt 和变量描述
       if (node?.type === 'minigame') {
         expect(node.url).toBe('https://example.com/game.js');
@@ -255,18 +264,18 @@ variables:
       // 验证小游戏节点
       const matchScene = result.data.scenes.get('quidditch_match');
       expect(matchScene).toBeDefined();
-      
-      const minigameNode = matchScene?.nodes.find(n => n.type === 'minigame') as SceneMiniGameNode;
+
+      const minigameNode = matchScene?.nodes.find((n) => n.type === 'minigame') as SceneMiniGameNode;
       expect(minigameNode).toBeDefined();
       expect(minigameNode.variables?.snitch_caught).toBe('捕获的飞贼数量');
 
       // 验证条件选项
-      const choices = matchScene?.nodes.filter(n => n.type === 'choice');
+      const choices = matchScene?.nodes.filter((n) => n.type === 'choice');
       expect(choices?.length).toBe(2);
-      
-      const winChoice = choices?.find(c => c.type === 'choice' && c.nextSceneId === 'quidditch_win');
-      const loseChoice = choices?.find(c => c.type === 'choice' && c.nextSceneId === 'quidditch_lose');
-      
+
+      const winChoice = choices?.find((c) => c.type === 'choice' && c.nextSceneId === 'quidditch_win');
+      const loseChoice = choices?.find((c) => c.type === 'choice' && c.nextSceneId === 'quidditch_lose');
+
       expect(winChoice?.type === 'choice' && winChoice.condition).toBe('snitch_caught >= 10');
       expect(loseChoice?.type === 'choice' && loseChoice.condition).toBe('snitch_caught < 10');
 

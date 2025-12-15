@@ -17,12 +17,7 @@ interface MiniGamePlayerProps {
   onComplete: (updatedVariables: Record<string, number | string | boolean>) => void;
 }
 
-export default function MiniGamePlayer({
-  url,
-  variables,
-  runtimeState,
-  onComplete,
-}: MiniGamePlayerProps) {
+export default function MiniGamePlayer({ url, variables, runtimeState, onComplete }: MiniGamePlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gameRef = useRef<MiniGameAPI | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,64 +30,67 @@ export default function MiniGamePlayer({
     const gameVars: Record<string, number | string | boolean> = {};
     for (const varName of variables) {
       if (varName in runtimeState) {
-        gameVars[ varName ] = runtimeState[ varName ];
+        gameVars[varName] = runtimeState[varName];
       }
     }
     return gameVars;
   }, [variables, runtimeState]);
 
   // 加载并初始化小游戏
-  const loadGame = useCallback(async (container: HTMLDivElement) => {
-    if (!url) {
-      setError('小游戏 URL 未配置');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // 获取小游戏代码
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`加载失败: ${response.status}`);
+  const loadGame = useCallback(
+    async (container: HTMLDivElement) => {
+      if (!url) {
+        setError('小游戏 URL 未配置');
+        return;
       }
-      const code = await response.text();
 
-      // 使用 Blob URL 创建可导入的模块
-      const blob = new Blob([code], { type: 'application/javascript' });
-      const blobUrl = URL.createObjectURL(blob);
+      setLoading(true);
+      setError(null);
 
       try {
-        const gameModule = await import(/* webpackIgnore: true */ blobUrl);
-        const game: MiniGameAPI = gameModule.default || gameModule;
-
-        if (!game.init || !game.onComplete || !game.destroy) {
-          throw new Error('小游戏模块缺少必要的接口（需要 init, onComplete, destroy）');
+        // 获取小游戏代码
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`加载失败: ${response.status}`);
         }
+        const code = await response.text();
 
-        gameRef.current = game;
+        // 使用 Blob URL 创建可导入的模块
+        const blob = new Blob([code], { type: 'application/javascript' });
+        const blobUrl = URL.createObjectURL(blob);
 
-        // 注册完成回调
-        game.onComplete((updatedVars) => {
-          setIsPlaying(false);
-          onComplete(updatedVars);
-        });
+        try {
+          const gameModule = await import(/* webpackIgnore: true */ blobUrl);
+          const game: MiniGameAPI = gameModule.default || gameModule;
 
-        // 初始化游戏
-        game.init(container, getGameVariables());
-        setIsPlaying(true);
+          if (!game.init || !game.onComplete || !game.destroy) {
+            throw new Error('小游戏模块缺少必要的接口（需要 init, onComplete, destroy）');
+          }
+
+          gameRef.current = game;
+
+          // 注册完成回调
+          game.onComplete((updatedVars) => {
+            setIsPlaying(false);
+            onComplete(updatedVars);
+          });
+
+          // 初始化游戏
+          game.init(container, getGameVariables());
+          setIsPlaying(true);
+        } finally {
+          // 清理 Blob URL
+          URL.revokeObjectURL(blobUrl);
+        }
+      } catch (e) {
+        console.error('加载小游戏失败:', e);
+        setError((e as Error).message || '加载小游戏失败');
       } finally {
-        // 清理 Blob URL
-        URL.revokeObjectURL(blobUrl);
+        setLoading(false);
       }
-    } catch (e) {
-      console.error('加载小游戏失败:', e);
-      setError((e as Error).message || '加载小游戏失败');
-    } finally {
-      setLoading(false);
-    }
-  }, [url, getGameVariables, onComplete]);
+    },
+    [url, getGameVariables, onComplete],
+  );
 
   // 当容器出现且已开始时，加载游戏
   useEffect(() => {
@@ -133,8 +131,7 @@ export default function MiniGamePlayer({
         <p className="text-red-500 text-xs">{error}</p>
         <button
           onClick={handleRetry}
-          className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 text-sm"
-        >
+          className="mt-3 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 text-sm">
           重试
         </button>
       </div>
@@ -147,8 +144,7 @@ export default function MiniGamePlayer({
         <p className="text-purple-700 mb-4">准备好开始小游戏了吗？</p>
         <button
           onClick={handleStart}
-          className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-500 font-medium shadow-md hover:shadow-lg transition-all"
-        >
+          className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-500 font-medium shadow-md hover:shadow-lg transition-all">
           开始游戏
         </button>
       </div>
@@ -160,7 +156,10 @@ export default function MiniGamePlayer({
       {loading && (
         <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center z-10">
           <div className="text-center">
-            <Loader2 size={32} className="mx-auto text-purple-600 animate-spin" />
+            <Loader2
+              size={32}
+              className="mx-auto text-purple-600 animate-spin"
+            />
             <p className="text-gray-600 mt-2 text-sm">加载小游戏中...</p>
           </div>
         </div>

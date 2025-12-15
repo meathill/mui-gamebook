@@ -8,20 +8,24 @@ const mockGame: Game = {
   ai: {},
   published: false,
   scenes: new Map([
-    ['start', {
-      id: 'start',
-      nodes: [
-        { type: 'text', content: 'Hello' },
-        { type: 'choice', text: 'Go', nextSceneId: 'end', condition: 'flag == true' }
-      ]
-    }],
-    ['end', {
-      id: 'end',
-      nodes: [
-        { type: 'text', content: 'Bye' }
-      ]
-    }]
-  ])
+    [
+      'start',
+      {
+        id: 'start',
+        nodes: [
+          { type: 'text', content: 'Hello' },
+          { type: 'choice', text: 'Go', nextSceneId: 'end', condition: 'flag == true' },
+        ],
+      },
+    ],
+    [
+      'end',
+      {
+        id: 'end',
+        nodes: [{ type: 'text', content: 'Bye' }],
+      },
+    ],
+  ]),
 };
 
 describe('Editor Transformers', () => {
@@ -31,11 +35,11 @@ describe('Editor Transformers', () => {
     expect(nodes).toHaveLength(2);
     expect(edges).toHaveLength(1);
 
-    const startNode = nodes.find(n => n.id === 'start');
+    const startNode = nodes.find((n) => n.id === 'start');
     expect(startNode).toBeDefined();
     expect(startNode?.data.content).toBe('Hello');
 
-    const edge = edges[ 0 ];
+    const edge = edges[0];
     expect(edge.source).toBe('start');
     expect(edge.target).toBe('end');
     expect(edge.label).toBe('Go');
@@ -47,13 +51,13 @@ describe('Editor Transformers', () => {
     const newGame = flowToGame(nodes, edges, mockGame);
 
     expect(newGame.scenes.size).toBe(2);
-    
+
     const startScene = newGame.scenes.get('start');
     expect(startScene).toBeDefined();
     // Note: transformer logic puts assets/text/choices in a specific order
     // In this case: text ('Hello') -> choice ('Go')
     expect(startScene?.nodes).toHaveLength(2);
-    expect(startScene?.nodes[ 0 ].content).toBe('Hello');
-    expect((startScene?.nodes[ 1 ] as any).nextSceneId).toBe('end');
+    expect(startScene?.nodes[0].content).toBe('Hello');
+    expect((startScene?.nodes[1] as any).nextSceneId).toBe('end');
   });
 });

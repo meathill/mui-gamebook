@@ -50,11 +50,7 @@ export async function POST(req: Request, { params }: Props) {
 
   try {
     // 获取游戏内容以获取 AI 样式
-    const content = await db
-      .select()
-      .from(schema.gameContent)
-      .where(eq(schema.gameContent.gameId, id))
-      .get();
+    const content = await db.select().from(schema.gameContent).where(eq(schema.gameContent.gameId, id)).get();
 
     let stylePrompt = '';
     if (content?.content) {

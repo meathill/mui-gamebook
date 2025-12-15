@@ -18,8 +18,8 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
       <div className="relative w-full h-64 md:h-80 bg-gray-200 overflow-hidden">
         {game.cover_image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img 
-            src={game.cover_image} 
+          <img
+            src={game.cover_image}
             alt={game.title}
             className="object-cover w-full h-full"
           />
@@ -33,8 +33,10 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{game.title}</h1>
             {game.tags && (
               <div className="flex gap-2">
-                {game.tags.map(tag => (
-                  <span key={tag} className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded text-xs">
+                {game.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-2 py-1 bg-white/20 backdrop-blur-sm rounded text-xs">
                     {tag}
                   </span>
                 ))}
@@ -44,10 +46,13 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
         </div>
         {/* 分享按钮 - 右上角 */}
         <div className="absolute top-4 right-4">
-          <ShareButton title={game.title} url={shareUrl} />
+          <ShareButton
+            title={game.title}
+            url={shareUrl}
+          />
         </div>
       </div>
-      
+
       <div className="flex-1 p-6 md:p-8 flex flex-col items-center text-center">
         {game.backgroundStory ? (
           <div className="text-gray-600 text-base mb-8 max-w-2xl leading-relaxed text-left prose prose-gray prose-sm">
@@ -58,15 +63,16 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
             {game.description || '一场互动冒险等待着你。'}
           </p>
         )}
-        
+
         <button
           onClick={onStart}
-          className="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5"
-        >
+          className="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5">
           开始冒险
         </button>
-        
-        <Link href="/" className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
+
+        <Link
+          href="/"
+          className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
           返回游戏库
         </Link>
       </div>

@@ -1,7 +1,7 @@
 /**
  * Google GenAI 提供者实现
  */
-import { GoogleGenAI, PartUnion, ThinkingLevel } from "@google/genai";
+import { GoogleGenAI, PartUnion, ThinkingLevel } from '@google/genai';
 import type {
   AiProvider,
   AiUsageInfo,
@@ -10,8 +10,8 @@ import type {
   TextGenerationResult,
   VideoGenerationStartResult,
   VideoGenerationStatusResult,
-} from "./ai-provider";
-import { MINIGAME_API_SPEC } from "./ai";
+} from './ai-provider';
+import { MINIGAME_API_SPEC } from './ai';
 
 export class GoogleAiProvider implements AiProvider {
   readonly type = 'google' as const;
@@ -188,7 +188,9 @@ export class GoogleAiProvider implements AiProvider {
     console.log(`[Google AI] Generating minigame with model: ${model}`);
 
     const variablesList = variables
-      ? Object.entries(variables).map(([key, desc]) => `- ${key}: ${desc}`).join('\n')
+      ? Object.entries(variables)
+          .map(([key, desc]) => `- ${key}: ${desc}`)
+          .join('\n')
       : '无特定变量';
 
     const systemPrompt = `你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。
@@ -223,7 +225,10 @@ ${variablesList}
     };
 
     let code = response.text || '';
-    code = code.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+    code = code
+      .replace(/^```(?:javascript|js)?\n?/i, '')
+      .replace(/\n?```$/i, '')
+      .trim();
 
     if (!code) {
       throw new Error('AI 未返回有效的游戏代码');

@@ -17,14 +17,12 @@ export default function EndScreen({ title, shareUrl, onRestart }: EndScreenProps
       <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
         <button
           onClick={() => onRestart(true)}
-          className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow transition-transform hover:-translate-y-0.5 font-medium"
-        >
+          className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow transition-transform hover:-translate-y-0.5 font-medium">
           再玩一次
         </button>
         <Link
           href="/"
-          className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 shadow-sm transition-transform hover:-translate-y-0.5 font-medium"
-        >
+          className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 shadow-sm transition-transform hover:-translate-y-0.5 font-medium">
           返回游戏库
         </Link>
       </div>
@@ -32,7 +30,10 @@ export default function EndScreen({ title, shareUrl, onRestart }: EndScreenProps
       <div className="mt-6 pt-6 border-t border-gray-200">
         <p className="text-sm text-gray-500 mb-3">喜欢这个故事吗？分享给朋友！</p>
         <div className="flex justify-center">
-          <ShareButton title={title} url={shareUrl} />
+          <ShareButton
+            title={title}
+            url={shareUrl}
+          />
         </div>
       </div>
     </div>
