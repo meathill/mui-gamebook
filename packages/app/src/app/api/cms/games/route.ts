@@ -15,7 +15,8 @@ export async function GET() {
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  const userGames = await db.select()
+  const userGames = await db
+    .select()
     .from(schema.games)
     .where(eq(schema.games.ownerId, session.user.id))
     .orderBy(desc(schema.games.updatedAt));
@@ -53,7 +54,8 @@ Welcome to your new game!
   const db = drizzle(env.DB);
 
   try {
-    const result = await db.insert(schema.games)
+    const result = await db
+      .insert(schema.games)
       .values({
         slug,
         title,
@@ -64,7 +66,7 @@ Welcome to your new game!
       })
       .returning();
 
-    const id = result[ 0 ].id;
+    const id = result[0].id;
     await db.insert(schema.gameContent).values({
       gameId: id,
       content: defaultContent,

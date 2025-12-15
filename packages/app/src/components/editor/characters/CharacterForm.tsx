@@ -10,13 +10,7 @@ interface Props {
   onSave: () => void;
 }
 
-export default function CharacterForm({
-  formData,
-  isCreating,
-  gameId,
-  onUpdate,
-  onSave,
-}: Props) {
+export default function CharacterForm({ formData, isCreating, gameId, onUpdate, onSave }: Props) {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -33,7 +27,7 @@ export default function CharacterForm({
         }),
       });
       if (!res.ok) throw new Error('生成失败');
-      const data = await res.json() as { url: string };
+      const data = (await res.json()) as { url: string };
       onUpdate({ image_url: data.url });
     } catch (e) {
       console.error('生成角色图片失败:', e);
@@ -43,7 +37,7 @@ export default function CharacterForm({
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[ 0 ];
+    const file = e.target.files?.[0];
     if (!file) return;
     setUploadingImage(true);
     try {
@@ -51,13 +45,13 @@ export default function CharacterForm({
       formDataUpload.append('file', file);
       formDataUpload.append('type', 'character');
       formDataUpload.append('characterId', formData.id);
-      
+
       const res = await fetch(`/api/cms/games/${gameId}/upload`, {
         method: 'POST',
         body: formDataUpload,
       });
       if (!res.ok) throw new Error('上传失败');
-      const data = await res.json() as { url: string };
+      const data = (await res.json()) as { url: string };
       onUpdate({ image_url: data.url });
     } catch (e) {
       console.error('上传角色图片失败:', e);
@@ -68,9 +62,7 @@ export default function CharacterForm({
 
   return (
     <div className="p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">
-        {isCreating ? '创建新角色' : '编辑角色'}
-      </h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">{isCreating ? '创建新角色' : '编辑角色'}</h3>
 
       <div className="space-y-5">
         {/* 角色 ID */}
@@ -140,25 +132,30 @@ export default function CharacterForm({
                 </span>
               )}
             </div>
-            
+
             {/* 操作按钮 */}
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleGenerateImage}
                 disabled={!formData.image_prompt || generatingImage}
-                className="flex items-center gap-2 px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
-              >
+                className="flex items-center gap-2 px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50">
                 {generatingImage ? (
-                  <Loader2 size={16} className="animate-spin" />
+                  <Loader2
+                    size={16}
+                    className="animate-spin"
+                  />
                 ) : (
                   <Sparkles size={16} />
                 )}
                 {generatingImage ? '生成中...' : 'AI 生成'}
               </button>
-              
+
               <label className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 cursor-pointer">
                 {uploadingImage ? (
-                  <Loader2 size={16} className="animate-spin" />
+                  <Loader2
+                    size={16}
+                    className="animate-spin"
+                  />
                 ) : (
                   <Upload size={16} />
                 )}
@@ -190,8 +187,7 @@ export default function CharacterForm({
         {isCreating && (
           <button
             onClick={onSave}
-            className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-          >
+            className="w-full py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
             创建角色
           </button>
         )}

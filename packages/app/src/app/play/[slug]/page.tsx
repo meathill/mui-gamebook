@@ -3,8 +3,8 @@ import GamePlayer from '@/components/GamePlayer';
 import { Metadata } from 'next';
 
 type Props = {
-  params: Promise<{ slug: string }>
-}
+  params: Promise<{ slug: string }>;
+};
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const game = await cachedGetGameBySlug(slug);
@@ -53,7 +53,10 @@ export default async function PlayPage({ params }: Props) {
   return (
     <main className="min-h-screen bg-neutral-100 py-12">
       <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden">
-        <GamePlayer game={game} slug={slug} />
+        <GamePlayer
+          game={game}
+          slug={slug}
+        />
       </div>
     </main>
   );

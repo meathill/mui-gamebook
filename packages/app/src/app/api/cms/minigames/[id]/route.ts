@@ -15,10 +15,7 @@ interface MiniGameRecord {
  * 获取小游戏代码
  * 返回 JavaScript 代码，设置适当的缓存头
  */
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const minigameId = parseInt(id, 10);
 
@@ -33,7 +30,9 @@ export async function GET(
 
     const minigame = await DB.prepare(`
       SELECT * FROM Minigames WHERE id = ?
-    `).bind(minigameId).first<MiniGameRecord>();
+    `)
+      .bind(minigameId)
+      .first<MiniGameRecord>();
 
     if (!minigame) {
       return NextResponse.json({ error: '小游戏不存在' }, { status: 404 });

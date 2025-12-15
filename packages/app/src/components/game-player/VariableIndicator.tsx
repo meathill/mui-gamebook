@@ -17,12 +17,14 @@ export default function VariableIndicator({ varKey, meta, currentValue }: Variab
       <div className="flex items-center gap-2">
         <span className="text-xs text-gray-600 min-w-[60px]">{label}</span>
         <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div 
+          <div
             className={`h-full transition-all duration-300 ${percentage < 30 ? 'bg-red-500' : percentage < 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
             style={{ width: `${percentage}%` }}
           />
         </div>
-        <span className="text-xs text-gray-500 min-w-[40px] text-right">{currentValue}/{max}</span>
+        <span className="text-xs text-gray-500 min-w-[40px] text-right">
+          {currentValue}/{max}
+        </span>
       </div>
     );
   }

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Edit, Eye, Lock, Globe } from 'lucide-react';
+import { Plus, Trash2, Edit, Eye, Lock, Globe, Settings } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
@@ -29,7 +29,11 @@ export default function AdminPage() {
   const dialog = useDialog();
 
   // Use React Query to fetch games
-  const { data: games, isLoading, error } = useQuery({
+  const {
+    data: games,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['games'],
     queryFn: () => fetcher('/api/cms/games'),
   });
@@ -90,15 +94,23 @@ export default function AdminPage() {
             <h1 className="text-3xl font-bold text-gray-900">我的游戏</h1>
             <p className="text-gray-500 mt-1">管理你的互动故事</p>
           </div>
-          <div className="text-sm text-gray-600">
-            {session.user.email}
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin/config"
+              className="text-gray-500 hover:text-blue-600 p-2 rounded hover:bg-blue-50"
+              title="系统配置">
+              <Settings size={20} />
+            </Link>
+            <span className="text-sm text-gray-600">{session.user.email}</span>
           </div>
         </header>
 
         {/* Create New Game */}
         <div className="bg-white p-6 rounded-lg shadow mb-8">
           <h2 className="text-lg font-semibold mb-4">创建新游戏</h2>
-          <form onSubmit={handleCreate} className="flex gap-4">
+          <form
+            onSubmit={handleCreate}
+            className="flex gap-4">
             <input
               type="text"
               value={newTitle}
@@ -110,8 +122,7 @@ export default function AdminPage() {
             <button
               type="submit"
               disabled={createMutation.isPending}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-            >
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
               <Plus size={18} /> {createMutation.isPending ? '创建中...' : '创建'}
             </button>
           </form>
@@ -127,9 +138,12 @@ export default function AdminPage() {
           )}
 
           {games?.map((game) => (
-            <div key={game.id} className="bg-white p-4 rounded-lg shadow">
+            <div
+              key={game.id}
+              className="bg-white p-4 rounded-lg shadow">
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-2 rounded-full ${game.published ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                <div
+                  className={`p-2 rounded-full ${game.published ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
                   {game.published ? <Globe size={20} /> : <Lock size={20} />}
                 </div>
                 <div className="flex items-center gap-2 transition-opacity">
@@ -137,36 +151,37 @@ export default function AdminPage() {
                     href={`/play/${game.slug}`}
                     target="_blank"
                     className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
-                    title="预览"
-                  >
+                    title="预览">
                     <Eye size={18} />
                   </Link>
                   <Link
                     href={`/admin/edit/${game.id}`}
                     className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
-                    title="编辑"
-                  >
+                    title="编辑">
                     <Edit size={18} />
                   </Link>
                   <button
                     onClick={() => handleDelete(game.id)}
                     className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
-                    title="删除"
-                  >
+                    title="删除">
                     <Trash2 size={18} />
                   </button>
                 </div>
               </div>
               <div>
-                {game.cover_image && <Image
-                  alt={game.title}
-                  className="w-full object-cover rounded mb-4"
-                  height={200}
-                  src={game.cover_image}
-                  width={400}
-                />}
+                {game.cover_image && (
+                  <Image
+                    alt={game.title}
+                    className="w-full object-cover rounded mb-4"
+                    height={200}
+                    src={game.cover_image}
+                    width={400}
+                  />
+                )}
                 <h3 className="font-medium text-gray-900">{game.title}</h3>
-                <p className="text-xs text-gray-500">/{game.slug} • 更新于：{new Date(game.updatedAt).toLocaleDateString('zh-CN')}</p>
+                <p className="text-xs text-gray-500">
+                  /{game.slug} • 更新于：{new Date(game.updatedAt).toLocaleDateString('zh-CN')}
+                </p>
               </div>
             </div>
           ))}

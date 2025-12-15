@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     const { env } = getCloudflareContext();
     const bucket = env.ASSETS_BUCKET;
-    if (!bucket) throw new Error('R2 Bucket \'ASSETS_BUCKET\' not found');
+    if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
     const buffer = await file.arrayBuffer();
     const fileName = `images/${id}/${type}-${Date.now()}-${file.name}`;

@@ -40,7 +40,9 @@ export async function GET(req: Request) {
 
     query += ' ORDER BY created_at DESC';
 
-    const result = await DB.prepare(query).bind(...params).all<MiniGameRecord>();
+    const result = await DB.prepare(query)
+      .bind(...params)
+      .all<MiniGameRecord>();
 
     return NextResponse.json({
       minigames: result.results.map((m) => ({
@@ -84,12 +86,7 @@ export async function POST(req: Request) {
 
     const minigameName = name || `小游戏 ${new Date().toLocaleString('zh-CN')}`;
 
-    const { id, url, usage, model } = await generateAndStoreMiniGame(
-      prompt,
-      session.user.id,
-      minigameName,
-      variables,
-    );
+    const { id, url, usage, model } = await generateAndStoreMiniGame(prompt, session.user.id, minigameName, variables);
 
     // 记录 AI 用量
     await recordAiUsage({

@@ -1,9 +1,9 @@
 /**
  * Demo 小游戏：金色飞贼捕捉
- * 
+ *
  * 这是一个示例小游戏，展示了小游戏 API 的正确实现方式。
  * 玩家需要在限定时间内点击屏幕上随机出现的金色飞贼。
- * 
+ *
  * 接口规范：
  * - init(container, variables): 初始化游戏
  * - onComplete(callback): 注册完成回调
@@ -88,7 +88,7 @@ function draw() {
     0,
     snitch.x,
     snitch.y,
-    SNITCH_SIZE
+    SNITCH_SIZE,
   );
   gradient.addColorStop(0, '#ffd700');
   gradient.addColorStop(0.5, '#ffb800');
@@ -103,7 +103,7 @@ function draw() {
   ctx.save();
   ctx.translate(snitch.x, snitch.y);
   const wingAngle = Math.sin(Date.now() / 50) * 0.3;
-  
+
   // 左翅膀
   ctx.save();
   ctx.rotate(-Math.PI / 4 + wingAngle);
@@ -218,20 +218,12 @@ function endGame() {
   ctx.fillStyle = '#fff';
   ctx.font = 'bold 36px Arial';
   ctx.textAlign = 'center';
-  
+
   const success = score >= TARGET_CLICKS;
-  ctx.fillText(
-    success ? '🎉 成功！' : '⏰ 时间到！',
-    canvas.width / 2,
-    canvas.height / 2 - 40
-  );
-  
+  ctx.fillText(success ? '🎉 成功！' : '⏰ 时间到！', canvas.width / 2, canvas.height / 2 - 40);
+
   ctx.font = '24px Arial';
-  ctx.fillText(
-    `捕获飞贼: ${score} / ${TARGET_CLICKS}`,
-    canvas.width / 2,
-    canvas.height / 2 + 10
-  );
+  ctx.fillText(`捕获飞贼: ${score} / ${TARGET_CLICKS}`, canvas.width / 2, canvas.height / 2 + 10);
 
   ctx.font = '18px Arial';
   ctx.fillStyle = '#aaa';
@@ -261,7 +253,7 @@ function handleContinue() {
  */
 export function init(containerEl, variables) {
   container = containerEl;
-  
+
   // 获取初始变量值
   if (variables.snitch_caught !== undefined) {
     score = Number(variables.snitch_caught) || 0;
@@ -274,7 +266,7 @@ export function init(containerEl, variables) {
   canvas.style.display = 'block';
   canvas.style.cursor = 'crosshair';
   container.appendChild(canvas);
-  
+
   ctx = canvas.getContext('2d');
 
   // 初始化游戏状态

@@ -4,12 +4,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { games, user } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import {
-  createStoryClient,
-  uploadMetadataToIpfs,
-  registerGameAsIp,
-  type IpMetadataInput,
-} from '@/lib/story-protocol';
+import { createStoryClient, uploadMetadataToIpfs, registerGameAsIp, type IpMetadataInput } from '@/lib/story-protocol';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -39,27 +34,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const pinataJwt = env.PINATA_JWT;
 
     if (!privateKey) {
-      return NextResponse.json(
-        { error: 'Story Protocol 私钥未配置' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Story Protocol 私钥未配置' }, { status: 500 });
     }
 
     if (!pinataJwt) {
-      return NextResponse.json(
-        { error: 'Pinata JWT 未配置' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Pinata JWT 未配置' }, { status: 500 });
     }
 
     const db = drizzle(env.DB);
 
     // 获取游戏信息
-    const [game] = await db
-      .select()
-      .from(games)
-      .where(eq(games.id, gameId))
-      .limit(1);
+    const [game] = await db.select().from(games).where(eq(games.id, gameId)).limit(1);
 
     if (!game) {
       return NextResponse.json({ error: '游戏不存在' }, { status: 404 });
@@ -67,10 +52,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // 验证所有权
     if (game.ownerId !== session.user.id) {
-      return NextResponse.json(
-        { error: '您没有权限注册此游戏的 IP' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '您没有权限注册此游戏的 IP' }, { status: 403 });
     }
 
     // 检查是否已经注册
@@ -81,16 +63,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
           ipId: game.ipId,
           explorerUrl: `https://aeneid.explorer.story.foundation/ipa/${game.ipId}`,
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // 获取用户信息
-    const [owner] = await db
-      .select()
-      .from(user)
-      .where(eq(user.id, session.user.id))
-      .limit(1);
+    const [owner] = await db.select().from(user).where(eq(user.id, session.user.id)).limit(1);
 
     // 准备 IP 元数据
     const metadata: IpMetadataInput = {
@@ -112,11 +90,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // 注册 IP Asset
     console.log('[Story] 注册 IP Asset...');
-    const result = await registerGameAsIp(
-      storyClient,
-      metadata,
-      metadataUri,
-    );
+    const result = await registerGameAsIp(storyClient, metadata, metadataUri);
     console.log('[Story] 注册成功:', result);
 
     // 更新数据库
@@ -144,7 +118,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       {
         error: error instanceof Error ? error.message : '注册 IP 失败',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -190,10 +164,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // 验证所有权
     if (game.ownerId !== session.user.id) {
-      return NextResponse.json(
-        { error: '您没有权限查看此游戏的 IP 信息' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: '您没有权限查看此游戏的 IP 信息' }, { status: 403 });
     }
 
     if (!game.ipId) {
@@ -216,7 +187,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       {
         error: error instanceof Error ? error.message : '获取 IP 状态失败',
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

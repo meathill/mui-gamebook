@@ -4,4 +4,4 @@ export type GameRow = {
   description: string;
   cover_image: string;
   tags: string;
-}
+};

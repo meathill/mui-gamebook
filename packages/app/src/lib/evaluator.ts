@@ -18,11 +18,14 @@ export function evaluateCondition(condition: string | undefined, state: RuntimeS
 
   // Simple parser for "A op B"
   // This regex splits by operators but keeps them in the result
-  const parts = condition.split(/(\s*==\s*|\s*!=\s*|\s*>=\s*|\s*<=\s*|\s*>\s*|\s*<\s*)/).map(p => p.trim()).filter(p => p);
+  const parts = condition
+    .split(/(\s*==\s*|\s*!=\s*|\s*>=\s*|\s*<=\s*|\s*>\s*|\s*<\s*)/)
+    .map((p) => p.trim())
+    .filter((p) => p);
 
   if (parts.length === 1) {
     // Boolean variable check e.g. "has_key"
-    const val = getValue(parts[ 0 ], state);
+    const val = getValue(parts[0], state);
     return !!val;
   }
 
@@ -32,12 +35,18 @@ export function evaluateCondition(condition: string | undefined, state: RuntimeS
     const right = getValue(rightRaw, state);
 
     switch (op) {
-      case '==': return left == right;
-      case '!=': return left != right;
-      case '>': return (left as number) > (right as number);
-      case '<': return (left as number) < (right as number);
-      case '>=': return (left as number) >= (right as number);
-      case '<=': return (left as number) <= (right as number);
+      case '==':
+        return left == right;
+      case '!=':
+        return left != right;
+      case '>':
+        return (left as number) > (right as number);
+      case '<':
+        return (left as number) < (right as number);
+      case '>=':
+        return (left as number) >= (right as number);
+      case '<=':
+        return (left as number) <= (right as number);
     }
   }
 
@@ -63,7 +72,7 @@ export function executeSet(instruction: string | undefined, state: RuntimeState)
   const newState = { ...state };
 
   // Handle multiple instructions separated by comma
-  const statements = instruction.split(',').map(s => s.trim());
+  const statements = instruction.split(',').map((s) => s.trim());
 
   for (const stmt of statements) {
     const parts = stmt.split(/\s*=\s*/);
@@ -72,8 +81,8 @@ export function executeSet(instruction: string | undefined, state: RuntimeState)
       continue;
     }
 
-    const key = parts[ 0 ];
-    const expression = parts[ 1 ];
+    const key = parts[0];
+    const expression = parts[1];
 
     // Check for simple arithmetic: "key +/- value" or "val1 +/- val2"
     // This regex captures: (operand1) (operator) (operand2)
@@ -85,7 +94,7 @@ export function executeSet(instruction: string | undefined, state: RuntimeState)
       const op2 = getValue(op2Raw, newState) as number;
 
       if (typeof op1 === 'number' && typeof op2 === 'number') {
-        newState[ key ] = operator === '+' ? op1 + op2 : op1 - op2;
+        newState[key] = operator === '+' ? op1 + op2 : op1 - op2;
       } else {
         console.warn(`Invalid arithmetic operands in: ${stmt}`);
       }
@@ -93,7 +102,7 @@ export function executeSet(instruction: string | undefined, state: RuntimeState)
       // Direct assignment
       const val = getValue(expression, newState);
       if (val !== undefined) {
-        newState[ key ] = val;
+        newState[key] = val;
       }
     }
   }
@@ -110,13 +119,13 @@ function getValue(token: string, state: RuntimeState): boolean | number | string
   if (!isNaN(Number(token))) return Number(token);
 
   // String literals (start/end with ' or ")
-  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith('\'') && token.endsWith('\''))) {
+  if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
     return token.slice(1, -1);
   }
 
   // Variable lookup
   if (Object.prototype.hasOwnProperty.call(state, token)) {
-    return state[ token ];
+    return state[token];
   }
 
   // Undefined variable treats as 0 if strictly numeric context needed, or null?
@@ -136,11 +145,11 @@ function getValue(token: string, state: RuntimeState): boolean | number | string
  */
 export function interpolateVariables(text: string, state: RuntimeState): string {
   if (!text) return text;
-  
+
   // 匹配 {{变量名}} 格式，变量名可以包含字母、数字、下划线
   return text.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
     if (Object.prototype.hasOwnProperty.call(state, varName)) {
-      const value = state[ varName ];
+      const value = state[varName];
       return String(value);
     }
     // 如果变量不存在，保留原始文本

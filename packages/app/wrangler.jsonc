@@ -3,10 +3,7 @@
   "main": ".open-next/worker.js",
   "name": "mui-gamebook",
   "compatibility_date": "2025-11-20",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
-  ],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "account_id": "fdc63eeea83ae8f5234357308b9a638b",
   "assets": {
     "directory": ".open-next/assets",
@@ -41,14 +38,14 @@
     "mode": "smart"
   },
   "r2_buckets": [
-     {
-       "binding": "NEXT_INC_CACHE_R2_BUCKET",
-       "bucket_name": "baifo"
-     },
-     {
-       "binding": "ASSETS_BUCKET",
-       "bucket_name": "gamebook-assets"
-     }
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "baifo"
+    },
+    {
+      "binding": "ASSETS_BUCKET",
+      "bucket_name": "gamebook-assets"
+    }
   ],
   "services": [
     {

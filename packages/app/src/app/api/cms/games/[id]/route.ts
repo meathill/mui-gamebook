@@ -8,11 +8,8 @@ import { parse } from '@mui-gamebook/parser';
 
 type Props = {
   params: Promise<{ id: string }>;
-}
-export async function GET(
-  req: Request,
-  { params }: Props,
-) {
+};
+export async function GET(req: Request, { params }: Props) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -21,30 +18,27 @@ export async function GET(
   const db = drizzle(env.DB);
 
   // Verify ownership
-  const game = await db.select().from(schema.games)
+  const game = await db
+    .select()
+    .from(schema.games)
     .where(and(eq(schema.games.id, Number(id)), eq(schema.games.ownerId, session.user.id)))
     .get();
 
   if (!game) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
 
-  const content = await db.select().from(schema.gameContent)
-    .where(eq(schema.gameContent.gameId, id))
-    .get();
+  const content = await db.select().from(schema.gameContent).where(eq(schema.gameContent.gameId, id)).get();
 
   // Parse tags and ensure published is boolean
   const parsedGame = {
     ...game,
     tags: game.tags ? JSON.parse(game.tags) : [],
-    published: Boolean(game.published)
+    published: Boolean(game.published),
   };
 
   return NextResponse.json({ ...parsedGame, content: content?.content || '' });
 }
 
-export async function PUT(
-  req: Request,
-  { params }: Props,
-) {
+export async function PUT(req: Request, { params }: Props) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -67,7 +61,9 @@ export async function PUT(
   const db = drizzle(env.DB);
 
   // Check ownership first
-  const currentGame = await db.select().from(schema.games)
+  const currentGame = await db
+    .select()
+    .from(schema.games)
     .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
     .get();
 
@@ -79,7 +75,11 @@ export async function PUT(
 
   // Check for slug collision if changing
   if (newSlug && newSlug !== currentGame.slug) {
-    const existing = await db.select().from(schema.games).where(and(eq(schema.games.slug, newSlug), ne(schema.games.id, id))).get();
+    const existing = await db
+      .select()
+      .from(schema.games)
+      .where(and(eq(schema.games.slug, newSlug), ne(schema.games.id, id)))
+      .get();
     if (existing) {
       return NextResponse.json({ error: 'Slug already exists' }, { status: 409 });
     }
@@ -87,7 +87,8 @@ export async function PUT(
   }
 
   // Update Games table
-  await db.update(schema.games)
+  await db
+    .update(schema.games)
     .set({
       slug: finalSlug,
       title,
@@ -96,22 +97,17 @@ export async function PUT(
       coverImage: cover_image,
       tags: JSON.stringify(tags),
       published: published,
-      updatedAt: now
+      updatedAt: now,
     })
     .where(eq(schema.games.id, id));
 
   // Update GameContent table
-  await db.update(schema.gameContent)
-    .set({ content })
-    .where(eq(schema.gameContent.gameId, id));
+  await db.update(schema.gameContent).set({ content }).where(eq(schema.gameContent.gameId, id));
 
   return NextResponse.json({ success: true, slug: finalSlug });
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: Props,
-) {
+export async function DELETE(req: Request, { params }: Props) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -119,7 +115,8 @@ export async function DELETE(
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  const result = await db.delete(schema.games)
+  const result = await db
+    .delete(schema.games)
     .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
     .returning({ deletedId: schema.games.id })
     .get();

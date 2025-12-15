@@ -5,17 +5,13 @@
 /**
  * 带指数退避的重试函数
  */
-export async function retry<T>(
-  operation: () => Promise<T>,
-  retries: number = 3,
-  delay: number = 1000
-): Promise<T> {
+export async function retry<T>(operation: () => Promise<T>, retries: number = 3, delay: number = 1000): Promise<T> {
   try {
     return await operation();
   } catch (error) {
     if (retries <= 0) throw error;
     console.warn(`Operation failed, retrying in ${delay}ms... (${retries} retries left)`);
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
     return retry(operation, retries - 1, delay * 2);
   }
 }

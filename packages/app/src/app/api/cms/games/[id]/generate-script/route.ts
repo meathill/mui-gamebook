@@ -12,8 +12,8 @@ Output ONLY the raw Markdown content, no extra conversational text.
 `;
 
 type Props = {
-  params: Promise<{ id: string }>
-}
+  params: Promise<{ id: string }>;
+};
 export async function POST(req: Request, { params }: Props) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -41,13 +41,18 @@ export async function POST(req: Request, { params }: Props) {
   const model = env.GOOGLE_MODEL || process.env.GOOGLE_MODEL || 'gemini-3-pro';
 
   try {
-    const { text: script, usage } = await generateText(genAI, model, `${SYSTEM_PROMPT}
+    const { text: script, usage } = await generateText(
+      genAI,
+      model,
+      `${SYSTEM_PROMPT}
 
 ${dslSpec}
 
 ## User Story:
 
-"""${story}"""`, ThinkingLevel.LOW);
+"""${story}"""`,
+      ThinkingLevel.LOW,
+    );
     // Cleanup: Remove markdown code blocks if AI wrapped it
     const cleanScript = script
       .replace(/^```markdown\n/, '')

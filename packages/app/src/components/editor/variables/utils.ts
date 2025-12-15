@@ -90,12 +90,12 @@ export function variableToFormData(name: string, val: GameState[string]): Variab
 
 export function formDataToVariable(data: VariableFormData): VariableMeta | number | string | boolean {
   const value = parseValue(data.value, data.valueType);
-  
+
   // 如果只有简单值，返回简单类型
   if (!data.visible && !data.hasTrigger && !data.label && data.display === 'value') {
     return value;
   }
-  
+
   // 返回完整元数据
   const meta: VariableMeta = { value };
   if (data.visible) meta.visible = true;

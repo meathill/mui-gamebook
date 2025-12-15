@@ -10,19 +10,9 @@ interface VariableListProps {
   searchQuery: string;
 }
 
-export default function VariableList({ 
-  variables, 
-  selectedVar, 
-  onSelect, 
-  onDelete,
-  searchQuery
-}: VariableListProps) {
+export default function VariableList({ variables, selectedVar, onSelect, onDelete, searchQuery }: VariableListProps) {
   if (variables.length === 0) {
-    return (
-      <div className="p-4 text-center text-gray-400 text-sm">
-        {searchQuery ? '无匹配变量' : '暂无变量'}
-      </div>
-    );
+    return <div className="p-4 text-center text-gray-400 text-sm">{searchQuery ? '无匹配变量' : '暂无变量'}</div>;
   }
 
   return (
@@ -33,19 +23,23 @@ export default function VariableList({
           className={`px-4 py-2 cursor-pointer flex items-center gap-2 hover:bg-gray-50 ${
             selectedVar === name ? 'bg-blue-50 border-l-2 border-blue-500' : ''
           }`}
-          onClick={() => onSelect(name)}
-        >
+          onClick={() => onSelect(name)}>
           <div className="flex-1 min-w-0">
             <div className="font-mono text-sm text-gray-900 truncate">{name}</div>
             <div className="text-xs text-gray-500 truncate">= {getDisplayValue(val)}</div>
           </div>
           {isVisible(val) && (
-            <Eye size={12} className="text-green-600 flex-shrink-0" />
+            <Eye
+              size={12}
+              className="text-green-600 flex-shrink-0"
+            />
           )}
           <button
-            onClick={e => { e.stopPropagation(); onDelete(name); }}
-            className="p-1 text-gray-400 hover:text-red-600 rounded flex-shrink-0"
-          >
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(name);
+            }}
+            className="p-1 text-gray-400 hover:text-red-600 rounded flex-shrink-0">
             <Trash2 size={12} />
           </button>
         </div>

@@ -39,17 +39,17 @@ export default function SignInPage() {
     <div className="flex min-h-[80vh] items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            登录姆伊游戏书
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            仅限受邀用户访问
-          </p>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">登录姆伊游戏书</h2>
+          <p className="mt-2 text-center text-sm text-gray-600">仅限受邀用户访问</p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form
+          className="mt-8 space-y-6"
+          onSubmit={handleSubmit}>
           <div className="-space-y-px rounded-md shadow-sm">
             <div>
-              <label htmlFor="email-address" className="sr-only">
+              <label
+                htmlFor="email-address"
+                className="sr-only">
                 邮箱地址
               </label>
               <input
@@ -65,7 +65,9 @@ export default function SignInPage() {
               />
             </div>
             <div>
-              <label htmlFor="password" className="sr-only">
+              <label
+                htmlFor="password"
+                className="sr-only">
                 密码
               </label>
               <input
@@ -82,17 +84,12 @@ export default function SignInPage() {
             </div>
           </div>
 
-          {error && (
-            <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">
-              {error}
-            </div>
-          )}
+          {error && <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</div>}
 
           <div>
             <button
               disabled={loading}
-              className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+              className="group relative flex w-full justify-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? '登录中...' : '登录'}
             </button>
           </div>

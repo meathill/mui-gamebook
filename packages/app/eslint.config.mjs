@@ -9,9 +9,9 @@ const eslintConfig = defineConfig([
   {
     rules: {
       'react-hooks/set-state-in-effect': 'off',
-      'quotes': [ 'error', 'single' ],
-      'object-curly-spacing': [ 'error', 'always' ],
-      'computed-property-spacing': [ 'error', 'always' ],
+      quotes: ['error', 'single'],
+      'object-curly-spacing': ['error', 'always'],
+      'computed-property-spacing': ['error', 'always'],
     },
   },
   globalIgnores([

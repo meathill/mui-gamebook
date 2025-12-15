@@ -37,15 +37,13 @@ export async function POST(req: Request) {
         password,
         name,
       },
-      asResponse: false // We want the user object, not a Response
+      asResponse: false, // We want the user object, not a Response
     });
 
     if (res?.user?.id) {
       // Automatically verify email for admin-invited users
       const db = drizzle(env.DB);
-      await db.update(schema.user)
-        .set({ emailVerified: true })
-        .where(eq(schema.user.id, res.user.id));
+      await db.update(schema.user).set({ emailVerified: true }).where(eq(schema.user.id, res.user.id));
 
       // Update the returned user object to reflect the change
       res.user.emailVerified = true;

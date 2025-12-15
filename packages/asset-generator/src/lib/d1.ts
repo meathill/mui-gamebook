@@ -31,11 +31,11 @@ export async function executeD1Query<T>(sql: string, params: unknown[] = []): Pr
     {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${CF_API_TOKEN}`,
+        Authorization: `Bearer ${CF_API_TOKEN}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ sql, params }),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -43,9 +43,9 @@ export async function executeD1Query<T>(sql: string, params: unknown[] = []): Pr
     throw new Error(`D1 API 请求失败: ${response.status} - ${errorText}`);
   }
 
-  const data = await response.json() as D1QueryResult<T>;
+  const data = (await response.json()) as D1QueryResult<T>;
   if (!data.success) {
-    throw new Error(`D1 查询失败: ${data.errors?.map(e => e.message).join(', ')}`);
+    throw new Error(`D1 查询失败: ${data.errors?.map((e) => e.message).join(', ')}`);
   }
 
   return data.result[0]?.results || [];
@@ -63,7 +63,7 @@ export async function listGames(): Promise<GameRow[]> {
  */
 export async function getGameContent(idOrSlug: string): Promise<{ game: GameRow; content: string } | null> {
   const isNumeric = /^\d+$/.test(idOrSlug);
-  
+
   let games: GameRow[];
   if (isNumeric) {
     games = await executeD1Query<GameRow>('SELECT id, slug, title FROM Games WHERE id = ?', [parseInt(idOrSlug)]);
@@ -76,10 +76,7 @@ export async function getGameContent(idOrSlug: string): Promise<{ game: GameRow;
   }
 
   const game = games[0];
-  const contents = await executeD1Query<GameContentRow>(
-    'SELECT content FROM GameContent WHERE game_id = ?',
-    [game.id]
-  );
+  const contents = await executeD1Query<GameContentRow>('SELECT content FROM GameContent WHERE game_id = ?', [game.id]);
 
   if (contents.length === 0) {
     return null;
@@ -92,8 +89,5 @@ export async function getGameContent(idOrSlug: string): Promise<{ game: GameRow;
  * 更新游戏内容
  */
 export async function updateGameContent(gameId: number, content: string): Promise<void> {
-  await executeD1Query(
-    'UPDATE GameContent SET content = ? WHERE game_id = ?',
-    [content, gameId]
-  );
+  await executeD1Query('UPDATE GameContent SET content = ? WHERE game_id = ?', [content, gameId]);
 }

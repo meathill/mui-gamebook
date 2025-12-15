@@ -30,15 +30,14 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
     if (!searchQuery) return characterList;
     const query = searchQuery.toLowerCase();
     return characterList.filter(
-      ([id, char]) =>
-        id.toLowerCase().includes(query) || char.name.toLowerCase().includes(query)
+      ([id, char]) => id.toLowerCase().includes(query) || char.name.toLowerCase().includes(query),
     );
   }, [characterList, searchQuery]);
 
   const handleSelectCharacter = (id: string) => {
     setSelectedId(id);
     setIsCreating(false);
-    setFormData(characterToFormData(id, characters[ id ]));
+    setFormData(characterToFormData(id, characters[id]));
   };
 
   const handleCreateNew = () => {
@@ -61,21 +60,21 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
     const newCharacters = { ...characters };
 
     // 检查 ID 重复
-    if (isCreating && characters[ formData.id ]) {
+    if (isCreating && characters[formData.id]) {
       await dialog.alert('角色 ID 已存在');
       return;
     }
 
     // 如果是编辑且修改了 ID
     if (selectedId && formData.id !== selectedId) {
-      if (characters[ formData.id ]) {
+      if (characters[formData.id]) {
         await dialog.alert('角色 ID 已存在');
         return;
       }
-      delete newCharacters[ selectedId ];
+      delete newCharacters[selectedId];
     }
 
-    newCharacters[ formData.id ] = formDataToCharacter(formData);
+    newCharacters[formData.id] = formDataToCharacter(formData);
     onChange(newCharacters);
 
     setSelectedId(formData.id);
@@ -83,11 +82,11 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
   };
 
   const handleDeleteCharacter = async (id: string) => {
-    const confirmed = await dialog.confirm(`确定删除角色 "${characters[ id ].name}" 吗？`);
+    const confirmed = await dialog.confirm(`确定删除角色 "${characters[id].name}" 吗？`);
     if (!confirmed) return;
 
     const newCharacters = { ...characters };
-    delete newCharacters[ id ];
+    delete newCharacters[id];
     onChange(newCharacters);
 
     if (selectedId === id) {
@@ -104,14 +103,14 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
     if (selectedId && !isCreating) {
       const newCharacters = { ...characters };
       if (updates.id && updates.id !== selectedId) {
-        if (characters[ updates.id ]) {
+        if (characters[updates.id]) {
           await dialog.alert('角色 ID 已存在');
           return;
         }
-        delete newCharacters[ selectedId ];
+        delete newCharacters[selectedId];
         setSelectedId(updates.id);
       }
-      newCharacters[ newFormData.id ] = formDataToCharacter(newFormData);
+      newCharacters[newFormData.id] = formDataToCharacter(newFormData);
       onChange(newCharacters);
     }
   };
@@ -126,7 +125,10 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
           {/* 搜索和新建 */}
           <div className="flex gap-2">
             <div className="flex-1 relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search
+                size={14}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <input
                 type="text"
                 value={searchQuery}
@@ -138,8 +140,7 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
             <button
               onClick={handleCreateNew}
               className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              title="新建角色"
-            >
+              title="新建角色">
               <Plus size={16} />
             </button>
           </div>

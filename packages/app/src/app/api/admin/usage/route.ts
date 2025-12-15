@@ -24,10 +24,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: '缺少 userId 参数' }, { status: 400 });
     }
 
-    const [usage, config] = await Promise.all([
-      getUserDailyUsage(userId),
-      getConfig(),
-    ]);
+    const [usage, config] = await Promise.all([getUserDailyUsage(userId), getConfig()]);
 
     return NextResponse.json({
       userId,

@@ -42,50 +42,65 @@ export function DialogProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const closeDialog = useCallback((result: boolean) => {
-    if (resolveRef) {
-      resolveRef(result);
-    }
-    setDialog(null);
-    setResolveRef(null);
-  }, [resolveRef]);
+  const closeDialog = useCallback(
+    (result: boolean) => {
+      if (resolveRef) {
+        resolveRef(result);
+      }
+      setDialog(null);
+      setResolveRef(null);
+    },
+    [resolveRef],
+  );
 
-  const alert = useCallback(async (message: string, title?: string) => {
-    await showDialog({
-      type: 'alert',
-      title: title || '提示',
-      message,
-      confirmText: '确定',
-    });
-  }, [showDialog]);
+  const alert = useCallback(
+    async (message: string, title?: string) => {
+      await showDialog({
+        type: 'alert',
+        title: title || '提示',
+        message,
+        confirmText: '确定',
+      });
+    },
+    [showDialog],
+  );
 
-  const confirm = useCallback(async (message: string, title?: string) => {
-    return showDialog({
-      type: 'confirm',
-      title: title || '确认',
-      message,
-      confirmText: '确定',
-      cancelText: '取消',
-    });
-  }, [showDialog]);
+  const confirm = useCallback(
+    async (message: string, title?: string) => {
+      return showDialog({
+        type: 'confirm',
+        title: title || '确认',
+        message,
+        confirmText: '确定',
+        cancelText: '取消',
+      });
+    },
+    [showDialog],
+  );
 
-  const success = useCallback(async (message: string, title?: string) => {
-    await showDialog({
-      type: 'success',
-      title: title || '成功',
-      message,
-      confirmText: '确定',
-    });
-  }, [showDialog]);
+  const success = useCallback(
+    async (message: string, title?: string) => {
+      await showDialog({
+        type: 'success',
+        title: title || '成功',
+        message,
+        confirmText: '确定',
+      });
+    },
+    [showDialog],
+  );
 
-  const error = useCallback(async (message: string, title?: string) => {
-    await showDialog({
-      type: 'error',
-      title: title || '错误',
-      message,
-      confirmText: '确定',
-    });
-  }, [showDialog]);
+  const error = useCallback(
+    async (message: string, title?: string) => {
+      await showDialog({
+        type: 'error',
+        title: title || '错误',
+        message,
+        confirmText: '确定',
+      });
+    },
+    [showDialog],
+  );
 
   const getIcon = () => {
     switch (dialog?.type) {
@@ -116,11 +131,13 @@ export function DialogProvider({ children }: { children: ReactNode }) {
   return (
     <DialogContext.Provider value={{ alert, confirm, success, error }}>
       {children}
-      
-      <DialogPrimitive.Root open={!!dialog} onOpenChange={(open) => !open && closeDialog(dialog?.type === 'confirm' ? false : true)}>
+
+      <DialogPrimitive.Root
+        open={!!dialog}
+        onOpenChange={(open) => !open && closeDialog(dialog?.type === 'confirm' ? false : true)}>
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-          <DialogPrimitive.Content 
+          <DialogPrimitive.Content
             className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]"
             onEscapeKeyDown={(e) => {
               if (dialog?.type === 'confirm') {
@@ -131,8 +148,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
               if (dialog?.type === 'confirm') {
                 e.preventDefault();
               }
-            }}
-          >
+            }}>
             {/* Close button for non-confirm dialogs */}
             {dialog?.type !== 'confirm' && (
               <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none">
@@ -143,9 +159,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
 
             <div className="flex flex-col items-center text-center">
               {/* Icon */}
-              <div className="mb-4">
-                {getIcon()}
-              </div>
+              <div className="mb-4">{getIcon()}</div>
 
               {/* Title */}
               {dialog?.title && (
@@ -164,15 +178,13 @@ export function DialogProvider({ children }: { children: ReactNode }) {
                 {dialog?.type === 'confirm' && (
                   <button
                     onClick={() => closeDialog(false)}
-                    className="flex-1 max-w-[120px] px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
-                  >
+                    className="flex-1 max-w-[120px] px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
                     {dialog.cancelText}
                   </button>
                 )}
                 <button
                   onClick={() => closeDialog(true)}
-                  className={`flex-1 max-w-[120px] px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${getButtonStyles()}`}
-                >
+                  className={`flex-1 max-w-[120px] px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${getButtonStyles()}`}>
                   {dialog?.confirmText}
                 </button>
               </div>

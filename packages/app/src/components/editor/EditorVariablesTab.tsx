@@ -8,7 +8,7 @@ import {
   VariableFormData,
   defaultFormData,
   variableToFormData,
-  formDataToVariable
+  formDataToVariable,
 } from './variables';
 
 interface Props {
@@ -36,7 +36,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
   const handleSelectVariable = (name: string) => {
     setSelectedVar(name);
     setIsCreating(false);
-    setFormData(variableToFormData(name, state[ name ]));
+    setFormData(variableToFormData(name, state[name]));
   };
 
   const handleCreateNew = () => {
@@ -55,19 +55,19 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     const newState = { ...state };
 
     if (selectedVar && formData.name !== selectedVar) {
-      if (state[ formData.name ] !== undefined) {
+      if (state[formData.name] !== undefined) {
         await dialog.alert('变量名已存在');
         return;
       }
-      delete newState[ selectedVar ];
+      delete newState[selectedVar];
     }
 
-    if (isCreating && state[ formData.name ] !== undefined) {
+    if (isCreating && state[formData.name] !== undefined) {
       await dialog.alert('变量名已存在');
       return;
     }
 
-    newState[ formData.name ] = formDataToVariable(formData);
+    newState[formData.name] = formDataToVariable(formData);
     onChange(newState);
 
     setSelectedVar(formData.name);
@@ -78,7 +78,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     const confirmed = await dialog.confirm(`确定删除变量 "${name}" 吗？`);
     if (!confirmed) return;
     const newState = { ...state };
-    delete newState[ name ];
+    delete newState[name];
     onChange(newState);
 
     if (selectedVar === name) {
@@ -94,14 +94,14 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     if (selectedVar && !isCreating) {
       const newState = { ...state };
       if (updates.name && updates.name !== selectedVar) {
-        if (state[ updates.name ] !== undefined) {
+        if (state[updates.name] !== undefined) {
           await dialog.alert('变量名已存在');
           return;
         }
-        delete newState[ selectedVar ];
+        delete newState[selectedVar];
         setSelectedVar(updates.name);
       }
-      newState[ newFormData.name ] = formDataToVariable(newFormData);
+      newState[newFormData.name] = formDataToVariable(newFormData);
       onChange(newState);
     }
   };
@@ -116,11 +116,14 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
           {/* 搜索和新建 */}
           <div className="flex gap-2">
             <div className="flex-1 relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search
+                size={14}
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <input
                 type="text"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="搜索..."
                 className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -128,8 +131,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
             <button
               onClick={handleCreateNew}
               className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              title="新建变量"
-            >
+              title="新建变量">
               <Plus size={16} />
             </button>
           </div>
@@ -149,7 +151,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
 
       {/* 右侧编辑区域 */}
       <div className="flex-1 overflow-y-auto">
-        {(selectedVar || isCreating) ? (
+        {selectedVar || isCreating ? (
           <VariableForm
             formData={formData}
             isCreating={isCreating}

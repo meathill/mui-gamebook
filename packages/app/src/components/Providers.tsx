@@ -9,9 +9,7 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <DialogProvider>
-        {children}
-      </DialogProvider>
+      <DialogProvider>{children}</DialogProvider>
     </QueryClientProvider>
   );
 }

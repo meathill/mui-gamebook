@@ -24,10 +24,10 @@ export async function getUserDailyUsage(userId: string): Promise<DailyUsage> {
   try {
     const { env } = getCloudflareContext();
     const kv = env.KV;
-    
+
     const key = getTodayKey(userId);
     const usage = await kv.get<DailyUsage>(key, 'json');
-    
+
     return usage || { totalTokens: 0, lastUpdated: new Date().toISOString() };
   } catch (error) {
     console.error('[Usage Limit] 获取用户每日用量失败:', error);
@@ -42,18 +42,18 @@ export async function incrementUserDailyUsage(userId: string, tokens: number): P
   try {
     const { env } = getCloudflareContext();
     const kv = env.KV;
-    
+
     const key = getTodayKey(userId);
     const current = await getUserDailyUsage(userId);
-    
+
     const newUsage: DailyUsage = {
       totalTokens: current.totalTokens + tokens,
       lastUpdated: new Date().toISOString(),
     };
-    
+
     // 设置 TTL 为 2 天，确保过期数据自动清理
     await kv.put(key, JSON.stringify(newUsage), { expirationTtl: 2 * 24 * 60 * 60 });
-    
+
     console.log(`[Usage Limit] 用户 ${userId} 今日用量: ${newUsage.totalTokens} tokens`);
   } catch (error) {
     console.error('[Usage Limit] 更新用户每日用量失败:', error);
@@ -78,7 +78,7 @@ export interface UsageLimitCheckResult {
 export async function checkUserUsageLimit(userId: string): Promise<UsageLimitCheckResult> {
   try {
     const config = await getConfig();
-    
+
     // 检查是否是管理员用户
     if (config.adminUserIds.includes(userId)) {
       return {
@@ -89,11 +89,11 @@ export async function checkUserUsageLimit(userId: string): Promise<UsageLimitChe
         message: '管理员用户，无限制',
       };
     }
-    
+
     const usage = await getUserDailyUsage(userId);
     const limit = config.dailyTokenLimit;
     const remaining = Math.max(0, limit - usage.totalTokens);
-    
+
     if (usage.totalTokens >= limit) {
       return {
         allowed: false,
@@ -103,7 +103,7 @@ export async function checkUserUsageLimit(userId: string): Promise<UsageLimitChe
         message: `今日 AI 用量已达上限（${limit.toLocaleString()} tokens），请明天再试`,
       };
     }
-    
+
     return {
       allowed: true,
       currentUsage: usage.totalTokens,

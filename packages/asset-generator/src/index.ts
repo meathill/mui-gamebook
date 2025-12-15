@@ -14,7 +14,7 @@ async function main() {
   const showHelpFlag = args.includes('--help') || args.includes('-h');
 
   // 过滤出命令和参数
-  const positionalArgs = args.filter(arg => !arg.startsWith('--') && arg !== '-h');
+  const positionalArgs = args.filter((arg) => !arg.startsWith('--') && arg !== '-h');
   const command = positionalArgs[0];
   const argument = positionalArgs[1];
 
@@ -56,7 +56,7 @@ async function main() {
   }
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error('发生错误:', error);
   process.exit(1);
 });

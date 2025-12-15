@@ -35,21 +35,21 @@ export function createStoryClient(privateKey: string): {
   account: ReturnType<typeof privateKeyToAccount>;
 } {
   const account = privateKeyToAccount(privateKey as `0x${string}`);
-  
+
   const walletClient = createWalletClient({
     account,
     chain: aeneid,
     transport: http(STORY_RPC_URL),
   });
-  
+
   const config: StoryConfig = {
     wallet: walletClient,
     transport: http(STORY_RPC_URL),
     chainId: 'aeneid',
   };
-  
+
   const storyClient = StoryClient.newClient(config);
-  
+
   return { storyClient, walletClient, account };
 }
 
@@ -70,7 +70,7 @@ export function generateIpMetadataJson(metadata: IpMetadataInput): string {
       { trait_type: 'Type', value: 'Interactive Story' },
     ],
   };
-  
+
   return JSON.stringify(ipMetadata);
 }
 
@@ -78,12 +78,9 @@ export function generateIpMetadataJson(metadata: IpMetadataInput): string {
  * 上传元数据到 IPFS（通过 Pinata）
  * 返回 IPFS URI
  */
-export async function uploadMetadataToIpfs(
-  metadata: IpMetadataInput,
-  pinataJwt: string
-): Promise<string> {
+export async function uploadMetadataToIpfs(metadata: IpMetadataInput, pinataJwt: string): Promise<string> {
   const metadataJson = generateIpMetadataJson(metadata);
-  
+
   const response = await fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
     method: 'POST',
     headers: {
@@ -97,13 +94,13 @@ export async function uploadMetadataToIpfs(
       },
     }),
   });
-  
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(`上传元数据到 IPFS 失败: ${error}`);
   }
-  
-  const result = await response.json() as { IpfsHash: string };
+
+  const result = (await response.json()) as { IpfsHash: string };
   return `ipfs://${result.IpfsHash}`;
 }
 
@@ -127,7 +124,7 @@ export async function registerGameAsIp(
       { key: 'Type', value: 'Interactive Story' },
     ],
   });
-  
+
   // 使用新的统一入口 registerIpAsset，支持 mint-on-demand
   const response = await storyClient.ipAsset.registerIpAsset({
     nft: {
@@ -141,11 +138,11 @@ export async function registerGameAsIp(
       nftMetadataHash: ipMetadata.nftMetadataHash as `0x${string}`,
     },
   });
-  
+
   if (!response.ipId || !response.txHash) {
     throw new Error('注册 IP 失败：未返回有效的 IP ID 或交易哈希');
   }
-  
+
   return {
     txHash: response.txHash,
     ipId: response.ipId as Address,
@@ -165,10 +162,10 @@ export async function getIpInfo(ipId: Address): Promise<{
     chain: aeneid,
     transport: http(STORY_RPC_URL),
   });
-  
+
   // 简单检查地址是否有代码（是否是有效的合约/IP）
   const code = await publicClient.getCode({ address: ipId });
-  
+
   return {
     exists: code !== undefined && code !== '0x',
     explorerUrl: `https://aeneid.explorer.story.foundation/ipa/${ipId}`,

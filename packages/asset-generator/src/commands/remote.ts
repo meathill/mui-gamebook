@@ -6,11 +6,7 @@ import { getGameContent, updateGameContent } from '../lib/d1';
 import { processGame } from '../lib/generator';
 import { printUsageStats } from '../lib/usage';
 
-export async function handleRemoteCommand(
-  idOrSlug: string,
-  force: boolean,
-  dryRun: boolean
-): Promise<void> {
+export async function handleRemoteCommand(idOrSlug: string, force: boolean, dryRun: boolean): Promise<void> {
   console.log(`正在获取游戏: ${idOrSlug}...\n`);
 
   const result = await getGameContent(idOrSlug);

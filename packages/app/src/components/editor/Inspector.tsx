@@ -1,7 +1,19 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { SceneNodeData } from '@/lib/editor/transformers';
-import { CheckIcon, Trash2, ImageIcon, Loader2, Upload, Sparkles, Music, Video, Clock, Gamepad2, List } from 'lucide-react';
+import {
+  CheckIcon,
+  Trash2,
+  ImageIcon,
+  Loader2,
+  Upload,
+  Sparkles,
+  Music,
+  Video,
+  Clock,
+  Gamepad2,
+  List,
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { SceneNode } from '@mui-gamebook/parser';
 import { useDialog } from '@/components/Dialog';
@@ -15,7 +27,13 @@ interface InspectorProps {
   onEdgeChange: (id: string, changes: { label?: string; data?: Record<string, unknown> }) => void;
 }
 
-export default function Inspector({ selectedNode, selectedEdge, onNodeChange, onNodeIdChange, onEdgeChange }: InspectorProps) {
+export default function Inspector({
+  selectedNode,
+  selectedEdge,
+  onNodeChange,
+  onNodeIdChange,
+  onEdgeChange,
+}: InspectorProps) {
   const { id } = useParams();
   const [generatingIndex, setGeneratingIndex] = useState<number>(-1);
   const [openGeneratorIndex, setOpenGeneratorIndex] = useState<number>(-1);
@@ -40,7 +58,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
   const handleAssetChange = (index: number, field: string, value: string) => {
     if (!selectedNode || !nodeData) return;
     const newAssets = [...(nodeData.assets || [])];
-    newAssets[ index ] = { ...newAssets[ index ], [ field ]: value };
+    newAssets[index] = { ...newAssets[index], [field]: value };
     onNodeChange(selectedNode.id, { assets: newAssets });
   };
 
@@ -90,8 +108,8 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
         // 使用 pendingAssetsRef 如果存在，否则使用当前的 nodeData.assets
         const currentAssets = pendingAssetsRef.current || nodeData?.assets || [];
         const newAssets = [...currentAssets];
-        if (newAssets[ index ]) {
-          newAssets[ index ] = { ...newAssets[ index ], url: data.url } as SceneNode;
+        if (newAssets[index]) {
+          newAssets[index] = { ...newAssets[index], url: data.url } as SceneNode;
           onNodeChange(selectedNode.id, { assets: newAssets });
         }
         pendingAssetsRef.current = null;
@@ -111,7 +129,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
       files: e.target.files,
       pendingIndex: pendingUploadIndexRef.current,
     });
-    const file = e.target.files?.[ 0 ];
+    const file = e.target.files?.[0];
     if (file && pendingUploadIndexRef.current !== null) {
       console.log('[Inspector] Calling handleUpload with file:', file.name);
       await handleUpload(file, pendingUploadIndexRef.current);
@@ -146,7 +164,13 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
 
     // 确定媒体类型
     const isMinigame = asset.type === 'minigame';
-    const mediaType = isMinigame ? 'minigame' : asset.type.includes('image') ? 'image' : asset.type.includes('audio') ? 'audio' : 'video';
+    const mediaType = isMinigame
+      ? 'minigame'
+      : asset.type.includes('image')
+        ? 'image'
+        : asset.type.includes('audio')
+          ? 'audio'
+          : 'video';
     // API 需要 ai_ 类型
     const apiType = isMinigame ? 'minigame' : `ai_${mediaType}`;
 
@@ -180,7 +204,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
           body: JSON.stringify({
             prompt: asset.prompt,
             gameId: id,
-            type: apiType
+            type: apiType,
           }),
         });
 
@@ -202,7 +226,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
           body: JSON.stringify({
             prompt: asset.prompt,
             gameId: id,
-            type: apiType
+            type: apiType,
           }),
         });
 
@@ -263,32 +287,28 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                   <button
                     onClick={() => handleAddAsset('image')}
                     className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-0.5"
-                    title="添加图片"
-                  >
+                    title="添加图片">
                     <ImageIcon size={14} />
                     <span className="text-xs">图片</span>
                   </button>
                   <button
                     onClick={() => handleAddAsset('audio')}
                     className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-0.5"
-                    title="添加音频"
-                  >
+                    title="添加音频">
                     <Music size={14} />
                     <span className="text-xs">音频</span>
                   </button>
                   <button
                     onClick={() => handleAddAsset('video')}
                     className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-0.5"
-                    title="添加视频"
-                  >
+                    title="添加视频">
                     <Video size={14} />
                     <span className="text-xs">视频</span>
                   </button>
                   <button
                     onClick={() => handleAddAsset('minigame')}
                     className="p-1 text-purple-600 hover:bg-purple-50 rounded flex items-center gap-0.5"
-                    title="添加小游戏"
-                  >
+                    title="添加小游戏">
                     <Gamepad2 size={14} />
                     <span className="text-xs">小游戏</span>
                   </button>
@@ -314,10 +334,22 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                     const isMinigame = asset.type === 'minigame';
 
                     return (
-                      <div key={i} className="p-3 bg-gray-50 rounded border border-gray-200 text-sm relative group">
+                      <div
+                        key={i}
+                        className="p-3 bg-gray-50 rounded border border-gray-200 text-sm relative group">
                         <div className="flex items-center gap-1 mb-2">
-                          {isImage && <ImageIcon size={16} className="text-gray-500" />}
-                          {isMinigame && <Gamepad2 size={16} className="text-purple-500" />}
+                          {isImage && (
+                            <ImageIcon
+                              size={16}
+                              className="text-gray-500"
+                            />
+                          )}
+                          {isMinigame && (
+                            <Gamepad2
+                              size={16}
+                              className="text-purple-500"
+                            />
+                          )}
                           <span className="font-bold uppercase text-xs">
                             {asset.type.replace('ai_', '').replace('static_', '')}
                           </span>
@@ -328,8 +360,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                                 onClick={() => setShowMinigameSelector(showMinigameSelector === i ? -1 : i)}
                                 className="p-1 text-xs text-blue-600 rounded hover:bg-blue-100 flex items-center justify-center"
                                 title="选择已有小游戏"
-                                type="button"
-                              >
+                                type="button">
                                 <List size={14} />
                               </button>
                             )}
@@ -339,11 +370,13 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                                 disabled={uploadingIndex === i}
                                 className="p-1 text-xs rounded disabled:text-gray-300 hover:bg-blue-100 flex items-center justify-center"
                                 title="上传素材"
-                                type="button"
-                              >
+                                type="button">
                                 {uploadingIndex === i ? (
                                   <>
-                                    <Loader2 size={14} className="animate-spin" />
+                                    <Loader2
+                                      size={14}
+                                      className="animate-spin"
+                                    />
                                     <span className="sr-only">上传中...</span>
                                   </>
                                 ) : (
@@ -359,15 +392,13 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                               disabled={generatingIndex > -1}
                               onClick={() => setOpenGeneratorIndex(i === openGeneratorIndex ? -1 : i)}
                               title="AI 生成素材"
-                              type="button"
-                            >
+                              type="button">
                               <Sparkles size={14} />
                             </button>
                             <button
                               onClick={() => handleAssetDelete(i)}
                               className="p-1 text-red-600 hover:text-red-500 hover:bg-red-100"
-                              title="删除素材"
-                            >
+                              title="删除素材">
                               <Trash2 size={14} />
                             </button>
                           </div>
@@ -391,7 +422,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                         )}
 
                         {/* AI 生成区域 */}
-                        {(openGeneratorIndex === i || !assetUrl && assetPrompt) && (
+                        {(openGeneratorIndex === i || (!assetUrl && assetPrompt)) && (
                           <div className="relative">
                             <textarea
                               value={assetPrompt || ''}
@@ -404,11 +435,13 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                               disabled={generatingIndex === i || !assetPrompt}
                               onClick={() => handleRegenerate(i, asset)}
                               title="生成素材"
-                              type="button"
-                            >
+                              type="button">
                               {generatingIndex === i ? (
                                 <>
-                                  <Loader2 size={16} className="animate-spin" />
+                                  <Loader2
+                                    size={16}
+                                    className="animate-spin"
+                                  />
                                   <span className="sr-only">生成中...</span>
                                 </>
                               ) : (
@@ -425,24 +458,39 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                         {assetUrl && isImage && !assetUrl.startsWith('pending://') && (
                           <div className="mb-2 relative w-full h-24 bg-gray-100 rounded overflow-hidden">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={assetUrl} alt="预览" className="w-full h-full object-cover" />
+                            <img
+                              src={assetUrl}
+                              alt="预览"
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         )}
                         {assetUrl && isAudio && !assetUrl.startsWith('pending://') && (
                           <div className="mb-2">
-                            <audio src={assetUrl} controls className="w-full h-8" />
+                            <audio
+                              src={assetUrl}
+                              controls
+                              className="w-full h-8"
+                            />
                           </div>
                         )}
                         {assetUrl && isVideo && !assetUrl.startsWith('pending://') && (
                           <div className="mb-2 relative w-full h-24 bg-gray-100 rounded overflow-hidden">
-                            <video src={assetUrl} controls className="w-full h-full object-cover" />
+                            <video
+                              src={assetUrl}
+                              controls
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         )}
                         {/* 小游戏已生成状态 */}
                         {assetUrl && isMinigame && (
                           <div className="mb-2 relative w-full h-16 bg-purple-50 rounded overflow-hidden flex items-center justify-center border border-purple-200">
                             <div className="text-center">
-                              <Gamepad2 size={20} className="mx-auto text-purple-500" />
+                              <Gamepad2
+                                size={20}
+                                className="mx-auto text-purple-500"
+                              />
                               <p className="text-xs text-purple-600 mt-1">小游戏已生成</p>
                             </div>
                           </div>
@@ -451,7 +499,10 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
                         {assetUrl && assetUrl.startsWith('pending://') && (
                           <div className="mb-2 relative w-full h-24 bg-gray-100 rounded overflow-hidden flex items-center justify-center">
                             <div className="text-center">
-                              <Clock size={24} className="mx-auto text-gray-400 animate-pulse" />
+                              <Clock
+                                size={24}
+                                className="mx-auto text-gray-400 animate-pulse"
+                              />
                               <p className="text-xs text-gray-500 mt-1">生成中...</p>
                             </div>
                           </div>
@@ -473,7 +524,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
               <label className="block text-xs font-medium text-gray-700 mb-1">选项文本</label>
               <input
                 type="text"
-                value={selectedEdge.label as string || ''}
+                value={(selectedEdge.label as string) || ''}
                 onChange={(e) => onEdgeChange(selectedEdge.id, { label: e.target.value })}
                 className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
@@ -482,8 +533,10 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
               <label className="block text-xs font-medium text-gray-700 mb-1">条件 (if)</label>
               <input
                 type="text"
-                value={selectedEdge.data?.condition as string || ''}
-                onChange={(e) => onEdgeChange(selectedEdge.id, { data: { ...selectedEdge.data, condition: e.target.value } })}
+                value={(selectedEdge.data?.condition as string) || ''}
+                onChange={(e) =>
+                  onEdgeChange(selectedEdge.id, { data: { ...selectedEdge.data, condition: e.target.value } })
+                }
                 placeholder="例如: has_key == true"
                 className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
@@ -492,7 +545,7 @@ export default function Inspector({ selectedNode, selectedEdge, onNodeChange, on
               <label className="block text-xs font-medium text-gray-700 mb-1">状态更新 (set)</label>
               <input
                 type="text"
-                value={selectedEdge.data?.set as string || ''}
+                value={(selectedEdge.data?.set as string) || ''}
                 onChange={(e) => onEdgeChange(selectedEdge.id, { data: { ...selectedEdge.data, set: e.target.value } })}
                 placeholder="例如: gold = gold - 10"
                 className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
