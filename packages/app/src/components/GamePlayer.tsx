@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
 import type { PlayableGame, RuntimeState, SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables, fromSerializablePlayableGame } from '@mui-gamebook/parser/src/types';
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
@@ -20,7 +19,6 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   const [imageLoading, setImageLoading] = useState(false);
   const [minigameCompleted, setMinigameCompleted] = useState(false);
   const dialog = useDialog();
-  const t = useTranslations('game');
 
   const visibleVariables = getVisibleVariables(game.initialState);
 
@@ -149,7 +147,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   };
 
   if (!isLoaded) {
-    return <div className="p-8 text-center">{t('loading')}</div>;
+    return <div className="p-8 text-center">加载中...</div>;
   }
 
   if (!isGameStarted) {
@@ -159,8 +157,8 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   if (!currentScene) {
     return (
       <div className="p-8 text-center">
-        <h2 className="text-xl font-bold text-red-600 mb-4">{t('sceneNotFound')}</h2>
-        <p className="mb-6">{t('cannotFindScene', { sceneId: currentSceneId })}</p>
+        <h2 className="text-xl font-bold text-red-600 mb-4">场景未找到</h2>
+        <p className="mb-6">找不到场景：{currentSceneId}</p>
         <button
           onClick={() => handleRestart()}
           className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"

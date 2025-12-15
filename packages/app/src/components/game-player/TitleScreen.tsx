@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import ShareButton from '@/components/ShareButton';
@@ -13,15 +12,14 @@ interface TitleScreenProps {
 
 export default function TitleScreen({ game, onStart }: TitleScreenProps) {
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-  const t = useTranslations('game');
 
   return (
     <div className="flex flex-col min-h-[600px] bg-white">
       <div className="relative w-full h-64 md:h-80 bg-gray-200 overflow-hidden">
         {game.cover_image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img 
-            src={game.cover_image} 
+          <img
+            src={game.cover_image}
             alt={game.title}
             className="object-cover w-full h-full"
           />
@@ -49,7 +47,7 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
           <ShareButton title={game.title} url={shareUrl} />
         </div>
       </div>
-      
+
       <div className="flex-1 p-6 md:p-8 flex flex-col items-center text-center">
         {game.backgroundStory ? (
           <div className="text-gray-600 text-base mb-8 max-w-2xl leading-relaxed text-left prose prose-gray prose-sm">
@@ -57,17 +55,17 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
           </div>
         ) : (
           <p className="text-gray-600 text-lg mb-8 max-w-xl leading-relaxed">
-            {game.description || t('defaultDescription')}
+            {game.description || '一场互动冒险等待着你。'}
           </p>
         )}
-        
+
         <button
           onClick={onStart}
           className="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5"
         >
           {t('startAdventure')}
         </button>
-        
+
         <Link href="/" className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
           {t('backToLibrary')}
         </Link>

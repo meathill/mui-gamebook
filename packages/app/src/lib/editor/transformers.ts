@@ -15,11 +15,11 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
   let y = 0;
 
   game.scenes.forEach((scene, id) => {
-    const textNodes = scene.nodes.filter(n => n.type === 'text');
-    const assetNodes = scene.nodes.filter(n => n.type !== 'text' && n.type !== 'choice');
-    const choiceNodes = scene.nodes.filter(n => n.type === 'choice');
+    const textNodes = scene.nodes.filter((n) => n.type === 'text');
+    const assetNodes = scene.nodes.filter((n) => n.type !== 'text' && n.type !== 'choice');
+    const choiceNodes = scene.nodes.filter((n) => n.type === 'choice');
 
-    const content = textNodes.map(n => n.content).join('\n\n');
+    const content = textNodes.map((n) => n.content).join('\n\n');
 
     nodes.push({
       id: id,
@@ -59,7 +59,7 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
   const newGame: Game = { ...originalGame };
   const scenes = new Map<string, Scene>();
 
-  nodes.forEach(node => {
+  nodes.forEach((node) => {
     const sceneId = node.id;
     const sceneNodes: SceneNode[] = [];
 
@@ -79,11 +79,11 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
 
     // 3. Add Choices (Edges)
     // Find all edges starting from this node
-    const outgoingEdges = edges.filter(e => e.source === sceneId);
-    outgoingEdges.forEach(edge => {
+    const outgoingEdges = edges.filter((e) => e.source === sceneId);
+    outgoingEdges.forEach((edge) => {
       sceneNodes.push({
         type: 'choice',
-        text: edge.label as string || 'Next',
+        text: (edge.label as string) || 'Next',
         nextSceneId: edge.target,
         condition: edge.data?.condition as string | undefined,
         set: edge.data?.set as string | undefined,

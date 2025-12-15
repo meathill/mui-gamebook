@@ -9,7 +9,7 @@ import type {
   MiniGameGenerationResult,
   TextGenerationResult,
 } from './ai-provider';
-import { MINIGAME_API_SPEC } from './ai';
+import { extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
 
 export class OpenAiProvider implements AiProvider {
   readonly type = 'openai' as const;
@@ -59,7 +59,7 @@ export class OpenAiProvider implements AiProvider {
       response_format: 'b64_json',
     });
 
-    const imageData = response.data[0]?.b64_json;
+    const imageData = response.data?.[0]?.b64_json;
     if (!imageData) {
       throw new Error('No image data received from OpenAI.');
     }
@@ -86,7 +86,9 @@ export class OpenAiProvider implements AiProvider {
     console.log(`[OpenAI] Generating minigame with model: ${model}`);
 
     const variablesList = variables
-      ? Object.entries(variables).map(([key, desc]) => `- ${key}: ${desc}`).join('\n')
+      ? Object.entries(variables)
+          .map(([key, desc]) => `- ${key}: ${desc}`)
+          .join('\n')
       : '无特定变量';
 
     const systemPrompt = `你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。
@@ -121,7 +123,7 @@ ${variablesList}
     };
 
     let code = response.choices[0]?.message?.content || '';
-    code = code.replace(/^```(?:javascript|js)?\n?/i, '').replace(/\n?```$/i, '').trim();
+    code = extractMiniGameCode(code);
 
     if (!code) {
       throw new Error('AI 未返回有效的游戏代码');

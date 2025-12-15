@@ -3,7 +3,10 @@
  * 在应用级别管理 pending 操作的轮询，独立于组件生命周期
  */
 
-type OperationCallback = (operationId: number, result: { status: 'completed' | 'failed'; url?: string; error?: string }) => void;
+type OperationCallback = (
+  operationId: number,
+  result: { status: 'completed' | 'failed'; url?: string; error?: string },
+) => void;
 
 interface PendingOperation {
   operationId: number;
@@ -68,18 +71,18 @@ class PendingOperationsManager {
    */
   async batchCheck(urls: string[]): Promise<Map<string, { url?: string; error?: string; status: string }>> {
     const results = new Map<string, { url?: string; error?: string; status: string }>();
-    const pendingUrls = urls.filter(url => url.startsWith('pending://'));
+    const pendingUrls = urls.filter((url) => url.startsWith('pending://'));
 
     await Promise.all(
       pendingUrls.map(async (pendingUrl) => {
         try {
           const res = await fetch(`/api/cms/operations?url=${encodeURIComponent(pendingUrl)}`);
-          const data = await res.json() as { status: string; url?: string; error?: string };
+          const data = (await res.json()) as { status: string; url?: string; error?: string };
           results.set(pendingUrl, data);
         } catch (e) {
           console.error('Check pending operation error:', e);
         }
-      })
+      }),
     );
 
     return results;
@@ -98,10 +101,7 @@ class PendingOperationsManager {
     }
 
     // 使用上次请求耗时作为间隔，限制在 [min, max] 范围内
-    const interval = Math.min(
-      Math.max(operation.lastRequestDuration, this.minPollInterval),
-      this.maxPollInterval
-    );
+    const interval = Math.min(Math.max(operation.lastRequestDuration, this.minPollInterval), this.maxPollInterval);
 
     operation.timeoutId = setTimeout(() => this.checkOperation(operationId), interval);
   }
@@ -122,7 +122,7 @@ class PendingOperationsManager {
     const startTime = Date.now();
     try {
       const res = await fetch(`/api/cms/operations?id=${operationId}`);
-      const data = await res.json() as { status: string; url?: string; error?: string };
+      const data = (await res.json()) as { status: string; url?: string; error?: string };
 
       // 记录本次请求耗时
       operation.lastRequestDuration = Date.now() - startTime;

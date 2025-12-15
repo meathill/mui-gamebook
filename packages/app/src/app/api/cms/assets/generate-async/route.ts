@@ -4,10 +4,7 @@ import { startAsyncVideoGeneration } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 import { checkVideoGenerationPermission } from '@/lib/config';
-import {
-  createPendingOperation,
-  generatePlaceholderUrl,
-} from '@/lib/pending-operations';
+import { createPendingOperation, generatePlaceholderUrl } from '@/lib/pending-operations';
 
 /**
  * 启动异步素材生成

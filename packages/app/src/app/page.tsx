@@ -1,24 +1,22 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getTranslations } from 'next-intl/server';
 import { getPublishedGames } from '@/lib/games';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const games = await getPublishedGames();
-  const t = await getTranslations('home');
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 mb-8 p-6 shadow">
-          <h2 className="text-2xl font-medium mb-4">{t('aboutTitle')}</h2>
+          <h2 className="text-2xl font-medium mb-4">关于“姆伊故事书”</h2>
           <p className="mb-2">
             {t('aboutContent')}
           </p>
           <p className="mb-2">
-            {t('aboutContent2')}
+            目前这里仍在早创阶段，功能和内容都比较有限，但我会持续改进和完善。如果你有任何建议或想法，欢迎随时联系我！
             <Link
               className="text-sky-600 underline ml-1"
               href="mailto:meathill@gmail.com"

@@ -4,7 +4,8 @@ import * as schema from '@/db/schema';
 import type { AiUsageInfo } from '@mui-gamebook/core/lib/ai';
 import { incrementUserDailyUsage } from './usage-limit';
 
-export type AiUsageType = 'text_generation'
+export type AiUsageType =
+  | 'text_generation'
   | 'image_generation'
   | 'audio_generation'
   | 'video_generation'
@@ -41,7 +42,9 @@ export async function recordAiUsage(params: RecordUsageParams): Promise<void> {
     // 同时更新 KV 中的每日用量统计
     await incrementUserDailyUsage(params.userId, params.usage.totalTokens);
 
-    console.log(`[AI Usage] 记录用量: 用户=${params.userId}, 类型=${params.type}, 模型=${params.model}, 总token=${params.usage.totalTokens}`);
+    console.log(
+      `[AI Usage] 记录用量: 用户=${params.userId}, 类型=${params.type}, 模型=${params.model}, 总token=${params.usage.totalTokens}`,
+    );
   } catch (error) {
     // 用量记录失败不应阻止主流程
     console.error('[AI Usage] 记录用量失败:', error);

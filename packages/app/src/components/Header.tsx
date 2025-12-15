@@ -1,17 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import { useLocale } from '@/i18n/client';
-import type { Locale } from '@/i18n/config';
 
 export default function Header() {
   const { data: session } = authClient.useSession();
   const router = useRouter();
-  const t = useTranslations('header');
-  const { setLocale } = useLocale();
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -25,17 +20,6 @@ export default function Header() {
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            {/* 语言切换 */}
-            <select
-              onChange={(e) => setLocale(e.target.value as Locale)}
-              className="text-sm border-gray-300 rounded-md bg-transparent"
-              defaultValue=""
-            >
-              <option value="" disabled>🌐</option>
-              <option value="en">English</option>
-              <option value="zh">中文</option>
-            </select>
-            
             <Link
               href="/"
               className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium"

@@ -15,7 +15,7 @@ describe('evaluator', () => {
 
     it('should evaluate comparison expressions', () => {
       const state = { gold: 10, age: 20, name: 'Hero' };
-      
+
       expect(evaluateCondition('gold == 10', state)).toBe(true);
       expect(evaluateCondition('gold != 5', state)).toBe(true);
       expect(evaluateCondition('age > 18', state)).toBe(true);
@@ -26,7 +26,7 @@ describe('evaluator', () => {
 
     it('should evaluate string comparisons', () => {
       const state = { name: 'Hero' };
-      expect(evaluateCondition('name == \'Hero\'', state)).toBe(true);
+      expect(evaluateCondition("name == 'Hero'", state)).toBe(true);
       expect(evaluateCondition('name == "Villain"', state)).toBe(false);
     });
 
@@ -57,7 +57,7 @@ describe('evaluator', () => {
 
     it('should handle arithmetic', () => {
       const state = { gold: 10, cost: 5 };
-      
+
       let newState = executeSet('gold = gold + 5', state);
       expect(newState.gold).toBe(15);
 
@@ -89,20 +89,19 @@ describe('evaluator', () => {
 
     it('应替换多个变量', () => {
       const state = { player_name: '勇者', gold: 50, level: 5 };
-      expect(interpolateVariables('{{player_name}}，等级{{level}}，金币{{gold}}', state))
-        .toBe('勇者，等级5，金币50');
+      expect(interpolateVariables('{{player_name}}，等级{{level}}，金币{{gold}}', state)).toBe('勇者，等级5，金币50');
     });
 
     it('应保留不存在的变量原样', () => {
       const state = { gold: 100 };
-      expect(interpolateVariables('你有 {{gold}} 金币和 {{silver}} 银币', state))
-        .toBe('你有 100 金币和 {{silver}} 银币');
+      expect(interpolateVariables('你有 {{gold}} 金币和 {{silver}} 银币', state)).toBe(
+        '你有 100 金币和 {{silver}} 银币',
+      );
     });
 
     it('应处理布尔值', () => {
       const state = { has_key: true, is_dead: false };
-      expect(interpolateVariables('钥匙: {{has_key}}, 死亡: {{is_dead}}', state))
-        .toBe('钥匙: true, 死亡: false');
+      expect(interpolateVariables('钥匙: {{has_key}}, 死亡: {{is_dead}}', state)).toBe('钥匙: true, 死亡: false');
     });
 
     it('应处理字符串值', () => {

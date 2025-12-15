@@ -46,7 +46,7 @@ export async function POST(req: Request, { params }: Props) {
     const buffer = await file.arrayBuffer();
     const gameSlug = slugify(game.slug || game.title, { lower: true });
     const ext = file.name.split('.').pop() || 'png';
-    
+
     let fileName: string;
     switch (type) {
       case 'character':

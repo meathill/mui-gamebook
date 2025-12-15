@@ -55,7 +55,7 @@ url: https://example.com/castle.png
     const startScene = playable.scenes.get('start');
     expect(startScene).toBeDefined();
 
-    const imageNode = startScene!.nodes.find(n => n.type === 'ai_image');
+    const imageNode = startScene!.nodes.find((n) => n.type === 'ai_image');
     expect(imageNode).toBeDefined();
     // 不应该有 prompt
     expect((imageNode as Record<string, unknown>)['prompt']).toBeUndefined();
@@ -127,7 +127,7 @@ state:
 
     const playable = toPlayableGame(result.data);
     const startScene = playable.scenes.get('start');
-    const choices = startScene!.nodes.filter(n => n.type === 'choice');
+    const choices = startScene!.nodes.filter((n) => n.type === 'choice');
 
     expect(choices).toHaveLength(2);
     expect(choices[0]).toMatchObject({
@@ -158,8 +158,8 @@ url: https://example.com/music.mp3
 
     const playable = toPlayableGame(result.data);
     const startScene = playable.scenes.get('start');
-    const audioNode = startScene!.nodes.find(n => n.type === 'ai_audio');
-    
+    const audioNode = startScene!.nodes.find((n) => n.type === 'ai_audio');
+
     expect(audioNode).toBeDefined();
     expect((audioNode as Record<string, unknown>)['prompt']).toBeUndefined();
     if (audioNode && 'audioType' in audioNode) {

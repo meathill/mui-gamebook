@@ -26,7 +26,11 @@ export default function AdminConfigPage() {
 
   const [formData, setFormData] = useState<Partial<AppConfig>>({});
 
-  const { data: config, isLoading, error } = useQuery<AppConfig>({
+  const {
+    data: config,
+    isLoading,
+    error,
+  } = useQuery<AppConfig>({
     queryKey: ['admin-config'],
     queryFn: async () => {
       const res = await fetch('/api/admin/config');
@@ -74,10 +78,10 @@ export default function AdminConfigPage() {
     return (
       <div className="min-h-screen bg-gray-50 py-12 px-4">
         <div className="max-w-3xl mx-auto">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error.message}
-          </div>
-          <Link href="/admin" className="mt-4 inline-flex items-center gap-2 text-blue-600 hover:text-blue-800">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">{error.message}</div>
+          <Link
+            href="/admin"
+            className="mt-4 inline-flex items-center gap-2 text-blue-600 hover:text-blue-800">
             <ArrowLeft size={18} /> 返回
           </Link>
         </div>
@@ -91,14 +95,16 @@ export default function AdminConfigPage() {
   };
 
   const updateField = (field: keyof AppConfig, value: unknown) => {
-    setFormData(prev => ({ ...prev, [ field ]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <header className="flex items-center gap-4 mb-8">
-          <Link href="/admin" className="text-gray-500 hover:text-gray-700">
+          <Link
+            href="/admin"
+            className="text-gray-500 hover:text-gray-700">
             <ArrowLeft size={24} />
           </Link>
           <div>
@@ -107,21 +113,20 @@ export default function AdminConfigPage() {
           </div>
         </header>
 
-        <form onSubmit={handleSubmit} className="space-y-8">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-8">
           {/* AI 提供者配置 */}
           <section className="bg-white p-6 rounded-lg shadow">
             <h2 className="text-lg font-semibold mb-4 border-b pb-2">AI 提供者配置</h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  默认 AI 提供者
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认 AI 提供者</label>
                 <select
                   value={formData.defaultAiProvider || 'google'}
-                  onChange={e => updateField('defaultAiProvider', e.target.value)}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                >
+                  onChange={(e) => updateField('defaultAiProvider', e.target.value)}
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
                   <option value="google">Google GenAI</option>
                   <option value="openai">OpenAI</option>
                 </select>
@@ -138,39 +143,33 @@ export default function AdminConfigPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  文本模型
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">文本模型</label>
                 <input
                   type="text"
                   value={formData.googleTextModel || ''}
-                  onChange={e => updateField('googleTextModel', e.target.value)}
+                  onChange={(e) => updateField('googleTextModel', e.target.value)}
                   placeholder="gemini-2.5-flash"
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  图片模型
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">图片模型</label>
                 <input
                   type="text"
                   value={formData.googleImageModel || ''}
-                  onChange={e => updateField('googleImageModel', e.target.value)}
+                  onChange={(e) => updateField('googleImageModel', e.target.value)}
                   placeholder="gemini-3-pro-image-preview"
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  视频模型
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">视频模型</label>
                 <input
                   type="text"
                   value={formData.googleVideoModel || ''}
-                  onChange={e => updateField('googleVideoModel', e.target.value)}
+                  onChange={(e) => updateField('googleVideoModel', e.target.value)}
                   placeholder="veo-3.1-fast-generate-preview"
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
@@ -184,26 +183,22 @@ export default function AdminConfigPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  文本模型
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">文本模型</label>
                 <input
                   type="text"
                   value={formData.openaiTextModel || ''}
-                  onChange={e => updateField('openaiTextModel', e.target.value)}
+                  onChange={(e) => updateField('openaiTextModel', e.target.value)}
                   placeholder="gpt-4o"
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  图片模型
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">图片模型</label>
                 <input
                   type="text"
                   value={formData.openaiImageModel || ''}
-                  onChange={e => updateField('openaiImageModel', e.target.value)}
+                  onChange={(e) => updateField('openaiImageModel', e.target.value)}
                   placeholder="gpt-image-1"
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
@@ -217,18 +212,14 @@ export default function AdminConfigPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  每日 Token 限制
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">每日 Token 限制</label>
                 <input
                   type="number"
                   value={formData.dailyTokenLimit || 100000}
-                  onChange={e => updateField('dailyTokenLimit', parseInt(e.target.value) || 100000)}
+                  onChange={(e) => updateField('dailyTokenLimit', parseInt(e.target.value) || 100000)}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  普通用户每日可使用的 AI Token 上限
-                </p>
+                <p className="text-xs text-gray-500 mt-1">普通用户每日可使用的 AI Token 上限</p>
               </div>
             </div>
           </section>
@@ -239,35 +230,43 @@ export default function AdminConfigPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  视频生成白名单
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">视频生成白名单</label>
                 <textarea
                   value={(formData.videoWhitelist || []).join('\n')}
-                  onChange={e => updateField('videoWhitelist', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
+                  onChange={(e) =>
+                    updateField(
+                      'videoWhitelist',
+                      e.target.value
+                        .split('\n')
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    )
+                  }
                   placeholder="每行一个邮箱地址"
                   rows={4}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  只有白名单中的用户才能使用视频生成功能
-                </p>
+                <p className="text-xs text-gray-500 mt-1">只有白名单中的用户才能使用视频生成功能</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  管理员用户 ID
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">管理员用户 ID</label>
                 <textarea
                   value={(formData.adminUserIds || []).join('\n')}
-                  onChange={e => updateField('adminUserIds', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
+                  onChange={(e) =>
+                    updateField(
+                      'adminUserIds',
+                      e.target.value
+                        .split('\n')
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    )
+                  }
                   placeholder="每行一个用户 ID"
                   rows={4}
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  管理员用户不受 Token 限制
-                </p>
+                <p className="text-xs text-gray-500 mt-1">管理员用户不受 Token 限制</p>
               </div>
             </div>
           </section>
@@ -277,23 +276,18 @@ export default function AdminConfigPage() {
             <button
               type="submit"
               disabled={saveMutation.isPending}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-            >
+              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
               <Save size={18} />
               {saveMutation.isPending ? '保存中...' : '保存配置'}
             </button>
           </div>
 
           {saveMutation.isSuccess && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
-              配置已保存
-            </div>
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">配置已保存</div>
           )}
 
           {saveMutation.isError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              保存失败，请重试
-            </div>
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">保存失败，请重试</div>
           )}
         </form>
       </div>

@@ -86,7 +86,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
   };
 
   const handleChange = (field: string, value: string | boolean | Record<string, unknown>) => {
-    onChange({ ...game, [ field ]: value });
+    onChange({ ...game, [field]: value });
   };
 
   const handleTagsChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -96,7 +96,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
       if (val && !game.tags?.includes(val)) {
         onChange({
           ...game,
-          tags: [...(game.tags || []), val]
+          tags: [...(game.tags || []), val],
         });
         e.currentTarget.value = '';
       }
@@ -106,12 +106,12 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
   const removeTag = (tagToRemove: string) => {
     onChange({
       ...game,
-      tags: (game.tags || []).filter(t => t !== tagToRemove)
+      tags: (game.tags || []).filter((t) => t !== tagToRemove),
     });
   };
 
   const handleUploadCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[ 0 ];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     setUploadingCover(true);
@@ -150,9 +150,9 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: [(game.ai?.style?.image || ''), coverPrompt].filter(Boolean).join('\n'),
+          prompt: [game.ai?.style?.image || '', coverPrompt].filter(Boolean).join('\n'),
           gameId: id,
-          type: 'ai_image'
+          type: 'ai_image',
         }),
       });
       const data = (await res.json()) as {
@@ -185,7 +185,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
               <input
                 type="text"
                 value={game.title}
-                onChange={e => handleChange('title', e.target.value)}
+                onChange={(e) => handleChange('title', e.target.value)}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
               />
             </div>
@@ -194,7 +194,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
               <input
                 type="text"
                 value={slug}
-                onChange={e => onSlugChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
+                onChange={(e) => onSlugChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 placeholder="game-url-slug"
               />
@@ -206,7 +206,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
             <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
             <textarea
               value={game.description || ''}
-              onChange={e => handleChange('description', e.target.value)}
+              onChange={(e) => handleChange('description', e.target.value)}
               rows={3}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 resize-none"
             />
@@ -215,10 +215,16 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">标签</label>
             <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-md bg-white">
-              {(game.tags || []).map(tag => (
-                <span key={tag} className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+              {(game.tags || []).map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
                   {tag}
-                  <button onClick={() => removeTag(tag)} className="ml-1 text-blue-600 hover:text-blue-900"><X size={12} /></button>
+                  <button
+                    onClick={() => removeTag(tag)}
+                    className="ml-1 text-blue-600 hover:text-blue-900">
+                    <X size={12} />
+                  </button>
                 </span>
               ))}
               <input
@@ -251,10 +257,22 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
               {game.cover_image && !game.cover_image.startsWith('prompt:') ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={game.cover_image} alt="封面" className="absolute inset-0 w-full h-full object-cover" />
+                  <img
+                    src={game.cover_image}
+                    alt="封面"
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button onClick={() => fileInputRef.current?.click()} className="p-2 bg-white rounded-full hover:bg-gray-100"><Upload size={16} /></button>
-                    <button onClick={() => setShowCoverGen(true)} className="p-2 bg-white rounded-full hover:bg-gray-100"><Sparkles size={16} /></button>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="p-2 bg-white rounded-full hover:bg-gray-100">
+                      <Upload size={16} />
+                    </button>
+                    <button
+                      onClick={() => setShowCoverGen(true)}
+                      className="p-2 bg-white rounded-full hover:bg-gray-100">
+                      <Sparkles size={16} />
+                    </button>
                   </div>
                 </>
               ) : (
@@ -264,15 +282,13 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingCover}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                    >
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium">
                       {uploadingCover ? '上传中...' : '上传图片'}
                     </button>
                     <span className="text-xs text-gray-400">- 或者 -</span>
                     <button
                       onClick={() => setShowCoverGen(!showCoverGen)}
-                      className="text-sm text-purple-600 hover:text-purple-800 font-medium"
-                    >
+                      className="text-sm text-purple-600 hover:text-purple-800 font-medium">
                       AI 生成封面
                     </button>
                   </div>
@@ -292,15 +308,21 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                 <textarea
                   placeholder="描述你想要的封面..."
                   value={coverPrompt}
-                  onChange={e => setCoverPrompt(e.target.value)}
+                  onChange={(e) => setCoverPrompt(e.target.value)}
                   className="w-full p-2 text-sm border rounded mb-2 h-20 resize-none"
                 />
                 <button
                   onClick={handleGenerateCover}
                   disabled={generatingCover || !coverPrompt}
-                  className="w-full py-1.5 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2"
-                >
-                  {generatingCover ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                  className="w-full py-1.5 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2">
+                  {generatingCover ? (
+                    <Loader2
+                      size={12}
+                      className="animate-spin"
+                    />
+                  ) : (
+                    <Sparkles size={12} />
+                  )}
                   生成封面
                 </button>
               </div>
@@ -315,7 +337,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                   type="checkbox"
                   className="sr-only peer"
                   checked={game.published || false}
-                  onChange={e => handleChange('published', e.target.checked)}
+                  onChange={(e) => handleChange('published', e.target.checked)}
                 />
                 <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
               </div>
@@ -323,9 +345,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                 {game.published ? '已发布' : '草稿'}
               </span>
             </label>
-            <p className="text-xs text-gray-500 mt-2">
-              已发布的游戏会在首页对所有人可见。
-            </p>
+            <p className="text-xs text-gray-500 mt-2">已发布的游戏会在首页对所有人可见。</p>
           </div>
 
           {/* AI Style Config */}
@@ -333,7 +353,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
             <h3 className="text-sm font-medium text-blue-900 mb-2">AI 风格（作用于全篇故事）</h3>
             <textarea
               value={game.ai?.style?.image || ''}
-              onChange={e => handleChange('ai', { ...game.ai, style: { ...game.ai.style, image: e.target.value } })}
+              onChange={(e) => handleChange('ai', { ...game.ai, style: { ...game.ai.style, image: e.target.value } })}
               placeholder="全局艺术风格提示词（如：水彩画风，奇幻风格）..."
               className="w-full p-2 text-sm border border-blue-200 rounded h-20 resize-none"
             />
