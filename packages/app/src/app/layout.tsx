@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -39,9 +41,11 @@ export default async function RootLayout({
   children: ReactNode;
 }>) {
   const { env } = await getCloudflareContext({ async: true });
+  const locale = await getLocale();
+  const messages = await getMessages();
 
   return (
-    <html lang="zh-CN">
+    <html lang={locale}>
       <head>
         <meta charSet="UTF-8" />
         <meta
@@ -59,7 +63,7 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <Providers>
             <Header />
-            <main className="flex-grow flex flex-col">{children}</main>
+            <main className="grow flex flex-col">{children}</main>
             <Footer />
           </Providers>
         </NextIntlClientProvider>

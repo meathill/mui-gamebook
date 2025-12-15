@@ -28,9 +28,12 @@ export default function Header() {
             <select
               onChange={(e) => setLocale(e.target.value as Locale)}
               className="text-sm border-gray-300 rounded-md bg-transparent"
-              defaultValue=""
-            >
-              <option value="" disabled>🌐</option>
+              defaultValue="">
+              <option
+                value=""
+                disabled>
+                🌐
+              </option>
               <option value="en">English</option>
               <option value="zh">中文</option>
             </select>
