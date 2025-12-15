@@ -3,3 +3,4 @@ node_modules
 dist
 packages/asset-generator/.env
 tmp
+package-lock.json

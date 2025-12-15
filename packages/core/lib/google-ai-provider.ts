@@ -10,6 +10,7 @@ import type {
   TextGenerationResult,
   VideoGenerationStartResult,
   VideoGenerationStatusResult,
+  buildMiniGamePrompt,
 } from './ai-provider';
 import { MINIGAME_API_SPEC } from './ai';
 
@@ -187,28 +188,7 @@ export class GoogleAiProvider implements AiProvider {
     const model = this.models.text || 'gemini-2.5-flash';
     console.log(`[Google AI] Generating minigame with model: ${model}`);
 
-    const variablesList = variables
-      ? Object.entries(variables)
-          .map(([key, desc]) => `- ${key}: ${desc}`)
-          .join('\n')
-      : '无特定变量';
-
-    const systemPrompt = `你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。
-
-要求：
-1. 生成的代码必须是一个 ES Module，导出默认对象实现以下接口：
-${MINIGAME_API_SPEC}
-
-2. 游戏必须是简单的，不依赖任何外部库
-3. 使用原生 Canvas 或 DOM 操作
-4. 游戏应该在 container 元素内渲染
-5. 游戏结束时调用 onComplete 回调，传入修改后的变量
-6. destroy 方法必须清理所有事件监听器和定时器
-
-可用的变量：
-${variablesList}
-
-只输出 JavaScript 代码，不要包含 markdown 代码块标记。代码必须可以直接作为 ES Module 执行。`;
+    const systemPrompt = buildMiniGamePrompt(MINIGAME_API_SPEC, variables);
 
     const response = await this.genAI.models.generateContent({
       model,
