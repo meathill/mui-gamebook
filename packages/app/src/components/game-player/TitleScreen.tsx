@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import ShareButton from '@/components/ShareButton';
@@ -12,9 +13,10 @@ interface TitleScreenProps {
 
 export default function TitleScreen({ game, onStart }: TitleScreenProps) {
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const t = useTranslations('game');
 
   return (
-    <div className="flex flex-col min-h-[600px] bg-white">
+    <div className="flex flex-col min-h-150 bg-white">
       <div className="relative w-full h-64 md:h-80 bg-gray-200 overflow-hidden">
         {game.cover_image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -28,7 +30,7 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
             <span className="text-4xl font-bold opacity-20">{game.title}</span>
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent flex items-end">
           <div className="p-6 md:p-8 text-white flex-1">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{game.title}</h1>
             {game.tags && (
@@ -60,7 +62,7 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
           </div>
         ) : (
           <p className="text-gray-600 text-lg mb-8 max-w-xl leading-relaxed">
-            {game.description || '一场互动冒险等待着你。'}
+            {game.description || t('defaultDescription')}
           </p>
         )}
 

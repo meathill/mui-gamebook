@@ -1,15 +1,22 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
 import GamePlayer from '../../src/components/GamePlayer';
-import { DialogProvider } from '../../src/components/Dialog';
+import { DialogProvider } from '@/components/Dialog';
 import type { SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
+import messages from '../../src/i18n/messages/en.json';
 
 // Mock scrollIntoView
 window.scrollTo = vi.fn();
 
-// Helper to render with DialogProvider
-const renderWithDialog = (component: React.ReactElement) => {
-  return render(<DialogProvider>{component}</DialogProvider>);
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(
+    <NextIntlClientProvider
+      messages={messages}
+      locale="en">
+      <DialogProvider>{component}</DialogProvider>
+    </NextIntlClientProvider>,
+  );
 };
 
 const mockGame: SerializablePlayableGame = {
