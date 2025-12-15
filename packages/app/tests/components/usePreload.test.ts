@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { 
-  extractMediaUrls, 
-  getNextSceneIds, 
-  collectPreloadUrls 
-} from '@/components/game-player/usePreload';
+import { extractMediaUrls, getNextSceneIds, collectPreloadUrls } from '@/components/game-player/usePreload';
 import type { PlayableGame, PlayableScene, PlayableSceneNode } from '@mui-gamebook/parser/src/types';
 
 function createMockGame(scenes: Map<string, PlayableScene>): PlayableGame {
@@ -22,12 +18,9 @@ describe('extractMediaUrls', () => {
       { type: 'static_image', url: 'https://example.com/a.jpg' },
       { type: 'ai_image', url: 'https://example.com/b.png' },
     ];
-    
+
     const urls = extractMediaUrls(nodes);
-    expect(urls).toEqual([
-      'https://example.com/a.jpg',
-      'https://example.com/b.png',
-    ]);
+    expect(urls).toEqual(['https://example.com/a.jpg', 'https://example.com/b.png']);
   });
 
   it('应该从节点中提取音频 URL', () => {
@@ -35,12 +28,9 @@ describe('extractMediaUrls', () => {
       { type: 'static_audio', url: 'https://example.com/a.mp3' },
       { type: 'ai_audio', audioType: 'sfx', url: 'https://example.com/b.wav' },
     ];
-    
+
     const urls = extractMediaUrls(nodes);
-    expect(urls).toEqual([
-      'https://example.com/a.mp3',
-      'https://example.com/b.wav',
-    ]);
+    expect(urls).toEqual(['https://example.com/a.mp3', 'https://example.com/b.wav']);
   });
 
   it('应该从节点中提取视频 URL', () => {
@@ -48,12 +38,9 @@ describe('extractMediaUrls', () => {
       { type: 'static_video', url: 'https://example.com/a.mp4' },
       { type: 'ai_video', url: 'https://example.com/b.webm' },
     ];
-    
+
     const urls = extractMediaUrls(nodes);
-    expect(urls).toEqual([
-      'https://example.com/a.mp4',
-      'https://example.com/b.webm',
-    ]);
+    expect(urls).toEqual(['https://example.com/a.mp4', 'https://example.com/b.webm']);
   });
 
   it('应该跳过没有 URL 的节点', () => {
@@ -61,7 +48,7 @@ describe('extractMediaUrls', () => {
       { type: 'ai_image' }, // 没有 URL
       { type: 'static_image', url: 'https://example.com/valid.jpg' },
     ];
-    
+
     const urls = extractMediaUrls(nodes);
     expect(urls).toEqual(['https://example.com/valid.jpg']);
   });
@@ -72,7 +59,7 @@ describe('extractMediaUrls', () => {
       { type: 'choice', text: '选项', nextSceneId: 'next' },
       { type: 'static_image', url: 'https://example.com/img.jpg' },
     ];
-    
+
     const urls = extractMediaUrls(nodes);
     expect(urls).toEqual(['https://example.com/img.jpg']);
   });
@@ -88,7 +75,7 @@ describe('getNextSceneIds', () => {
         { type: 'choice', text: '去B', nextSceneId: 'scene-b' },
       ],
     };
-    
+
     const ids = getNextSceneIds(scene);
     expect(ids).toEqual(['scene-a', 'scene-b']);
   });
@@ -101,7 +88,7 @@ describe('getNextSceneIds', () => {
         { type: 'choice', text: '选项2', nextSceneId: 'same' },
       ],
     };
-    
+
     const ids = getNextSceneIds(scene);
     expect(ids).toEqual(['same']);
   });
@@ -109,11 +96,9 @@ describe('getNextSceneIds', () => {
   it('应该返回空数组当没有选项时', () => {
     const scene: PlayableScene = {
       id: 'end',
-      nodes: [
-        { type: 'text', content: '结束' },
-      ],
+      nodes: [{ type: 'text', content: '结束' }],
     };
-    
+
     const ids = getNextSceneIds(scene);
     expect(ids).toEqual([]);
   });
@@ -122,104 +107,117 @@ describe('getNextSceneIds', () => {
 describe('collectPreloadUrls', () => {
   it('应该收集下一个场景的媒体 URL', () => {
     const scenes = new Map<string, PlayableScene>([
-      ['start', {
-        id: 'start',
-        nodes: [
-          { type: 'choice', text: '去A', nextSceneId: 'scene-a' },
-        ],
-      }],
-      ['scene-a', {
-        id: 'scene-a',
-        nodes: [
-          { type: 'static_image', url: 'https://example.com/a.jpg' },
-        ],
-      }],
+      [
+        'start',
+        {
+          id: 'start',
+          nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
+        },
+      ],
+      [
+        'scene-a',
+        {
+          id: 'scene-a',
+          nodes: [{ type: 'static_image', url: 'https://example.com/a.jpg' }],
+        },
+      ],
     ]);
 
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>();
     const preloadedUrls = new Set<string>();
-    
+
     const urls = collectPreloadUrls(game, 'start', processedScenes, preloadedUrls);
     expect(urls).toEqual(['https://example.com/a.jpg']);
   });
 
   it('应该跳过已处理的场景', () => {
     const scenes = new Map<string, PlayableScene>([
-      ['start', {
-        id: 'start',
-        nodes: [
-          { type: 'choice', text: '去A', nextSceneId: 'scene-a' },
-        ],
-      }],
-      ['scene-a', {
-        id: 'scene-a',
-        nodes: [
-          { type: 'static_image', url: 'https://example.com/a.jpg' },
-        ],
-      }],
+      [
+        'start',
+        {
+          id: 'start',
+          nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
+        },
+      ],
+      [
+        'scene-a',
+        {
+          id: 'scene-a',
+          nodes: [{ type: 'static_image', url: 'https://example.com/a.jpg' }],
+        },
+      ],
     ]);
 
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>(['start']); // 已处理
     const preloadedUrls = new Set<string>();
-    
+
     const urls = collectPreloadUrls(game, 'start', processedScenes, preloadedUrls);
     expect(urls).toEqual([]);
   });
 
   it('应该跳过已预加载的 URL', () => {
     const scenes = new Map<string, PlayableScene>([
-      ['start', {
-        id: 'start',
-        nodes: [
-          { type: 'choice', text: '去A', nextSceneId: 'scene-a' },
-        ],
-      }],
-      ['scene-a', {
-        id: 'scene-a',
-        nodes: [
-          { type: 'static_image', url: 'https://example.com/a.jpg' },
-          { type: 'static_image', url: 'https://example.com/b.jpg' },
-        ],
-      }],
+      [
+        'start',
+        {
+          id: 'start',
+          nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
+        },
+      ],
+      [
+        'scene-a',
+        {
+          id: 'scene-a',
+          nodes: [
+            { type: 'static_image', url: 'https://example.com/a.jpg' },
+            { type: 'static_image', url: 'https://example.com/b.jpg' },
+          ],
+        },
+      ],
     ]);
 
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>();
     const preloadedUrls = new Set<string>(['https://example.com/a.jpg']); // 已预加载
-    
+
     const urls = collectPreloadUrls(game, 'start', processedScenes, preloadedUrls);
     expect(urls).toEqual(['https://example.com/b.jpg']);
   });
 
   it('应该去重相同的 URL', () => {
     const scenes = new Map<string, PlayableScene>([
-      ['start', {
-        id: 'start',
-        nodes: [
-          { type: 'choice', text: '去A', nextSceneId: 'scene-a' },
-          { type: 'choice', text: '去B', nextSceneId: 'scene-b' },
-        ],
-      }],
-      ['scene-a', {
-        id: 'scene-a',
-        nodes: [
-          { type: 'static_image', url: 'https://example.com/same.jpg' },
-        ],
-      }],
-      ['scene-b', {
-        id: 'scene-b',
-        nodes: [
-          { type: 'static_image', url: 'https://example.com/same.jpg' },
-        ],
-      }],
+      [
+        'start',
+        {
+          id: 'start',
+          nodes: [
+            { type: 'choice', text: '去A', nextSceneId: 'scene-a' },
+            { type: 'choice', text: '去B', nextSceneId: 'scene-b' },
+          ],
+        },
+      ],
+      [
+        'scene-a',
+        {
+          id: 'scene-a',
+          nodes: [{ type: 'static_image', url: 'https://example.com/same.jpg' }],
+        },
+      ],
+      [
+        'scene-b',
+        {
+          id: 'scene-b',
+          nodes: [{ type: 'static_image', url: 'https://example.com/same.jpg' }],
+        },
+      ],
     ]);
 
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>();
     const preloadedUrls = new Set<string>();
-    
+
     const urls = collectPreloadUrls(game, 'start', processedScenes, preloadedUrls);
     expect(urls).toEqual(['https://example.com/same.jpg']);
   });
@@ -229,7 +227,7 @@ describe('collectPreloadUrls', () => {
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>();
     const preloadedUrls = new Set<string>();
-    
+
     const urls = collectPreloadUrls(game, 'non-existent', processedScenes, preloadedUrls);
     expect(urls).toEqual([]);
   });

@@ -4,13 +4,13 @@
   "description": "DSL parser for MUI Gamebook",
   "main": "src/index.ts",
   "dependencies": {
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.1.1",
     "lodash-es": "^4.17.21"
   },
   "scripts": {},
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
-    "typescript": "^5.4.5"
+    "typescript": "^5.9.3"
   }
 }

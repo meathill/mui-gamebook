@@ -16,7 +16,7 @@ describe('MiniGamePlayer 组件', () => {
 
   it('应该显示开始游戏按钮', () => {
     render(<MiniGamePlayer {...defaultProps} />);
-    
+
     expect(screen.getByText('准备好开始小游戏了吗？')).toBeInTheDocument();
     expect(screen.getByText('开始游戏')).toBeInTheDocument();
   });
@@ -24,14 +24,14 @@ describe('MiniGamePlayer 组件', () => {
   it('应该只传递指定的变量给小游戏', () => {
     // 验证 getGameVariables 逻辑
     const { variables, runtimeState } = defaultProps;
-    
+
     const gameVars: Record<string, number | string | boolean> = {};
     for (const varName of variables) {
       if (varName in runtimeState) {
         gameVars[varName] = runtimeState[varName as keyof typeof runtimeState];
       }
     }
-    
+
     // 应该只包含 score 和 health，不包含 other
     expect(gameVars).toEqual({ score: 0, health: 100 });
     expect(gameVars).not.toHaveProperty('other');
@@ -39,7 +39,10 @@ describe('MiniGamePlayer 组件', () => {
 
   it('url 为空时不应该渲染任何内容', () => {
     const { container } = render(
-      <MiniGamePlayer {...defaultProps} url="" />
+      <MiniGamePlayer
+        {...defaultProps}
+        url=""
+      />,
     );
     // 组件应该正常渲染，但不会加载任何游戏
     expect(container).toBeDefined();

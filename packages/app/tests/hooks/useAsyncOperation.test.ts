@@ -42,10 +42,7 @@ describe('batchCheckPlaceholders', () => {
   });
 
   it('应该忽略非占位符 URL', async () => {
-    const urls = [
-      'https://example.com/1.mp4',
-      'https://example.com/2.mp4',
-    ];
+    const urls = ['https://example.com/1.mp4', 'https://example.com/2.mp4'];
 
     const result = await batchCheckPlaceholders(urls);
 

@@ -8,11 +8,8 @@ import { getSession } from '@/lib/auth-server';
 
 type Props = {
   params: Promise<{ slug: string }>;
-}
-export async function GET(
-  request: Request,
-  { params }: Props
-) {
+};
+export async function GET(request: Request, { params }: Props) {
   const { slug } = await params;
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
@@ -31,9 +28,7 @@ export async function GET(
   }
 
   // 1. Find Game by Slug
-  const game = await db.select().from(schema.games)
-    .where(eq(schema.games.slug, slug))
-    .get();
+  const game = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
 
   if (!game) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 });
@@ -48,9 +43,7 @@ export async function GET(
   }
 
   // 2. Fetch Content
-  const contentRecord = await db.select().from(schema.gameContent)
-    .where(eq(schema.gameContent.gameId, game.id))
-    .get();
+  const contentRecord = await db.select().from(schema.gameContent).where(eq(schema.gameContent.gameId, game.id)).get();
 
   if (!contentRecord) {
     return NextResponse.json({ error: 'Content not found' }, { status: 404 });
@@ -70,7 +63,7 @@ export async function GET(
     cover_image: game.coverImage,
     tags: game.tags ? JSON.parse(game.tags) : [],
     published: game.published,
-    slug: game.slug // Inject slug for frontend use
+    slug: game.slug, // Inject slug for frontend use
   };
 
   return NextResponse.json(finalGame);

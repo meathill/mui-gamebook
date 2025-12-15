@@ -12,13 +12,13 @@ export async function getPublishedGames() {
     const DB = env.DB; // Assume binding name is DB
 
     if (!DB) {
-      console.error('D1 database binding \'DB\' not found.');
+      console.error("D1 database binding 'DB' not found.");
       return [];
     }
 
     const { results } = (await DB.prepare(
-      'SELECT slug, title, description, cover_image, tags FROM Games WHERE published = 1 ORDER BY updated_at DESC'
-    ).all() as { results: GameRow[] });
+      'SELECT slug, title, description, cover_image, tags FROM Games WHERE published = 1 ORDER BY updated_at DESC',
+    ).all()) as { results: GameRow[] };
 
     return results.map((row: GameRow) => ({
       ...row,
@@ -36,7 +36,7 @@ export async function getGameBySlug(slug: string): Promise<SerializablePlayableG
     const DB = env.DB;
 
     if (!DB) {
-      console.error('D1 database binding \'DB\' not found.');
+      console.error("D1 database binding 'DB' not found.");
       return null;
     }
 
@@ -54,8 +54,10 @@ export async function getGameBySlug(slug: string): Promise<SerializablePlayableG
       `SELECT g.id, g.owner_id, g.published, c.content 
 FROM Games g 
 LEFT JOIN GameContent c ON c.game_id = g.id
-WHERE g.slug = ?`
-    ).bind(slug).first<{ id: number; owner_id: string | null; published: number; content: string }>();
+WHERE g.slug = ?`,
+    )
+      .bind(slug)
+      .first<{ id: number; owner_id: string | null; published: number; content: string }>();
 
     if (!gameRecord || !gameRecord.content) {
       return null;

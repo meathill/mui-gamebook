@@ -191,7 +191,7 @@ Welcome!
     if (result.success) {
       expect(result.data.initialState.gold).toBe(50);
       expect(result.data.initialState.has_key).toBe(false);
-      
+
       const health = result.data.initialState.health as VariableMeta;
       expect(health.value).toBe(100);
       expect(health.visible).toBe(true);

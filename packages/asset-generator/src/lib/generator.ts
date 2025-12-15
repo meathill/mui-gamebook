@@ -27,19 +27,11 @@ export async function generateImage(prompt: string): Promise<{
 /**
  * 上传文件到 R2（带重试）
  */
-export async function uploadToR2(
-  fileName: string,
-  body: Buffer,
-  type: string = 'image/png'
-): Promise<string> {
+export async function uploadToR2(fileName: string, body: Buffer, type: string = 'image/png'): Promise<string> {
   return retry(() => _uploadToR2(fileName, body, type));
 }
 
-async function _uploadToR2(
-  fileName: string,
-  body: Buffer,
-  type: string = 'image/png'
-): Promise<string> {
+async function _uploadToR2(fileName: string, body: Buffer, type: string = 'image/png'): Promise<string> {
   console.log(`[R2] Uploading ${fileName}...`);
   await s3Client.send(
     new PutObjectCommand({
@@ -47,7 +39,7 @@ async function _uploadToR2(
       Key: fileName,
       Body: body,
       ContentType: type,
-    })
+    }),
   );
   return `${R2_PUBLIC_URL}/${fileName}`;
 }
@@ -119,7 +111,7 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
 
     // Include multiple characters descriptions
     if (node.characters && node.characters.length > 0 && game.ai.characters) {
-      node.characters.forEach(charId => {
+      node.characters.forEach((charId) => {
         const char = game.ai?.characters?.[charId];
         if (char && char.image_prompt) {
           fullPrompt += `, ${char.image_prompt}`;
