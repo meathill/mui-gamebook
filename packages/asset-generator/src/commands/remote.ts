@@ -58,6 +58,13 @@ export async function handleRemoteCommand(idOrSlug: string, force: boolean, dryR
         if (node.type === 'ai_video' && (!node.url || force)) {
           console.log(`[场景 ${scene.id}] 视频: ${node.prompt.substring(0, 50)}...`);
         }
+        // TTS 语音生成
+        if (node.type === 'text' && (!node.audio_url || force)) {
+          console.log(`[场景 ${scene.id}] TTS文本: ${node.content.substring(0, 40)}...`);
+        }
+        if (node.type === 'choice' && (!node.audio_url || force)) {
+          console.log(`[场景 ${scene.id}] TTS选项: ${node.text.substring(0, 40)}...`);
+        }
       }
     }
     return;

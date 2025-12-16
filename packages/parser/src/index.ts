@@ -12,6 +12,8 @@ const SCENE_ID_REGEX = /^#\s*([\w-]+)/;
 const CHOICE_REGEX = /^\s*\*\s*\[(.*?)\]\s*->\s*([\w-]+)\s*(.*?)\s*$/;
 const IF_REGEX = /\(if:\s*(.*?)\)/;
 const SET_REGEX = /\(set:\s*(.*?)\)/;
+const AUDIO_REGEX = /\(audio:\s*(.*?)\)/;
+const TEXT_AUDIO_COMMENT_REGEX = /^<!--\s*audio:\s*(.*?)\s*-->$/;
 const STATIC_IMAGE_REGEX = /^\s*!\[(.*?)\]\((.*?)\)$/;
 const STATIC_AUDIO_REGEX = /^\s*\[audio\]\((.*?)\)$/;
 const STATIC_VIDEO_REGEX = /^\s*\[video\]\((.*?)\)$/;
@@ -27,11 +29,19 @@ function parseSceneContent(content: string): SceneNode[] {
   let blockContentBuffer: string[] = [];
   let textBuffer: string[] = [];
 
+  // 当前文本节点的 audio_url（从 HTML 注释提取）
+  let pendingAudioUrl: string | undefined;
+
   const flushTextBuffer = () => {
     if (textBuffer.length > 0) {
       const content = textBuffer.join('\n').trim();
       if (content) {
-        nodes.push({ type: 'text', content });
+        const textNode: SceneNode = { type: 'text', content };
+        if (pendingAudioUrl) {
+          textNode.audio_url = pendingAudioUrl;
+          pendingAudioUrl = undefined;
+        }
+        nodes.push(textNode);
       }
       textBuffer = [];
     }
@@ -103,12 +113,20 @@ function parseSceneContent(content: string): SceneNode[] {
         if (clausesStr) {
           const ifMatch = clausesStr.match(IF_REGEX);
           const setMatch = clausesStr.match(SET_REGEX);
+          const audioMatch = clausesStr.match(AUDIO_REGEX);
           if (ifMatch) choiceNode.condition = ifMatch[1].trim();
           if (setMatch) choiceNode.set = setMatch[1].trim();
+          if (audioMatch) choiceNode.audio_url = audioMatch[1].trim();
         }
         nodes.push(choiceNode);
       } else {
-        textBuffer.push(line);
+        // 检查是否是 audio_url 的 HTML 注释
+        const audioCommentMatch = line.match(TEXT_AUDIO_COMMENT_REGEX);
+        if (audioCommentMatch) {
+          pendingAudioUrl = audioCommentMatch[1];
+        } else {
+          textBuffer.push(line);
+        }
       }
     }
   }
@@ -271,6 +289,9 @@ export function stringify(game: Game): string {
       switch (node.type) {
         case 'text':
           markdown += `${node.content}\n`;
+          if (node.audio_url) {
+            markdown += `<!-- audio: ${node.audio_url} -->\n`;
+          }
           break;
         case 'static_image':
           markdown += `![${node.alt || ''}](${node.url})\n`;
@@ -288,6 +309,9 @@ export function stringify(game: Game): string {
           }
           if (node.set) {
             choiceLine += ` (set: ${node.set})`;
+          }
+          if (node.audio_url) {
+            choiceLine += ` (audio: ${node.audio_url})`;
           }
           markdown += `${choiceLine}\n`;
           break;
