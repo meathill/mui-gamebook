@@ -330,6 +330,65 @@ variables:
 - 支持数字、字符串和布尔值类型的变量
 - 变量插值会在每次场景渲染时实时计算
 
+### 4.5 TTS 语音 (Text-to-Speech)
+
+场景文本和选项可以附带语音朗读，适合儿童阅读器等场景。语音使用 Gemini TTS 模型生成，存储在 R2 中。
+
+#### 4.5.1 文本语音
+
+文本节点可以通过 HTML 注释附带语音 URL：
+
+**语法：**
+```markdown
+这是场景的描述性文本。
+<!-- audio: https://assets.example.com/audio/scene-text.wav -->
+```
+
+**说明：**
+- 语音 URL 通过 HTML 注释 `<!-- audio: URL -->` 存储
+- 注释必须紧跟在文本之后
+- 播放器会在场景加载时自动播放语音
+
+#### 4.5.2 选项语音
+
+选项可以通过 `(audio: URL)` 子句附带语音：
+
+**语法：** `* [选项文本] -> NextSceneID (audio: URL)`
+
+**示例：**
+```markdown
+* [继续冒险] -> next_scene (audio: https://assets.example.com/audio/choice.wav)
+* [购买药水] -> shop (set: gold = gold - 10) (audio: https://assets.example.com/audio/buy.wav)
+```
+
+**说明：**
+- `(audio: URL)` 子句可以与 `(if:)` 和 `(set:)` 子句一起使用
+- 播放器会在选项按钮上显示播放图标
+- 点击播放图标播放语音，点击按钮执行选项
+
+#### 4.5.3 语音生成
+
+语音可以通过以下方式生成：
+
+1. **编辑器手动生成**：在编辑器中点击"生成语音"按钮
+2. **批量生成**：使用 `asset-generator` 命令行工具
+
+**命令行生成：**
+```bash
+cd packages/asset-generator
+pnpm generate remote <game-id>  # 生成所有素材（包括 TTS）
+pnpm generate remote <game-id> --force  # 强制重新生成
+```
+
+**声音选项：**
+
+可以通过环境变量 `DEFAULT_TTS_VOICE` 设置默认声音：
+- `Aoede` - 温和女声（默认，推荐儿童故事）
+- `Kore` - 活泼女声
+- `Puck` - 活泼男声
+- `Leda` - 温柔女声
+- `Charon` - 沉稳男声
+
 ## 5. 选项与互动
 
 玩家通过场景末尾呈现的选项进行互动。

@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
-import { Game } from '@mui-gamebook/parser/src/types';
+import { useState, useEffect } from 'react';
+import type { Game } from '@mui-gamebook/parser/src/types';
 import MDEditor from '@uiw/react-md-editor';
-import { Upload, Sparkles, X, Image as ImageIcon, Loader2, Shield, ExternalLink } from 'lucide-react';
+import { X, Loader2, Shield, ExternalLink } from 'lucide-react';
 import { useDialog } from '@/components/Dialog';
+import CoverImageEditor from './CoverImageEditor';
 
 interface IpStatus {
   registered: boolean;
@@ -22,19 +23,13 @@ interface Props {
 }
 
 export default function EditorSettingsTab({ game, id, onChange, onSlugChange, slug }: Props) {
-  const [generatingCover, setGeneratingCover] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
-  const [coverPrompt, setCoverPrompt] = useState('');
-  const [showCoverGen, setShowCoverGen] = useState(false);
   const [ipStatus, setIpStatus] = useState<IpStatus | null>(null);
   const [registeringIp, setRegisteringIp] = useState(false);
   const [loadingIpStatus, setLoadingIpStatus] = useState(true);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const dialog = useDialog();
 
-  // 加载 IP 注册状态
   useEffect(() => {
-    const fetchIpStatus = async () => {
+    async function fetchIpStatus() {
       try {
         const res = await fetch(`/api/cms/games/${id}/register-ip`);
         if (res.ok) {
@@ -46,12 +41,11 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
       } finally {
         setLoadingIpStatus(false);
       }
-    };
+    }
     fetchIpStatus();
   }, [id]);
 
-  // 注册 IP
-  const handleRegisterIp = async () => {
+  async function handleRegisterIp() {
     const confirmed = await dialog.confirm(
       '注册 IP 将把您的作品记录在 Story Protocol 区块链上，这个操作不可撤销。确定要继续吗？',
     );
@@ -59,9 +53,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
 
     setRegisteringIp(true);
     try {
-      const res = await fetch(`/api/cms/games/${id}/register-ip`, {
-        method: 'POST',
-      });
+      const res = await fetch(`/api/cms/games/${id}/register-ip`, { method: 'POST' });
       const data = (await res.json()) as {
         success?: boolean;
         ipId?: string;
@@ -70,11 +62,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
       };
       if (res.ok && data.success) {
         await dialog.success('IP 注册成功！您的作品已被记录在区块链上。');
-        setIpStatus({
-          registered: true,
-          ipId: data.ipId,
-          explorerUrl: data.explorerUrl,
-        });
+        setIpStatus({ registered: true, ipId: data.ipId, explorerUrl: data.explorerUrl });
       } else {
         await dialog.error(data.error || 'IP 注册失败');
       }
@@ -83,94 +71,26 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
     } finally {
       setRegisteringIp(false);
     }
-  };
+  }
 
-  const handleChange = (field: string, value: string | boolean | Record<string, unknown>) => {
+  function handleChange(field: string, value: string | boolean | Record<string, unknown>) {
     onChange({ ...game, [field]: value });
-  };
+  }
 
-  const handleTagsChange = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  function handleTagsChange(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter') {
       e.preventDefault();
       const val = e.currentTarget.value.trim();
       if (val && !game.tags?.includes(val)) {
-        onChange({
-          ...game,
-          tags: [...(game.tags || []), val],
-        });
+        onChange({ ...game, tags: [...(game.tags || []), val] });
         e.currentTarget.value = '';
       }
     }
-  };
+  }
 
-  const removeTag = (tagToRemove: string) => {
-    onChange({
-      ...game,
-      tags: (game.tags || []).filter((t) => t !== tagToRemove),
-    });
-  };
-
-  const handleUploadCover = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingCover(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('id', id);
-    formData.append('type', 'game_cover');
-
-    try {
-      const res = await fetch('/api/cms/assets/upload', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = (await res.json()) as {
-        url: string;
-        error?: string;
-      };
-      if (res.ok) {
-        handleChange('cover_image', data.url);
-      } else {
-        await dialog.error(data.error || '上传失败');
-      }
-    } catch (e) {
-      await dialog.error('上传失败：' + (e as Error).message);
-    } finally {
-      setUploadingCover(false);
-    }
-  };
-
-  const handleGenerateCover = async () => {
-    if (!coverPrompt) return;
-
-    setGeneratingCover(true);
-    try {
-      const res = await fetch('/api/cms/assets/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: [game.ai?.style?.image || '', coverPrompt].filter(Boolean).join('\n'),
-          gameId: id,
-          type: 'ai_image',
-        }),
-      });
-      const data = (await res.json()) as {
-        url: string;
-        error?: string;
-      };
-      if (res.ok) {
-        handleChange('cover_image', data.url);
-        setShowCoverGen(false);
-      } else {
-        await dialog.error(data.error || '生成失败');
-      }
-    } catch (e) {
-      await dialog.error('生成失败：' + (e as Error).message);
-    } finally {
-      setGeneratingCover(false);
-    }
-  };
+  function removeTag(tagToRemove: string) {
+    onChange({ ...game, tags: (game.tags || []).filter((t) => t !== tagToRemove) });
+  }
 
   return (
     <div className="p-6 max-w-5xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200">
@@ -251,83 +171,12 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
 
         {/* Right Column: Cover & Publish */}
         <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">封面图片</label>
-            <div className="relative w-full aspect-[3/2] bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center overflow-hidden hover:border-blue-400 transition-colors group">
-              {game.cover_image && !game.cover_image.startsWith('prompt:') ? (
-                <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={game.cover_image}
-                    alt="封面"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="p-2 bg-white rounded-full hover:bg-gray-100">
-                      <Upload size={16} />
-                    </button>
-                    <button
-                      onClick={() => setShowCoverGen(true)}
-                      className="p-2 bg-white rounded-full hover:bg-gray-100">
-                      <Sparkles size={16} />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center p-4">
-                  <ImageIcon className="mx-auto h-10 w-10 text-gray-400 mb-2" />
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingCover}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                      {uploadingCover ? '上传中...' : '上传图片'}
-                    </button>
-                    <span className="text-xs text-gray-400">- 或者 -</span>
-                    <button
-                      onClick={() => setShowCoverGen(!showCoverGen)}
-                      className="text-sm text-purple-600 hover:text-purple-800 font-medium">
-                      AI 生成封面
-                    </button>
-                  </div>
-                </div>
-              )}
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleUploadCover}
-              />
-            </div>
-
-            {showCoverGen && (
-              <div className="mt-3 p-3 bg-purple-50 rounded-md border border-purple-100">
-                <textarea
-                  placeholder="描述你想要的封面..."
-                  value={coverPrompt}
-                  onChange={(e) => setCoverPrompt(e.target.value)}
-                  className="w-full p-2 text-sm border rounded mb-2 h-20 resize-none"
-                />
-                <button
-                  onClick={handleGenerateCover}
-                  disabled={generatingCover || !coverPrompt}
-                  className="w-full py-1.5 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2">
-                  {generatingCover ? (
-                    <Loader2
-                      size={12}
-                      className="animate-spin"
-                    />
-                  ) : (
-                    <Sparkles size={12} />
-                  )}
-                  生成封面
-                </button>
-              </div>
-            )}
-          </div>
+          <CoverImageEditor
+            gameId={id}
+            coverImage={game.cover_image}
+            aiStylePrompt={game.ai?.style?.image}
+            onCoverChange={(url) => handleChange('cover_image', url)}
+          />
 
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <h3 className="text-sm font-medium text-gray-900 mb-3">发布状态</h3>
