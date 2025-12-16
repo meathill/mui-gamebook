@@ -12,7 +12,16 @@ import {
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
-import { TitleScreen, EndScreen, VariableIndicator, MiniGamePlayer, usePreload } from '@/components/game-player';
+import {
+  TitleScreen,
+  EndScreen,
+  VariableIndicator,
+  MiniGamePlayer,
+  AudioControls,
+  usePreload,
+  useAudioPlayer,
+} from '@/components/game-player';
+import { Volume2 } from 'lucide-react';
 
 export default function GamePlayer({ game: serializedGame, slug }: { game: SerializablePlayableGame; slug: string }) {
   // 将可序列化的游戏数据转换回 PlayableGame（恢复 Map）
@@ -26,6 +35,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
   const [minigameCompleted, setMinigameCompleted] = useState(false);
   const dialog = useDialog();
   const t = useTranslations('game');
+  const audioPlayer = useAudioPlayer();
 
   const visibleVariables = getVisibleVariables(game.initialState);
 
@@ -89,6 +99,24 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     }
   }, [currentSceneId, currentScene, currentImageUrl, isGameStarted]);
 
+  // 场景切换时自动播放语音
+  useEffect(() => {
+    if (isGameStarted && currentScene) {
+      // 停止之前的音频
+      audioPlayer.stop();
+
+      // 查找文本节点的音频
+      const textNode = currentScene.nodes.find((n) => n.type === 'text' && 'audio_url' in n && n.audio_url);
+      if (textNode && 'audio_url' in textNode && textNode.audio_url) {
+        // 延迟播放，让用户先看到文字
+        setTimeout(() => {
+          audioPlayer.play(textNode.audio_url!);
+        }, 500);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSceneId, isGameStarted]);
+
   // Save progress whenever state changes
   useEffect(() => {
     if (isLoaded && isGameStarted) {
@@ -141,8 +169,9 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     } else {
       setCurrentSceneId(nextSceneId);
     }
-    // 切换场景时重置小游戏完成状态
+    // 切换场景时重置小游戏完成状态和停止音频
     setMinigameCompleted(false);
+    audioPlayer.stop();
   };
 
   // 处理小游戏完成后的变量更新
@@ -247,14 +276,24 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
         <div className="space-y-6">
           {currentScene.nodes.map((node, index) => {
             switch (node.type) {
-              case 'text':
+              case 'text': {
+                const hasTextAudio = 'audio_url' in node && !!node.audio_url;
                 return (
-                  <p
+                  <div
                     key={index}
-                    className="text-lg leading-relaxed text-gray-800 font-serif">
-                    {interpolateVariables(node.content, runtimeState)}
-                  </p>
+                    className="space-y-2">
+                    <p className="text-lg leading-relaxed text-gray-800 font-serif">
+                      {interpolateVariables(node.content, runtimeState)}
+                    </p>
+                    {hasTextAudio && (
+                      <AudioControls
+                        audioPlayer={audioPlayer}
+                        hasAudio={hasTextAudio}
+                      />
+                    )}
+                  </div>
                 );
+              }
 
               case 'static_image':
               case 'ai_image':
@@ -276,12 +315,24 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
                 if (!evaluateCondition(node.condition, runtimeState)) {
                   return null;
                 }
+                const hasChoiceAudio = 'audio_url' in node && !!node.audio_url;
                 return (
                   <button
                     key={index}
-                    className="w-full text-left p-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md"
+                    className="w-full text-left p-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md flex items-center gap-3"
                     onClick={() => handleChoice(node.nextSceneId, node.set)}>
-                    <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg">
+                    {hasChoiceAudio && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          audioPlayer.play((node as { audio_url: string }).audio_url);
+                        }}
+                        className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors flex-shrink-0"
+                        title="播放语音">
+                        <Volume2 size={16} />
+                      </button>
+                    )}
+                    <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg flex-1">
                       {interpolateVariables(node.text, runtimeState)}
                     </span>
                   </button>

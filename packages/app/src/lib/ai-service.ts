@@ -35,6 +35,11 @@ export interface GenerateMiniGameResult {
   model: string;
 }
 
+export interface GenerateTTSResult {
+  url: string;
+  model: string;
+}
+
 export async function generateAndUploadImage(prompt: string, fileName: string): Promise<GenerateImageResult> {
   const { env } = getCloudflareContext();
 
@@ -172,5 +177,78 @@ export async function generateAndStoreMiniGame(
     url: `${baseUrl}/api/cms/minigames/${minigameId}`,
     usage,
     model: provider.type,
+  };
+}
+
+/**
+ * TTS 声音选项
+ */
+export type TTSVoiceName =
+  | 'Aoede' // 温和女声
+  | 'Kore' // 活泼女声
+  | 'Puck' // 活泼男声
+  | 'Charon' // 沉稳男声
+  | 'Fenrir' // 深沉男声
+  | 'Leda' // 温柔女声
+  | 'Orus' // 自然男声
+  | 'Zephyr'; // 中性声音
+
+/**
+ * 生成 TTS 语音并上传到 R2
+ * 使用 Gemini TTS 模型
+ */
+export async function generateAndUploadTTS(
+  text: string,
+  fileName: string,
+  voiceName: TTSVoiceName = 'Aoede',
+): Promise<GenerateTTSResult> {
+  const { env } = getCloudflareContext();
+
+  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  if (!apiKey) {
+    throw new Error('GOOGLE_API_KEY_NEW not configured');
+  }
+
+  // 使用 @google/genai 生成 TTS
+  const { GoogleGenAI } = await import('@google/genai');
+  const genAI = new GoogleGenAI({ apiKey });
+
+  // 为儿童故事添加朗读指导
+  const enhancedText = `请用温柔、有表现力的方式朗读这段故事，语速稍慢，适合小朋友听：
+
+${text}`;
+
+  const response = await genAI.models.generateContent({
+    model: 'gemini-2.5-flash-preview-tts',
+    contents: [{ parts: [{ text: enhancedText }] }],
+    config: {
+      responseModalities: ['AUDIO'],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName },
+        },
+      },
+    },
+  });
+
+  const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  if (!data) {
+    throw new Error('TTS 生成失败：未返回音频数据');
+  }
+
+  const audioBuffer = Buffer.from(data, 'base64');
+
+  // 上传到 R2
+  const bucket = env.ASSETS_BUCKET;
+  if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
+
+  await bucket.put(fileName, audioBuffer, {
+    httpMetadata: { contentType: 'audio/wav' },
+  });
+
+  const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
+  return {
+    url: `${publicDomain}/${fileName}`,
+    model: 'gemini-2.5-flash-preview-tts',
   };
 }

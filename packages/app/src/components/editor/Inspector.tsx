@@ -13,6 +13,7 @@ import {
   Clock,
   Gamepad2,
   List,
+  Volume2,
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import { SceneNode } from '@mui-gamebook/parser';
@@ -42,6 +43,8 @@ export default function Inspector({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingUploadIndexRef = useRef<number>(-1);
   const pendingAssetsRef = useRef<SceneNode[] | null>(null);
+  const [generatingTTS, setGeneratingTTS] = useState(false);
+  const [contentAudioUrl, setContentAudioUrl] = useState<string | undefined>(undefined);
   const dialog = useDialog();
 
   // Cast data for easier access
@@ -277,6 +280,58 @@ export default function Inspector({
                 className="w-full h-32 p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                 placeholder="场景描述..."
               />
+              {/* TTS 生成按钮 */}
+              {nodeData.content && (
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      if (!nodeData.content || !id) return;
+                      setGeneratingTTS(true);
+                      try {
+                        const res = await fetch('/api/cms/assets/generate-tts', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            text: nodeData.content,
+                            gameId: id,
+                          }),
+                        });
+                        if (!res.ok) {
+                          const error = (await res.json()) as { error: string };
+                          await dialog.error(`TTS 生成失败：${error.error}`);
+                          return;
+                        }
+                        const data = (await res.json()) as { url: string };
+                        setContentAudioUrl(data.url);
+                        await dialog.alert('语音生成成功！');
+                      } catch (e) {
+                        await dialog.error(`错误：${(e as Error).message}`);
+                      } finally {
+                        setGeneratingTTS(false);
+                      }
+                    }}
+                    disabled={generatingTTS}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded hover:bg-purple-100 disabled:opacity-50"
+                    title="为内容生成语音">
+                    {generatingTTS ? (
+                      <Loader2
+                        size={14}
+                        className="animate-spin"
+                      />
+                    ) : (
+                      <Volume2 size={14} />
+                    )}
+                    <span>生成语音</span>
+                  </button>
+                  {contentAudioUrl && (
+                    <audio
+                      src={contentAudioUrl}
+                      controls
+                      className="h-8 flex-1"
+                    />
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Assets Editor */}
