@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
-  "name": "mui-gamebook",
+  "name": "xiaoniaoshuo-admin",
   "compatibility_date": "2025-11-20",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "account_id": "fdc63eeea83ae8f5234357308b9a638b",
@@ -12,8 +12,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "mui-gamebook",
-      "database_id": "f1e05f17-9197-4344-a106-1fe0f906586f"
+      "database_name": "xiaoniaoshuo-db",
+      "database_id": "58b80611-f382-4e20-b110-cd50dac2f624"
     }
   ],
   "images": {
@@ -40,29 +40,29 @@
   "r2_buckets": [
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "baifo"
+      "bucket_name": "site-cache"
     },
     {
       "binding": "ASSETS_BUCKET",
-      "bucket_name": "gamebook-assets"
+      "bucket_name": "xiaoniaoshuo"
     }
   ],
   "services": [
     {
       "binding": "WORKER_SELF_REFERENCE",
       // The service should match the "name" of your worker
-      "service": "mui-gamebook"
+      "service": "xiaoniaoshuo-admin"
     }
   ],
   "vars": {
-    "ASSETS_PUBLIC_DOMAIN": "https://i.muistory.com",
-    "COOKIE_DOMAIN": "",
-    "HEADLESS_MODE": "",
+    "ASSETS_PUBLIC_DOMAIN": "https://i.xiaoniaoshuo.com",
+    "COOKIE_DOMAIN": "xiaoniaoshuo.com",
+    "HEADLESS_MODE": "1",
     "GOOGLE_MODEL": "gemini-3-pro-preview",
     "GOOGLE_IMAGE_MODEL": "gemini-2.5-flash-image",
     "GOOGLE_VIDEO_MODEL": "veo-3.1-fast-generate-preview",
     "NEXT_PUBLIC_GA_ID": "G-244NXPS1H0",
-    "NEXT_PUBLIC_SITE_URL": "https://muistory.com/",
+    "NEXT_PUBLIC_SITE_URL": "https://xiaoniaoshuo.com",
     "ROOT_USER_EMAIL": "meathill@gmail.com",
     "RPC_PROVIDER_URL": "https://aeneid.storyrpc.io"
   }
