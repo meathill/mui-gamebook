@@ -6,10 +6,6 @@ export const dynamic = 'force-dynamic';
 // 可爱的装饰 emoji 组
 const decorEmojis = ['🌈', '⭐', '🎨', '🎪', '🎠', '🎡', '🎢', '🦄', '🐰', '🐻'];
 
-function getRandomEmoji() {
-  return decorEmojis[Math.floor(Math.random() * decorEmojis.length)];
-}
-
 export default async function Home() {
   const games = await getGames();
 

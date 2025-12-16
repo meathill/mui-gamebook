@@ -5,9 +5,10 @@ import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { generateImage as _generateImage, type AiUsageInfo } from '@mui-gamebook/core/lib/ai';
 import type { Game, SceneNode } from '@mui-gamebook/parser';
 import slugify from 'slugify';
-import { genAI, s3Client, R2_BUCKET, R2_PUBLIC_URL, GOOGLE_IMAGE_MODEL } from './config';
+import { genAI, s3Client, R2_BUCKET, R2_PUBLIC_URL, GOOGLE_IMAGE_MODEL, DEFAULT_TTS_VOICE } from './config';
 import { retry } from './utils';
 import { addUsage } from './usage';
+import { generateStorySpeech, type VoiceName } from './tts';
 
 /**
  * 生成图片（带重试）
@@ -144,6 +145,59 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
 }
 
 /**
+ * 为节点生成 TTS 语音
+ * 支持文本节点和选项节点
+ */
+export async function processNodeTTS(
+  node: SceneNode,
+  game: Game,
+  sceneId: string,
+  nodeIndex: number,
+  force: boolean = false,
+): Promise<boolean> {
+  const folder = slugify(game.title, { lower: true, trim: true }) || game.title;
+  const voiceName = (DEFAULT_TTS_VOICE as VoiceName) || 'Aoede';
+
+  // 文本节点 TTS
+  if (node.type === 'text' && (!node.audio_url || force)) {
+    try {
+      console.log(`[TTS] Processing text node in scene ${sceneId}...`);
+      const { buffer, mimeType } = await generateStorySpeech(genAI, node.content, voiceName);
+
+      const fileName = `audio/${folder}/${sceneId}-text-${nodeIndex}-${Date.now()}.wav`;
+      const publicUrl = await uploadToR2(fileName, buffer, mimeType);
+      node.audio_url = publicUrl;
+      console.log(`[SUCCESS] Generated TTS for text: ${publicUrl}`);
+      return true;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[ERROR] Failed to generate TTS for text in scene ${sceneId}: ${message}`);
+      return false;
+    }
+  }
+
+  // 选项节点 TTS
+  if (node.type === 'choice' && (!node.audio_url || force)) {
+    try {
+      console.log(`[TTS] Processing choice node in scene ${sceneId}...`);
+      const { buffer, mimeType } = await generateStorySpeech(genAI, node.text, voiceName);
+
+      const fileName = `audio/${folder}/${sceneId}-choice-${nodeIndex}-${Date.now()}.wav`;
+      const publicUrl = await uploadToR2(fileName, buffer, mimeType);
+      node.audio_url = publicUrl;
+      console.log(`[SUCCESS] Generated TTS for choice: ${publicUrl}`);
+      return true;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[ERROR] Failed to generate TTS for choice in scene ${sceneId}: ${message}`);
+      return false;
+    }
+  }
+
+  return false;
+}
+
+/**
  * 处理游戏素材生成的核心逻辑
  */
 export async function processGame(game: Game, force: boolean): Promise<boolean> {
@@ -155,11 +209,16 @@ export async function processGame(game: Game, force: boolean): Promise<boolean> 
 
   // 处理场景素材
   for (const scene of game.scenes.values()) {
-    for (const node of scene.nodes) {
-      const updated = await processNode(node, game, force);
-      if (updated) {
-        hasChanged = true;
-      }
+    for (let i = 0; i < scene.nodes.length; i++) {
+      const node = scene.nodes[i];
+
+      // 处理图片/音频/视频素材
+      const assetUpdated = await processNode(node, game, force);
+      if (assetUpdated) hasChanged = true;
+
+      // 处理 TTS 语音
+      const ttsUpdated = await processNodeTTS(node, game, scene.id, i, force);
+      if (ttsUpdated) hasChanged = true;
     }
   }
 

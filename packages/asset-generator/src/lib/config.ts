@@ -32,6 +32,12 @@ export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL!;
 // Google 图片生成模型
 export const GOOGLE_IMAGE_MODEL = process.env.GOOGLE_IMAGE_MODEL!;
 
+// Google TTS 模型
+export const GOOGLE_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+
+// TTS 默认声音（适合儿童的温和声音）
+export const DEFAULT_TTS_VOICE = process.env.DEFAULT_TTS_VOICE || 'Aoede';
+
 /**
  * 检查远程命令必需的环境变量
  */

@@ -54,7 +54,11 @@ export interface AICharacter {
 /**
  * 场景内容的原子节点。
  */
-export type SceneContentNode = { type: 'text'; content: string };
+export type SceneContentNode = {
+  type: 'text';
+  content: string;
+  audio_url?: string; // TTS 生成的语音 URL
+};
 export type SceneStaticImageNode = { type: 'static_image'; alt?: string; url: string };
 export type SceneStaticAudioNode = { type: 'static_audio'; url: string };
 export type SceneStaticVideoNode = { type: 'static_video'; url: string };
@@ -88,6 +92,7 @@ export type SceneChoiceNode = {
   nextSceneId: string;
   condition?: string; // e.g., "has_key == true"
   set?: string; // e.g., "gold = gold + 5, has_key = false"
+  audio_url?: string; // TTS 生成的语音 URL
 };
 export type SceneNode =
   | SceneContentNode
