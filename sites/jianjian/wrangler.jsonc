@@ -1,24 +1,22 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
-  "name": "jianjian",
+  "name": "xiaoniaoshuo",
   "compatibility_date": "2025-11-20",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "account_id": "fdc63eeea83ae8f5234357308b9a638b",
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "images": {
+    "binding": "IMAGES"
+  },
   "kv_namespaces": [
     {
       "binding": "KV",
-      "id": "TODO_CREATE_KV_NAMESPACE",
-      "preview_id": "TODO_CREATE_KV_NAMESPACE"
-    }
-  ],
-  "r2_buckets": [
-    {
-      "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "jianjian-cache"
+      "id": "9bf5ab2aa257483f9d82800297591bb8",
+      "preview_id": "9bf5ab2aa257483f9d82800297591bb8"
     }
   ],
   "observability": {
@@ -32,8 +30,21 @@
   "placement": {
     "mode": "smart"
   },
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "site-cache"
+    }
+  ],
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      // The service should match the "name" of your worker
+      "service": "xiaoniaoshuo"
+    }
+  ],
   "vars": {
-    "NEXT_PUBLIC_API_URL": "https://admin.jianjian.com",
-    "NEXT_PUBLIC_SITE_URL": "https://jianjian.com"
+    "NEXT_PUBLIC_API_URL": "https://admin.xiaoniaoshuo.com",
+    "NEXT_PUBLIC_SITE_URL": "https://xiaoniaoshuo.com"
   }
 }

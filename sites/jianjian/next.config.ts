@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'i.muistory.com',
+        hostname: 'i.xiaoniaoshuo.com',
         port: '',
       },
     ],
