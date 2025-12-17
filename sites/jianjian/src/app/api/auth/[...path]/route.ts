@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3020';
+import { CMS_API_URL } from '@/lib/config';
 
 type Props = {
   params: Promise<{ path: string[] }>;
@@ -25,7 +24,7 @@ async function proxyAuthRequest(request: NextRequest, props: Props) {
     const url = new URL(request.url);
 
     // 构建代理 URL
-    const proxyUrl = new URL(`/api/auth/${pathString}`, API_URL);
+    const proxyUrl = new URL(`/api/auth/${pathString}`, CMS_API_URL);
     proxyUrl.search = url.search;
 
     // 转发请求到 CMS
@@ -33,7 +32,7 @@ async function proxyAuthRequest(request: NextRequest, props: Props) {
       method: request.method,
       headers: request.headers,
       body: request.body,
-      // @ts-expect-error - duplex is required for streaming
+      // @ts-expect-error - duplex is required when forwarding request bodies with ReadableStream
       duplex: 'half',
     });
 

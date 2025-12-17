@@ -1,7 +1,6 @@
 import { createAuthClient } from 'better-auth/react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3020';
+import { CMS_API_URL } from './config';
 
 export const authClient = createAuthClient({
-  baseURL: API_URL,
+  baseURL: CMS_API_URL,
 });

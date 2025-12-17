@@ -29,7 +29,8 @@ export default function SignInPage() {
         router.refresh();
       }
     } catch (err) {
-      setError('发生未知错误. ' + (err as Error).message);
+      setError('发生未知错误，请稍后重试');
+      console.error('Sign in error:', err);
     } finally {
       setLoading(false);
     }
