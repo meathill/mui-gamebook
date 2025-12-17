@@ -1,11 +1,23 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
+import { redirect } from 'next/navigation';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getPublishedGames } from '@/lib/games';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  const { env } = await getCloudflareContext({ async: true });
+
+  // Headless 模式：自动跳转到 admin 页面
+  if (env.HEADLESS_MODE === 'true') {
+    if (!env.COOKIE_DOMAIN) {
+      throw new Error('HEADLESS_MODE 启用时必须配置 COOKIE_DOMAIN');
+    }
+    redirect('/admin');
+  }
+
   const games = await getPublishedGames();
   const t = await getTranslations('home');
 
