@@ -80,7 +80,7 @@ importers:
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@story-protocol/core-sdk':
         specifier: ^1.4.2
-        version: 1.4.2(typescript@5.9.3)(zod@4.1.13)
+        version: 1.4.2(typescript@5.9.3)(zod@3.22.3)
       '@tanstack/react-query':
         specifier: ^5.90.12
         version: 5.90.12(react@19.2.3)
@@ -128,7 +128,7 @@ importers:
         version: 3.4.0
       viem:
         specifier: ^2.42.0
-        version: 2.42.0(typescript@5.9.3)(zod@4.1.13)
+        version: 2.42.0(typescript@5.9.3)(zod@3.22.3)
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.18
@@ -268,6 +268,9 @@ importers:
       '@opennextjs/cloudflare':
         specifier: ^1.14.6
         version: 1.14.6(next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(wrangler@4.54.0)
+      better-auth:
+        specifier: ^1.4.7
+        version: 1.4.7(drizzle-kit@0.31.8)(drizzle-orm@0.44.7(kysely@0.28.9))(next@16.0.10(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(vitest@4.0.15)
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -8828,15 +8831,15 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
-  '@story-protocol/core-sdk@1.4.2(typescript@5.9.3)(zod@4.1.13)':
+  '@story-protocol/core-sdk@1.4.2(typescript@5.9.3)(zod@3.22.3)':
     dependencies:
       '@scure/bip32': 1.7.0
-      abitype: 0.10.3(typescript@5.9.3)(zod@4.1.13)
+      abitype: 0.10.3(typescript@5.9.3)(zod@3.22.3)
       axios: 1.13.2
       bs58: 6.0.0
       dotenv: 16.6.1
       multiformats: 9.9.0
-      viem: 2.42.0(typescript@5.9.3)(zod@4.1.13)
+      viem: 2.42.0(typescript@5.9.3)(zod@3.22.3)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9249,15 +9252,15 @@ snapshots:
       d3-selection: 3.0.0
       d3-zoom: 3.0.0
 
-  abitype@0.10.3(typescript@5.9.3)(zod@4.1.13):
+  abitype@0.10.3(typescript@5.9.3)(zod@3.22.3):
     optionalDependencies:
       typescript: 5.9.3
-      zod: 4.1.13
+      zod: 3.22.3
 
-  abitype@1.1.0(typescript@5.9.3)(zod@4.1.13):
+  abitype@1.1.0(typescript@5.9.3)(zod@3.22.3):
     optionalDependencies:
       typescript: 5.9.3
-      zod: 4.1.13
+      zod: 3.22.3
 
   abort-controller@3.0.0:
     dependencies:
@@ -11205,7 +11208,7 @@ snapshots:
       ws: 8.18.3
       zod: 4.1.13
 
-  ox@0.9.6(typescript@5.9.3)(zod@4.1.13):
+  ox@0.9.6(typescript@5.9.3)(zod@3.22.3):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/ciphers': 1.3.0
@@ -11213,7 +11216,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.1.0(typescript@5.9.3)(zod@4.1.13)
+      abitype: 1.1.0(typescript@5.9.3)(zod@3.22.3)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.9.3
@@ -12060,15 +12063,15 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  viem@2.42.0(typescript@5.9.3)(zod@4.1.13):
+  viem@2.42.0(typescript@5.9.3)(zod@3.22.3):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.1.0(typescript@5.9.3)(zod@4.1.13)
+      abitype: 1.1.0(typescript@5.9.3)(zod@3.22.3)
       isows: 1.0.7(ws@8.18.3)
-      ox: 0.9.6(typescript@5.9.3)(zod@4.1.13)
+      ox: 0.9.6(typescript@5.9.3)(zod@3.22.3)
       ws: 8.18.3
     optionalDependencies:
       typescript: 5.9.3
