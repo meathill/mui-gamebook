@@ -4,18 +4,18 @@
 declare namespace Cloudflare {
   interface Env {
     KV: KVNamespace;
-    NEXT_PUBLIC_API_URL: 'https://admin.xiaoniaoshuo.com';
+    NEXT_PUBLIC_API_URL: 'https://cms.xiaoniaoshuo.com';
     NEXT_PUBLIC_SITE_URL: 'https://xiaoniaoshuo.com';
     NEXT_INC_CACHE_R2_BUCKET: R2Bucket;
     ASSETS: Fetcher;
   }
 }
-interface CloudflareEnv extends Cloudflare.Env {}
+interface CloudflareEnv extends Cloudflare.Env { }
 type StringifyValues<EnvType extends Record<string, unknown>> = {
   [Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-  interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, 'NEXT_PUBLIC_API_URL' | 'NEXT_PUBLIC_SITE_URL'>> {}
+  interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, 'NEXT_PUBLIC_API_URL' | 'NEXT_PUBLIC_SITE_URL'>> { }
 }
 
 // Begin runtime types
@@ -460,7 +460,7 @@ declare const performance: Performance;
 declare const Cloudflare: Cloudflare;
 declare const origin: string;
 declare const navigator: Navigator;
-interface TestController {}
+interface TestController { }
 interface ExecutionContext<Props = unknown> {
   waitUntil(promise: Promise<any>): void;
   passThroughOnException(): void;
@@ -564,7 +564,7 @@ type DurableObjectLocationHint = 'wnam' | 'enam' | 'sam' | 'weur' | 'eeur' | 'ap
 interface DurableObjectNamespaceGetDurableObjectOptions {
   locationHint?: DurableObjectLocationHint;
 }
-interface DurableObjectClass<_T extends Rpc.DurableObjectBranded | undefined = undefined> {}
+interface DurableObjectClass<_T extends Rpc.DurableObjectBranded | undefined = undefined> { }
 interface DurableObjectState<Props = unknown> {
   waitUntil(promise: Promise<any>): void;
   readonly exports: Cloudflare.Exports;
@@ -1078,14 +1078,14 @@ declare abstract class Crypto {
    */
   getRandomValues<
     T extends
-      | Int8Array
-      | Uint8Array
-      | Int16Array
-      | Uint16Array
-      | Int32Array
-      | Uint32Array
-      | BigInt64Array
-      | BigUint64Array,
+    | Int8Array
+    | Uint8Array
+    | Int16Array
+    | Uint16Array
+    | Int32Array
+    | Uint32Array
+    | BigInt64Array
+    | BigUint64Array,
   >(buffer: T): T;
   /**
    * The **`randomUUID()`** method of the Crypto interface is used to generate a v4 UUID using a cryptographically secure random number generator.
@@ -1762,7 +1762,7 @@ declare abstract class Body {
  */
 declare var Response: {
   prototype: Response;
-  new (body?: BodyInit | null, init?: ResponseInit): Response;
+  new(body?: BodyInit | null, init?: ResponseInit): Response;
   error(): Response;
   redirect(url: string, status?: number): Response;
   json(any: any, maybeInit?: ResponseInit | Response): Response;
@@ -1929,21 +1929,21 @@ interface RequestInit<Cf = CfProperties> {
 }
 type Service<
   T extends
-    | (new (
-        ...args: any[]
-      ) => Rpc.WorkerEntrypointBranded)
-    | Rpc.WorkerEntrypointBranded
-    | ExportedHandler<any, any, any>
-    | undefined = undefined,
+  | (new (
+    ...args: any[]
+  ) => Rpc.WorkerEntrypointBranded)
+  | Rpc.WorkerEntrypointBranded
+  | ExportedHandler<any, any, any>
+  | undefined = undefined,
 > = T extends new (
   ...args: any[]
 ) => Rpc.WorkerEntrypointBranded
   ? Fetcher<InstanceType<T>>
   : T extends Rpc.WorkerEntrypointBranded
-    ? Fetcher<T>
-    : T extends Exclude<Rpc.EntrypointBranded, Rpc.WorkerEntrypointBranded>
-      ? never
-      : Fetcher<undefined>;
+  ? Fetcher<T>
+  : T extends Exclude<Rpc.EntrypointBranded, Rpc.WorkerEntrypointBranded>
+  ? never
+  : Fetcher<undefined>;
 type Fetcher<
   T extends Rpc.EntrypointBranded | undefined = undefined,
   Reserved extends string = never,
@@ -1958,16 +1958,16 @@ interface KVNamespaceListKey<Metadata, Key extends string = string> {
 }
 type KVNamespaceListResult<Metadata, Key extends string = string> =
   | {
-      list_complete: false;
-      keys: KVNamespaceListKey<Metadata, Key>[];
-      cursor: string;
-      cacheStatus: string | null;
-    }
+    list_complete: false;
+    keys: KVNamespaceListKey<Metadata, Key>[];
+    cursor: string;
+    cacheStatus: string | null;
+  }
   | {
-      list_complete: true;
-      keys: KVNamespaceListKey<Metadata, Key>[];
-      cacheStatus: string | null;
-    };
+    list_complete: true;
+    keys: KVNamespaceListKey<Metadata, Key>[];
+    cacheStatus: string | null;
+  };
 interface KVNamespace<Key extends string = string> {
   get(key: Key, options?: Partial<KVNamespaceGetOptions<undefined>>): Promise<string | null>;
   get(key: Key, type: 'text'): Promise<string | null>;
@@ -2191,16 +2191,16 @@ interface R2ObjectBody extends R2Object {
 }
 type R2Range =
   | {
-      offset: number;
-      length?: number;
-    }
+    offset: number;
+    length?: number;
+  }
   | {
-      offset?: number;
-      length: number;
-    }
+    offset?: number;
+    length: number;
+  }
   | {
-      suffix: number;
-    };
+    suffix: number;
+  };
 interface R2Conditional {
   etagMatches?: string;
   etagDoesNotMatch?: string;
@@ -2258,14 +2258,14 @@ type R2Objects = {
   objects: R2Object[];
   delimitedPrefixes: string[];
 } & (
-  | {
+    | {
       truncated: true;
       cursor: string;
     }
-  | {
+    | {
       truncated: false;
     }
-);
+  );
 interface R2UploadPartOptions {
   ssecKey?: ArrayBuffer | string;
 }
@@ -2338,13 +2338,13 @@ interface StreamPipeOptions {
 }
 type ReadableStreamReadResult<R = any> =
   | {
-      done: false;
-      value: R;
-    }
+    done: false;
+    value: R;
+  }
   | {
-      done: true;
-      value?: undefined;
-    };
+    done: true;
+    value?: undefined;
+  };
 /**
  * The `ReadableStream` interface of the Streams API represents a readable stream of byte data.
  *
@@ -2403,7 +2403,7 @@ interface ReadableStream<R = any> {
  */
 declare const ReadableStream: {
   prototype: ReadableStream;
-  new (underlyingSource: UnderlyingByteSource, strategy?: QueuingStrategy<Uint8Array>): ReadableStream<Uint8Array>;
+  new(underlyingSource: UnderlyingByteSource, strategy?: QueuingStrategy<Uint8Array>): ReadableStream<Uint8Array>;
   new <R = any>(underlyingSource?: UnderlyingSource<R>, strategy?: QueuingStrategy<R>): ReadableStream<R>;
 };
 /**
@@ -2824,18 +2824,18 @@ declare abstract class TailEvent extends ExtendableEvent {
 }
 interface TraceItem {
   readonly event:
-    | (
-        | TraceItemFetchEventInfo
-        | TraceItemJsRpcEventInfo
-        | TraceItemScheduledEventInfo
-        | TraceItemAlarmEventInfo
-        | TraceItemQueueEventInfo
-        | TraceItemEmailEventInfo
-        | TraceItemTailEventInfo
-        | TraceItemCustomEventInfo
-        | TraceItemHibernatableWebSocketEventInfo
-      )
-    | null;
+  | (
+    | TraceItemFetchEventInfo
+    | TraceItemJsRpcEventInfo
+    | TraceItemScheduledEventInfo
+    | TraceItemAlarmEventInfo
+    | TraceItemQueueEventInfo
+    | TraceItemEmailEventInfo
+    | TraceItemTailEventInfo
+    | TraceItemCustomEventInfo
+    | TraceItemHibernatableWebSocketEventInfo
+  )
+  | null;
   readonly eventTimestamp: number | null;
   readonly logs: TraceLog[];
   readonly exceptions: TraceException[];
@@ -2855,7 +2855,7 @@ interface TraceItem {
 interface TraceItemAlarmEventInfo {
   readonly scheduledTime: Date;
 }
-interface TraceItemCustomEventInfo {}
+interface TraceItemCustomEventInfo { }
 interface TraceItemScheduledEventInfo {
   readonly scheduledTime: number;
   readonly cron: string;
@@ -2894,9 +2894,9 @@ interface TraceItemJsRpcEventInfo {
 }
 interface TraceItemHibernatableWebSocketEventInfo {
   readonly getWebSocketEvent:
-    | TraceItemHibernatableWebSocketEventInfoMessage
-    | TraceItemHibernatableWebSocketEventInfoClose
-    | TraceItemHibernatableWebSocketEventInfoError;
+  | TraceItemHibernatableWebSocketEventInfoMessage
+  | TraceItemHibernatableWebSocketEventInfoClose
+  | TraceItemHibernatableWebSocketEventInfoError;
 }
 interface TraceItemHibernatableWebSocketEventInfoMessage {
   readonly webSocketEventType: string;
@@ -3264,7 +3264,7 @@ type WebSocketEventMap = {
  */
 declare var WebSocket: {
   prototype: WebSocket;
-  new (url: string, protocols?: string[] | string): WebSocket;
+  new(url: string, protocols?: string[] | string): WebSocket;
   readonly READY_STATE_CONNECTING: number;
   readonly CONNECTING: number;
   readonly READY_STATE_OPEN: number;
@@ -3321,7 +3321,7 @@ interface WebSocket extends EventTarget<WebSocketEventMap> {
   extensions: string | null;
 }
 declare const WebSocketPair: {
-  new (): {
+  new(): {
     0: WebSocket;
     1: WebSocket;
   };
@@ -3332,18 +3332,18 @@ interface SqlStorage {
   Cursor: typeof SqlStorageCursor;
   Statement: typeof SqlStorageStatement;
 }
-declare abstract class SqlStorageStatement {}
+declare abstract class SqlStorageStatement { }
 type SqlStorageValue = ArrayBuffer | string | number | null;
 declare abstract class SqlStorageCursor<T extends Record<string, SqlStorageValue>> {
   next():
     | {
-        done?: false;
-        value: T;
-      }
+      done?: false;
+      value: T;
+    }
     | {
-        done: true;
-        value?: never;
-      };
+      done: true;
+      value?: never;
+    };
   toArray(): T[];
   one(): T;
   raw<U extends SqlStorageValue[]>(): IterableIterator<U>;
@@ -3502,12 +3502,12 @@ type LoopbackForExport<
 ) => Rpc.WorkerEntrypointBranded
   ? LoopbackServiceStub<InstanceType<T>>
   : T extends new (
-        ...args: any[]
-      ) => Rpc.DurableObjectBranded
-    ? LoopbackDurableObjectClass<InstanceType<T>>
-    : T extends ExportedHandler<any, any, any>
-      ? LoopbackServiceStub<undefined>
-      : undefined;
+    ...args: any[]
+  ) => Rpc.DurableObjectBranded
+  ? LoopbackDurableObjectClass<InstanceType<T>>
+  : T extends ExportedHandler<any, any, any>
+  ? LoopbackServiceStub<undefined>
+  : undefined;
 type LoopbackServiceStub<T extends Rpc.WorkerEntrypointBranded | undefined = undefined> = Fetcher<T> &
   (T extends CloudflareWorkersModule.WorkerEntrypoint<any, infer Props>
     ? (opts: { props?: Props }) => Fetcher<T>
@@ -3803,8 +3803,8 @@ type AiTextToSpeechInput = {
 type AiTextToSpeechOutput =
   | Uint8Array
   | {
-      audio: string;
-    };
+    audio: string;
+  };
 declare abstract class BaseAiTextToSpeech {
   inputs: AiTextToSpeechInput;
   postProcessedOutputs: AiTextToSpeechOutput;
@@ -3951,24 +3951,24 @@ type ResponseCustomToolCallOutput = {
 };
 type ResponseError = {
   code:
-    | 'server_error'
-    | 'rate_limit_exceeded'
-    | 'invalid_prompt'
-    | 'vector_store_timeout'
-    | 'invalid_image'
-    | 'invalid_image_format'
-    | 'invalid_base64_image'
-    | 'invalid_image_url'
-    | 'image_too_large'
-    | 'image_too_small'
-    | 'image_parse_error'
-    | 'image_content_policy_violation'
-    | 'invalid_image_mode'
-    | 'image_file_too_large'
-    | 'unsupported_image_media_type'
-    | 'empty_image_file'
-    | 'failed_to_download_image'
-    | 'image_file_not_found';
+  | 'server_error'
+  | 'rate_limit_exceeded'
+  | 'invalid_prompt'
+  | 'vector_store_timeout'
+  | 'invalid_image'
+  | 'invalid_image_format'
+  | 'invalid_base64_image'
+  | 'invalid_image_url'
+  | 'image_too_large'
+  | 'image_too_small'
+  | 'image_parse_error'
+  | 'image_content_policy_violation'
+  | 'invalid_image_mode'
+  | 'image_file_too_large'
+  | 'unsupported_image_media_type'
+  | 'empty_image_file'
+  | 'failed_to_download_image'
+  | 'image_file_not_found';
   message: string;
 };
 type ResponseErrorEvent = {
@@ -4246,36 +4246,36 @@ type StreamOptions = {
 };
 type Ai_Cf_Baai_Bge_Base_En_V1_5_Input =
   | {
+    text: string | string[];
+    /**
+     * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
+     */
+    pooling?: 'mean' | 'cls';
+  }
+  | {
+    /**
+     * Batch of the embeddings requests to run using async-queue
+     */
+    requests: {
       text: string | string[];
       /**
        * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
        */
       pooling?: 'mean' | 'cls';
-    }
-  | {
-      /**
-       * Batch of the embeddings requests to run using async-queue
-       */
-      requests: {
-        text: string | string[];
-        /**
-         * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
-         */
-        pooling?: 'mean' | 'cls';
-      }[];
-    };
+    }[];
+  };
 type Ai_Cf_Baai_Bge_Base_En_V1_5_Output =
   | {
-      shape?: number[];
-      /**
-       * Embeddings of the requested text values
-       */
-      data?: number[][];
-      /**
-       * The pooling method used in the embedding process.
-       */
-      pooling?: 'mean' | 'cls';
-    }
+    shape?: number[];
+    /**
+     * Embeddings of the requested text values
+     */
+    data?: number[][];
+    /**
+     * The pooling method used in the embedding process.
+     */
+    pooling?: 'mean' | 'cls';
+  }
   | Ai_Cf_Baai_Bge_Base_En_V1_5_AsyncResponse;
 interface Ai_Cf_Baai_Bge_Base_En_V1_5_AsyncResponse {
   /**
@@ -4290,11 +4290,11 @@ declare abstract class Base_Ai_Cf_Baai_Bge_Base_En_V1_5 {
 type Ai_Cf_Openai_Whisper_Input =
   | string
   | {
-      /**
-       * An array of integers that represent the audio data constrained to 8-bit unsigned integer values
-       */
-      audio: number[];
-    };
+    /**
+     * An array of integers that represent the audio data constrained to 8-bit unsigned integer values
+     */
+    audio: number[];
+  };
 interface Ai_Cf_Openai_Whisper_Output {
   /**
    * The transcription
@@ -4320,6 +4320,24 @@ declare abstract class Base_Ai_Cf_Openai_Whisper {
 }
 type Ai_Cf_Meta_M2M100_1_2B_Input =
   | {
+    /**
+     * The text to be translated
+     */
+    text: string;
+    /**
+     * The language code of the source text (e.g., 'en' for English). Defaults to 'en' if not specified
+     */
+    source_lang?: string;
+    /**
+     * The language code to translate the text into (e.g., 'es' for Spanish)
+     */
+    target_lang: string;
+  }
+  | {
+    /**
+     * Batch of the embeddings requests to run using async-queue
+     */
+    requests: {
       /**
        * The text to be translated
        */
@@ -4332,33 +4350,15 @@ type Ai_Cf_Meta_M2M100_1_2B_Input =
        * The language code to translate the text into (e.g., 'es' for Spanish)
        */
       target_lang: string;
-    }
-  | {
-      /**
-       * Batch of the embeddings requests to run using async-queue
-       */
-      requests: {
-        /**
-         * The text to be translated
-         */
-        text: string;
-        /**
-         * The language code of the source text (e.g., 'en' for English). Defaults to 'en' if not specified
-         */
-        source_lang?: string;
-        /**
-         * The language code to translate the text into (e.g., 'es' for Spanish)
-         */
-        target_lang: string;
-      }[];
-    };
+    }[];
+  };
 type Ai_Cf_Meta_M2M100_1_2B_Output =
   | {
-      /**
-       * The translated text in the target language
-       */
-      translated_text?: string;
-    }
+    /**
+     * The translated text in the target language
+     */
+    translated_text?: string;
+  }
   | Ai_Cf_Meta_M2M100_1_2B_AsyncResponse;
 interface Ai_Cf_Meta_M2M100_1_2B_AsyncResponse {
   /**
@@ -4372,36 +4372,36 @@ declare abstract class Base_Ai_Cf_Meta_M2M100_1_2B {
 }
 type Ai_Cf_Baai_Bge_Small_En_V1_5_Input =
   | {
+    text: string | string[];
+    /**
+     * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
+     */
+    pooling?: 'mean' | 'cls';
+  }
+  | {
+    /**
+     * Batch of the embeddings requests to run using async-queue
+     */
+    requests: {
       text: string | string[];
       /**
        * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
        */
       pooling?: 'mean' | 'cls';
-    }
-  | {
-      /**
-       * Batch of the embeddings requests to run using async-queue
-       */
-      requests: {
-        text: string | string[];
-        /**
-         * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
-         */
-        pooling?: 'mean' | 'cls';
-      }[];
-    };
+    }[];
+  };
 type Ai_Cf_Baai_Bge_Small_En_V1_5_Output =
   | {
-      shape?: number[];
-      /**
-       * Embeddings of the requested text values
-       */
-      data?: number[][];
-      /**
-       * The pooling method used in the embedding process.
-       */
-      pooling?: 'mean' | 'cls';
-    }
+    shape?: number[];
+    /**
+     * Embeddings of the requested text values
+     */
+    data?: number[][];
+    /**
+     * The pooling method used in the embedding process.
+     */
+    pooling?: 'mean' | 'cls';
+  }
   | Ai_Cf_Baai_Bge_Small_En_V1_5_AsyncResponse;
 interface Ai_Cf_Baai_Bge_Small_En_V1_5_AsyncResponse {
   /**
@@ -4415,36 +4415,36 @@ declare abstract class Base_Ai_Cf_Baai_Bge_Small_En_V1_5 {
 }
 type Ai_Cf_Baai_Bge_Large_En_V1_5_Input =
   | {
+    text: string | string[];
+    /**
+     * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
+     */
+    pooling?: 'mean' | 'cls';
+  }
+  | {
+    /**
+     * Batch of the embeddings requests to run using async-queue
+     */
+    requests: {
       text: string | string[];
       /**
        * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
        */
       pooling?: 'mean' | 'cls';
-    }
-  | {
-      /**
-       * Batch of the embeddings requests to run using async-queue
-       */
-      requests: {
-        text: string | string[];
-        /**
-         * The pooling method used in the embedding process. `cls` pooling will generate more accurate embeddings on larger inputs - however, embeddings created with cls pooling are not compatible with embeddings generated with mean pooling. The default pooling method is `mean` in order for this to not be a breaking change, but we highly suggest using the new `cls` pooling for better accuracy.
-         */
-        pooling?: 'mean' | 'cls';
-      }[];
-    };
+    }[];
+  };
 type Ai_Cf_Baai_Bge_Large_En_V1_5_Output =
   | {
-      shape?: number[];
-      /**
-       * Embeddings of the requested text values
-       */
-      data?: number[][];
-      /**
-       * The pooling method used in the embedding process.
-       */
-      pooling?: 'mean' | 'cls';
-    }
+    shape?: number[];
+    /**
+     * Embeddings of the requested text values
+     */
+    data?: number[][];
+    /**
+     * The pooling method used in the embedding process.
+     */
+    pooling?: 'mean' | 'cls';
+  }
   | Ai_Cf_Baai_Bge_Large_En_V1_5_AsyncResponse;
 interface Ai_Cf_Baai_Bge_Large_En_V1_5_AsyncResponse {
   /**
@@ -4459,44 +4459,44 @@ declare abstract class Base_Ai_Cf_Baai_Bge_Large_En_V1_5 {
 type Ai_Cf_Unum_Uform_Gen2_Qwen_500M_Input =
   | string
   | {
-      /**
-       * The input text prompt for the model to generate a response.
-       */
-      prompt?: string;
-      /**
-       * If true, a chat template is not applied and you must adhere to the specific model's expected formatting.
-       */
-      raw?: boolean;
-      /**
-       * Controls the creativity of the AI's responses by adjusting how many possible words it considers. Lower values make outputs more predictable; higher values allow for more varied and creative responses.
-       */
-      top_p?: number;
-      /**
-       * Limits the AI to choose from the top 'k' most probable words. Lower values make responses more focused; higher values introduce more variety and potential surprises.
-       */
-      top_k?: number;
-      /**
-       * Random seed for reproducibility of the generation.
-       */
-      seed?: number;
-      /**
-       * Penalty for repeated tokens; higher values discourage repetition.
-       */
-      repetition_penalty?: number;
-      /**
-       * Decreases the likelihood of the model repeating the same lines verbatim.
-       */
-      frequency_penalty?: number;
-      /**
-       * Increases the likelihood of the model introducing new topics.
-       */
-      presence_penalty?: number;
-      image: number[] | (string & NonNullable<unknown>);
-      /**
-       * The maximum number of tokens to generate in the response.
-       */
-      max_tokens?: number;
-    };
+    /**
+     * The input text prompt for the model to generate a response.
+     */
+    prompt?: string;
+    /**
+     * If true, a chat template is not applied and you must adhere to the specific model's expected formatting.
+     */
+    raw?: boolean;
+    /**
+     * Controls the creativity of the AI's responses by adjusting how many possible words it considers. Lower values make outputs more predictable; higher values allow for more varied and creative responses.
+     */
+    top_p?: number;
+    /**
+     * Limits the AI to choose from the top 'k' most probable words. Lower values make responses more focused; higher values introduce more variety and potential surprises.
+     */
+    top_k?: number;
+    /**
+     * Random seed for reproducibility of the generation.
+     */
+    seed?: number;
+    /**
+     * Penalty for repeated tokens; higher values discourage repetition.
+     */
+    repetition_penalty?: number;
+    /**
+     * Decreases the likelihood of the model repeating the same lines verbatim.
+     */
+    frequency_penalty?: number;
+    /**
+     * Increases the likelihood of the model introducing new topics.
+     */
+    presence_penalty?: number;
+    image: number[] | (string & NonNullable<unknown>);
+    /**
+     * The maximum number of tokens to generate in the response.
+     */
+    max_tokens?: number;
+  };
 interface Ai_Cf_Unum_Uform_Gen2_Qwen_500M_Output {
   description?: string;
 }
@@ -4507,11 +4507,11 @@ declare abstract class Base_Ai_Cf_Unum_Uform_Gen2_Qwen_500M {
 type Ai_Cf_Openai_Whisper_Tiny_En_Input =
   | string
   | {
-      /**
-       * An array of integers that represent the audio data constrained to 8-bit unsigned integer values
-       */
-      audio: number[];
-    };
+    /**
+     * An array of integers that represent the audio data constrained to 8-bit unsigned integer values
+     */
+    audio: number[];
+  };
 interface Ai_Cf_Openai_Whisper_Tiny_En_Output {
   /**
    * The transcription
@@ -4645,11 +4645,11 @@ type Ai_Cf_Baai_Bge_M3_Input =
   | Ai_Cf_Baai_Bge_M3_Input_QueryAnd_Contexts
   | Ai_Cf_Baai_Bge_M3_Input_Embedding
   | {
-      /**
-       * Batch of the embeddings requests to run using async-queue
-       */
-      requests: (Ai_Cf_Baai_Bge_M3_Input_QueryAnd_Contexts_1 | Ai_Cf_Baai_Bge_M3_Input_Embedding_1)[];
-    };
+    /**
+     * Batch of the embeddings requests to run using async-queue
+     */
+    requests: (Ai_Cf_Baai_Bge_M3_Input_QueryAnd_Contexts_1 | Ai_Cf_Baai_Bge_M3_Input_Embedding_1)[];
+  };
 interface Ai_Cf_Baai_Bge_M3_Input_QueryAnd_Contexts {
   /**
    * A query you wish to perform against the provided contexts. If no query is provided the model with respond with embeddings for contexts
@@ -4836,33 +4836,33 @@ interface Ai_Cf_Meta_Llama_3_2_11B_Vision_Instruct_Messages {
      */
     tool_call_id?: string;
     content?:
-      | string
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        }[]
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        };
+    | string
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    }[]
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    };
   }[];
   image?: number[] | (string & NonNullable<unknown>);
   functions?: {
@@ -4874,16 +4874,62 @@ interface Ai_Cf_Meta_Llama_3_2_11B_Vision_Instruct_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -4910,54 +4956,8 @@ interface Ai_Cf_Meta_Llama_3_2_11B_Vision_Instruct_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   /**
    * If true, the response will be streamed back incrementally.
@@ -5101,16 +5101,62 @@ interface Ai_Cf_Meta_Llama_3_3_70B_Instruct_Fp8_Fast_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -5137,54 +5183,8 @@ interface Ai_Cf_Meta_Llama_3_3_70B_Instruct_Fp8_Fast_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   response_format?: Ai_Cf_Meta_Llama_3_3_70B_Instruct_Fp8_Fast_JSON_Mode_1;
   /**
@@ -5283,41 +5283,41 @@ interface Ai_Cf_Meta_Llama_3_3_70B_Instruct_Fp8_Fast_JSON_Mode_2 {
 }
 type Ai_Cf_Meta_Llama_3_3_70B_Instruct_Fp8_Fast_Output =
   | {
+    /**
+     * The generated text response from the model
+     */
+    response: string;
+    /**
+     * Usage statistics for the inference request
+     */
+    usage?: {
       /**
-       * The generated text response from the model
+       * Total number of tokens in input
        */
-      response: string;
+      prompt_tokens?: number;
       /**
-       * Usage statistics for the inference request
+       * Total number of tokens in output
        */
-      usage?: {
-        /**
-         * Total number of tokens in input
-         */
-        prompt_tokens?: number;
-        /**
-         * Total number of tokens in output
-         */
-        completion_tokens?: number;
-        /**
-         * Total number of input and output tokens
-         */
-        total_tokens?: number;
-      };
+      completion_tokens?: number;
       /**
-       * An array of tool calls requests made during the response generation
+       * Total number of input and output tokens
        */
-      tool_calls?: {
-        /**
-         * The arguments passed to be passed to the tool call request
-         */
-        arguments?: object;
-        /**
-         * The name of the tool to be called
-         */
-        name?: string;
-      }[];
-    }
+      total_tokens?: number;
+    };
+    /**
+     * An array of tool calls requests made during the response generation
+     */
+    tool_calls?: {
+      /**
+       * The arguments passed to be passed to the tool call request
+       */
+      arguments?: object;
+      /**
+       * The name of the tool to be called
+       */
+      name?: string;
+    }[];
+  }
   | string
   | Ai_Cf_Meta_Llama_3_3_70B_Instruct_Fp8_Fast_AsyncResponse;
 interface Ai_Cf_Meta_Llama_3_3_70B_Instruct_Fp8_Fast_AsyncResponse {
@@ -5364,17 +5364,17 @@ interface Ai_Cf_Meta_Llama_Guard_3_8B_Input {
 }
 interface Ai_Cf_Meta_Llama_Guard_3_8B_Output {
   response?:
-    | string
-    | {
-        /**
-         * Whether the conversation is safe or not.
-         */
-        safe?: boolean;
-        /**
-         * A list of what hazard categories predicted for the conversation, if the conversation is deemed unsafe.
-         */
-        categories?: string[];
-      };
+  | string
+  | {
+    /**
+     * Whether the conversation is safe or not.
+     */
+    safe?: boolean;
+    /**
+     * A list of what hazard categories predicted for the conversation, if the conversation is deemed unsafe.
+     */
+    categories?: string[];
+  };
   /**
    * Usage statistics for the inference request
    */
@@ -5512,16 +5512,62 @@ interface Ai_Cf_Qwen_Qwen2_5_Coder_32B_Instruct_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -5548,54 +5594,8 @@ interface Ai_Cf_Qwen_Qwen2_5_Coder_32B_Instruct_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   response_format?: Ai_Cf_Qwen_Qwen2_5_Coder_32B_Instruct_JSON_Mode_1;
   /**
@@ -5748,33 +5748,33 @@ interface Ai_Cf_Qwen_Qwq_32B_Messages {
      */
     tool_call_id?: string;
     content?:
-      | string
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        }[]
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        };
+    | string
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    }[]
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    };
   }[];
   functions?: {
     name: string;
@@ -5785,16 +5785,62 @@ interface Ai_Cf_Qwen_Qwq_32B_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -5821,54 +5867,8 @@ interface Ai_Cf_Qwen_Qwq_32B_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   /**
    * JSON schema that should be fufilled for the response.
@@ -6022,33 +6022,33 @@ interface Ai_Cf_Mistralai_Mistral_Small_3_1_24B_Instruct_Messages {
      */
     tool_call_id?: string;
     content?:
-      | string
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        }[]
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        };
+    | string
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    }[]
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    };
   }[];
   functions?: {
     name: string;
@@ -6059,16 +6059,62 @@ interface Ai_Cf_Mistralai_Mistral_Small_3_1_24B_Instruct_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -6095,54 +6141,8 @@ interface Ai_Cf_Mistralai_Mistral_Small_3_1_24B_Instruct_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   /**
    * JSON schema that should be fufilled for the response.
@@ -6290,20 +6290,20 @@ interface Ai_Cf_Google_Gemma_3_12B_It_Messages {
      */
     role?: string;
     content?:
-      | string
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        }[];
+    | string
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    }[];
   }[];
   functions?: {
     name: string;
@@ -6314,16 +6314,62 @@ interface Ai_Cf_Google_Gemma_3_12B_It_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -6350,54 +6396,8 @@ interface Ai_Cf_Google_Gemma_3_12B_It_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   /**
    * JSON schema that should be fufilled for the response.
@@ -6557,33 +6557,33 @@ interface Ai_Cf_Meta_Llama_4_Scout_17B_16E_Instruct_Messages {
      */
     tool_call_id?: string;
     content?:
-      | string
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        }[]
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        };
+    | string
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    }[]
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    };
   }[];
   functions?: {
     name: string;
@@ -6594,16 +6594,62 @@ interface Ai_Cf_Meta_Llama_4_Scout_17B_16E_Instruct_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -6630,54 +6676,8 @@ interface Ai_Cf_Meta_Llama_4_Scout_17B_16E_Instruct_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   response_format?: Ai_Cf_Meta_Llama_4_Scout_17B_16E_Instruct_JSON_Mode;
   /**
@@ -6796,33 +6796,33 @@ interface Ai_Cf_Meta_Llama_4_Scout_17B_16E_Instruct_Messages_Inner {
      */
     tool_call_id?: string;
     content?:
-      | string
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        }[]
-      | {
-          /**
-           * Type of the content provided
-           */
-          type?: string;
-          text?: string;
-          image_url?: {
-            /**
-             * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
-             */
-            url?: string;
-          };
-        };
+    | string
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    }[]
+    | {
+      /**
+       * Type of the content provided
+       */
+      type?: string;
+      text?: string;
+      image_url?: {
+        /**
+         * image uri with data (e.g. data:image/jpeg;base64,/9j/...). HTTP URL will not be accepted
+         */
+        url?: string;
+      };
+    };
   }[];
   functions?: {
     name: string;
@@ -6833,16 +6833,62 @@ interface Ai_Cf_Meta_Llama_4_Scout_17B_16E_Instruct_Messages_Inner {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -6869,54 +6915,8 @@ interface Ai_Cf_Meta_Llama_4_Scout_17B_16E_Instruct_Messages_Inner {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   response_format?: Ai_Cf_Meta_Llama_4_Scout_17B_16E_Instruct_JSON_Mode;
   /**
@@ -7099,16 +7099,62 @@ interface Ai_Cf_Qwen_Qwen3_30B_A3B_Fp8_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -7135,54 +7181,8 @@ interface Ai_Cf_Qwen_Qwen3_30B_A3B_Fp8_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   response_format?: Ai_Cf_Qwen_Qwen3_30B_A3B_Fp8_JSON_Mode_1;
   /**
@@ -7311,16 +7311,62 @@ interface Ai_Cf_Qwen_Qwen3_30B_A3B_Fp8_Messages_1 {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -7347,54 +7393,8 @@ interface Ai_Cf_Qwen_Qwen3_30B_A3B_Fp8_Messages_1 {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   response_format?: Ai_Cf_Qwen_Qwen3_30B_A3B_Fp8_JSON_Mode_3;
   /**
@@ -7823,28 +7823,28 @@ declare abstract class Base_Ai_Cf_Qwen_Qwen3_Embedding_0_6B {
 }
 type Ai_Cf_Pipecat_Ai_Smart_Turn_V2_Input =
   | {
-      /**
-       * readable stream with audio data and content-type specified for that data
-       */
-      audio: {
-        body: object;
-        contentType: string;
-      };
-      /**
-       * type of data PCM data that's sent to the inference server as raw array
-       */
-      dtype?: 'uint8' | 'float32' | 'float64';
-    }
-  | {
-      /**
-       * base64 encoded audio data
-       */
-      audio: string;
-      /**
-       * type of data PCM data that's sent to the inference server as raw array
-       */
-      dtype?: 'uint8' | 'float32' | 'float64';
+    /**
+     * readable stream with audio data and content-type specified for that data
+     */
+    audio: {
+      body: object;
+      contentType: string;
     };
+    /**
+     * type of data PCM data that's sent to the inference server as raw array
+     */
+    dtype?: 'uint8' | 'float32' | 'float64';
+  }
+  | {
+    /**
+     * base64 encoded audio data
+     */
+    audio: string;
+    /**
+     * type of data PCM data that's sent to the inference server as raw array
+     */
+    dtype?: 'uint8' | 'float32' | 'float64';
+  };
 interface Ai_Cf_Pipecat_Ai_Smart_Turn_V2_Output {
   /**
    * if true, end-of-turn was detected
@@ -7950,18 +7950,18 @@ interface Ai_Cf_Deepgram_Aura_1_Input {
    * Speaker used to produce the audio.
    */
   speaker?:
-    | 'angus'
-    | 'asteria'
-    | 'arcas'
-    | 'orion'
-    | 'orpheus'
-    | 'athena'
-    | 'luna'
-    | 'zeus'
-    | 'perseus'
-    | 'helios'
-    | 'hera'
-    | 'stella';
+  | 'angus'
+  | 'asteria'
+  | 'arcas'
+  | 'orion'
+  | 'orpheus'
+  | 'athena'
+  | 'luna'
+  | 'zeus'
+  | 'perseus'
+  | 'helios'
+  | 'hera'
+  | 'stella';
   /**
    * Encoding of the output audio.
    */
@@ -8000,40 +8000,40 @@ interface Ai_Cf_Ai4Bharat_Indictrans2_En_Indic_1B_Input {
    * Target langauge to translate to
    */
   target_language:
-    | 'asm_Beng'
-    | 'awa_Deva'
-    | 'ben_Beng'
-    | 'bho_Deva'
-    | 'brx_Deva'
-    | 'doi_Deva'
-    | 'eng_Latn'
-    | 'gom_Deva'
-    | 'gon_Deva'
-    | 'guj_Gujr'
-    | 'hin_Deva'
-    | 'hne_Deva'
-    | 'kan_Knda'
-    | 'kas_Arab'
-    | 'kas_Deva'
-    | 'kha_Latn'
-    | 'lus_Latn'
-    | 'mag_Deva'
-    | 'mai_Deva'
-    | 'mal_Mlym'
-    | 'mar_Deva'
-    | 'mni_Beng'
-    | 'mni_Mtei'
-    | 'npi_Deva'
-    | 'ory_Orya'
-    | 'pan_Guru'
-    | 'san_Deva'
-    | 'sat_Olck'
-    | 'snd_Arab'
-    | 'snd_Deva'
-    | 'tam_Taml'
-    | 'tel_Telu'
-    | 'urd_Arab'
-    | 'unr_Deva';
+  | 'asm_Beng'
+  | 'awa_Deva'
+  | 'ben_Beng'
+  | 'bho_Deva'
+  | 'brx_Deva'
+  | 'doi_Deva'
+  | 'eng_Latn'
+  | 'gom_Deva'
+  | 'gon_Deva'
+  | 'guj_Gujr'
+  | 'hin_Deva'
+  | 'hne_Deva'
+  | 'kan_Knda'
+  | 'kas_Arab'
+  | 'kas_Deva'
+  | 'kha_Latn'
+  | 'lus_Latn'
+  | 'mag_Deva'
+  | 'mai_Deva'
+  | 'mal_Mlym'
+  | 'mar_Deva'
+  | 'mni_Beng'
+  | 'mni_Mtei'
+  | 'npi_Deva'
+  | 'ory_Orya'
+  | 'pan_Guru'
+  | 'san_Deva'
+  | 'sat_Olck'
+  | 'snd_Arab'
+  | 'snd_Deva'
+  | 'tam_Taml'
+  | 'tel_Telu'
+  | 'urd_Arab'
+  | 'unr_Deva';
 }
 interface Ai_Cf_Ai4Bharat_Indictrans2_En_Indic_1B_Output {
   /**
@@ -8127,16 +8127,62 @@ interface Ai_Cf_Aisingapore_Gemma_Sea_Lion_V4_27B_It_Messages {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -8163,54 +8209,8 @@ interface Ai_Cf_Aisingapore_Gemma_Sea_Lion_V4_27B_It_Messages {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   response_format?: Ai_Cf_Aisingapore_Gemma_Sea_Lion_V4_27B_It_JSON_Mode_1;
   /**
@@ -8342,16 +8342,62 @@ interface Ai_Cf_Aisingapore_Gemma_Sea_Lion_V4_27B_It_Messages_1 {
    */
   tools?: (
     | {
+      /**
+       * The name of the tool. More descriptive the better.
+       */
+      name: string;
+      /**
+       * A brief description of what the tool does.
+       */
+      description: string;
+      /**
+       * Schema defining the parameters accepted by the tool.
+       */
+      parameters: {
         /**
-         * The name of the tool. More descriptive the better.
+         * The type of the parameters object (usually 'object').
+         */
+        type: string;
+        /**
+         * List of required parameter names.
+         */
+        required?: string[];
+        /**
+         * Definitions of each parameter.
+         */
+        properties: {
+          [k: string]: {
+            /**
+             * The data type of the parameter.
+             */
+            type: string;
+            /**
+             * A description of the expected parameter.
+             */
+            description: string;
+          };
+        };
+      };
+    }
+    | {
+      /**
+       * Specifies the type of tool (e.g., 'function').
+       */
+      type: string;
+      /**
+       * Details of the function tool.
+       */
+      function: {
+        /**
+         * The name of the function.
          */
         name: string;
         /**
-         * A brief description of what the tool does.
+         * A brief description of what the function does.
          */
         description: string;
         /**
-         * Schema defining the parameters accepted by the tool.
+         * Schema defining the parameters accepted by the function.
          */
         parameters: {
           /**
@@ -8378,54 +8424,8 @@ interface Ai_Cf_Aisingapore_Gemma_Sea_Lion_V4_27B_It_Messages_1 {
             };
           };
         };
-      }
-    | {
-        /**
-         * Specifies the type of tool (e.g., 'function').
-         */
-        type: string;
-        /**
-         * Details of the function tool.
-         */
-        function: {
-          /**
-           * The name of the function.
-           */
-          name: string;
-          /**
-           * A brief description of what the function does.
-           */
-          description: string;
-          /**
-           * Schema defining the parameters accepted by the function.
-           */
-          parameters: {
-            /**
-             * The type of the parameters object (usually 'object').
-             */
-            type: string;
-            /**
-             * List of required parameter names.
-             */
-            required?: string[];
-            /**
-             * Definitions of each parameter.
-             */
-            properties: {
-              [k: string]: {
-                /**
-                 * The data type of the parameter.
-                 */
-                type: string;
-                /**
-                 * A description of the expected parameter.
-                 */
-                description: string;
-              };
-            };
-          };
-        };
-      }
+      };
+    }
   )[];
   response_format?: Ai_Cf_Aisingapore_Gemma_Sea_Lion_V4_27B_It_JSON_Mode_3;
   /**
@@ -8768,46 +8768,46 @@ interface Ai_Cf_Deepgram_Aura_2_En_Input {
    * Speaker used to produce the audio.
    */
   speaker?:
-    | 'amalthea'
-    | 'andromeda'
-    | 'apollo'
-    | 'arcas'
-    | 'aries'
-    | 'asteria'
-    | 'athena'
-    | 'atlas'
-    | 'aurora'
-    | 'callista'
-    | 'cora'
-    | 'cordelia'
-    | 'delia'
-    | 'draco'
-    | 'electra'
-    | 'harmonia'
-    | 'helena'
-    | 'hera'
-    | 'hermes'
-    | 'hyperion'
-    | 'iris'
-    | 'janus'
-    | 'juno'
-    | 'jupiter'
-    | 'luna'
-    | 'mars'
-    | 'minerva'
-    | 'neptune'
-    | 'odysseus'
-    | 'ophelia'
-    | 'orion'
-    | 'orpheus'
-    | 'pandora'
-    | 'phoebe'
-    | 'pluto'
-    | 'saturn'
-    | 'thalia'
-    | 'theia'
-    | 'vesta'
-    | 'zeus';
+  | 'amalthea'
+  | 'andromeda'
+  | 'apollo'
+  | 'arcas'
+  | 'aries'
+  | 'asteria'
+  | 'athena'
+  | 'atlas'
+  | 'aurora'
+  | 'callista'
+  | 'cora'
+  | 'cordelia'
+  | 'delia'
+  | 'draco'
+  | 'electra'
+  | 'harmonia'
+  | 'helena'
+  | 'hera'
+  | 'hermes'
+  | 'hyperion'
+  | 'iris'
+  | 'janus'
+  | 'juno'
+  | 'jupiter'
+  | 'luna'
+  | 'mars'
+  | 'minerva'
+  | 'neptune'
+  | 'odysseus'
+  | 'ophelia'
+  | 'orion'
+  | 'orpheus'
+  | 'pandora'
+  | 'phoebe'
+  | 'pluto'
+  | 'saturn'
+  | 'thalia'
+  | 'theia'
+  | 'vesta'
+  | 'zeus';
   /**
    * Encoding of the output audio.
    */
@@ -8842,16 +8842,16 @@ interface Ai_Cf_Deepgram_Aura_2_Es_Input {
    * Speaker used to produce the audio.
    */
   speaker?:
-    | 'sirio'
-    | 'nestor'
-    | 'carina'
-    | 'celeste'
-    | 'alvaro'
-    | 'diana'
-    | 'aquila'
-    | 'selena'
-    | 'estrella'
-    | 'javier';
+  | 'sirio'
+  | 'nestor'
+  | 'carina'
+  | 'celeste'
+  | 'alvaro'
+  | 'diana'
+  | 'aquila'
+  | 'selena'
+  | 'estrella'
+  | 'javier';
   /**
    * Encoding of the output audio.
    */
@@ -9017,8 +9017,8 @@ type AiModelsSearchObject = {
     value: string;
   }[];
 };
-interface InferenceUpstreamError extends Error {}
-interface AiInternalError extends Error {}
+interface InferenceUpstreamError extends Error { }
+interface AiInternalError extends Error { }
 type AiModelListType = Record<string, any>;
 declare abstract class Ai<AiModelList extends AiModelListType = AiModels> {
   aiGatewayLogId: string | null;
@@ -9030,18 +9030,18 @@ declare abstract class Ai<AiModelList extends AiModelListType = AiModels> {
     options?: Options,
   ): Promise<
     Options extends
-      | {
-          returnRawResponse: true;
-        }
-      | {
-          websocket: true;
-        }
-      ? Response
-      : InputOptions extends {
-            stream: true;
-          }
-        ? ReadableStream
-        : AiModelList[Name]['postProcessedOutputs']
+    | {
+      returnRawResponse: true;
+    }
+    | {
+      websocket: true;
+    }
+    ? Response
+    : InputOptions extends {
+      stream: true;
+    }
+    ? ReadableStream
+    : AiModelList[Name]['postProcessedOutputs']
   >;
   models(params?: AiModelsSearchParams): Promise<AiModelsSearchObject[]>;
   toMarkdown(): ToMarkdownService;
@@ -9126,14 +9126,14 @@ type AIGatewayProviders =
 type AIGatewayHeaders = {
   'cf-aig-metadata': Record<string, number | string | boolean | null | bigint> | string;
   'cf-aig-custom-cost':
-    | {
-        per_token_in?: number;
-        per_token_out?: number;
-      }
-    | {
-        total_cost?: number;
-      }
-    | string;
+  | {
+    per_token_in?: number;
+    per_token_out?: number;
+  }
+  | {
+    total_cost?: number;
+  }
+  | string;
   'cf-aig-cache-ttl': number | string;
   'cf-aig-skip-cache': boolean | string;
   'cf-aig-cache-key': string;
@@ -9153,8 +9153,8 @@ type AIGatewayUniversalRequest = {
   headers: Partial<AIGatewayHeaders>;
   query: unknown;
 };
-interface AiGatewayInternalError extends Error {}
-interface AiGatewayLogNotFound extends Error {}
+interface AiGatewayInternalError extends Error { }
+interface AiGatewayLogNotFound extends Error { }
 declare abstract class AiGateway {
   patchLog(logId: string, data: AiGatewayPatchLog): Promise<void>;
   getLog(logId: string): Promise<AiGatewayLog>;
@@ -9167,10 +9167,10 @@ declare abstract class AiGateway {
   ): Promise<Response>;
   getUrl(provider?: AIGatewayProviders | string): Promise<string>; // eslint-disable-line
 }
-interface AutoRAGInternalError extends Error {}
-interface AutoRAGNotFoundError extends Error {}
-interface AutoRAGUnauthorizedError extends Error {}
-interface AutoRAGNameNotSetError extends Error {}
+interface AutoRAGInternalError extends Error { }
+interface AutoRAGNotFoundError extends Error { }
+interface AutoRAGUnauthorizedError extends Error { }
+interface AutoRAGNameNotSetError extends Error { }
 type ComparisonFilter = {
   key: string;
   type: 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte';
@@ -9291,15 +9291,15 @@ interface BasicImageTransformations {
    * source image.
    */
   gravity?:
-    | 'face'
-    | 'left'
-    | 'right'
-    | 'top'
-    | 'bottom'
-    | 'center'
-    | 'auto'
-    | 'entropy'
-    | BasicImageTransformationsGravityCoordinates;
+  | 'face'
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'center'
+  | 'auto'
+  | 'entropy'
+  | BasicImageTransformationsGravityCoordinates;
   /**
    * Background color to add underneath the image. Applies only to images with
    * transparency (such as PNG). Accepts any CSS color (#RRGGBB, rgba(…),
@@ -9436,22 +9436,22 @@ interface RequestInitCfPropertiesImage extends BasicImageTransformations {
    *    - keep: the number of pixels of border to keep
    */
   trim?:
-    | 'border'
+  | 'border'
+  | {
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+    width?: number;
+    height?: number;
+    border?:
+    | boolean
     | {
-        top?: number;
-        bottom?: number;
-        left?: number;
-        right?: number;
-        width?: number;
-        height?: number;
-        border?:
-          | boolean
-          | {
-              color?: string;
-              tolerance?: number;
-              keep?: number;
-            };
-      };
+      color?: string;
+      tolerance?: number;
+      keep?: number;
+    };
+  };
   /**
    * Quality setting from 1-100 (useful values are in 60-90 range). Lower values
    * make images look worse, but load faster. The default is 85. It applies only
@@ -9521,17 +9521,17 @@ interface RequestInitCfPropertiesImage extends BasicImageTransformations {
    * width property, or individually for each side.
    */
   border?:
-    | {
-        color: string;
-        width: number;
-      }
-    | {
-        color: string;
-        top: number;
-        right: number;
-        bottom: number;
-        left: number;
-      };
+  | {
+    color: string;
+    width: number;
+  }
+  | {
+    color: string;
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
   /**
    * Increase brightness by a factor. A value of 1.0 equals no change, a value
    * of 0.5 equals half brightness, and a value of 2.0 equals twice as bright.
@@ -10337,7 +10337,7 @@ declare abstract class D1PreparedStatement {
 // but this will ensure type checking on older versions still passes.
 // TypeScript's interface merging will ensure our empty interface is effectively
 // ignored when `Disposable` is included in the standard lib.
-interface Disposable {}
+interface Disposable { }
 /**
  * An email message that can be sent from a Worker.
  */
@@ -10404,7 +10404,7 @@ declare type EmailExportedHandler<Env = unknown> = (
 declare module 'cloudflare:email' {
   let _EmailMessage: {
     prototype: EmailMessage;
-    new (from: string, to: string, raw: ReadableStream | string): EmailMessage;
+    new(from: string, to: string, raw: ReadableStream | string): EmailMessage;
   };
   export { _EmailMessage as EmailMessage };
 }
@@ -10476,30 +10476,30 @@ interface Hyperdrive {
 //     https://opensource.org/licenses/Apache-2.0
 type ImageInfoResponse =
   | {
-      format: 'image/svg+xml';
-    }
+    format: 'image/svg+xml';
+  }
   | {
-      format: string;
-      fileSize: number;
-      width: number;
-      height: number;
-    };
+    format: string;
+    fileSize: number;
+    width: number;
+    height: number;
+  };
 type ImageTransform = {
   width?: number;
   height?: number;
   background?: string;
   blur?: number;
   border?:
-    | {
-        color?: string;
-        width?: number;
-      }
-    | {
-        top?: number;
-        bottom?: number;
-        left?: number;
-        right?: number;
-      };
+  | {
+    color?: string;
+    width?: number;
+  }
+  | {
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+  };
   brightness?: number;
   contrast?: number;
   fit?: 'scale-down' | 'contain' | 'pad' | 'squeeze' | 'cover' | 'crop';
@@ -10507,39 +10507,39 @@ type ImageTransform = {
   gamma?: number;
   segment?: 'foreground';
   gravity?:
-    | 'face'
-    | 'left'
-    | 'right'
-    | 'top'
-    | 'bottom'
-    | 'center'
-    | 'auto'
-    | 'entropy'
-    | {
-        x?: number;
-        y?: number;
-        mode: 'remainder' | 'box-center';
-      };
+  | 'face'
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'center'
+  | 'auto'
+  | 'entropy'
+  | {
+    x?: number;
+    y?: number;
+    mode: 'remainder' | 'box-center';
+  };
   rotate?: 0 | 90 | 180 | 270;
   saturation?: number;
   sharpen?: number;
   trim?:
-    | 'border'
+  | 'border'
+  | {
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+    width?: number;
+    height?: number;
+    border?:
+    | boolean
     | {
-        top?: number;
-        bottom?: number;
-        left?: number;
-        right?: number;
-        width?: number;
-        height?: number;
-        border?:
-          | boolean
-          | {
-              color?: string;
-              tolerance?: number;
-              keep?: number;
-            };
-      };
+      color?: string;
+      tolerance?: number;
+      keep?: number;
+    };
+  };
 };
 type ImageDrawOptions = {
   opacity?: number;
@@ -10896,14 +10896,14 @@ declare namespace Rpc {
     | BaseType
     // Structured cloneable composites
     | Map<
-        T extends Map<infer U, unknown> ? Serializable<U> : never,
-        T extends Map<unknown, infer U> ? Serializable<U> : never
-      >
+      T extends Map<infer U, unknown> ? Serializable<U> : never,
+      T extends Map<unknown, infer U> ? Serializable<U> : never
+    >
     | Set<T extends Set<infer U> ? Serializable<U> : never>
     | ReadonlyArray<T extends ReadonlyArray<infer U> ? Serializable<U> : never>
     | {
-        [K in keyof T]: K extends number | string ? Serializable<T[K]> : never;
-      }
+      [K in keyof T]: K extends number | string ? Serializable<T[K]> : never;
+    }
     // Special types
     | Stub<Stubable>
     // Serialized as stubs, see `Stubify`
@@ -10940,46 +10940,46 @@ declare namespace Rpc {
   type Stubify<T> = T extends Stubable
     ? Stub<T>
     : T extends Map<infer K, infer V>
-      ? Map<Stubify<K>, Stubify<V>>
-      : T extends Set<infer V>
-        ? Set<Stubify<V>>
-        : T extends Array<infer V>
-          ? Array<Stubify<V>>
-          : T extends ReadonlyArray<infer V>
-            ? ReadonlyArray<Stubify<V>>
-            : T extends BaseType
-              ? T
-              : T extends {
-                    [key: string | number]: any;
-                  }
-                ? {
-                    [K in keyof T]: Stubify<T[K]>;
-                  }
-                : T;
+    ? Map<Stubify<K>, Stubify<V>>
+    : T extends Set<infer V>
+    ? Set<Stubify<V>>
+    : T extends Array<infer V>
+    ? Array<Stubify<V>>
+    : T extends ReadonlyArray<infer V>
+    ? ReadonlyArray<Stubify<V>>
+    : T extends BaseType
+    ? T
+    : T extends {
+      [key: string | number]: any;
+    }
+    ? {
+      [K in keyof T]: Stubify<T[K]>;
+    }
+    : T;
   // Recursively rewrite all `Stub<T>`s with the corresponding `T`s.
   // Note we use `StubBase` instead of `Stub` here to avoid circular dependencies:
   // `Stub` depends on `Provider`, which depends on `Unstubify`, which would depend on `Stub`.
   // prettier-ignore
   type Unstubify<T> =
     T extends StubBase<infer V>
-      ? V
-      : T extends Map<infer K, infer V>
-        ? Map<Unstubify<K>, Unstubify<V>>
-        : T extends Set<infer V>
-          ? Set<Unstubify<V>>
-          : T extends Array<infer V>
-            ? Array<Unstubify<V>>
-            : T extends ReadonlyArray<infer V>
-              ? ReadonlyArray<Unstubify<V>>
-              : T extends BaseType
-                ? T
-                : T extends {
-                      [key: string | number]: unknown;
-                    }
-                  ? {
-                      [K in keyof T]: Unstubify<T[K]>;
-                    }
-                  : T;
+    ? V
+    : T extends Map<infer K, infer V>
+    ? Map<Unstubify<K>, Unstubify<V>>
+    : T extends Set<infer V>
+    ? Set<Unstubify<V>>
+    : T extends Array<infer V>
+    ? Array<Unstubify<V>>
+    : T extends ReadonlyArray<infer V>
+    ? ReadonlyArray<Unstubify<V>>
+    : T extends BaseType
+    ? T
+    : T extends {
+      [key: string | number]: unknown;
+    }
+    ? {
+      [K in keyof T]: Unstubify<T[K]>;
+    }
+    : T;
   type UnstubifyAll<A extends any[]> = {
     [I in keyof A]: Unstubify<A[I]>;
   };
@@ -10998,8 +10998,8 @@ declare namespace Rpc {
   type Result<R> = R extends Stubable
     ? Promise<Stub<R>> & Provider<R>
     : R extends Serializable<R>
-      ? Promise<Stubify<R> & MaybeDisposable<R>> & MaybeProvider<R>
-      : never;
+    ? Promise<Stubify<R> & MaybeDisposable<R>> & MaybeProvider<R>
+    : never;
   // Type for method or property on an RPC interface.
   // For methods, unwrap `Stub`s in parameters, and rewrite returns to be `Result`s.
   // Unwrapping `Stub`s allows calling with `Stubable` arguments.
@@ -11029,7 +11029,7 @@ declare namespace Cloudflare {
   // will merge all declarations.
   //
   // You can use `wrangler types` to generate the `Env` type automatically.
-  interface Env {}
+  interface Env { }
   // Project-specific parameters used to inform types.
   //
   // This interface is, again, intended to be declared in project-specific files, and then that
@@ -11048,7 +11048,7 @@ declare namespace Cloudflare {
   //     }
   //
   // You can use `wrangler types` to generate `GlobalProps` automatically.
-  interface GlobalProps {}
+  interface GlobalProps { }
   // Evaluates to the type of a property in GlobalProps, defaulting to `Default` if it is not
   // present.
   type GlobalProp<K extends string, Default> = K extends keyof GlobalProps ? GlobalProps[K] : Default;
@@ -11058,17 +11058,17 @@ declare namespace Cloudflare {
   // The type of ctx.exports, which contains loopback bindings for all top-level exports.
   type Exports = {
     [K in keyof MainModule]: LoopbackForExport<MainModule[K]> &
-      // If the export is listed in `durableNamespaces`, then it is also a
-      // DurableObjectNamespace.
-      (K extends GlobalProp<'durableNamespaces', never>
-        ? MainModule[K] extends new (
-            ...args: any[]
-          ) => infer DoInstance
-          ? DoInstance extends Rpc.DurableObjectBranded
-            ? DurableObjectNamespace<DoInstance>
-            : DurableObjectNamespace<undefined>
-          : DurableObjectNamespace<undefined>
-        : {});
+    // If the export is listed in `durableNamespaces`, then it is also a
+    // DurableObjectNamespace.
+    (K extends GlobalProp<'durableNamespaces', never>
+      ? MainModule[K] extends new (
+        ...args: any[]
+      ) => infer DoInstance
+      ? DoInstance extends Rpc.DurableObjectBranded
+      ? DurableObjectNamespace<DoInstance>
+      : DurableObjectNamespace<undefined>
+      : DurableObjectNamespace<undefined>
+      : {});
   };
 }
 declare namespace CloudflareWorkersModule {
@@ -11145,8 +11145,7 @@ declare namespace CloudflareWorkersModule {
     ): Promise<WorkflowStepEvent<T>>;
   }
   export abstract class WorkflowEntrypoint<Env = unknown, T extends Rpc.Serializable<T> | unknown = unknown>
-    implements Rpc.WorkflowEntrypointBranded
-  {
+    implements Rpc.WorkflowEntrypointBranded {
     [Rpc.__WORKFLOW_ENTRYPOINT_BRAND]: never;
     protected ctx: ExecutionContext;
     protected env: Env;
@@ -11180,18 +11179,18 @@ type MarkdownDocument = {
 };
 type ConversionResponse =
   | {
-      name: string;
-      mimeType: string;
-      format: 'markdown';
-      tokens: number;
-      data: string;
-    }
+    name: string;
+    mimeType: string;
+    format: 'markdown';
+    tokens: number;
+    data: string;
+  }
   | {
-      name: string;
-      mimeType: string;
-      format: 'error';
-      error: string;
-    };
+    name: string;
+    mimeType: string;
+    format: 'error';
+    error: string;
+  };
 type ImageConversionOptions = {
   descriptionLanguage?: 'en' | 'es' | 'fr' | 'it' | 'pt' | 'de';
 };
@@ -11281,9 +11280,9 @@ declare namespace TailStream {
   interface HibernatableWebSocketEventInfo {
     readonly type: 'hibernatableWebSocket';
     readonly info:
-      | HibernatableWebSocketEventInfoClose
-      | HibernatableWebSocketEventInfoError
-      | HibernatableWebSocketEventInfoMessage;
+    | HibernatableWebSocketEventInfoClose
+    | HibernatableWebSocketEventInfoError
+    | HibernatableWebSocketEventInfoMessage;
   }
   interface CustomEventInfo {
     readonly type: 'custom';
@@ -11321,15 +11320,15 @@ declare namespace TailStream {
     readonly scriptTags?: string[];
     readonly scriptVersion?: ScriptVersion;
     readonly info:
-      | FetchEventInfo
-      | JsRpcEventInfo
-      | ScheduledEventInfo
-      | AlarmEventInfo
-      | QueueEventInfo
-      | EmailEventInfo
-      | TraceEventInfo
-      | HibernatableWebSocketEventInfo
-      | CustomEventInfo;
+    | FetchEventInfo
+    | JsRpcEventInfo
+    | ScheduledEventInfo
+    | AlarmEventInfo
+    | QueueEventInfo
+    | EmailEventInfo
+    | TraceEventInfo
+    | HibernatableWebSocketEventInfo
+    | CustomEventInfo;
   }
   interface Outcome {
     readonly type: 'outcome';
@@ -11457,14 +11456,14 @@ type VectorizeVectorMetadataFilterCollectionOp = '$in' | '$nin';
  */
 type VectorizeVectorMetadataFilter = {
   [field: string]:
-    | Exclude<VectorizeVectorMetadataValue, string[]>
-    | null
-    | {
-        [Op in VectorizeVectorMetadataFilterOp]?: Exclude<VectorizeVectorMetadataValue, string[]> | null;
-      }
-    | {
-        [Op in VectorizeVectorMetadataFilterCollectionOp]?: Exclude<VectorizeVectorMetadataValue, string[]>[];
-      };
+  | Exclude<VectorizeVectorMetadataValue, string[]>
+  | null
+  | {
+    [Op in VectorizeVectorMetadataFilterOp]?: Exclude<VectorizeVectorMetadataValue, string[]> | null;
+  }
+  | {
+    [Op in VectorizeVectorMetadataFilterCollectionOp]?: Exclude<VectorizeVectorMetadataValue, string[]>[];
+  };
 };
 /**
  * Supported distance metrics for an index.
@@ -11493,12 +11492,12 @@ interface VectorizeQueryOptions {
  */
 type VectorizeIndexConfig =
   | {
-      dimensions: number;
-      metric: VectorizeDistanceMetric;
-    }
+    dimensions: number;
+    metric: VectorizeDistanceMetric;
+  }
   | {
-      preset: string; // keep this generic, as we'll be adding more presets in the future and this is only in a read capacity
-    };
+    preset: string; // keep this generic, as we'll be adding more presets in the future and this is only in a read capacity
+  };
 /**
  * Metadata about an existing index.
  *
@@ -11776,15 +11775,15 @@ interface WorkflowInstanceCreateOptions<PARAMS = unknown> {
 }
 type InstanceStatus = {
   status:
-    | 'queued' // means that instance is waiting to be started (see concurrency limits)
-    | 'running'
-    | 'paused'
-    | 'errored'
-    | 'terminated' // user terminated the instance while it was running
-    | 'complete'
-    | 'waiting' // instance is hibernating and waiting for sleep or event to finish
-    | 'waitingForPause' // instance is finishing the current work to pause
-    | 'unknown';
+  | 'queued' // means that instance is waiting to be started (see concurrency limits)
+  | 'running'
+  | 'paused'
+  | 'errored'
+  | 'terminated' // user terminated the instance while it was running
+  | 'complete'
+  | 'waiting' // instance is hibernating and waiting for sleep or event to finish
+  | 'waitingForPause' // instance is finishing the current work to pause
+  | 'unknown';
   error?: {
     name: string;
     message: string;
