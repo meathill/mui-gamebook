@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import UserMenu from './UserMenu';
 
 export default function Header() {
   return (
@@ -21,12 +22,7 @@ export default function Header() {
               <span>🏠</span>
               <span className="hidden sm:inline">首页</span>
             </Link>
-            <Link
-              href="/sign-in"
-              className="btn btn-primary text-base py-2 px-5 min-h-0">
-              <span className="mr-1">👋</span>
-              登录
-            </Link>
+            <UserMenu />
           </nav>
         </div>
       </div>
