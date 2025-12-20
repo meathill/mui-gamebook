@@ -64,6 +64,7 @@
     "NEXT_PUBLIC_GA_ID": "G-7GQKFPXHD1",
     "NEXT_PUBLIC_SITE_URL": "https://cms.xiaoniaoshuo.com",
     "ROOT_USER_EMAIL": "meathill@gmail.com",
-    "RPC_PROVIDER_URL": "https://aeneid.storyrpc.io"
+    "RPC_PROVIDER_URL": "https://aeneid.storyrpc.io",
+    "TRUSTED_ORIGINS": "https://xiaoniaoshuo.com"
   }
 }
