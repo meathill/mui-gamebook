@@ -33,8 +33,9 @@ export async function getGames(): Promise<Game[]> {
       return [];
     }
 
-    const data = (await response.json()) as { games?: Game[] };
-    return data.games || [];
+    const data = (await response.json()) as Game[] | { games?: Game[] };
+    // API 可能返回数组或 { games: [...] } 格式
+    return Array.isArray(data) ? data : data.games || [];
   } catch (error) {
     console.error('Error fetching games:', error);
     return [];

@@ -88,3 +88,28 @@ interface MiniGameAPI {
 - 记忆类：翻牌配对、记忆序列
 - 反应类：快速反应测试
 - 收集类：限时收集物品
+
+## API 数据格式规范
+
+### CMS 公开 API
+
+CMS 对外提供的 API 遵循以下格式：
+
+| 端点 | 响应格式 |
+|------|---------|
+| `GET /api/games` | `Game[]` (直接数组) |
+| `GET /api/games/:slug` | `Game` (单个对象) |
+| `GET /api/games/:slug/play` | `PlayableGame` (单个对象) |
+
+### 子站点调用 API
+
+子站点（如 `sites/jianjian`）通过 HTTP 调用 CMS API 获取数据。调用时注意：
+
+1. **响应格式**：API 直接返回数组或对象，不包裹在 `{ data: ... }` 或类似结构中
+2. **错误处理**：需捕获网络错误和 HTTP 错误，返回合理的默认值
+3. **缓存策略**：使用 Next.js 的 `revalidate` 配置控制缓存时间
+
+相关文件：
+- `/sites/jianjian/src/lib/api.ts` - API 调用封装
+- `/sites/jianjian/src/lib/api.test.ts` - API 测试
+
