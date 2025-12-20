@@ -39,7 +39,7 @@ Must have a start scene.
     expect(game.ai.style?.image).toBe('fantasy');
 
     // Check that scenes are empty
-    expect(game.scenes.size).toBe(1);
+    expect(Object.keys(game.scenes).length).toBe(1);
   });
 
   it('should correctly parse published status', () => {

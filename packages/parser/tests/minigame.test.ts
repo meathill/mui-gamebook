@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse, stringify } from '../src';
 import type { Game, SceneNode, SceneMiniGameNode } from '../src/types';
-import { toPlayableGame } from '../src/types';
+import { toPlayableGame } from '../src/utils';
 
 describe('minigame DSL', () => {
   describe('parse', () => {
@@ -21,7 +21,7 @@ url: https://example.com/minigames/1
       expect(result.success).toBe(true);
       if (!result.success) return;
 
-      const node = result.data.scenes.get('start')?.nodes[0] as SceneMiniGameNode;
+      const node = result.data.scenes['start']?.nodes[0] as SceneMiniGameNode;
       expect(node.type).toBe('minigame');
       expect(node.prompt).toBe('创建一个点击金色飞贼的游戏');
       expect(node.variables).toEqual({ snitch_caught: '捕获的飞贼数量' });
@@ -43,7 +43,7 @@ variables:
       expect(result.success).toBe(true);
       if (!result.success) return;
 
-      const node = result.data.scenes.get('start')?.nodes[0] as SceneMiniGameNode;
+      const node = result.data.scenes['start']?.nodes[0] as SceneMiniGameNode;
       expect(node.type).toBe('minigame');
       expect(node.prompt).toBe('创建一个记忆配对游戏');
       expect(node.url).toBeUndefined();
@@ -66,7 +66,7 @@ variables:
       expect(result.success).toBe(true);
       if (!result.success) return;
 
-      const node = result.data.scenes.get('start')?.nodes[0] as SceneMiniGameNode;
+      const node = result.data.scenes['start']?.nodes[0] as SceneMiniGameNode;
       expect(node.variables).toEqual({
         hits: '击中次数',
         misses: '失误次数',
@@ -90,7 +90,7 @@ variables:
       expect(result.success).toBe(true);
       if (!result.success) return;
 
-      const node = result.data.scenes.get('start')?.nodes[0] as SceneMiniGameNode;
+      const node = result.data.scenes['start']?.nodes[0] as SceneMiniGameNode;
       expect(node.variables).toEqual({
         health: '生命值',
         gold: '金币数量',
@@ -110,7 +110,7 @@ prompt: 简单的点击游戏，不需要变量
       expect(result.success).toBe(true);
       if (!result.success) return;
 
-      const node = result.data.scenes.get('start')?.nodes[0] as SceneMiniGameNode;
+      const node = result.data.scenes['start']?.nodes[0] as SceneMiniGameNode;
       expect(node.type).toBe('minigame');
       expect(node.variables).toBeUndefined();
     });
@@ -123,23 +123,20 @@ prompt: 简单的点击游戏，不需要变量
         title: 'Minigame Stringify',
         initialState: { snitch_caught: 0 },
         ai: {},
-        scenes: new Map([
-          [
-            'start',
-            {
-              id: 'start',
-              nodes: [
-                { type: 'text', content: '准备开始游戏！' },
-                {
-                  type: 'minigame',
-                  prompt: '抓住金色飞贼',
-                  variables: { snitch_caught: '捕获数量' },
-                  url: 'https://example.com/game.js',
-                } as SceneMiniGameNode,
-              ],
-            },
-          ],
-        ]),
+        scenes: {
+          start: {
+            id: 'start',
+            nodes: [
+              { type: 'text', content: '准备开始游戏！' },
+              {
+                type: 'minigame',
+                prompt: '抓住金色飞贼',
+                variables: { snitch_caught: '捕获数量' },
+                url: 'https://example.com/game.js',
+              } as SceneMiniGameNode,
+            ],
+          },
+        },
       };
 
       const result = stringify(game);
@@ -155,20 +152,17 @@ prompt: 简单的点击游戏，不需要变量
         title: 'No URL Minigame',
         initialState: {},
         ai: {},
-        scenes: new Map([
-          [
-            'start',
-            {
-              id: 'start',
-              nodes: [
-                {
-                  type: 'minigame',
-                  prompt: '简单游戏',
-                } as SceneMiniGameNode,
-              ],
-            },
-          ],
-        ]),
+        scenes: {
+          start: {
+            id: 'start',
+            nodes: [
+              {
+                type: 'minigame',
+                prompt: '简单游戏',
+              } as SceneMiniGameNode,
+            ],
+          },
+        },
       };
 
       const result = stringify(game);
@@ -185,26 +179,23 @@ prompt: 简单的点击游戏，不需要变量
         title: 'Playable Test',
         initialState: { score: 0 },
         ai: {},
-        scenes: new Map([
-          [
-            'start',
-            {
-              id: 'start',
-              nodes: [
-                {
-                  type: 'minigame',
-                  prompt: '这是创作者的 prompt，玩家不应该看到',
-                  variables: { score: '玩家得分，这是敏感描述' },
-                  url: 'https://example.com/game.js',
-                } as SceneMiniGameNode,
-              ],
-            },
-          ],
-        ]),
+        scenes: {
+          start: {
+            id: 'start',
+            nodes: [
+              {
+                type: 'minigame',
+                prompt: '这是创作者的 prompt，玩家不应该看到',
+                variables: { score: '玩家得分，这是敏感描述' },
+                url: 'https://example.com/game.js',
+              } as SceneMiniGameNode,
+            ],
+          },
+        },
       };
 
       const playable = toPlayableGame(game);
-      const node = playable.scenes.get('start')?.nodes[0];
+      const node = playable.scenes['start']?.nodes[0];
 
       expect(node).toBeDefined();
       expect(node?.type).toBe('minigame');
@@ -262,7 +253,7 @@ variables:
       if (!result.success) return;
 
       // 验证小游戏节点
-      const matchScene = result.data.scenes.get('quidditch_match');
+      const matchScene = result.data.scenes['quidditch_match'];
       expect(matchScene).toBeDefined();
 
       const minigameNode = matchScene?.nodes.find((n) => n.type === 'minigame') as SceneMiniGameNode;
@@ -280,8 +271,8 @@ variables:
       expect(loseChoice?.type === 'choice' && loseChoice.condition).toBe('snitch_caught < 10');
 
       // 验证结局场景存在
-      expect(result.data.scenes.has('quidditch_win')).toBe(true);
-      expect(result.data.scenes.has('quidditch_lose')).toBe(true);
+      expect(result.data.scenes['quidditch_win'] !== undefined).toBe(true);
+      expect(result.data.scenes['quidditch_lose'] !== undefined).toBe(true);
     });
   });
 });

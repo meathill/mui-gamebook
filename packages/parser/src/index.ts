@@ -1,10 +1,11 @@
 import * as yaml from 'js-yaml';
 import type { AICharacter, Game, GameState, ParseResult, Scene, SceneNode, VariableMeta } from './types';
-import { isVariableMeta } from './types';
+import { isVariableMeta } from './utils';
 import { omitBy } from 'lodash-es';
 import slugify from 'slugify';
 export { Game, SceneNode };
 export * from './types';
+export * from './utils';
 
 // Final, correct regexes
 const FRONT_MATTER_REGEX = /---\n([\s\S]*?)\n---/;
@@ -183,7 +184,7 @@ export function parse(source: string): ParseResult {
       return { success: false, error: 'Title is required in YAML front matter.' };
     }
 
-    const scenes = new Map<string, Scene>();
+    const scenes: Record<string, Scene> = {};
     const sceneBlocks = body.split(/\n---\n/);
 
     for (const block of sceneBlocks) {
@@ -198,7 +199,7 @@ export function parse(source: string): ParseResult {
 
       const nodes = parseSceneContent(contentAfterId);
 
-      scenes.set(sceneId, { id: sceneId, nodes });
+      scenes[sceneId] = { id: sceneId, nodes };
     }
 
     const game: Game = {
@@ -218,7 +219,7 @@ export function parse(source: string): ParseResult {
     };
 
     // Validate that a 'start' scene exists
-    if (!game.scenes.has('start')) {
+    if (!game.scenes['start']) {
       return { success: false, error: "Game must contain a 'start' scene." };
     }
 
@@ -280,7 +281,7 @@ export function stringify(game: Game): string {
   markdown += '---\n' + yaml.dump(frontMatter, { indent: 2, lineWidth: -1 }) + '---\n\n';
 
   // 2. Scenes
-  const sceneEntries = Array.from(game.scenes.values());
+  const sceneEntries = Object.values(game.scenes);
   for (let i = 0; i < sceneEntries.length; i++) {
     const scene = sceneEntries[i];
     markdown += `# ${scene.id}\n`;

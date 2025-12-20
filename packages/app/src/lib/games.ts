@@ -1,6 +1,6 @@
 import { parse } from '@mui-gamebook/parser';
-import { toPlayableGame, toSerializablePlayableGame } from '@mui-gamebook/parser/src/types';
-import type { SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
+import { toPlayableGame } from '@mui-gamebook/parser/src/utils';
+import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GameRow } from '@/types';
 import { cache } from 'react';
@@ -30,7 +30,7 @@ export async function getPublishedGames() {
   }
 }
 
-export async function getGameBySlug(slug: string): Promise<SerializablePlayableGame | null> {
+export async function getGameBySlug(slug: string): Promise<PlayableGame | null> {
   try {
     const { env } = getCloudflareContext();
     const DB = env.DB;
@@ -73,9 +73,8 @@ WHERE g.slug = ?`,
 
     const result = parse(gameRecord.content);
     if (result.success) {
-      // 返回可序列化的游戏数据（Map 转换为 Record）
-      const playableGame = toPlayableGame(result.data);
-      return toSerializablePlayableGame(playableGame);
+      // 返回可玩游戏数据（已经是 Record 类型）
+      return toPlayableGame(result.data);
     }
 
     return null;

@@ -14,7 +14,7 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
   let x = 0;
   let y = 0;
 
-  game.scenes.forEach((scene, id) => {
+  Object.entries(game.scenes).forEach(([id, scene]) => {
     const textNodes = scene.nodes.filter((n) => n.type === 'text');
     const assetNodes = scene.nodes.filter((n) => n.type !== 'text' && n.type !== 'choice');
     const choiceNodes = scene.nodes.filter((n) => n.type === 'choice');
@@ -57,7 +57,7 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
 
 export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], originalGame: Game): Game {
   const newGame: Game = { ...originalGame };
-  const scenes = new Map<string, Scene>();
+  const scenes: Record<string, Scene> = {};
 
   nodes.forEach((node) => {
     const sceneId = node.id;
@@ -90,7 +90,7 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
       });
     });
 
-    scenes.set(sceneId, { id: sceneId, nodes: sceneNodes });
+    scenes[sceneId] = { id: sceneId, nodes: sceneNodes };
   });
 
   newGame.scenes = scenes;

@@ -1,25 +1,19 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { PlayableGame, RuntimeState, SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
-import {
-  isVariableMeta,
-  extractRuntimeState,
-  getVisibleVariables,
-  fromSerializablePlayableGame,
-} from '@mui-gamebook/parser/src/types';
+import { useState, useEffect, useCallback } from 'react';
+import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
+import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
 import { evaluateCondition, executeSet, interpolateVariables } from './evaluator';
 
 interface Props {
-  game: SerializablePlayableGame;
+  game: PlayableGame;
   slug: string;
 }
 
 /**
  * GamePlayerWrapper - 简简站点的儿童友好游戏播放器
  */
-export default function GamePlayerWrapper({ game: serializedGame, slug }: Props) {
-  const game: PlayableGame = useMemo(() => fromSerializablePlayableGame(serializedGame), [serializedGame]);
+export default function GamePlayerWrapper({ game, slug }: Props) {
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
   const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
   const [isLoaded, setIsLoaded] = useState(false);
@@ -50,7 +44,7 @@ export default function GamePlayerWrapper({ game: serializedGame, slug }: Props)
     if (savedProgress) {
       try {
         const { sceneId, state } = JSON.parse(savedProgress);
-        if (game.scenes.has(sceneId)) {
+        if (game.scenes[sceneId]) {
           setCurrentSceneId(sceneId);
           setIsGameStarted(true);
         }
@@ -99,7 +93,7 @@ export default function GamePlayerWrapper({ game: serializedGame, slug }: Props)
     }
 
     const triggerScene = checkTriggers(newState);
-    if (triggerScene && game.scenes.has(triggerScene)) {
+    if (triggerScene && game.scenes[triggerScene]) {
       setCurrentSceneId(triggerScene);
     } else {
       setCurrentSceneId(nextSceneId);
@@ -154,7 +148,7 @@ export default function GamePlayerWrapper({ game: serializedGame, slug }: Props)
     );
   }
 
-  const currentScene = game.scenes.get(currentSceneId);
+  const currentScene = game.scenes[currentSceneId];
 
   // 场景未找到
   if (!currentScene) {

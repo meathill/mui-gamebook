@@ -1,6 +1,29 @@
 开发笔记
 ====
 
+## 独立站点认证架构
+
+独立站点（如 `sites/jianjian`）不直接处理用户认证，而是通过 API 代理将认证请求转发到 CMS（`packages/app`）：
+
+1. **认证流程**：
+   - 用户在独立站点访问 `/sign-in` 页面
+   - 使用 better-auth 客户端发起登录请求到 `/api/auth/*`
+   - 独立站点的 API 代理 (`/api/auth/[...path]/route.ts`) 将请求转发到 CMS
+   - CMS 处理认证并设置 Cookie
+   - API 代理保留所有响应头（包括 Set-Cookie）返回给客户端
+
+2. **配置要点**：
+   - 使用 `NEXT_PUBLIC_API_URL` 环境变量配置 CMS 地址
+   - 共享配置统一在 `src/lib/config.ts` 管理
+   - Cookie 跨域配置通过 CMS 的 `COOKIE_DOMAIN` 环境变量控制
+
+3. **相关文件**：
+   - `/sites/jianjian/src/lib/config.ts` - 共享配置
+   - `/sites/jianjian/src/lib/auth-client.ts` - better-auth 客户端配置
+   - `/sites/jianjian/src/app/sign-in/page.tsx` - 登录页面
+   - `/sites/jianjian/src/app/api/auth/[...path]/route.ts` - 认证 API 代理
+   - `/packages/app/src/lib/auth-config.ts` - CMS 认证配置
+
 ## 异步操作系统
 
 视频生成等耗时较长的操作使用异步处理模式：

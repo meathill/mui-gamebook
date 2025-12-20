@@ -17,7 +17,7 @@ Second start scene.
     const result = parse(source);
     expect(result.success).toBe(true);
     if (result.success) {
-      const scene = result.data.scenes.get('start');
+      const scene = result.data.scenes['start'];
       expect(scene?.nodes[0].content).toBe('Second start scene.');
     }
   });
@@ -50,9 +50,9 @@ Number start scene.
     const result = parse(source);
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.scenes.has('scene-123')).toBe(true);
-      expect(result.data.scenes.has('scene_abc')).toBe(true);
-      expect(result.data.scenes.has('123scene')).toBe(true);
+      expect(result.data.scenes['scene-123'] !== undefined).toBe(true);
+      expect(result.data.scenes['scene_abc'] !== undefined).toBe(true);
+      expect(result.data.scenes['123scene'] !== undefined).toBe(true);
     }
   });
 
@@ -74,8 +74,8 @@ Text.
     const result = parse(source);
     expect(result.success).toBe(true);
     if (result.success) {
-      const emptyOne = result.data.scenes.get('empty_one');
-      const emptyTwo = result.data.scenes.get('empty_two');
+      const emptyOne = result.data.scenes['empty_one'];
+      const emptyTwo = result.data.scenes['empty_two'];
       expect(emptyOne).toBeDefined();
       expect(emptyOne?.nodes.length).toBe(0);
       expect(emptyTwo).toBeDefined();

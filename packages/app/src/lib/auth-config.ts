@@ -6,8 +6,16 @@ import * as schema from '../db/schema';
 export function createAuth(env: CloudflareEnv) {
   const db = drizzle(env.DB);
   const domain = env.COOKIE_DOMAIN || undefined; // 例如 '.jianjian.com'
+  // 允许的认证来源
+  const trustedOrigins: string[] = [env.NEXT_PUBLIC_SITE_URL];
+  const extraOrigins = env.TRUSTED_ORIGINS;
+  if (extraOrigins) {
+    trustedOrigins.push(...extraOrigins.split(',').map((o: string) => o.trim()));
+  }
+
   return betterAuth({
     baseURL: env.NEXT_PUBLIC_SITE_URL,
+    trustedOrigins,
     database: drizzleAdapter(db, {
       provider: 'sqlite',
       schema: schema,

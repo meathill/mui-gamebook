@@ -1,13 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { PlayableGame, RuntimeState, SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
-import {
-  isVariableMeta,
-  extractRuntimeState,
-  getVisibleVariables,
-  fromSerializablePlayableGame,
-} from '@mui-gamebook/parser/src/types';
+import { useState, useEffect, useCallback } from 'react';
+import type { PlayableGame, PlayableScene, RuntimeState } from '@mui-gamebook/parser/src/types';
+import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
 import { evaluateCondition, executeSet, interpolateVariables } from '../utils/evaluator';
 
 export interface GamePlayerState {
@@ -17,7 +12,7 @@ export interface GamePlayerState {
   isLoaded: boolean;
   isGameStarted: boolean;
   visibleVariables: ReturnType<typeof getVisibleVariables>;
-  currentScene: ReturnType<PlayableGame['scenes']['get']>;
+  currentScene: PlayableScene | undefined;
   hasConfiguredChoices: boolean;
   showEndScreen: boolean;
 }
@@ -38,13 +33,12 @@ export interface UseGamePlayerOptions {
  * 提供游戏状态管理和操作方法，UI 由各站点自定义
  */
 export function useGamePlayer(
-  serializedGame: SerializablePlayableGame,
+  game: PlayableGame,
   slug: string,
   options: UseGamePlayerOptions = {},
 ): GamePlayerState & GamePlayerActions {
   const { storagePrefix = 'game', confirmRestart = () => confirm('确定要重新开始吗？') } = options;
 
-  const game: PlayableGame = useMemo(() => fromSerializablePlayableGame(serializedGame), [serializedGame]);
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
   const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
   const [isLoaded, setIsLoaded] = useState(false);
@@ -76,7 +70,7 @@ export function useGamePlayer(
     if (savedProgress) {
       try {
         const { sceneId, state } = JSON.parse(savedProgress);
-        if (game.scenes.has(sceneId)) {
+        if (game.scenes[sceneId]) {
           setCurrentSceneId(sceneId);
           setIsGameStarted(true);
         }
@@ -131,7 +125,7 @@ export function useGamePlayer(
       }
 
       const triggerScene = checkTriggers(newState);
-      if (triggerScene && game.scenes.has(triggerScene)) {
+      if (triggerScene && game.scenes[triggerScene]) {
         setCurrentSceneId(triggerScene);
       } else {
         setCurrentSceneId(nextSceneId);
@@ -140,7 +134,7 @@ export function useGamePlayer(
     [runtimeState, checkTriggers, game.scenes],
   );
 
-  const currentScene = game.scenes.get(currentSceneId);
+  const currentScene = game.scenes[currentSceneId];
   const hasConfiguredChoices = currentScene?.nodes.some((node) => node.type === 'choice') ?? false;
   const showEndScreen = !hasConfiguredChoices;
 

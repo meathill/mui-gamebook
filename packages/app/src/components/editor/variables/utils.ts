@@ -1,5 +1,5 @@
 import type { GameState, VariableMeta, VariableDisplay } from '@mui-gamebook/parser/src/types';
-import { isVariableMeta } from '@mui-gamebook/parser/src/types';
+import { isVariableMeta } from '@mui-gamebook/parser/src/utils';
 
 export interface VariableFormData {
   name: string;

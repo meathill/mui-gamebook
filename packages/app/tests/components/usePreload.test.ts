@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { extractMediaUrls, getNextSceneIds, collectPreloadUrls } from '@/components/game-player/usePreload';
 import type { PlayableGame, PlayableScene, PlayableSceneNode } from '@mui-gamebook/parser/src/types';
 
-function createMockGame(scenes: Map<string, PlayableScene>): PlayableGame {
+function createMockGame(scenes: Record<string, PlayableScene>): PlayableGame {
   return {
     slug: 'test-game',
     title: '测试游戏',
@@ -106,22 +106,16 @@ describe('getNextSceneIds', () => {
 
 describe('collectPreloadUrls', () => {
   it('应该收集下一个场景的媒体 URL', () => {
-    const scenes = new Map<string, PlayableScene>([
-      [
-        'start',
-        {
-          id: 'start',
-          nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
-        },
-      ],
-      [
-        'scene-a',
-        {
-          id: 'scene-a',
-          nodes: [{ type: 'static_image', url: 'https://example.com/a.jpg' }],
-        },
-      ],
-    ]);
+    const scenes: Record<string, PlayableScene> = {
+      start: {
+        id: 'start',
+        nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
+      },
+      'scene-a': {
+        id: 'scene-a',
+        nodes: [{ type: 'static_image', url: 'https://example.com/a.jpg' }],
+      },
+    };
 
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>();
@@ -132,22 +126,16 @@ describe('collectPreloadUrls', () => {
   });
 
   it('应该跳过已处理的场景', () => {
-    const scenes = new Map<string, PlayableScene>([
-      [
-        'start',
-        {
-          id: 'start',
-          nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
-        },
-      ],
-      [
-        'scene-a',
-        {
-          id: 'scene-a',
-          nodes: [{ type: 'static_image', url: 'https://example.com/a.jpg' }],
-        },
-      ],
-    ]);
+    const scenes: Record<string, PlayableScene> = {
+      start: {
+        id: 'start',
+        nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
+      },
+      'scene-a': {
+        id: 'scene-a',
+        nodes: [{ type: 'static_image', url: 'https://example.com/a.jpg' }],
+      },
+    };
 
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>(['start']); // 已处理
@@ -158,25 +146,19 @@ describe('collectPreloadUrls', () => {
   });
 
   it('应该跳过已预加载的 URL', () => {
-    const scenes = new Map<string, PlayableScene>([
-      [
-        'start',
-        {
-          id: 'start',
-          nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
-        },
-      ],
-      [
-        'scene-a',
-        {
-          id: 'scene-a',
-          nodes: [
-            { type: 'static_image', url: 'https://example.com/a.jpg' },
-            { type: 'static_image', url: 'https://example.com/b.jpg' },
-          ],
-        },
-      ],
-    ]);
+    const scenes: Record<string, PlayableScene> = {
+      start: {
+        id: 'start',
+        nodes: [{ type: 'choice', text: '去A', nextSceneId: 'scene-a' }],
+      },
+      'scene-a': {
+        id: 'scene-a',
+        nodes: [
+          { type: 'static_image', url: 'https://example.com/a.jpg' },
+          { type: 'static_image', url: 'https://example.com/b.jpg' },
+        ],
+      },
+    };
 
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>();
@@ -187,32 +169,23 @@ describe('collectPreloadUrls', () => {
   });
 
   it('应该去重相同的 URL', () => {
-    const scenes = new Map<string, PlayableScene>([
-      [
-        'start',
-        {
-          id: 'start',
-          nodes: [
-            { type: 'choice', text: '去A', nextSceneId: 'scene-a' },
-            { type: 'choice', text: '去B', nextSceneId: 'scene-b' },
-          ],
-        },
-      ],
-      [
-        'scene-a',
-        {
-          id: 'scene-a',
-          nodes: [{ type: 'static_image', url: 'https://example.com/same.jpg' }],
-        },
-      ],
-      [
-        'scene-b',
-        {
-          id: 'scene-b',
-          nodes: [{ type: 'static_image', url: 'https://example.com/same.jpg' }],
-        },
-      ],
-    ]);
+    const scenes: Record<string, PlayableScene> = {
+      start: {
+        id: 'start',
+        nodes: [
+          { type: 'choice', text: '去A', nextSceneId: 'scene-a' },
+          { type: 'choice', text: '去B', nextSceneId: 'scene-b' },
+        ],
+      },
+      'scene-a': {
+        id: 'scene-a',
+        nodes: [{ type: 'static_image', url: 'https://example.com/same.jpg' }],
+      },
+      'scene-b': {
+        id: 'scene-b',
+        nodes: [{ type: 'static_image', url: 'https://example.com/same.jpg' }],
+      },
+    };
 
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>();
@@ -223,7 +196,7 @@ describe('collectPreloadUrls', () => {
   });
 
   it('应该处理不存在的场景', () => {
-    const scenes = new Map<string, PlayableScene>();
+    const scenes: Record<string, PlayableScene> = {};
     const game = createMockGame(scenes);
     const processedScenes = new Set<string>();
     const preloadedUrls = new Set<string>();
