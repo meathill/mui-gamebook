@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src';
-import { toPlayableGame, PlayableGame } from '../src/types';
+import { toPlayableGame } from '../src/utils';
+import type { PlayableGame } from '../src/types';
 
 describe('toPlayableGame - 过滤敏感数据', () => {
   it('应该过滤角色的 prompt 和 description', () => {
@@ -52,7 +53,7 @@ url: https://example.com/castle.png
     if (!result.success) return;
 
     const playable = toPlayableGame(result.data);
-    const startScene = playable.scenes.get('start');
+    const startScene = playable.scenes['start'];
     expect(startScene).toBeDefined();
 
     const imageNode = startScene!.nodes.find((n) => n.type === 'ai_image');
@@ -126,7 +127,7 @@ state:
     if (!result.success) return;
 
     const playable = toPlayableGame(result.data);
-    const startScene = playable.scenes.get('start');
+    const startScene = playable.scenes['start'];
     const choices = startScene!.nodes.filter((n) => n.type === 'choice');
 
     expect(choices).toHaveLength(2);
@@ -157,7 +158,7 @@ url: https://example.com/music.mp3
     if (!result.success) return;
 
     const playable = toPlayableGame(result.data);
-    const startScene = playable.scenes.get('start');
+    const startScene = playable.scenes['start'];
     const audioNode = startScene!.nodes.find((n) => n.type === 'ai_audio');
 
     expect(audioNode).toBeDefined();

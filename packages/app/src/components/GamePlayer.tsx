@@ -1,14 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import type { PlayableGame, RuntimeState, SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
-import {
-  isVariableMeta,
-  extractRuntimeState,
-  getVisibleVariables,
-  fromSerializablePlayableGame,
-} from '@mui-gamebook/parser/src/types';
+import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
+import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
@@ -23,9 +18,7 @@ import {
 } from '@/components/game-player';
 import { Volume2 } from 'lucide-react';
 
-export default function GamePlayer({ game: serializedGame, slug }: { game: SerializablePlayableGame; slug: string }) {
-  // 将可序列化的游戏数据转换回 PlayableGame（恢复 Map）
-  const game: PlayableGame = useMemo(() => fromSerializablePlayableGame(serializedGame), [serializedGame]);
+export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: string }) {
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
   const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
   const [isLoaded, setIsLoaded] = useState(false);
@@ -65,7 +58,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     if (savedProgress) {
       try {
         const { sceneId, state, imageUrl } = JSON.parse(savedProgress);
-        if (game.scenes.has(sceneId)) {
+        if (game.scenes[sceneId]) {
           setCurrentSceneId(sceneId);
           setIsGameStarted(true);
         }
@@ -75,7 +68,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
         console.error('Failed to load progress', e);
       }
     } else {
-      const startScene = game.scenes.get(game.startSceneId || 'start');
+      const startScene = game.scenes[game.startSceneId || 'start'];
       const firstImage = startScene?.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
       if (firstImage && 'url' in firstImage && firstImage.url) {
         setCurrentImageUrl(firstImage.url);
@@ -84,7 +77,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     setIsLoaded(true);
   }, [slug, game.scenes, game.startSceneId]);
 
-  const currentScene = game.scenes.get(currentSceneId);
+  const currentScene = game.scenes[currentSceneId];
 
   // Update image when scene changes
   useEffect(() => {
@@ -149,7 +142,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     setCurrentImageUrl(undefined);
     setIsGameStarted(false);
 
-    const startScene = game.scenes.get(game.startSceneId || 'start');
+    const startScene = game.scenes[game.startSceneId || 'start'];
     const firstImage = startScene?.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
     if (firstImage && 'url' in firstImage && firstImage.url) {
       setCurrentImageUrl(firstImage.url);
@@ -164,7 +157,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
     }
 
     const triggerScene = checkTriggers(newState);
-    if (triggerScene && game.scenes.has(triggerScene)) {
+    if (triggerScene && game.scenes[triggerScene]) {
       setCurrentSceneId(triggerScene);
     } else {
       setCurrentSceneId(nextSceneId);
@@ -182,7 +175,7 @@ export default function GamePlayer({ game: serializedGame, slug }: { game: Seria
 
     // 检查触发器
     const triggerScene = checkTriggers(newState);
-    if (triggerScene && game.scenes.has(triggerScene)) {
+    if (triggerScene && game.scenes[triggerScene]) {
       setCurrentSceneId(triggerScene);
       setMinigameCompleted(false);
     }

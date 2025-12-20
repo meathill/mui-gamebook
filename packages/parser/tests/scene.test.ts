@@ -13,10 +13,10 @@ This is the first scene.
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    expect(result.data.scenes.size).toBe(1);
-    expect(result.data.scenes.has('start')).toBe(true);
+    expect(Object.keys(result.data.scenes).length).toBe(1);
+    expect(result.data.scenes['start']).toBeDefined();
 
-    const scene = result.data.scenes.get('start');
+    const scene = result.data.scenes['start'];
     expect(scene?.id).toBe('start');
     expect(scene?.nodes.length).toBe(1);
     expect(scene?.nodes[0]).toEqual({ type: 'text', content: 'This is the first scene.' });
@@ -38,11 +38,11 @@ Content of scene 2.
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    expect(result.data.scenes.size).toBe(2);
-    expect(result.data.scenes.has('start')).toBe(true);
-    expect(result.data.scenes.has('scene2')).toBe(true);
+    expect(Object.keys(result.data.scenes).length).toBe(2);
+    expect(result.data.scenes['start']).toBeDefined();
+    expect(result.data.scenes['scene2']).toBeDefined();
 
-    const scene2 = result.data.scenes.get('scene2');
+    const scene2 = result.data.scenes['scene2'];
     expect(scene2?.nodes[0]).toEqual({ type: 'text', content: 'Content of scene 2.' });
   });
 
@@ -60,7 +60,7 @@ title: "Whitespace Test"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const scene = result.data.scenes.get('start');
+    const scene = result.data.scenes['start'];
     expect(scene?.nodes[0]).toEqual({ type: 'text', content: 'Some content with spaces.' });
   });
 
@@ -74,7 +74,7 @@ title: "Empty Scene"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const scene = result.data.scenes.get('start');
+    const scene = result.data.scenes['start'];
     expect(scene).toBeDefined();
     expect(scene?.nodes.length).toBe(0);
   });

@@ -14,7 +14,7 @@ title: "Static Image"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    const node = result.data.scenes['start']?.nodes[0] as SceneNode;
     expect(node.type).toBe('static_image');
     if (node.type !== 'static_image') return;
 
@@ -37,7 +37,7 @@ title: "AI Image"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    const node = result.data.scenes['start']?.nodes[0] as SceneNode;
     expect(node.type).toBe('ai_image');
     if (node.type !== 'ai_image') return;
 
@@ -60,7 +60,7 @@ characters: [lrrh, wolf]
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    const node = result.data.scenes['start']?.nodes[0] as SceneNode;
     expect(node.type).toBe('ai_image');
     if (node.type !== 'ai_image') return;
 
@@ -81,7 +81,7 @@ title: "AI Audio"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    const node = result.data.scenes['start']?.nodes[0] as SceneNode;
     expect(node.type).toBe('ai_audio');
     if (node.type !== 'ai_audio') return;
 
@@ -107,7 +107,7 @@ Welcome to the scene.
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const nodes = result.data.scenes.get('start')?.nodes;
+    const nodes = result.data.scenes['start']?.nodes;
     expect(nodes?.length).toBe(4);
     expect(nodes?.[0].type).toBe('ai_image');
     expect(nodes?.[1].type).toBe('text');
@@ -131,7 +131,7 @@ url: https://example.com/minigames/1
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    const node = result.data.scenes['start']?.nodes[0] as SceneNode;
     expect(node.type).toBe('minigame');
     if (node.type !== 'minigame') return;
 
@@ -156,7 +156,7 @@ variables:
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const node = result.data.scenes.get('start')?.nodes[0] as SceneNode;
+    const node = result.data.scenes['start']?.nodes[0] as SceneNode;
     expect(node.type).toBe('minigame');
     if (node.type !== 'minigame') return;
 

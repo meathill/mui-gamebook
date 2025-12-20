@@ -14,7 +14,7 @@ import {
 interface Props {
   state: GameState;
   onChange: (newState: GameState) => void;
-  scenes: Map<string, { id: string }>;
+  scenes: Record<string, { id: string }>;
 }
 
 export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
@@ -25,7 +25,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
   const dialog = useDialog();
 
   const variables = Object.entries(state);
-  const sceneList = Array.from(scenes.keys());
+  const sceneList = Object.keys(scenes);
 
   const filteredVariables = useMemo(() => {
     if (!searchQuery) return variables;

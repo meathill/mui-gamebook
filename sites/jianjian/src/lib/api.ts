@@ -3,6 +3,8 @@
  * 用于从 admin.jianjian.com 获取数据
  */
 
+import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3020';
 
 export interface Game {
@@ -31,7 +33,7 @@ export async function getGames(): Promise<Game[]> {
       return [];
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { games?: Game[] };
     return data.games || [];
   } catch (error) {
     console.error('Error fetching games:', error);
@@ -62,7 +64,7 @@ export async function getGame(slug: string): Promise<Game | null> {
 /**
  * 获取游戏的可玩数据
  */
-export async function getPlayableGame(slug: string) {
+export async function getPlayableGame(slug: string): Promise<PlayableGame | null> {
   try {
     const response = await fetch(`${API_BASE_URL}/api/games/${slug}/play`, {
       next: { revalidate: 60 },

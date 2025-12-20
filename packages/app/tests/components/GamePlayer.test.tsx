@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import GamePlayer from '../../src/components/GamePlayer';
 import { DialogProvider } from '@/components/Dialog';
-import type { SerializablePlayableGame } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import messages from '../../src/i18n/messages/en.json';
 
 // Mock scrollIntoView
@@ -19,7 +19,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   );
 };
 
-const mockGame: SerializablePlayableGame = {
+const mockGame: PlayableGame = {
   slug: 'test-game',
   title: 'Test Adventure',
   description: 'A test game',

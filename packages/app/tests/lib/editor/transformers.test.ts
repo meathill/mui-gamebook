@@ -3,29 +3,24 @@ import { gameToFlow, flowToGame } from '@/lib/editor/transformers';
 import type { Game } from '@mui-gamebook/parser/src/types';
 
 const mockGame: Game = {
+  slug: 'test-game',
   title: 'Test Game',
   initialState: {},
   ai: {},
   published: false,
-  scenes: new Map([
-    [
-      'start',
-      {
-        id: 'start',
-        nodes: [
-          { type: 'text', content: 'Hello' },
-          { type: 'choice', text: 'Go', nextSceneId: 'end', condition: 'flag == true' },
-        ],
-      },
-    ],
-    [
-      'end',
-      {
-        id: 'end',
-        nodes: [{ type: 'text', content: 'Bye' }],
-      },
-    ],
-  ]),
+  scenes: {
+    start: {
+      id: 'start',
+      nodes: [
+        { type: 'text', content: 'Hello' },
+        { type: 'choice', text: 'Go', nextSceneId: 'end', condition: 'flag == true' },
+      ],
+    },
+    end: {
+      id: 'end',
+      nodes: [{ type: 'text', content: 'Bye' }],
+    },
+  },
 };
 
 describe('Editor Transformers', () => {
@@ -50,9 +45,9 @@ describe('Editor Transformers', () => {
     const { nodes, edges } = gameToFlow(mockGame);
     const newGame = flowToGame(nodes, edges, mockGame);
 
-    expect(newGame.scenes.size).toBe(2);
+    expect(Object.keys(newGame.scenes).length).toBe(2);
 
-    const startScene = newGame.scenes.get('start');
+    const startScene = newGame.scenes['start'];
     expect(startScene).toBeDefined();
     // Note: transformer logic puts assets/text/choices in a specific order
     // In this case: text ('Hello') -> choice ('Go')

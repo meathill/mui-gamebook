@@ -55,14 +55,14 @@ export function collectPreloadUrls(
 ): string[] {
   if (processedScenes.has(currentSceneId)) return [];
 
-  const currentScene = game.scenes.get(currentSceneId);
+  const currentScene = game.scenes[currentSceneId];
   if (!currentScene) return [];
 
   const nextSceneIds = getNextSceneIds(currentScene);
   const newUrls: string[] = [];
 
   for (const sceneId of nextSceneIds) {
-    const scene = game.scenes.get(sceneId);
+    const scene = game.scenes[sceneId];
     if (!scene) continue;
 
     const urls = extractMediaUrls(scene.nodes);
@@ -148,7 +148,7 @@ export function usePreload(game: PlayableGame, currentSceneId: string) {
 
   const preloadScene = useCallback(
     (sceneId: string) => {
-      const scene = game.scenes.get(sceneId);
+      const scene = game.scenes[sceneId];
       if (!scene) return;
 
       const urls = extractMediaUrls(scene.nodes);
@@ -171,7 +171,7 @@ export function usePreload(game: PlayableGame, currentSceneId: string) {
     if (processedScenes.current.has(currentSceneId)) return;
     processedScenes.current.add(currentSceneId);
 
-    const currentScene = game.scenes.get(currentSceneId);
+    const currentScene = game.scenes[currentSceneId];
     if (!currentScene) {
       setStats({
         preloadedCount: preloadedUrls.current.size,

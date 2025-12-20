@@ -14,7 +14,7 @@ Some text.
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const scene = result.data.scenes.get('start');
+    const scene = result.data.scenes['start'];
     expect(scene?.nodes.length).toBe(2);
     expect(scene?.nodes[1]).toEqual({
       type: 'choice',
@@ -34,7 +34,7 @@ title: "If Test"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const choiceNode = result.data.scenes.get('start')?.nodes[0];
+    const choiceNode = result.data.scenes['start']?.nodes[0];
     expect(choiceNode?.type).toBe('choice');
     if (choiceNode?.type !== 'choice') return;
 
@@ -52,7 +52,7 @@ title: "Set Test"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const choiceNode = result.data.scenes.get('start')?.nodes[0];
+    const choiceNode = result.data.scenes['start']?.nodes[0];
     expect(choiceNode?.type).toBe('choice');
     if (choiceNode?.type !== 'choice') return;
 
@@ -70,7 +70,7 @@ title: "Complex Test"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const choiceNode = result.data.scenes.get('start')?.nodes[0];
+    const choiceNode = result.data.scenes['start']?.nodes[0];
     expect(choiceNode?.type).toBe('choice');
     if (choiceNode?.type !== 'choice') return;
 
@@ -91,7 +91,7 @@ Text after choice.
     expect(result.success).toBe(true);
     if (!result.success) return;
 
-    const scene = result.data.scenes.get('start');
+    const scene = result.data.scenes['start'];
     expect(scene?.nodes.length).toBe(3);
     expect(scene?.nodes[0].type).toBe('text');
     expect(scene?.nodes[1].type).toBe('choice');
