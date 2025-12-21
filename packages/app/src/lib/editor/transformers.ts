@@ -5,6 +5,7 @@ import { Game, Scene, SceneNode } from '@mui-gamebook/parser/src/types';
 export interface SceneNodeData extends Record<string, unknown> {
   label: string; // Scene ID
   content: string; // Concatenated text content
+  audio_url?: string; // TTS audio URL for the text content
   assets: SceneNode[]; // Non-text, non-choice nodes (images, etc.)
 }
 
@@ -20,6 +21,8 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
     const choiceNodes = scene.nodes.filter((n) => n.type === 'choice');
 
     const content = textNodes.map((n) => n.content).join('\n\n');
+    // 获取第一个文本节点的 audio_url（如果有多个文本节点，只保留第一个的音频）
+    const audio_url = textNodes.find((n) => 'audio_url' in n && n.audio_url)?.audio_url as string | undefined;
 
     nodes.push({
       id: id,
@@ -27,6 +30,7 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
       data: {
         label: id,
         content,
+        audio_url,
         assets: assetNodes,
       },
       type: 'scene', // We will create a custom node type later
@@ -72,9 +76,13 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
       sceneNodes.push(...node.data.assets);
     }
 
-    // 2. Add Text
+    // 2. Add Text (with optional audio_url)
     if (node.data.content) {
-      sceneNodes.push({ type: 'text', content: node.data.content });
+      const textNode: SceneNode = { type: 'text', content: node.data.content };
+      if (node.data.audio_url) {
+        textNode.audio_url = node.data.audio_url;
+      }
+      sceneNodes.push(textNode);
     }
 
     // 3. Add Choices (Edges)

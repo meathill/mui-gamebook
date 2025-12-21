@@ -24,7 +24,6 @@ export default function Inspector({
 }: InspectorProps) {
   const { id } = useParams();
   const [generatingTTS, setGeneratingTTS] = useState(false);
-  const [contentAudioUrl, setContentAudioUrl] = useState<string | undefined>(undefined);
   const dialog = useDialog();
 
   const nodeData = selectedNode ? (selectedNode.data as unknown as SceneNodeData) : null;
@@ -43,7 +42,7 @@ export default function Inspector({
   }
 
   async function handleGenerateTTS() {
-    if (!nodeData?.content || !id) return;
+    if (!nodeData?.content || !id || !selectedNode) return;
     setGeneratingTTS(true);
     try {
       const res = await fetch('/api/cms/assets/generate-tts', {
@@ -57,7 +56,8 @@ export default function Inspector({
         return;
       }
       const data = (await res.json()) as { url: string };
-      setContentAudioUrl(data.url);
+      // 保存 audio_url 到节点数据
+      onNodeChange(selectedNode.id, { audio_url: data.url });
       await dialog.alert('语音生成成功！');
     } catch (e) {
       await dialog.error(`错误：${(e as Error).message}`);
@@ -114,9 +114,9 @@ export default function Inspector({
                     )}
                     <span>生成语音</span>
                   </button>
-                  {contentAudioUrl && (
+                  {(nodeData.audio_url as string | undefined) && (
                     <audio
-                      src={contentAudioUrl}
+                      src={nodeData.audio_url as string}
                       controls
                       className="h-8 flex-1"
                     />
