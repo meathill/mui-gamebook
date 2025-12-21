@@ -136,22 +136,39 @@ describe('API', () => {
   });
 
   describe('getPlayableGame', () => {
-    it('正确获取可玩游戏数据', async () => {
-      const mockPlayable = {
-        id: 1,
+    it('正确获取可玩游戏数据并转换', async () => {
+      // Mock 返回完整的 Game 数据（而非 PlayableGame）
+      const mockFullGame = {
+        slug: 'test-game',
         title: '测试游戏',
-        scenes: { start: { id: 'start', content: '开始' } },
+        description: '一个测试游戏',
+        initialState: {},
+        ai: {
+          style: {},
+          characters: {},
+        },
+        scenes: {
+          start: {
+            id: 'start',
+            nodes: [{ type: 'text', content: '开始' }],
+          },
+        },
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve(mockPlayable),
+        json: () => Promise.resolve(mockFullGame),
       });
 
       const result = await getPlayableGame('test-game');
 
-      expect(result).toEqual(mockPlayable);
-      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/api/games/test-game/play'), expect.any(Object));
+      // 验证返回的是转换后的 PlayableGame 格式
+      expect(result).not.toBeNull();
+      expect(result?.title).toBe('测试游戏');
+      expect(result?.scenes['start']?.nodes[0]).toHaveProperty('content', '开始');
+      // 验证调用了正确的 API 端点（不再调用 /play）
+      expect(mockFetch).toHaveBeenCalledWith(expect.stringContaining('/api/games/test-game'), expect.any(Object));
+      expect(mockFetch).not.toHaveBeenCalledWith(expect.stringContaining('/play'), expect.any(Object));
     });
 
     it('游戏不存在时返回 null', async () => {

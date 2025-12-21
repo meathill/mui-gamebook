@@ -168,4 +168,55 @@ url: https://example.com/minigames/1
     const result = stringify(game);
     expect(result.trim()).toBe(expected.trim());
   });
+
+  it('should correctly stringify text nodes with audio_url before the content', () => {
+    const game: Game = {
+      slug: 'audio-test',
+      title: 'Audio Test',
+      initialState: {},
+      ai: {},
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            { type: 'text', content: '妈妈说了一些话。', audio_url: 'https://example.com/audio.wav' },
+            { type: 'text', content: '没有语音的文本。' },
+          ],
+        },
+      },
+    };
+
+    const expected = `---
+title: Audio Test
+---
+
+# start
+<!-- audio: https://example.com/audio.wav -->
+妈妈说了一些话。
+没有语音的文本。`;
+
+    const result = stringify(game);
+    expect(result.trim()).toBe(expected.trim());
+  });
+
+  it('should correctly stringify choice nodes with audio_url', () => {
+    const game: Game = {
+      slug: 'choice-audio-test',
+      title: 'Choice Audio Test',
+      initialState: {},
+      ai: {},
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            { type: 'text', content: '选择一个选项' },
+            { type: 'choice', text: '选项一', nextSceneId: 'next', audio_url: 'https://example.com/choice.wav' },
+          ],
+        },
+      },
+    };
+
+    const result = stringify(game);
+    expect(result).toContain('* [选项一] -> next (audio: https://example.com/choice.wav)');
+  });
 });

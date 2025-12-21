@@ -3,7 +3,8 @@
  * 用于从 admin.jianjian.com 获取数据
  */
 
-import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import type { Game as FullGame, PlayableGame } from '@mui-gamebook/parser/src/types';
+import { toPlayableGame } from '@mui-gamebook/parser/src/utils';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3020';
 
@@ -67,7 +68,7 @@ export async function getGame(slug: string): Promise<Game | null> {
  */
 export async function getPlayableGame(slug: string): Promise<PlayableGame | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/games/${slug}/play`, {
+    const response = await fetch(`${API_BASE_URL}/api/games/${slug}`, {
       next: { revalidate: 60 },
     });
 
@@ -75,7 +76,9 @@ export async function getPlayableGame(slug: string): Promise<PlayableGame | null
       return null;
     }
 
-    return response.json();
+    const data = (await response.json()) as FullGame;
+    // API 返回完整的 Game 数据，使用 toPlayableGame 转换
+    return toPlayableGame(data);
   } catch (error) {
     console.error('Error fetching playable game:', error);
     return null;
