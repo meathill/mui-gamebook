@@ -92,16 +92,26 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem 2rem;
-  font-size: var(--text-lg);
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
   font-weight: 700;
   border-radius: var(--radius-full);
   border: var(--border-width-thick) solid transparent;
   transition: all 0.2s ease;
   cursor: pointer;
   /* 最小触摸目标 44px */
-  min-height: 56px;
-  min-width: 120px;
+  min-height: 48px;
+  min-width: 100px;
+}
+
+/* 桌面端使用更大的按钮 */
+@media (min-width: 768px) {
+  .btn {
+    padding: 1rem 2rem;
+    font-size: var(--text-lg);
+    min-height: 56px;
+    min-width: 120px;
+  }
 }
 
 .btn-primary {
@@ -122,12 +132,22 @@ body {
   box-shadow: none;
 }
 
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-outline:hover {
+  background: var(--primary-light);
+}
+
 /* 选项按钮 - 童趣风格 */
 .choice-btn {
   display: block;
   width: 100%;
-  padding: 1.25rem 1.5rem;
-  font-size: var(--text-lg);
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
   font-weight: 600;
   text-align: left;
   background: var(--card-bg);
@@ -138,7 +158,16 @@ body {
   transition: all 0.15s ease;
   cursor: pointer;
   /* 确保足够的触摸区域 */
-  min-height: 64px;
+  min-height: 56px;
+}
+
+/* 桌面端使用更大的选项按钮 */
+@media (min-width: 768px) {
+  .choice-btn {
+    padding: 1.25rem 1.5rem;
+    font-size: var(--text-lg);
+    min-height: 64px;
+  }
 }
 
 .choice-btn:hover {

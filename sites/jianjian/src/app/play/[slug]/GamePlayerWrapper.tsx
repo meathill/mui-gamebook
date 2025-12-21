@@ -86,6 +86,12 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
     handleRestart();
   }
 
+  // 独立播放选项语音，不影响场景语音按钮状态
+  function playChoiceAudio(url: string) {
+    const audio = new Audio(url);
+    audio.play().catch((e) => console.error('Failed to play choice audio:', e));
+  }
+
   // 加载中
   if (!isLoaded) {
     return (
@@ -199,10 +205,10 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
                     style={{ animationDelay: `${index * 0.1}s` }}>
                     {choiceHasAudio && (
                       <button
-                        onClick={() => audioPlayer.play((node as { audio_url: string }).audio_url)}
+                        onClick={() => playChoiceAudio((node as { audio_url: string }).audio_url)}
                         className="p-3 rounded-full bg-accent-purple/10 hover:bg-accent-purple/20 text-accent-purple transition-colors flex-shrink-0"
                         title="播放语音">
-                        🔊
+                        ▶️
                       </button>
                     )}
                     <button

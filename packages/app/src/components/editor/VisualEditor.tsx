@@ -193,6 +193,18 @@ export default function VisualEditor({ id }: { id: string }) {
           : edge,
       ),
     );
+    // 同步更新 selectedEdge 以便 Inspector 立即显示更新
+    if (selectedEdge && selectedEdge.id === edgeId) {
+      setSelectedEdge((prev) =>
+        prev
+          ? {
+              ...prev,
+              ...(changes.label ? { label: changes.label } : {}),
+              ...(changes.data ? { data: { ...prev.data, ...changes.data } } : {}),
+            }
+          : null,
+      );
+    }
   }
 
   function handleAddScene() {
