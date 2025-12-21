@@ -184,13 +184,13 @@ export default function Inspector({
                     )}
                     <span>生成语音</span>
                   </button>
-                  {selectedEdge.data?.audio_url && (
+                  {selectedEdge.data?.audio_url ? (
                     <audio
                       src={selectedEdge.data.audio_url as string}
                       controls
                       className="h-8 flex-1"
                     />
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>
