@@ -161,8 +161,15 @@ CMS 对外提供的 API 遵循以下格式：
 **使用方式：**
 ```bash
 cd packages/asset-generator
-pnpm batch --config ./configs/your-config.json
+pnpm batch --config ./configs/your-config.json [--force]
 ```
+
+**命令行选项：**
+| 选项 | 说明 |
+|-----|------|
+| `--config` | 配置文件路径（必需） |
+| `--force` | 强制重新生成所有素材（忽略已有 URL） |
+| `--dry-run` | 只生成和上传，不更新数据库（测试用） |
 
 **配置文件格式：**
 ```json
@@ -180,14 +187,15 @@ pnpm batch --config ./configs/your-config.json
 }
 ```
 
-**功能：**
-- 通过管理员 API 获取剧本
-- 遍历场景和选项，生成 TTS 语音
-- 使用 `ai.style.tts` 配置语音风格
+**功能特性：**
+- **本地缓存**：生成的素材保存到 `cache/` 目录，避免重复生成
+- **跳过已生成**：剧本中已有 URL 的素材跳过
+- **格式转换**：远端素材格式不符时自动下载、转换、重新上传
 - 支持 WAV 转 MP3（需要系统安装 ffmpeg）
-- 自动上传到 R2 并更新剧本
+- 使用 `ai.style.tts` 配置语音风格
 
 相关文件：
 - `/packages/asset-generator/src/batch-generate.ts` - 批量生成入口
+- `/packages/asset-generator/src/lib/cache.ts` - 本地缓存
 - `/packages/asset-generator/src/lib/converter.ts` - 格式转换
 - `/packages/asset-generator/configs/example.json` - 配置示例
