@@ -21,7 +21,7 @@ export default function Footer() {
           </div>
 
           {/* 品牌 */}
-          <p className="text-lg font-semibold text-foreground">
+          <p className="sm:text-lg font-semibold text-foreground">
             简简 - 小朋友的故事乐园 v{process.env.NEXT_PUBLIC_VERSION}
           </p>
 

@@ -50,9 +50,9 @@ export default function TermsOfServicePage() {
             <p className="text-foreground/80 leading-relaxed">
               如有任何问题或建议，请通过邮件联系我们：
               <a
-                href="mailto:support@jianjian.app"
+                href="mailto:meathill@gmail.com"
                 className="text-primary hover:underline">
-                support@jianjian.app
+                meathill@gmail.com
               </a>
             </p>
           </section>
