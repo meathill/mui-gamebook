@@ -5,7 +5,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
-import { useAudioPlayer } from './useAudioPlayer';
+// 直接从共享包的源文件导入，避免模块解析问题
+import { useAudioPlayer } from '../../../../../../packages/app/src/hooks/useAudioPlayer';
 
 describe('useAudioPlayer', () => {
   it('初始状态应该是未播放', () => {

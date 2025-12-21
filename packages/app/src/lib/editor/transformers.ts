@@ -95,6 +95,7 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
         nextSceneId: edge.target,
         condition: edge.data?.condition as string | undefined,
         set: edge.data?.set as string | undefined,
+        audio_url: edge.data?.audio_url as string | undefined,
       });
     });
 

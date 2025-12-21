@@ -24,6 +24,7 @@ export default function Inspector({
 }: InspectorProps) {
   const { id } = useParams();
   const [generatingTTS, setGeneratingTTS] = useState(false);
+  const [generatingEdgeTTS, setGeneratingEdgeTTS] = useState(false);
   const dialog = useDialog();
 
   const nodeData = selectedNode ? (selectedNode.data as unknown as SceneNodeData) : null;
@@ -56,13 +57,36 @@ export default function Inspector({
         return;
       }
       const data = (await res.json()) as { url: string };
-      // 保存 audio_url 到节点数据
       onNodeChange(selectedNode.id, { audio_url: data.url });
       await dialog.alert('语音生成成功！');
     } catch (e) {
       await dialog.error(`错误：${(e as Error).message}`);
     } finally {
       setGeneratingTTS(false);
+    }
+  }
+
+  async function handleGenerateEdgeTTS() {
+    if (!selectedEdge?.label || !id) return;
+    setGeneratingEdgeTTS(true);
+    try {
+      const res = await fetch('/api/cms/assets/generate-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: selectedEdge.label as string, gameId: id }),
+      });
+      if (!res.ok) {
+        const error = (await res.json()) as { error: string };
+        await dialog.error(`TTS 生成失败：${error.error}`);
+        return;
+      }
+      const data = (await res.json()) as { url: string };
+      onEdgeChange(selectedEdge.id, { data: { ...selectedEdge.data, audio_url: data.url } });
+      await dialog.alert('选项语音生成成功！');
+    } catch (e) {
+      await dialog.error(`错误：${(e as Error).message}`);
+    } finally {
+      setGeneratingEdgeTTS(false);
     }
   }
 
@@ -143,6 +167,32 @@ export default function Inspector({
                 onChange={(e) => onEdgeChange(selectedEdge.id, { label: e.target.value })}
                 className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
+              {selectedEdge.label && (
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    onClick={handleGenerateEdgeTTS}
+                    disabled={generatingEdgeTTS}
+                    className="flex items-center gap-1 px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded hover:bg-purple-100 disabled:opacity-50"
+                    title="为选项生成语音">
+                    {generatingEdgeTTS ? (
+                      <Loader2
+                        size={14}
+                        className="animate-spin"
+                      />
+                    ) : (
+                      <Volume2 size={14} />
+                    )}
+                    <span>生成语音</span>
+                  </button>
+                  {selectedEdge.data?.audio_url && (
+                    <audio
+                      src={selectedEdge.data.audio_url as string}
+                      controls
+                      className="h-8 flex-1"
+                    />
+                  )}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">条件 (if)</label>
