@@ -193,6 +193,16 @@ export default function VisualEditor({ id }: { id: string }) {
           : edge,
       ),
     );
+    // 同步更新 selectedEdge 以便 Inspector 立即显示更新
+    // 使用函数式更新以获取最新状态，避免闭包问题
+    setSelectedEdge((prev) => {
+      if (!prev || prev.id !== edgeId) return prev;
+      return {
+        ...prev,
+        ...(changes.label ? { label: changes.label } : {}),
+        ...(changes.data ? { data: { ...prev.data, ...changes.data } } : {}),
+      };
+    });
   }
 
   function handleAddScene() {
@@ -293,6 +303,7 @@ export default function VisualEditor({ id }: { id: string }) {
               <Inspector
                 selectedNode={selectedNode}
                 selectedEdge={selectedEdge}
+                aiConfig={originalGame?.ai}
                 onNodeChange={handleNodeChange}
                 onNodeIdChange={handleNodeIdChange}
                 onEdgeChange={handleEdgeChange}

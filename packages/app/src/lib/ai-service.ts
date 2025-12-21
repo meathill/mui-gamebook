@@ -1,6 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { AiUsageInfo } from '@mui-gamebook/core/lib/ai-provider';
 import { createAiProvider, createGoogleAiProvider } from './ai-provider-factory';
+import { wrapWav } from './audio';
 
 export type { AiUsageInfo };
 
@@ -193,6 +194,7 @@ export type TTSVoiceName =
   | 'Orus' // 自然男声
   | 'Zephyr'; // 中性声音
 
+const DEFAULT_SAMPLE_RATE = 24000;
 /**
  * 生成 TTS 语音并上传到 R2
  * 使用 Gemini TTS 模型
@@ -236,7 +238,8 @@ ${text}`;
     throw new Error('TTS 生成失败：未返回音频数据');
   }
 
-  const audioBuffer = Buffer.from(data, 'base64');
+  const sourceBuffer = Buffer.from(data, 'base64');
+  const audioBuffer = wrapWav(sourceBuffer, DEFAULT_SAMPLE_RATE);
 
   // 上传到 R2
   const bucket = env.ASSETS_BUCKET;

@@ -289,10 +289,10 @@ export function stringify(game: Game): string {
     for (const node of scene.nodes) {
       switch (node.type) {
         case 'text':
-          markdown += `${node.content}\n`;
           if (node.audio_url) {
             markdown += `<!-- audio: ${node.audio_url} -->\n`;
           }
+          markdown += `${node.content}\n`;
           break;
         case 'static_image':
           markdown += `![${node.alt || ''}](${node.url})\n`;

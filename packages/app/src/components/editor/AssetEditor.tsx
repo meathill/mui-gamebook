@@ -17,14 +17,16 @@ import {
 import type { SceneNode } from '@mui-gamebook/parser';
 import { useDialog } from '@/components/Dialog';
 import MiniGameSelector from './MiniGameSelector';
+import { buildImagePrompt, buildAudioPrompt, extractCharacterIds, type AiConfig } from '@/lib/ai-prompt-builder';
 
 interface AssetEditorProps {
   gameId: string;
   assets: SceneNode[];
+  aiConfig?: AiConfig;
   onAssetsChange: (assets: SceneNode[]) => void;
 }
 
-export default function AssetEditor({ gameId, assets, onAssetsChange }: AssetEditorProps) {
+export default function AssetEditor({ gameId, assets, aiConfig, onAssetsChange }: AssetEditorProps) {
   const [generatingIndex, setGeneratingIndex] = useState<number>(-1);
   const [openGeneratorIndex, setOpenGeneratorIndex] = useState<number>(-1);
   const [uploadingIndex, setUploadingIndex] = useState<number>(-1);
@@ -143,10 +145,13 @@ export default function AssetEditor({ gameId, assets, onAssetsChange }: AssetEdi
         handleAssetChange(index, 'url', data.url);
         await dialog.alert('小游戏生成成功！');
       } else if (mediaType === 'video') {
+        // 视频使用图片风格配置
+        const characterIds = extractCharacterIds(asset.prompt);
+        const fullPrompt = buildImagePrompt(asset.prompt, aiConfig, characterIds);
         const res = await fetch('/api/cms/assets/generate-async', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: asset.prompt, gameId, type: apiType }),
+          body: JSON.stringify({ prompt: fullPrompt, gameId, type: apiType }),
         });
         if (!res.ok) {
           const error = (await res.json()) as { error: string };
@@ -156,11 +161,34 @@ export default function AssetEditor({ gameId, assets, onAssetsChange }: AssetEdi
         const data = (await res.json()) as { url: string };
         handleAssetChange(index, 'url', data.url);
         await dialog.alert('视频生成已启动，请稍等几分钟。');
-      } else {
+      } else if (mediaType === 'image') {
+        // 图片使用 ai.style.image 和角色描述
+        const characterIds =
+          'characters' in asset
+            ? asset.characters
+            : 'character' in asset
+              ? ([asset.character].filter(Boolean) as string[])
+              : extractCharacterIds(asset.prompt);
+        const fullPrompt = buildImagePrompt(asset.prompt, aiConfig, characterIds);
         const res = await fetch('/api/cms/assets/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: asset.prompt, gameId, type: apiType }),
+          body: JSON.stringify({ prompt: fullPrompt, gameId, type: apiType }),
+        });
+        if (!res.ok) {
+          const error = (await res.json()) as { error: string };
+          await dialog.error(`生成失败：${error.error}`);
+          return;
+        }
+        const data = (await res.json()) as { url: string };
+        handleAssetChange(index, 'url', data.url);
+      } else {
+        // 音频使用 ai.style.audio
+        const fullPrompt = buildAudioPrompt(asset.prompt, aiConfig);
+        const res = await fetch('/api/cms/assets/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: fullPrompt, gameId, type: apiType }),
         });
         if (!res.ok) {
           const error = (await res.json()) as { error: string };

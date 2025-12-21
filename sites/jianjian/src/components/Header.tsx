@@ -10,8 +10,8 @@ export default function Header() {
           <Link
             href="/"
             className="flex items-center gap-2">
-            <span className="text-3xl">📚</span>
-            <span className="text-2xl font-extrabold title-fun">简简</span>
+            <span className="sm:text-3xl">📚</span>
+            <span className="sm:text-2xl font-extrabold title-fun">简简</span>
           </Link>
 
           {/* 导航 */}

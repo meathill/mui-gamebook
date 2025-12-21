@@ -80,7 +80,7 @@ importers:
         version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@story-protocol/core-sdk':
         specifier: ^1.4.2
-        version: 1.4.2(typescript@5.9.3)(zod@3.22.3)
+        version: 1.4.2(typescript@5.9.3)(zod@4.1.13)
       '@tanstack/react-query':
         specifier: ^5.90.12
         version: 5.90.12(react@19.2.3)
@@ -128,7 +128,7 @@ importers:
         version: 3.4.0
       viem:
         specifier: ^2.42.0
-        version: 2.42.0(typescript@5.9.3)(zod@3.22.3)
+        version: 2.42.0(typescript@5.9.3)(zod@4.1.13)
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.1.18
@@ -259,6 +259,9 @@ importers:
 
   sites/jianjian:
     dependencies:
+      '@mui-gamebook/app':
+        specifier: workspace:*
+        version: link:../../packages/app
       '@mui-gamebook/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -9191,15 +9194,15 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
-  '@story-protocol/core-sdk@1.4.2(typescript@5.9.3)(zod@3.22.3)':
+  '@story-protocol/core-sdk@1.4.2(typescript@5.9.3)(zod@4.1.13)':
     dependencies:
       '@scure/bip32': 1.7.0
-      abitype: 0.10.3(typescript@5.9.3)(zod@3.22.3)
+      abitype: 0.10.3(typescript@5.9.3)(zod@4.1.13)
       axios: 1.13.2
       bs58: 6.0.0
       dotenv: 16.6.1
       multiformats: 9.9.0
-      viem: 2.42.0(typescript@5.9.3)(zod@3.22.3)
+      viem: 2.42.0(typescript@5.9.3)(zod@4.1.13)
     transitivePeerDependencies:
       - bufferutil
       - debug
@@ -9582,7 +9585,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vitest: 4.0.15(@types/node@24.10.4)(@vitest/ui@4.0.15)(jiti@2.6.1)(jsdom@27.3.0(postcss@8.5.6))(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2)
+      vitest: 4.0.15(@types/node@24.10.4)(@vitest/ui@4.0.15)(jiti@2.6.1)(jsdom@24.1.3)(lightningcss@1.30.2)(terser@5.16.9)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/utils@4.0.15':
     dependencies:
@@ -9612,15 +9615,15 @@ snapshots:
       d3-selection: 3.0.0
       d3-zoom: 3.0.0
 
-  abitype@0.10.3(typescript@5.9.3)(zod@3.22.3):
+  abitype@0.10.3(typescript@5.9.3)(zod@4.1.13):
     optionalDependencies:
       typescript: 5.9.3
-      zod: 3.22.3
+      zod: 4.1.13
 
-  abitype@1.1.0(typescript@5.9.3)(zod@3.22.3):
+  abitype@1.1.0(typescript@5.9.3)(zod@4.1.13):
     optionalDependencies:
       typescript: 5.9.3
-      zod: 3.22.3
+      zod: 4.1.13
 
   abort-controller@3.0.0:
     dependencies:
@@ -11568,7 +11571,7 @@ snapshots:
       ws: 8.18.3
       zod: 4.1.13
 
-  ox@0.9.6(typescript@5.9.3)(zod@3.22.3):
+  ox@0.9.6(typescript@5.9.3)(zod@4.1.13):
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/ciphers': 1.3.0
@@ -11576,7 +11579,7 @@ snapshots:
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.1.0(typescript@5.9.3)(zod@3.22.3)
+      abitype: 1.1.0(typescript@5.9.3)(zod@4.1.13)
       eventemitter3: 5.0.1
     optionalDependencies:
       typescript: 5.9.3
@@ -12423,15 +12426,15 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  viem@2.42.0(typescript@5.9.3)(zod@3.22.3):
+  viem@2.42.0(typescript@5.9.3)(zod@4.1.13):
     dependencies:
       '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
-      abitype: 1.1.0(typescript@5.9.3)(zod@3.22.3)
+      abitype: 1.1.0(typescript@5.9.3)(zod@4.1.13)
       isows: 1.0.7(ws@8.18.3)
-      ox: 0.9.6(typescript@5.9.3)(zod@3.22.3)
+      ox: 0.9.6(typescript@5.9.3)(zod@4.1.13)
       ws: 8.18.3
     optionalDependencies:
       typescript: 5.9.3
