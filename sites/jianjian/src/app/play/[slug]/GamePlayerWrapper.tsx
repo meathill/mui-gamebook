@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { useAudioPlayer } from '@mui-gamebook/app/hooks/useAudioPlayer';
 import { evaluateCondition, interpolateVariables } from './evaluator';
@@ -20,6 +20,8 @@ interface Props {
  */
 export default function GamePlayerWrapper({ game, slug }: Props) {
   const audioPlayer = useAudioPlayer();
+  const choiceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [playingChoiceIndex, setPlayingChoiceIndex] = useState<number | null>(null);
   const {
     currentSceneId,
     currentScene,
@@ -41,6 +43,11 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
   useEffect(() => {
     if (isGameStarted && currentScene) {
       audioPlayer.stop();
+      // 停止选项音频
+      if (choiceAudioRef.current) {
+        choiceAudioRef.current.pause();
+        setPlayingChoiceIndex(null);
+      }
 
       const audioUrl = getSceneAudioUrl(currentScene.nodes);
       if (audioUrl) {
@@ -78,6 +85,10 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
 
   function handleChoiceWithAudio(nextSceneId: string, setInstruction?: string) {
     audioPlayer.stop();
+    if (choiceAudioRef.current) {
+      choiceAudioRef.current.pause();
+      setPlayingChoiceIndex(null);
+    }
     handleChoice(nextSceneId, setInstruction);
   }
 
@@ -86,10 +97,33 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
     handleRestart();
   }
 
-  // 独立播放选项语音，不影响场景语音按钮状态
-  function playChoiceAudio(url: string) {
+  // 播放/暂停选项语音
+  function toggleChoiceAudio(url: string, index: number) {
+    // 如果正在播放同一个，则暂停
+    if (playingChoiceIndex === index && choiceAudioRef.current) {
+      choiceAudioRef.current.pause();
+      setPlayingChoiceIndex(null);
+      return;
+    }
+
+    // 停止之前的音频
+    if (choiceAudioRef.current) {
+      choiceAudioRef.current.pause();
+    }
+
+    // 播放新音频
     const audio = new Audio(url);
-    audio.play().catch((e) => console.error('Failed to play choice audio:', e));
+    choiceAudioRef.current = audio;
+    setPlayingChoiceIndex(index);
+
+    audio.onended = () => {
+      setPlayingChoiceIndex(null);
+    };
+
+    audio.play().catch((e) => {
+      console.error('Failed to play choice audio:', e);
+      setPlayingChoiceIndex(null);
+    });
   }
 
   // 加载中
@@ -198,6 +232,7 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
                   return null;
                 }
                 const choiceHasAudio = 'audio_url' in node && !!node.audio_url;
+                const isPlaying = playingChoiceIndex === index;
                 return (
                   <div
                     key={index}
@@ -205,10 +240,14 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
                     style={{ animationDelay: `${index * 0.1}s` }}>
                     {choiceHasAudio && (
                       <button
-                        onClick={() => playChoiceAudio((node as { audio_url: string }).audio_url)}
-                        className="p-3 rounded-full bg-accent-purple/10 hover:bg-accent-purple/20 text-accent-purple transition-colors flex-shrink-0"
-                        title="播放语音">
-                        ▶️
+                        onClick={() => toggleChoiceAudio((node as { audio_url: string }).audio_url, index)}
+                        className={`p-3 rounded-full transition-colors flex-shrink-0 ${
+                          isPlaying
+                            ? 'bg-accent-purple/30 text-accent-purple'
+                            : 'bg-accent-purple/10 hover:bg-accent-purple/20 text-accent-purple'
+                        }`}
+                        title={isPlaying ? '暂停' : '播放语音'}>
+                        {isPlaying ? '⏸️' : '▶️'}
                       </button>
                     )}
                     <button

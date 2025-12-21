@@ -20,20 +20,24 @@ const jetBrainsMono = JetBrains_Mono({
   subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
-  title: {
-    template: '%s | 姆伊游戏书',
-    default: '姆伊游戏书 - AI 驱动的互动小说平台',
-  },
-  description: '探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。',
-  openGraph: {
-    title: '姆伊游戏书 - AI 驱动的互动小说平台',
+export async function generateMetadata(): Promise<Metadata> {
+  const { env } = await getCloudflareContext({ async: true });
+  return {
+    title: {
+      template: '%s | 姆伊游戏书',
+      default: '姆伊游戏书 - AI 驱动的互动小说平台',
+    },
     description: '探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。',
-    type: 'website',
-    locale: 'zh_CN',
-    siteName: '姆伊游戏书',
-  },
-};
+    openGraph: {
+      title: '姆伊游戏书 - AI 驱动的互动小说平台',
+      description: '探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。',
+      type: 'website',
+      locale: 'zh_CN',
+      siteName: '姆伊游戏书',
+    },
+    robots: env.HEADLESS_MODE === 'true' ? { index: false, follow: false } : undefined,
+  };
+}
 
 export default async function RootLayout({
   children,

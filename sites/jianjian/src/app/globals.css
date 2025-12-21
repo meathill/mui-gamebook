@@ -204,7 +204,6 @@ body {
 
 /* 标题样式 */
 .title-fun {
-  font-size: var(--text-3xl);
   font-weight: 800;
   background: linear-gradient(135deg, var(--primary), var(--accent-pink), var(--accent-purple));
   -webkit-background-clip: text;

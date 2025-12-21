@@ -113,3 +113,89 @@ CMS 对外提供的 API 遵循以下格式：
 - `/sites/jianjian/src/lib/api.ts` - API 调用封装
 - `/sites/jianjian/src/lib/api.test.ts` - API 测试
 
+## AI 上下文自动合并
+
+在编辑器中生成 AI 资源（图片、音频、视频）时，系统会自动将 `ai.style` 和 `ai.characters` 合并到用户 prompt 中：
+
+1. **图片/视频生成**：自动添加 `ai.style.image` + 引用角色的 `image_prompt`
+2. **音频生成**：自动添加 `ai.style.audio`
+
+相关文件：
+- `/packages/app/src/lib/ai-prompt-builder.ts` - prompt 组装工具
+- `/packages/app/tests/lib/ai-prompt-builder.test.ts` - 单元测试
+
+## TTS 语音生成
+
+平台支持为场景文本和选项生成语音：
+
+1. **场景语音**：在 Inspector 中点击"生成语音"按钮
+2. **选项语音**：为每个选项单独生成语音
+
+技术实现：
+- 使用 Gemini TTS 模型 (`gemini-2.5-flash-preview-tts`)
+- 默认使用 Aoede 温和女声
+- 音频存储在 R2，格式为 WAV
+
+相关文件：
+- `/packages/app/src/lib/ai-service.ts` - `generateAndUploadTTS` 函数
+- `/packages/app/src/app/api/cms/assets/generate-tts/route.ts` - TTS API
+
+## 管理员 API
+
+提供管理员级别的 API，用于批量操作剧本：
+
+| 端点 | 方法 | 功能 |
+|-----|------|------|
+| `/api/admin/games/[slug]` | GET | 获取剧本 Markdown 内容 |
+| `/api/admin/games/[slug]` | PUT | 更新剧本内容 |
+
+认证方式：`Authorization: Bearer ADMIN_PASSWORD`
+
+相关文件：
+- `/packages/app/src/app/api/admin/games/[slug]/route.ts`
+
+## 批量生成工具
+
+`packages/asset-generator` 提供批量生成脚本，用于为剧本批量生成 TTS 语音等资源：
+
+**使用方式：**
+```bash
+cd packages/asset-generator
+pnpm batch --config ./configs/your-config.json [--force]
+```
+
+**命令行选项：**
+| 选项 | 说明 |
+|-----|------|
+| `--config` | 配置文件路径（必需） |
+| `--force` | 强制重新生成所有素材（忽略已有 URL） |
+| `--dry-run` | 只生成和上传，不更新数据库（测试用） |
+
+**配置文件格式：**
+```json
+{
+  "apiUrl": "https://cms.example.com",
+  "adminSecret": "xxx",
+  "gameSlug": "my-story",
+  "generate": {
+    "sceneTTS": true,
+    "choiceTTS": true
+  },
+  "format": {
+    "audio": "mp3"
+  }
+}
+```
+
+**功能特性：**
+- **本地缓存**：生成的素材保存到 `cache/` 目录，避免重复生成
+- **跳过已生成**：剧本中已有 URL 的素材跳过
+- **格式转换**：远端素材格式不符时自动下载、转换、重新上传
+- 支持 WAV 转 MP3（需要系统安装 ffmpeg）
+- 使用 `ai.style.tts` 配置语音风格
+
+相关文件：
+- `/packages/asset-generator/src/batch-generate.ts` - 批量生成入口
+- `/packages/asset-generator/src/lib/cache.ts` - 本地缓存
+- `/packages/asset-generator/src/lib/converter.ts` - 格式转换
+- `/packages/asset-generator/configs/example.json` - 配置示例

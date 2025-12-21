@@ -198,14 +198,26 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
           </div>
 
           {/* AI Style Config */}
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <h3 className="text-sm font-medium text-blue-900 mb-2">AI 风格（作用于全篇故事）</h3>
-            <textarea
-              value={game.ai?.style?.image || ''}
-              onChange={(e) => handleChange('ai', { ...game.ai, style: { ...game.ai.style, image: e.target.value } })}
-              placeholder="全局艺术风格提示词（如：水彩画风，奇幻风格）..."
-              className="w-full p-2 text-sm border border-blue-200 rounded h-20 resize-none"
-            />
+          <div className="p-4 bg-blue-50 rounded-lg border border-blue-100 space-y-3">
+            <h3 className="text-sm font-medium text-blue-900">AI 风格（作用于全篇故事）</h3>
+            <div>
+              <label className="block text-xs text-blue-700 mb-1">图片风格</label>
+              <textarea
+                value={game.ai?.style?.image || ''}
+                onChange={(e) => handleChange('ai', { ...game.ai, style: { ...game.ai.style, image: e.target.value } })}
+                placeholder="全局艺术风格提示词（如：水彩画风，奇幻风格）..."
+                className="w-full p-2 text-sm border border-blue-200 rounded h-16 resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-blue-700 mb-1">TTS 语言风格</label>
+              <textarea
+                value={game.ai?.style?.tts || ''}
+                onChange={(e) => handleChange('ai', { ...game.ai, style: { ...game.ai.style, tts: e.target.value } })}
+                placeholder="语音朗读风格（如：用讲童话故事的语气，语速适中，温柔亲切）..."
+                className="w-full p-2 text-sm border border-blue-200 rounded h-16 resize-none"
+              />
+            </div>
           </div>
 
           {/* IP 注册 - Story Protocol */}

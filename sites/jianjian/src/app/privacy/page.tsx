@@ -68,9 +68,9 @@ export default function PrivacyPolicyPage() {
             <p className="text-foreground/80 leading-relaxed">
               如有隐私相关问题，请联系：
               <a
-                href="mailto:privacy@jianjian.app"
+                href="mailto:meathill@gmail.com"
                 className="text-primary hover:underline">
-                privacy@jianjian.app
+                meathill@gmail.com
               </a>
             </p>
           </section>

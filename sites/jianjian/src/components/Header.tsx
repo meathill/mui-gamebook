@@ -11,7 +11,7 @@ export default function Header() {
             href="/"
             className="flex items-center gap-2">
             <span className="sm:text-3xl">📚</span>
-            <span className="sm:text-2xl font-extrabold title-fun">简简</span>
+            <span className="text-xl sm:text-2xl font-extrabold title-fun">简简</span>
           </Link>
 
           {/* 导航 */}

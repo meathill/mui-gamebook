@@ -75,9 +75,12 @@ export async function generateStorySpeech(
   genAI: GoogleGenAI,
   text: string,
   voiceName: VoiceName = 'Aoede',
+  style?: string,
 ): Promise<TTSResult> {
-  // 添加朗读指导，让语音更适合儿童
-  const enhancedText = `请用温柔、有表现力的方式朗读这段故事，语速稍慢，适合小朋友听：
+  // 使用自定义风格或默认风格
+  const stylePrompt = style || '请用温柔、有表现力的方式朗读这段故事，语速稍慢，适合小朋友听：';
+
+  const enhancedText = `${stylePrompt}
 
 ${text}`;
 
