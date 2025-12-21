@@ -139,3 +139,55 @@ CMS 对外提供的 API 遵循以下格式：
 相关文件：
 - `/packages/app/src/lib/ai-service.ts` - `generateAndUploadTTS` 函数
 - `/packages/app/src/app/api/cms/assets/generate-tts/route.ts` - TTS API
+
+## 管理员 API
+
+提供管理员级别的 API，用于批量操作剧本：
+
+| 端点 | 方法 | 功能 |
+|-----|------|------|
+| `/api/admin/games/[slug]` | GET | 获取剧本 Markdown 内容 |
+| `/api/admin/games/[slug]` | PUT | 更新剧本内容 |
+
+认证方式：`Authorization: Bearer ADMIN_PASSWORD`
+
+相关文件：
+- `/packages/app/src/app/api/admin/games/[slug]/route.ts`
+
+## 批量生成工具
+
+`packages/asset-generator` 提供批量生成脚本，用于为剧本批量生成 TTS 语音等资源：
+
+**使用方式：**
+```bash
+cd packages/asset-generator
+pnpm batch --config ./configs/your-config.json
+```
+
+**配置文件格式：**
+```json
+{
+  "apiUrl": "https://cms.example.com",
+  "adminSecret": "xxx",
+  "gameSlug": "my-story",
+  "generate": {
+    "sceneTTS": true,
+    "choiceTTS": true
+  },
+  "format": {
+    "audio": "mp3"
+  }
+}
+```
+
+**功能：**
+- 通过管理员 API 获取剧本
+- 遍历场景和选项，生成 TTS 语音
+- 使用 `ai.style.tts` 配置语音风格
+- 支持 WAV 转 MP3（需要系统安装 ffmpeg）
+- 自动上传到 R2 并更新剧本
+
+相关文件：
+- `/packages/asset-generator/src/batch-generate.ts` - 批量生成入口
+- `/packages/asset-generator/src/lib/converter.ts` - 格式转换
+- `/packages/asset-generator/configs/example.json` - 配置示例

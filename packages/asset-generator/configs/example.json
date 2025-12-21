@@ -1,0 +1,12 @@
+{
+  "apiUrl": "https://cms.example.com",
+  "adminSecret": "YOUR_ADMIN_PASSWORD",
+  "gameSlug": "your-game-slug",
+  "generate": {
+    "sceneTTS": true,
+    "choiceTTS": true
+  },
+  "format": {
+    "audio": "mp3"
+  }
+}
