@@ -34,6 +34,15 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
     return undefined;
   }, []);
 
+  // 从场景节点中提取音频 URL
+  const getSceneAudioUrl = useCallback((nodes: PlayableSceneNode[]): string | undefined => {
+    const textNode = nodes.find((n) => n.type === 'text' && 'audio_url' in n && n.audio_url);
+    if (textNode && 'audio_url' in textNode) {
+      return textNode.audio_url as string;
+    }
+    return undefined;
+  }, []);
+
   // 检查变量触发器
   const checkTriggers = useCallback(
     (state: RuntimeState): string | null => {
@@ -90,21 +99,48 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
     }
   }, [currentSceneId, currentScene, currentImageUrl, isGameStarted, getSceneImage]);
 
-  // 场景切换时自动播放语音
+  // 场景切换时自动播放语音并预加载下一场景
   useEffect(() => {
     if (isGameStarted && currentScene) {
       audioPlayer.stop();
 
       // 查找文本节点的音频
-      const textNode = currentScene.nodes.find((n) => n.type === 'text' && 'audio_url' in n && n.audio_url);
-      if (textNode && 'audio_url' in textNode && textNode.audio_url) {
+      const audioUrl = getSceneAudioUrl(currentScene.nodes);
+      if (audioUrl) {
+        // 自动播放语音
         setTimeout(() => {
-          audioPlayer.play(textNode.audio_url!);
-        }, 500);
+          audioPlayer.play(audioUrl);
+        }, 300);
+      }
+
+      // 预加载下一场景的资源
+      const nextSceneIds = currentScene.nodes
+        .filter((n) => n.type === 'choice')
+        .map((n) => (n as { nextSceneId: string }).nextSceneId)
+        .filter((id) => id && game.scenes[id]);
+
+      for (const sceneId of nextSceneIds) {
+        const scene = game.scenes[sceneId];
+        if (!scene) continue;
+
+        // 预加载图片
+        const imageUrl = getSceneImage(scene.nodes);
+        if (imageUrl) {
+          const img = new Image();
+          img.src = imageUrl;
+        }
+
+        // 预加载音频
+        const nextAudioUrl = getSceneAudioUrl(scene.nodes);
+        if (nextAudioUrl) {
+          const audio = new Audio();
+          audio.preload = 'auto';
+          audio.src = nextAudioUrl;
+        }
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSceneId, isGameStarted]);
+  }, [currentSceneId, isGameStarted, getSceneImage, getSceneAudioUrl]);
 
   // 保存进度
   useEffect(() => {
@@ -285,6 +321,28 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
         </div>
       )}
 
+      {/* 音频控制（放在图片下方、文字上方） */}
+      {hasTextAudio && (
+        <div className="flex items-center justify-center gap-3 py-3 bg-primary-light/30 border-b border-card-border">
+          <span className="text-foreground/50 text-sm">🔊 语音</span>
+          <button
+            onClick={audioPlayer.toggle}
+            className="p-2 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+            title={audioPlayer.isPlaying ? '暂停' : audioPlayer.isPaused ? '继续' : '播放'}>
+            {audioPlayer.isPlaying ? '⏸️' : '▶️'}
+          </button>
+          <button
+            onClick={audioPlayer.replay}
+            className="p-2 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/70 transition-colors"
+            title="重播">
+            🔄
+          </button>
+          <span className="text-foreground/40 text-xs">
+            {audioPlayer.isPlaying ? '正在播放...' : audioPlayer.isPaused ? '已暂停' : ''}
+          </span>
+        </div>
+      )}
+
       {/* 场景内容 */}
       <div className="flex-1 p-6 sm:p-8 max-w-2xl mx-auto w-full">
         <div className="space-y-6">
@@ -337,27 +395,7 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
             }
           })}
 
-          {/* 音频控制 */}
-          {hasTextAudio && (
-            <div className="flex items-center justify-center gap-3 py-4 border-t border-card-border">
-              <span className="text-foreground/50 text-sm">语音控制</span>
-              <button
-                onClick={audioPlayer.toggle}
-                className="p-3 rounded-full bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
-                title={audioPlayer.isPlaying ? '暂停' : audioPlayer.isPaused ? '继续' : '播放'}>
-                {audioPlayer.isPlaying ? '⏸️' : '▶️'}
-              </button>
-              <button
-                onClick={audioPlayer.replay}
-                className="p-3 rounded-full bg-foreground/5 hover:bg-foreground/10 text-foreground/70 transition-colors"
-                title="重播">
-                🔄
-              </button>
-              <span className="text-foreground/40 text-xs">
-                {audioPlayer.isPlaying ? '正在播放...' : audioPlayer.isPaused ? '已暂停' : ''}
-              </span>
-            </div>
-          )}
+          {/* 音频控制已移至图片下方 */}
 
           {/* 结局画面 */}
           {showEndScreen && (
