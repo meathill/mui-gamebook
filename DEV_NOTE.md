@@ -113,3 +113,29 @@ CMS 对外提供的 API 遵循以下格式：
 - `/sites/jianjian/src/lib/api.ts` - API 调用封装
 - `/sites/jianjian/src/lib/api.test.ts` - API 测试
 
+## AI 上下文自动合并
+
+在编辑器中生成 AI 资源（图片、音频、视频）时，系统会自动将 `ai.style` 和 `ai.characters` 合并到用户 prompt 中：
+
+1. **图片/视频生成**：自动添加 `ai.style.image` + 引用角色的 `image_prompt`
+2. **音频生成**：自动添加 `ai.style.audio`
+
+相关文件：
+- `/packages/app/src/lib/ai-prompt-builder.ts` - prompt 组装工具
+- `/packages/app/tests/lib/ai-prompt-builder.test.ts` - 单元测试
+
+## TTS 语音生成
+
+平台支持为场景文本和选项生成语音：
+
+1. **场景语音**：在 Inspector 中点击"生成语音"按钮
+2. **选项语音**：为每个选项单独生成语音
+
+技术实现：
+- 使用 Gemini TTS 模型 (`gemini-2.5-flash-preview-tts`)
+- 默认使用 Aoede 温和女声
+- 音频存储在 R2，格式为 WAV
+
+相关文件：
+- `/packages/app/src/lib/ai-service.ts` - `generateAndUploadTTS` 函数
+- `/packages/app/src/app/api/cms/assets/generate-tts/route.ts` - TTS API
