@@ -46,6 +46,7 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
           data: {
             condition: choice.condition,
             set: choice.set,
+            audio_url: choice.audio_url,
           },
         });
       }

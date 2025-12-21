@@ -6,10 +6,12 @@ import { useParams } from 'next/navigation';
 import type { SceneNode } from '@mui-gamebook/parser';
 import { useDialog } from '@/components/Dialog';
 import AssetEditor from './AssetEditor';
+import type { AiConfig } from '@/lib/ai-prompt-builder';
 
 interface InspectorProps {
   selectedNode: Node | null;
   selectedEdge: Edge | null;
+  aiConfig?: AiConfig;
   onNodeChange: (id: string, data: Partial<SceneNodeData>) => void;
   onNodeIdChange: (oldId: string, newId: string) => void;
   onEdgeChange: (id: string, changes: { label?: string; data?: Record<string, unknown> }) => void;
@@ -18,6 +20,7 @@ interface InspectorProps {
 export default function Inspector({
   selectedNode,
   selectedEdge,
+  aiConfig,
   onNodeChange,
   onNodeIdChange,
   onEdgeChange,
@@ -152,6 +155,7 @@ export default function Inspector({
             <AssetEditor
               gameId={id as string}
               assets={nodeData.assets || []}
+              aiConfig={aiConfig}
               onAssetsChange={handleAssetsChange}
             />
           </>

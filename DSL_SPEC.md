@@ -28,10 +28,10 @@ title: "小红帽"
 description: "一个关于小女孩和一只狡猾大灰狼的经典童话故事。"
 backgroundStory: |
   # 第一章：起源
-  
+
   很久很久以前，在一个宁静的小村庄边，住着一个可爱的小女孩。
   她总是穿着奶奶送给她的红色斗篷，因此大家都叫她"小红帽"。
-  
+
   有一天，妈妈让她去看望住在森林那边的奶奶...
 cover_image: "/assets/covers/lrrh_cover.png"
 tags: ["童话", "经典", "多分支"]
@@ -126,6 +126,42 @@ ai:
       voice_sample_url: "/assets/voices/zhang_daxia_sample.wav"
 ---
 ```
+
+### 2.4 AI 上下文自动合并
+
+当使用编辑器生成 AI 素材（图片、音频、视频）时，系统会自动将 `ai.style` 和 `ai.characters` 合并到用户的 prompt 中，以确保生成结果的风格一致性。
+
+**合并规则：**
+
+1. **图片/视频生成**：
+   - 自动添加 `ai.style.image` 作为风格描述
+   - 如果引用了角色（通过 `character` 或 `characters` 字段），自动添加角色的 `image_prompt` 描述
+
+2. **音频生成**：
+   - 自动添加 `ai.style.audio` 作为风格描述
+
+3. **TTS 语音生成**：
+   - 使用预设的声音配置（如 Aoede 温和女声）
+
+**示例：**
+
+用户 prompt：
+```
+小红帽在森林里行走
+```
+
+合并后的完整 prompt：
+```
+风格：奇幻, 水彩, 色彩鲜艳
+
+角色：
+- 小红帽：穿着红色斗篷的可爱小女孩，约8岁
+
+小红帽在森林里行走
+```
+
+> [!TIP]
+> 在创建游戏前，建议先配置好 `ai.style` 和 `ai.characters`，这样后续生成的所有素材都会保持一致的风格。
 
 ## 3. 场景 (Scenes)
 A game is composed of multiple scenes. Each scene represents a specific moment or location in the narrative.

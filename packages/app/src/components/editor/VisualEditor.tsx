@@ -293,6 +293,7 @@ export default function VisualEditor({ id }: { id: string }) {
               <Inspector
                 selectedNode={selectedNode}
                 selectedEdge={selectedEdge}
+                aiConfig={originalGame?.ai}
                 onNodeChange={handleNodeChange}
                 onNodeIdChange={handleNodeIdChange}
                 onEdgeChange={handleEdgeChange}
