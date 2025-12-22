@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
+import { Theme } from '@radix-ui/themes';
+import '@radix-ui/themes/styles.css';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -65,11 +67,13 @@ export default async function RootLayout({
       <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
       <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
         <NextIntlClientProvider messages={messages}>
-          <Providers>
-            <Header />
-            <main className="grow flex flex-col">{children}</main>
-            <Footer />
-          </Providers>
+          <Theme accentColor="violet" grayColor="slate" radius="medium" scaling="100%">
+            <Providers>
+              <Header />
+              <main className="grow flex flex-col">{children}</main>
+              <Footer />
+            </Providers>
+          </Theme>
         </NextIntlClientProvider>
       </body>
     </html>
