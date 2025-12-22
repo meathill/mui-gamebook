@@ -1,7 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { MetadataRoute } from 'next';
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
   const { env } = getCloudflareContext();
   const BASE_URL = env.NEXT_PUBLIC_SITE_URL!;
   return {
