@@ -38,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const games = await getPublishedGames();
   const gamePages: MetadataRoute.Sitemap = games.map((game) => ({
     url: `${baseUrl}/play/${game.slug}`,
-    lastModified: new Date(),
+    lastModified: new Date(game.updated_at!),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }));

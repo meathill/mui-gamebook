@@ -32,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const games = (await fetch(`${BASE_URL}/api/games`).then((res) => res.json())) as Game[];
   const gamePages = games.map((game) => ({
     url: `${BASE_URL}/play/${game.slug}`,
-    lastModified: new Date(game.updated_at),
+    lastModified: new Date(game.updated_at!),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
   }));
