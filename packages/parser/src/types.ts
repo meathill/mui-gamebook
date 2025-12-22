@@ -67,6 +67,7 @@ export type SceneAiImageNode = {
   prompt: string;
   character?: string;
   characters?: string[];
+  aspectRatio?: string;
   url?: string;
 };
 export type SceneAiAudioNode = {

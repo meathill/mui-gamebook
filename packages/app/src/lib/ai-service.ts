@@ -41,12 +41,16 @@ export interface GenerateTTSResult {
   model: string;
 }
 
-export async function generateAndUploadImage(prompt: string, fileName: string): Promise<GenerateImageResult> {
+export async function generateAndUploadImage(
+  prompt: string,
+  fileName: string,
+  aspectRatio?: string,
+): Promise<GenerateImageResult> {
   const { env } = getCloudflareContext();
 
   // 使用 AI 提供者工厂创建提供者
   const provider = await createAiProvider();
-  const { buffer, usage } = await provider.generateImage(prompt);
+  const { buffer, usage } = await provider.generateImage(prompt, { aspectRatio });
 
   // 上传到 R2
   const bucket = env.ASSETS_BUCKET;

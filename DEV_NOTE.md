@@ -199,3 +199,52 @@ pnpm batch --config ./configs/your-config.json [--force]
 - `/packages/asset-generator/src/lib/cache.ts` - 本地缓存
 - `/packages/asset-generator/src/lib/converter.ts` - 格式转换
 - `/packages/asset-generator/configs/example.json` - 配置示例
+
+## MediaAssetItem 统一组件
+
+将封面编辑器和素材编辑器合并为统一的 `MediaAssetItem` 组件：
+
+**组件路径：** `/packages/app/src/components/editor/MediaAssetItem/`
+
+**模块结构：**
+| 文件 | 说明 |
+|------|------|
+| `index.tsx` | 主组件入口 |
+| `types.ts` | 类型定义 |
+| `TypeIcon.tsx` | 媒体类型图标 |
+| `MediaPreview.tsx` | 媒体预览 |
+| `MediaGenerator.tsx` | AI 生成表单 |
+
+**使用方式：**
+
+```tsx
+// 封面模式（大尺寸，无删除按钮）
+<MediaAssetItem
+  asset={{ type: 'ai_image', url: coverImage, prompt: '' }}
+  gameId={id}
+  variant="featured"
+  showDelete={false}
+  onAssetChange={(field, value) => handleChange(field, value)}
+/>
+
+// 素材列表模式（紧凑，可删除）
+<MediaAssetItem
+  asset={asset}
+  gameId={gameId}
+  variant="compact"
+  showDelete={true}
+  onAssetChange={(field, value) => handleChange(field, value)}
+  onAssetDelete={() => handleDelete()}
+/>
+```
+
+**支持的资源类型：**
+- 图片（`ai_image`、`static_image`）
+- 音频（`ai_audio`、`static_audio`）
+- 视频（`ai_video`、`static_video`）
+- 小游戏（`minigame`）
+
+相关文件：
+- `/packages/app/src/components/editor/AssetEditor.tsx` - 素材列表管理
+- `/packages/app/src/components/editor/EditorSettingsTab.tsx` - 使用封面模式
+
