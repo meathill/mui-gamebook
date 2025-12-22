@@ -158,10 +158,11 @@ export default function AssetEditor({ gameId, assets, aiConfig, onAssetsChange }
               ? ([asset.character].filter(Boolean) as string[])
               : extractCharacterIds(asset.prompt);
         const fullPrompt = buildImagePrompt(asset.prompt, aiConfig, characterIds);
+        const aspectRatio = 'aspectRatio' in asset ? asset.aspectRatio : undefined;
         const res = await fetch('/api/cms/assets/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: fullPrompt, gameId, type: apiType }),
+          body: JSON.stringify({ prompt: fullPrompt, gameId, type: apiType, aspectRatio }),
         });
         if (!res.ok) {
           const error = (await res.json()) as { error: string };

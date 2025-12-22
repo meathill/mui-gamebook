@@ -55,13 +55,22 @@ export class GoogleAiProvider implements AiProvider {
     };
   }
 
-  async generateImage(prompt: string): Promise<ImageGenerationResult> {
+  async generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult> {
     const model = this.models.image || 'gemini-3-pro-image-preview';
     console.log(`[Google AI] Generating image with model: ${model}`);
+
+    // Google 支持的宽高比: 1:1, 2:3, 3:4, 4:5, 9:16, 16:9, 5:4, 4:3, 3:2, 21:9
+    const aspectRatio = options?.aspectRatio || '1:1';
 
     const response = await this.genAI.models.generateContent({
       model,
       contents: prompt,
+      config: {
+        responseModalities: ['IMAGE'],
+        imageConfig: {
+          aspectRatio,
+        },
+      },
     });
 
     const usage: AiUsageInfo = {

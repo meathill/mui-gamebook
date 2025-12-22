@@ -3,6 +3,7 @@
 import { CheckIcon, Trash2, ImageIcon, Loader2, Upload, Sparkles, Clock, Gamepad2, List } from 'lucide-react';
 import type { SceneNode } from '@mui-gamebook/parser';
 import MiniGameSelector from './MiniGameSelector';
+import { useCmsConfig, getAspectRatios } from '@/hooks/useCmsConfig';
 
 export interface AssetItemProps {
   index: number;
@@ -39,6 +40,8 @@ export default function AssetItem({
   const isAudio = asset.type.includes('audio');
   const isVideo = asset.type.includes('video');
   const isMinigame = asset.type === 'minigame';
+  const { data: cmsConfig } = useCmsConfig();
+  const aspectRatios = getAspectRatios(cmsConfig?.defaultAiProvider);
 
   return (
     <div className="p-3 bg-gray-50 rounded border border-gray-200 text-sm relative group">
@@ -117,28 +120,47 @@ export default function AssetItem({
       )}
 
       {(openGeneratorIndex === index || (!assetUrl && assetPrompt)) && (
-        <div className="relative">
+        <div className="mb-2">
           <textarea
             value={assetPrompt || ''}
             onChange={(e) => onAssetChange(index, 'prompt', e.target.value)}
             className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 resize-none h-16"
             placeholder="输入 AI 生成提示词..."
           />
-          <button
-            className="size-6 bg-purple-600 text-white hover:bg-purple-500 absolute right-2 bottom-2 rounded flex items-center justify-center p-1"
-            disabled={generatingIndex === index || !assetPrompt}
-            onClick={() => onRegenerate(index, asset)}
-            title="生成素材"
-            type="button">
-            {generatingIndex === index ? (
-              <Loader2
-                size={16}
-                className="animate-spin"
-              />
-            ) : (
-              <CheckIcon size={16} />
+          <footer className="flex items-center gap-2">
+            {isImage && asset.type === 'ai_image' && (
+              <div className="flex items-center gap-2 flex-1">
+                <label className="text-xs text-gray-500">比例:</label>
+                <select
+                  value={'aspectRatio' in asset ? asset.aspectRatio || '1:1' : '1:1'}
+                  onChange={(e) => onAssetChange(index, 'aspectRatio', e.target.value)}
+                  className="flex-1 text-xs p-1 border border-gray-300 rounded">
+                  {aspectRatios.map((r) => (
+                    <option
+                      key={r.value}
+                      value={r.value}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
-          </button>
+            <button
+              className="size-6 bg-purple-600 text-white hover:bg-purple-500 rounded flex items-center justify-center p-1 ms-auto"
+              disabled={generatingIndex === index || !assetPrompt}
+              onClick={() => onRegenerate(index, asset)}
+              title="生成素材"
+              type="button">
+              {generatingIndex === index ? (
+                <Loader2
+                  size={16}
+                  className="animate-spin"
+                />
+              ) : (
+                <CheckIcon size={16} />
+              )}
+            </button>
+          </footer>
         </div>
       )}
 

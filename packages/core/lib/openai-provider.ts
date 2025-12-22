@@ -48,16 +48,26 @@ export class OpenAiProvider implements AiProvider {
     };
   }
 
-  async generateImage(prompt: string): Promise<ImageGenerationResult> {
+  async generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult> {
     const model = this.models.image || 'gpt-image-1';
     console.log(`[OpenAI] Generating image with model: ${model}`);
 
+    // OpenAI 支持的宽高比: 3:2, 1:1, 2:3
+    // 需要映射到对应的 size 参数
+    const aspectRatio = options?.aspectRatio || '1:1';
+    const sizeMap: Record<string, string> = {
+      '3:2': '1536x1024',
+      '1:1': '1024x1024',
+      '2:3': '1024x1536',
+    };
+    const size = sizeMap[aspectRatio] || '1024x1024';
+
+    // gpt-image-1 系列模型默认返回 b64_json，无需 response_format 参数
     const response = await this.client.images.generate({
       model,
       prompt,
       n: 1,
-      size: '1024x1024',
-      response_format: 'b64_json',
+      size: size as '1024x1024' | '1536x1024' | '1024x1536',
     });
 
     const imageData = response.data?.[0]?.b64_json;

@@ -86,8 +86,13 @@ export interface AiProvider {
 
   /**
    * 生成图片
+   * @param prompt 提示词
+   * @param options 生成选项
+   * @param options.aspectRatio 宽高比
+   *   - OpenAI 支持: '3:2', '1:1', '2:3'
+   *   - Google 支持: '1:1', '2:3', '3:4', '4:5', '9:16', '16:9', '5:4', '4:3', '3:2', '21:9'
    */
-  generateImage(prompt: string): Promise<ImageGenerationResult>;
+  generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult>;
 
   /**
    * 启动视频生成（异步）

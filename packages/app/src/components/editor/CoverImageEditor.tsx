@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { Upload, Sparkles, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { useDialog } from '@/components/Dialog';
+import { useCmsConfig, getAspectRatios } from '@/hooks/useCmsConfig';
 
 interface CoverImageEditorProps {
   gameId: string;
@@ -15,9 +16,12 @@ export default function CoverImageEditor({ gameId, coverImage, aiStylePrompt, on
   const [generatingCover, setGeneratingCover] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [coverPrompt, setCoverPrompt] = useState('');
+  const [aspectRatio, setAspectRatio] = useState('3:2');
   const [showCoverGen, setShowCoverGen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dialog = useDialog();
+  const { data: cmsConfig } = useCmsConfig();
+  const aspectRatios = getAspectRatios(cmsConfig?.defaultAiProvider);
 
   async function handleUploadCover(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -59,6 +63,7 @@ export default function CoverImageEditor({ gameId, coverImage, aiStylePrompt, on
           prompt: [aiStylePrompt || '', coverPrompt].filter(Boolean).join('\n'),
           gameId,
           type: 'ai_image',
+          aspectRatio,
         }),
       });
       const data = (await res.json()) as { url: string; error?: string };
@@ -138,6 +143,21 @@ export default function CoverImageEditor({ gameId, coverImage, aiStylePrompt, on
             onChange={(e) => setCoverPrompt(e.target.value)}
             className="w-full p-2 text-sm border rounded mb-2 h-20 resize-none"
           />
+          <div className="flex gap-2 mb-2">
+            <label className="text-xs text-gray-600 self-center">比例:</label>
+            <select
+              value={aspectRatio}
+              onChange={(e) => setAspectRatio(e.target.value)}
+              className="flex-1 p-1.5 text-xs border rounded">
+              {aspectRatios.map((r) => (
+                <option
+                  key={r.value}
+                  value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={handleGenerateCover}
             disabled={generatingCover || !coverPrompt}
