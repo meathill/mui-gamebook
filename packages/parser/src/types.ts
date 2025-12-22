@@ -125,8 +125,8 @@ export interface Game {
   cover_image?: string;
   tags?: string[];
   published?: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 
   // 初始状态（带元数据）
   initialState: GameState;

@@ -11,16 +11,24 @@ const DEFAULT_CONFIG = {
   videoWhitelist: [] as string[],
   // 默认 AI 提供者
   defaultAiProvider: 'google' as AiProviderType,
+  // 默认 TTS 音色
+  defaultTtsVoice: 'Aoede',
   // Google AI 文本模型
-  googleTextModel: 'gemini-2.5-flash',
+  googleTextModel: 'gemini-3-pro-preview',
   // Google AI 图片模型
-  googleImageModel: 'gemini-3-pro-image-preview',
+  googleImageModel: 'gemini-2.5-flash-image',
+  // Google AI TTS 模型
+  googleTtsModel: 'gemini-2.5-flash-preview-tts',
   // Google AI 视频模型
   googleVideoModel: 'veo-3.1-fast-generate-preview',
   // OpenAI 文本模型
-  openaiTextModel: 'gpt-4o',
+  openaiTextModel: 'gpt-5',
   // OpenAI 图片模型
-  openaiImageModel: 'gpt-image-1',
+  openaiImageModel: 'gpt-image-1.5',
+  // OpenAI TTS 模型
+  openaiTtsModel: 'gpt-4o-mini-tts',
+  // OpenAI 视频模型
+  openaiVideoModel: 'sora-2',
 };
 
 export type AppConfig = typeof DEFAULT_CONFIG;

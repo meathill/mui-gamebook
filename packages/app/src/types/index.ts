@@ -4,4 +4,6 @@ export type GameRow = {
   description: string;
   cover_image: string;
   tags: string;
+  created_at: string;
+  updated_at: string;
 };

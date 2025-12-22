@@ -17,7 +17,7 @@ export async function getPublishedGames() {
     }
 
     const { results } = (await DB.prepare(
-      'SELECT slug, title, description, cover_image, tags FROM Games WHERE published = 1 ORDER BY updated_at DESC',
+      'SELECT slug, title, description, cover_image, tags, created_at, updated_at FROM Games WHERE published = 1 ORDER BY updated_at DESC',
     ).all()) as { results: GameRow[] };
 
     return results.map((row: GameRow) => ({
@@ -51,8 +51,8 @@ export async function getGameBySlug(slug: string): Promise<PlayableGame | null> 
 
     // 获取游戏信息，包括 ownerId 和 published 状态
     const gameRecord = await DB.prepare(
-      `SELECT g.id, g.owner_id, g.published, c.content 
-FROM Games g 
+      `SELECT g.id, g.owner_id, g.published, c.content
+FROM Games g
 LEFT JOIN GameContent c ON c.game_id = g.id
 WHERE g.slug = ?`,
     )

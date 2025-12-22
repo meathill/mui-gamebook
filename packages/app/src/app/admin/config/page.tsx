@@ -12,11 +12,15 @@ interface AppConfig {
   adminUserIds: string[];
   videoWhitelist: string[];
   defaultAiProvider: 'google' | 'openai';
+  defaultTtsVoice: string;
   googleTextModel: string;
   googleImageModel: string;
+  googleTtsModel: string;
   googleVideoModel: string;
   openaiTextModel: string;
   openaiImageModel: string;
+  openaiTtsModel: string;
+  openaiVideoModel: string;
 }
 
 export default function AdminConfigPage() {
@@ -134,6 +138,21 @@ export default function AdminConfigPage() {
                   选择默认用于文本和图片生成的 AI 提供者。视频生成始终使用 Google GenAI。
                 </p>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认 TTS 音色</label>
+                <input
+                  type="text"
+                  value={formData.defaultTtsVoice || ''}
+                  onChange={(e) => updateField('defaultTtsVoice', e.target.value)}
+                  placeholder="Aoede"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Google TTS 可选音色：Aoede, Charon, Fenrir, Kore, Puck, Zephyr 等<br />
+                  OpenAI TTS 可选音色：marin，cedar
+                </p>
+              </div>
             </div>
           </section>
 
@@ -160,6 +179,17 @@ export default function AdminConfigPage() {
                   value={formData.googleImageModel || ''}
                   onChange={(e) => updateField('googleImageModel', e.target.value)}
                   placeholder="gemini-3-pro-image-preview"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">TTS 模型</label>
+                <input
+                  type="text"
+                  value={formData.googleTtsModel || ''}
+                  onChange={(e) => updateField('googleTtsModel', e.target.value)}
+                  placeholder="gemini-2.5-flash-preview-tts"
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
               </div>
@@ -200,6 +230,28 @@ export default function AdminConfigPage() {
                   value={formData.openaiImageModel || ''}
                   onChange={(e) => updateField('openaiImageModel', e.target.value)}
                   placeholder="gpt-image-1"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">TTS 模型</label>
+                <input
+                  type="text"
+                  value={formData.openaiTtsModel || ''}
+                  onChange={(e) => updateField('openaiTtsModel', e.target.value)}
+                  placeholder="tts-1"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">视频模型</label>
+                <input
+                  type="text"
+                  value={formData.openaiVideoModel || ''}
+                  onChange={(e) => updateField('openaiVideoModel', e.target.value)}
+                  placeholder="sora-1"
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
               </div>

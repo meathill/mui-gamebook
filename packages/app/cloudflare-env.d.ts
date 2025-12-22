@@ -10,7 +10,11 @@ declare namespace Cloudflare {
     ASSETS_PUBLIC_DOMAIN: 'https://i.muistory.com';
     COOKIE_DOMAIN: '';
     HEADLESS_MODE: string;
+    GOOGLE_TTS_MODEL: 'gemini-2.5-flash-preview-tts';
+    DEFAULT_TTS_VOICE: 'Aoede';
     GOOGLE_VIDEO_MODEL: 'veo-3.1-fast-generate-preview';
+    OPENAI_TTS_MODEL: 'gpt-4o-mini-tts';
+    OPENAI_VIDEO_MODEL: 'sora-2';
     NEXT_PUBLIC_GA_ID: 'G-244NXPS1H0';
     ROOT_USER_EMAIL: 'meathill@gmail.com';
     TRUSTED_ORIGINS: string;
@@ -47,7 +51,11 @@ declare namespace NodeJS {
         | 'ASSETS_PUBLIC_DOMAIN'
         | 'COOKIE_DOMAIN'
         | 'HEADLESS_MODE'
+        | 'GOOGLE_TTS_MODEL'
+        | 'DEFAULT_TTS_VOICE'
         | 'GOOGLE_VIDEO_MODEL'
+        | 'OPENAI_TTS_MODEL'
+        | 'OPENAI_VIDEO_MODEL'
         | 'NEXT_PUBLIC_GA_ID'
         | 'ROOT_USER_EMAIL'
         | 'TRUSTED_ORIGINS'
