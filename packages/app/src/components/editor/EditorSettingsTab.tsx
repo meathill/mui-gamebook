@@ -3,7 +3,7 @@ import type { Game } from '@mui-gamebook/parser/src/types';
 import MDEditor from '@uiw/react-md-editor';
 import { X, Loader2, Shield, ExternalLink } from 'lucide-react';
 import { useDialog } from '@/components/Dialog';
-import CoverImageEditor from './CoverImageEditor';
+import MediaAssetItem from './MediaAssetItem';
 
 interface IpStatus {
   registered: boolean;
@@ -171,11 +171,15 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
 
         {/* Right Column: Cover & Publish */}
         <div className="space-y-6">
-          <CoverImageEditor
+          <MediaAssetItem
+            asset={{ type: 'ai_image', url: game.cover_image, prompt: '' }}
             gameId={id}
-            coverImage={game.cover_image}
+            variant="featured"
+            showDelete={false}
             aiStylePrompt={game.ai?.style?.image}
-            onCoverChange={(url) => handleChange('cover_image', url)}
+            onAssetChange={(field, value) => {
+              if (field === 'url') handleChange('cover_image', value);
+            }}
           />
 
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
