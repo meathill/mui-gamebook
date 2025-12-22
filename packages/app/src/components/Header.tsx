@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
+import { Button } from '@radix-ui/themes';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/i18n/client';
@@ -52,14 +53,15 @@ export default function Header() {
                   {t('admin')}
                 </Link>
                 <span className="text-sm text-gray-600">{session.user.name}</span>
-                <button
+                <Button
+                  variant="ghost"
+                  color="red"
                   onClick={async () => {
                     await authClient.signOut();
                     router.refresh();
-                  }}
-                  className="text-gray-500 hover:text-red-600 text-sm font-medium">
+                  }}>
                   {t('signOut')}
-                </button>
+                </Button>
               </div>
             ) : (
               <Link

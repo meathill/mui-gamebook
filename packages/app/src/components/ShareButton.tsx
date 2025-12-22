@@ -58,7 +58,9 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
   if ('share' in navigator) {
     return (
       <div className={className}>
-        <Button variant="ghost" onClick={handleShare}>
+        <Button
+          variant="ghost"
+          onClick={handleShare}>
           <Share2 className="w-4 h-4" />
           {t('share')}
         </Button>

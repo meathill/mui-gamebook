@@ -67,7 +67,11 @@ export default async function RootLayout({
       <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
       <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
         <NextIntlClientProvider messages={messages}>
-          <Theme accentColor="violet" grayColor="slate" radius="medium" scaling="100%">
+          <Theme
+            accentColor="violet"
+            grayColor="slate"
+            radius="medium"
+            scaling="100%">
             <Providers>
               <Header />
               <main className="grow flex flex-col">{children}</main>

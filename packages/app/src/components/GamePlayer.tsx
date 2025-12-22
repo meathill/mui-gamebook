@@ -7,6 +7,7 @@ import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-g
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
+import { Button, IconButton } from '@radix-ui/themes';
 import {
   TitleScreen,
   EndScreen,
@@ -199,11 +200,12 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
       <div className="p-8 text-center">
         <h2 className="text-xl font-bold text-red-600 mb-4">{t('sceneNotFound')}</h2>
         <p className="mb-6">{t('cannotFindScene', { sceneId: currentSceneId })}</p>
-        <button
-          onClick={() => handleRestart()}
-          className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">
+        <Button
+          variant="soft"
+          color="gray"
+          onClick={() => handleRestart()}>
           {t('backToTitle')}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -227,11 +229,12 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
             title={game.title}
             url={shareUrl}
           />
-          <button
-            onClick={() => handleRestart()}
-            className="px-3 py-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+          <Button
+            variant="ghost"
+            color="red"
+            onClick={() => handleRestart()}>
             {t('exit')}
-          </button>
+          </Button>
         </div>
       </div>
 
