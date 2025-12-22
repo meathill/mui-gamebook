@@ -1,10 +1,8 @@
 import { Game } from '@mui-gamebook/parser';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { env } = getCloudflareContext();
-  const BASE_URL = env.NEXT_PUBLIC_SITE_URL!;
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL!;
   // 静态页面
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -37,5 +35,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticPages];
+  return [...staticPages, ...gamePages];
 }
