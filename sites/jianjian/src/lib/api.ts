@@ -5,8 +5,7 @@
 
 import type { Game as FullGame, PlayableGame } from '@mui-gamebook/parser/src/types';
 import { toPlayableGame } from '@mui-gamebook/parser/src/utils';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3020';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export interface Game {
   id: number;
@@ -24,8 +23,9 @@ export interface Game {
  * 获取已发布的游戏列表
  */
 export async function getGames(): Promise<Game[]> {
+  const { env } = getCloudflareContext();
   try {
-    const response = await fetch(`${API_BASE_URL}/api/games`, {
+    const response = await fetch(`${env.NEXT_PUBLIC_API_URL}/api/games`, {
       next: { revalidate: 60 }, // 缓存 60 秒
     });
 
@@ -47,8 +47,9 @@ export async function getGames(): Promise<Game[]> {
  * 获取单个游戏详情
  */
 export async function getGame(slug: string): Promise<Game | null> {
+  const { env } = getCloudflareContext();
   try {
-    const response = await fetch(`${API_BASE_URL}/api/games/${slug}`, {
+    const response = await fetch(`${env.NEXT_PUBLIC_API_URL}/api/games/${slug}`, {
       next: { revalidate: 60 },
     });
 
@@ -67,8 +68,9 @@ export async function getGame(slug: string): Promise<Game | null> {
  * 获取游戏的可玩数据
  */
 export async function getPlayableGame(slug: string): Promise<PlayableGame | null> {
+  const { env } = getCloudflareContext();
   try {
-    const response = await fetch(`${API_BASE_URL}/api/games/${slug}`, {
+    const response = await fetch(`${env.NEXT_PUBLIC_API_URL}/api/games/${slug}`, {
       next: { revalidate: 60 },
     });
 

@@ -7,7 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "generate": "tsx src/index.ts",
-    "batch": "tsx src/batch-generate.ts"
+    "batch": "tsx src/batch-generate.ts --config configs/safe.json"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.956.0",
