@@ -7,6 +7,7 @@ import { IconButton, Button } from '@radix-ui/themes';
 import { useDialog } from '@/components/Dialog';
 import MiniGameSelector from '../MiniGameSelector';
 import { useCmsConfig, getAspectRatios } from '@/hooks/useCmsConfig';
+import { buildEnhancedImagePrompt } from '@/lib/ai-prompt-builder';
 import type { MediaAssetItemProps } from './types';
 import TypeIcon from './TypeIcon';
 import MediaPreview from './MediaPreview';
@@ -20,6 +21,7 @@ export default function MediaAssetItem({
   variant = 'compact',
   showDelete = true,
   aiStylePrompt,
+  aiCharacters,
   onAssetChange,
   onAssetDelete,
 }: MediaAssetItemProps) {
@@ -88,7 +90,12 @@ export default function MediaAssetItem({
 
     setIsGenerating(true);
     try {
-      const fullPrompt = aiStylePrompt ? `${aiStylePrompt}\n${assetPrompt}` : assetPrompt;
+      // 使用增强的 prompt 构建，支持 @角色ID 引用
+      const aiConfig = {
+        style: aiStylePrompt ? { image: aiStylePrompt } : undefined,
+        characters: aiCharacters,
+      };
+      const { prompt: fullPrompt, referenceImages } = buildEnhancedImagePrompt(assetPrompt, aiConfig);
 
       // 根据素材类型选择不同的 API
       if (isMinigame) {
@@ -117,6 +124,7 @@ export default function MediaAssetItem({
             gameId,
             type: asset.type,
             aspectRatio: assetAspectRatio,
+            referenceImages,
           }),
         });
         const data = (await res.json()) as { url: string; error?: string };
@@ -238,6 +246,7 @@ export default function MediaAssetItem({
             isImage={isImage}
             isGenerating={isGenerating}
             aspectRatios={aspectRatios}
+            characters={aiCharacters}
             onPromptChange={(value) => onAssetChange('prompt', value)}
             onAspectRatioChange={(value) => onAssetChange('aspectRatio', value)}
             onGenerate={handleGenerate}
@@ -341,6 +350,7 @@ export default function MediaAssetItem({
           isImage={isImage && asset.type === 'ai_image'}
           isGenerating={isGenerating}
           aspectRatios={aspectRatios}
+          characters={aiCharacters}
           onPromptChange={(value) => onAssetChange('prompt', value)}
           onAspectRatioChange={(value) => onAssetChange('aspectRatio', value)}
           onGenerate={handleGenerate}

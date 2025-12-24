@@ -182,6 +182,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
             variant="featured"
             showDelete={false}
             aiStylePrompt={game.ai?.style?.image}
+            aiCharacters={game.ai?.characters}
             onAssetChange={(field, value) => {
               if (field === 'url') handleChange('cover_image', value);
               else if (field === 'prompt') handleChange('cover_prompt', value);

@@ -137,8 +137,12 @@ export interface AiProvider {
    * @param options.aspectRatio 宽高比
    *   - OpenAI 支持: '3:2', '1:1', '2:3'
    *   - Google 支持: '1:1', '2:3', '3:4', '4:5', '9:16', '16:9', '5:4', '4:3', '3:2', '21:9'
+   * @param options.referenceImages 参考图片 URL 列表，用于图生图保持角色一致性
    */
-  generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult>;
+  generateImage(
+    prompt: string,
+    options?: { aspectRatio?: string; referenceImages?: string[] },
+  ): Promise<ImageGenerationResult>;
 
   /**
    * 启动视频生成（异步）
@@ -182,8 +186,8 @@ export interface AiProvider {
 export function buildMiniGamePrompt(minigameApiSpec: string, variables?: Record<string, string>): string {
   const variablesList = variables
     ? Object.entries(variables)
-        .map(([key, desc]) => `- ${key}: ${desc}`)
-        .join('\n')
+      .map(([key, desc]) => `- ${key}: ${desc}`)
+      .join('\n')
     : '无特定变量';
 
   return `你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。

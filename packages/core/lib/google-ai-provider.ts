@@ -30,7 +30,7 @@ export class GoogleAiProvider implements AiProvider {
       image?: string;
       video?: string;
     } = {},
-  ) {}
+  ) { }
 
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
     const model = this.models.text || 'gemini-2.5-flash';
@@ -60,16 +60,61 @@ export class GoogleAiProvider implements AiProvider {
     };
   }
 
-  async generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult> {
+  async generateImage(
+    prompt: string,
+    options?: { aspectRatio?: string; referenceImages?: string[] },
+  ): Promise<ImageGenerationResult> {
     const model = this.models.image || 'gemini-3-pro-image-preview';
     console.log(`[Google AI] Generating image with model: ${model}`);
 
     // Google 支持的宽高比: 1:1, 2:3, 3:4, 4:5, 9:16, 16:9, 5:4, 4:3, 3:2, 21:9
     const aspectRatio = options?.aspectRatio || '1:1';
 
+    // 构建内容：可能包含参考图片
+    const contents: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+
+    // 如果有参考图片，添加到请求中
+    if (options?.referenceImages && options.referenceImages.length > 0) {
+      console.log(`[Google AI] Including ${options.referenceImages.length} reference image(s)`);
+
+      for (const imageUrl of options.referenceImages) {
+        try {
+          // 下载图片
+          const response = await fetch(imageUrl);
+          if (!response.ok) {
+            console.warn(`[Google AI] Failed to fetch reference image: ${imageUrl}`);
+            continue;
+          }
+
+          const arrayBuffer = await response.arrayBuffer();
+          const base64Data = Buffer.from(arrayBuffer).toString('base64');
+
+          // 检测 MIME 类型
+          const contentType = response.headers.get('content-type') || 'image/png';
+
+          contents.push({
+            inlineData: {
+              mimeType: contentType,
+              data: base64Data,
+            },
+          });
+        } catch (e) {
+          console.warn(`[Google AI] Failed to process reference image: ${imageUrl}`, e);
+        }
+      }
+
+      // 添加提示词，要求保持角色一致性
+      contents.push({
+        text: `Generate an image based on the following description. Use the provided reference image(s) to maintain character consistency, ensuring the characters look identical to those in the reference images.\n\n${prompt}`,
+      });
+    } else {
+      // 没有参考图片，直接使用提示词
+      contents.push({ text: prompt });
+    }
+
     const response = await this.genAI.models.generateContent({
       model,
-      contents: prompt,
+      contents,
       config: {
         responseModalities: ['IMAGE'],
         imageConfig: {

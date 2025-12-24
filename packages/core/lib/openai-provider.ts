@@ -53,7 +53,10 @@ export class OpenAiProvider implements AiProvider {
     };
   }
 
-  async generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult> {
+  async generateImage(
+    prompt: string,
+    options?: { aspectRatio?: string; referenceImages?: string[] },
+  ): Promise<ImageGenerationResult> {
     const model = this.models.image || 'gpt-image-1';
     console.log(`[OpenAI] Generating image with model: ${model}`);
 
@@ -67,15 +70,54 @@ export class OpenAiProvider implements AiProvider {
     };
     const size = sizeMap[aspectRatio] || '1024x1024';
 
-    // gpt-image-1 系列模型默认返回 b64_json，无需 response_format 参数
-    const response = await this.client.images.generate({
-      model,
-      prompt,
-      n: 1,
-      size: size as '1024x1024' | '1536x1024' | '1024x1536',
-    });
+    let imageData: string | undefined;
 
-    const imageData = response.data?.[0]?.b64_json;
+    // 如果有参考图片，使用 edit API 进行图生图
+    if (options?.referenceImages && options.referenceImages.length > 0) {
+      console.log(`[OpenAI] Including ${options.referenceImages.length} reference image(s) for edit`);
+
+      // 下载第一张参考图片作为输入
+      const referenceUrl = options.referenceImages[0];
+      try {
+        const imgResponse = await fetch(referenceUrl);
+        if (!imgResponse.ok) {
+          throw new Error(`Failed to fetch reference image: ${referenceUrl}`);
+        }
+
+        const arrayBuffer = await imgResponse.arrayBuffer();
+
+        // 使用 images.edit API
+        const response = await this.client.images.edit({
+          model,
+          image: new File([arrayBuffer], 'reference.png', { type: 'image/png' }),
+          prompt: `Based on the reference image, ${prompt}`,
+          n: 1,
+          size: size as '1024x1024' | '1536x1024' | '1024x1536',
+        });
+
+        imageData = response.data?.[0]?.b64_json;
+      } catch (e) {
+        console.warn(`[OpenAI] Failed to use reference image, falling back to generation: ${e}`);
+        // 失败时回退到普通生成
+        const response = await this.client.images.generate({
+          model,
+          prompt,
+          n: 1,
+          size: size as '1024x1024' | '1536x1024' | '1024x1536',
+        });
+        imageData = response.data?.[0]?.b64_json;
+      }
+    } else {
+      // gpt-image-1 系列模型默认返回 b64_json，无需 response_format 参数
+      const response = await this.client.images.generate({
+        model,
+        prompt,
+        n: 1,
+        size: size as '1024x1024' | '1536x1024' | '1024x1536',
+      });
+      imageData = response.data?.[0]?.b64_json;
+    }
+
     if (!imageData) {
       throw new Error('No image data received from OpenAI.');
     }

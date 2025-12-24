@@ -15,11 +15,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { prompt, gameId, type, aspectRatio } = (await req.json()) satisfies {
+    const { prompt, gameId, type, aspectRatio, referenceImages } = (await req.json()) satisfies {
       prompt: string;
       gameId: string;
       type: string;
       aspectRatio?: string;
+      referenceImages?: string[];
     };
     if (!prompt || !gameId) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
@@ -28,7 +29,10 @@ export async function POST(req: Request) {
     }
 
     const fileName = `images/${gameId}/${Date.now()}.png`;
-    const { url, usage, model } = await generateAndUploadImage(prompt, fileName, aspectRatio);
+    const { url, usage, model } = await generateAndUploadImage(prompt, fileName, {
+      aspectRatio,
+      referenceImages,
+    });
 
     // 记录 AI 用量
     await recordAiUsage({
