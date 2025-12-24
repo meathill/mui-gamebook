@@ -172,6 +172,8 @@ export function parse(source: string): ParseResult {
       title,
       description,
       cover_image,
+      cover_prompt,
+      cover_aspect_ratio,
       tags,
       published,
       backgroundStory,
@@ -208,6 +210,8 @@ export function parse(source: string): ParseResult {
       description,
       backgroundStory: backgroundStory || background_story, // 兼容两种格式
       cover_image,
+      cover_prompt,
+      cover_aspect_ratio,
       tags: tags || [],
       published: !!published,
       initialState: state,
@@ -245,6 +249,8 @@ export function stringify(game: Game): string {
   if (game.description) frontMatter.description = game.description;
   if (game.backgroundStory) frontMatter.backgroundStory = game.backgroundStory;
   if (game.cover_image) frontMatter.cover_image = game.cover_image;
+  if (game.cover_prompt) frontMatter.cover_prompt = game.cover_prompt;
+  if (game.cover_aspect_ratio) frontMatter.cover_aspect_ratio = game.cover_aspect_ratio;
   if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
   if (game.published) frontMatter.published = true;
   if (Object.keys(game.initialState).length > 0) {

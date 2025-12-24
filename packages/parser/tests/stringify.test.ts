@@ -219,4 +219,22 @@ title: Audio Test
     const result = stringify(game);
     expect(result).toContain('* [选项一] -> next (audio: https://example.com/choice.wav)');
   });
+
+  it('should correctly stringify cover_prompt and cover_aspect_ratio', () => {
+    const game: Game = {
+      slug: 'cover-info-test',
+      title: 'Cover Info Test',
+      cover_image: 'https://example.com/cover.png',
+      cover_prompt: '一个幻想风格的城堡',
+      cover_aspect_ratio: '3:2',
+      initialState: {},
+      ai: {},
+      scenes: { start: { id: 'start', nodes: [{ type: 'text', content: 'Welcome!' }] } },
+    };
+
+    const result = stringify(game);
+    expect(result).toContain('cover_image: https://example.com/cover.png');
+    expect(result).toContain('cover_prompt: 一个幻想风格的城堡');
+    expect(result).toContain('cover_aspect_ratio: "3:2"');
+  });
 });

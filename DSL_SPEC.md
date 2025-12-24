@@ -18,6 +18,8 @@
 - **`description`** (可选): 游戏的简短介绍。
 - **`backgroundStory`** (可选): 游戏的背景故事，支持 Markdown 格式。如果设置了背景故事，游戏启动页面将显示渲染后的背景故事而非简短描述。
 - **`cover_image`** (可选): 游戏的封面图片链接。
+- **`cover_prompt`** (可选): 用于 AI 生成封面图片的提示词，方便后续修改和重新生成。
+- **`cover_aspect_ratio`** (可选): 封面图片的宽高比，如 `3:2`、`16:9` 等。
 - **`tags`** (可选): 一个用于分类的标签列表。
 - **`published`** (可选): 布尔值，标记游戏是否已发布。默认为 `false`。
 
@@ -34,6 +36,8 @@ backgroundStory: |
 
   有一天，妈妈让她去看望住在森林那边的奶奶...
 cover_image: "/assets/covers/lrrh_cover.png"
+cover_prompt: "童话风格的小红帽封面，小女孩穿着红色斗篷站在森林边缘"
+cover_aspect_ratio: "3:2"
 tags: ["童话", "经典", "多分支"]
 published: true
 ---
