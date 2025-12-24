@@ -18,6 +18,8 @@
 - **`description`** (可选): 游戏的简短介绍。
 - **`backgroundStory`** (可选): 游戏的背景故事，支持 Markdown 格式。如果设置了背景故事，游戏启动页面将显示渲染后的背景故事而非简短描述。
 - **`cover_image`** (可选): 游戏的封面图片链接。
+- **`cover_prompt`** (可选): 用于 AI 生成封面图片的提示词，方便后续修改和重新生成。
+- **`cover_aspect_ratio`** (可选): 封面图片的宽高比，如 `3:2`、`16:9` 等。
 - **`tags`** (可选): 一个用于分类的标签列表。
 - **`published`** (可选): 布尔值，标记游戏是否已发布。默认为 `false`。
 
@@ -34,6 +36,8 @@ backgroundStory: |
 
   有一天，妈妈让她去看望住在森林那边的奶奶...
 cover_image: "/assets/covers/lrrh_cover.png"
+cover_prompt: "童话风格的小红帽封面，小女孩穿着红色斗篷站在森林边缘"
+cover_aspect_ratio: "3:2"
 tags: ["童话", "经典", "多分支"]
 published: true
 ---
@@ -185,7 +189,9 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 
 ### 3.3 默认启动场景
 
-所有游戏都**必须**包含一个 `SceneID` 为 `start` 的场景。当游戏加载时，播放器将默认从这个场景开始。
+所有游戏都**必须**包含一个 `SceneID` 为 `start` 的场景。
+
+当游戏加载时，播放器将默认从这个场景开始。
 
 ### 3.4 游戏结束
 
@@ -469,41 +475,6 @@ pnpm generate remote <game-id> --force  # 强制重新生成
 * [尝试用钥匙开门] -> treasure_room (if: has_key == true)
 * [用力推门] -> door_does_not_budge (if: has_key == false, health > 50)
 ```
-
----
-
-## 6. IP 版权保护 (Story Protocol)
-
-MUI Gamebook 支持通过 Story Protocol 将您的作品注册为 IP Asset，在区块链上永久记录您的版权。
-
-### 6.1 功能说明
-
-- **IP 注册**：将整个游戏剧本注册为一个 IP Asset
-- **区块链记录**：在 Story Protocol 的 Aeneid 测试网上创建不可篡改的版权证明
-- **NFT 铸造**：自动铸造代表您作品的 NFT
-- **元数据存储**：作品元数据存储在 IPFS 上，永久可访问
-
-### 6.2 如何使用
-
-1. 在编辑器的「设置」标签页中找到「IP 版权保护」区块
-2. 点击「注册 IP 版权」按钮
-3. 确认操作后，系统将自动：
-   - 上传作品元数据到 IPFS
-   - 在 Story Protocol 上铸造 NFT 并注册 IP
-   - 在数据库中记录 IP 信息
-
-### 6.3 注册后
-
-注册成功后，您可以：
-- 在设置页面查看 IP ID 和交易详情
-- 通过链接访问 Story Protocol 区块浏览器查看您的 IP Asset
-- 在未来扩展中，可以基于此 IP 创建衍生作品或进行授权
-
-### 6.4 注意事项
-
-- IP 注册是**不可撤销**的操作
-- 需要配置 Story Protocol 私钥和 Pinata JWT 环境变量
-- 目前使用 Aeneid 测试网，正式版将迁移到主网
 
 ---
 

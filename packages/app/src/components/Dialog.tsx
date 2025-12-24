@@ -186,8 +186,10 @@ export function DialogProvider({ children }: { children: ReactNode }) {
                 )}
                 <Button
                   variant="solid"
+                  className="px-4"
                   color={getButtonColor()}
-                  onClick={() => closeDialog(true)}>
+                  onClick={() => closeDialog(true)}
+                  size="3">
                   {dialog?.confirmText}
                 </Button>
               </div>

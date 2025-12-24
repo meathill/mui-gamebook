@@ -62,9 +62,9 @@ title: "带背景故事的游戏"
 description: "简短描述"
 backgroundStory: |
   # 第一章：起源
-  
+
   很久很久以前，在一个遥远的王国里...
-  
+
   勇士踏上了冒险的旅程。
 ---
 # start
@@ -107,5 +107,24 @@ description: "没有标题"
     const result = parse(source);
     expect(result.success).toBe(false);
     expect((result as { success: false; error: string }).error).toContain('YAML front matter is missing or invalid');
+  });
+
+  it('should correctly parse cover_prompt and cover_aspect_ratio', () => {
+    const source = `---
+title: "带封面信息的游戏"
+cover_image: "https://example.com/cover.png"
+cover_prompt: "一个幻想风格的城堡"
+cover_aspect_ratio: "3:2"
+---
+# start
+游戏开始。
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.cover_image).toBe('https://example.com/cover.png');
+      expect(result.data.cover_prompt).toBe('一个幻想风格的城堡');
+      expect(result.data.cover_aspect_ratio).toBe('3:2');
+    }
   });
 });

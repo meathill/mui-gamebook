@@ -9,7 +9,8 @@ export type AiUsageType =
   | 'image_generation'
   | 'audio_generation'
   | 'video_generation'
-  | 'minigame_generation';
+  | 'minigame_generation'
+  | 'chat';
 
 interface RecordUsageParams {
   userId: string;

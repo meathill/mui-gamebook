@@ -103,15 +103,15 @@ export default function Inspector({
   }
 
   return (
-    <div className="w-80 border-l border-gray-200 bg-white flex flex-col overflow-y-auto z-20">
-      <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+    <div className="w-80 h-[calc(100vh-12rem)] border-l border-gray-200 bg-white flex flex-col overflow-hidden z-20">
+      <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between shrink-0">
         <h2 className="font-semibold text-gray-700">属性</h2>
         <p className="text-xs text-gray-500 truncate">
           {selectedNode ? `场景：${nodeData?.label}` : `选项：${selectedEdge?.label || '未命名'}`}
         </p>
       </div>
 
-      <div className="p-4 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {selectedNode && nodeData && (
           <>
             <div>
