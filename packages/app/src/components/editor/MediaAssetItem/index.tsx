@@ -35,6 +35,7 @@ export default function MediaAssetItem({
   const assetUrl = 'url' in asset ? asset.url : undefined;
   const assetPrompt = 'prompt' in asset ? asset.prompt : '';
   const assetAspectRatio = 'aspectRatio' in asset ? asset.aspectRatio || '1:1' : '1:1';
+
   const isImage = asset.type.includes('image');
   const isAudio = asset.type.includes('audio');
   const isVideo = asset.type.includes('video');
@@ -88,7 +89,6 @@ export default function MediaAssetItem({
     setIsGenerating(true);
     try {
       const fullPrompt = aiStylePrompt ? `${aiStylePrompt}\n${assetPrompt}` : assetPrompt;
-      const aspectRatio = 'aspectRatio' in asset ? asset.aspectRatio : undefined;
 
       const res = await fetch('/api/cms/assets/generate', {
         method: 'POST',
@@ -97,7 +97,7 @@ export default function MediaAssetItem({
           prompt: fullPrompt,
           gameId,
           type: 'ai_image',
-          aspectRatio,
+          aspectRatio: assetAspectRatio,
         }),
       });
       const data = (await res.json()) as { url: string; error?: string };

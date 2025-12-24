@@ -124,6 +124,8 @@ export interface Game {
   description?: string;
   backgroundStory?: string;
   cover_image?: string;
+  cover_prompt?: string;
+  cover_aspect_ratio?: string;
   tags?: string[];
   published?: boolean;
   created_at?: string;
