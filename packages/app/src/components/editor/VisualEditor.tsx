@@ -21,6 +21,7 @@ import '@xyflow/react/dist/style.css';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
 import { getLayoutedElements } from '@/lib/editor/layout';
+import { handleChatFunctionCall } from '@/lib/editor/chatFunctionHandlers';
 import { useEditorData } from '@/lib/editor/useEditorData';
 import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
@@ -29,6 +30,7 @@ import EditorVariablesTab from '@/components/editor/EditorVariablesTab';
 import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
 import EditorToolbar, { Tab } from '@/components/editor/EditorToolbar';
 import StoryImporter from '@/components/editor/StoryImporter';
+import ChatPanel from '@/components/editor/ChatPanel';
 import { useDialog } from '@/components/Dialog';
 import type { GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
@@ -50,6 +52,7 @@ export default function VisualEditor({ id }: { id: string }) {
   const [assetGenerating, setAssetGenerating] = useState(false);
   const [showImporter, setShowImporter] = useState(false);
   const [importerAutoOpened, setImporterAutoOpened] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const {
     originalGame,
@@ -186,10 +189,10 @@ export default function VisualEditor({ id }: { id: string }) {
       eds.map((edge) =>
         edge.id === edgeId
           ? {
-              ...edge,
-              ...(changes.label ? { label: changes.label } : {}),
-              ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
-            }
+            ...edge,
+            ...(changes.label ? { label: changes.label } : {}),
+            ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
+          }
           : edge,
       ),
     );
@@ -223,6 +226,21 @@ export default function VisualEditor({ id }: { id: string }) {
     window.requestAnimationFrame(() => fitView());
   }, [nodes, edges, setNodes, setEdges, fitView]);
 
+  // AI function call 处理器
+  const handleFunctionCall = useCallback(
+    (name: string, args: Record<string, unknown>) => {
+      handleChatFunctionCall(name, args, {
+        nodes: nodes as Node<SceneNodeData>[],
+        edges,
+        originalGame,
+        setNodes,
+        setEdges,
+        setOriginalGame,
+      });
+    },
+    [nodes, edges, originalGame, setNodes, setEdges, setOriginalGame],
+  );
+
   if (isAuthPending || loading) return <div className="p-8 text-center">加载中...</div>;
   if (!session) {
     router.push('/sign-in');
@@ -245,6 +263,8 @@ export default function VisualEditor({ id }: { id: string }) {
         onLayout={handleLayout}
         onGenerateAssets={handleGenerateAssets}
         onShowImporter={() => setShowImporter(true)}
+        chatOpen={chatOpen}
+        onToggleChat={() => setChatOpen((v) => !v)}
         onSave={handleSave}
       />
 
@@ -261,24 +281,52 @@ export default function VisualEditor({ id }: { id: string }) {
       )}
 
       {activeTab === 'variables' && originalGame && (
-        <div className="grow overflow-y-auto bg-gray-50 p-6">
-          <EditorVariablesTab
-            state={originalGame.initialState}
-            onChange={(newState: GameState) => setOriginalGame({ ...originalGame, initialState: newState })}
-            scenes={originalGame.scenes}
-          />
+        <div className="grow flex overflow-hidden">
+          <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
+            <EditorVariablesTab
+              state={originalGame.initialState}
+              onChange={(newState: GameState) => setOriginalGame({ ...originalGame, initialState: newState })}
+              scenes={originalGame.scenes}
+            />
+          </div>
+          {chatOpen && (
+            <ChatPanel
+              gameId={id}
+              isOpen={chatOpen}
+              onClose={() => setChatOpen(false)}
+              dsl={textContent}
+              story={originalGame.backgroundStory}
+              characters={originalGame.ai?.characters}
+              variables={originalGame.initialState as Record<string, unknown>}
+              onFunctionCall={handleFunctionCall}
+            />
+          )}
         </div>
       )}
 
       {activeTab === 'characters' && originalGame && (
-        <div className="grow overflow-y-auto bg-gray-50 p-6">
-          <EditorCharactersTab
-            characters={originalGame.ai.characters || {}}
-            onChange={(chars: Record<string, AICharacter>) =>
-              setOriginalGame({ ...originalGame, ai: { ...originalGame.ai, characters: chars } })
-            }
-            gameId={id}
-          />
+        <div className="grow flex overflow-hidden">
+          <div className="flex-1 overflow-y-auto bg-gray-50 p-6">
+            <EditorCharactersTab
+              characters={originalGame.ai.characters || {}}
+              onChange={(chars: Record<string, AICharacter>) =>
+                setOriginalGame({ ...originalGame, ai: { ...originalGame.ai, characters: chars } })
+              }
+              gameId={id}
+            />
+          </div>
+          {chatOpen && (
+            <ChatPanel
+              gameId={id}
+              isOpen={chatOpen}
+              onClose={() => setChatOpen(false)}
+              dsl={textContent}
+              story={originalGame.backgroundStory}
+              characters={originalGame.ai?.characters}
+              variables={originalGame.initialState as Record<string, unknown>}
+              onFunctionCall={handleFunctionCall}
+            />
+          )}
         </div>
       )}
 
@@ -321,6 +369,18 @@ export default function VisualEditor({ id }: { id: string }) {
               />
             </div>
           )}
+          {chatOpen && originalGame && (
+            <ChatPanel
+              gameId={id}
+              isOpen={chatOpen}
+              onClose={() => setChatOpen(false)}
+              dsl={textContent}
+              story={originalGame.backgroundStory}
+              characters={originalGame.ai?.characters}
+              variables={originalGame.initialState as Record<string, unknown>}
+              onFunctionCall={handleFunctionCall}
+            />
+          )}
         </div>
       )}
 
@@ -331,6 +391,8 @@ export default function VisualEditor({ id }: { id: string }) {
           onClose={() => setShowImporter(false)}
         />
       )}
+
+
     </div>
   );
 }

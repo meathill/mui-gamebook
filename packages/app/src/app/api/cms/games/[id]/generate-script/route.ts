@@ -39,6 +39,13 @@ export async function POST(req: Request, { params }: Props) {
   const dslSpec = await f.text();
   const genAI = new GoogleGenAI({ apiKey });
   const model = env.GOOGLE_MODEL || process.env.GOOGLE_MODEL || 'gemini-3-pro';
+  console.log('xxx', model, `${SYSTEM_PROMPT}
+
+${dslSpec}
+
+## User Story:
+
+"""${story}"""`);
 
   try {
     const { text: script, usage } = await generateText(

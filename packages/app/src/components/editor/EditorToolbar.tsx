@@ -13,6 +13,7 @@ import {
   BookOpen,
   Variable,
   Users,
+  BotIcon,
 } from 'lucide-react';
 
 export type Tab = 'settings' | 'variables' | 'characters' | 'story';
@@ -24,12 +25,14 @@ interface EditorToolbarProps {
   viewMode: 'visual' | 'text';
   saving: boolean;
   assetGenerating: boolean;
+  chatOpen: boolean;
   onTabChange: (tab: Tab) => void;
   onToggleViewMode: () => void;
   onAddScene: () => void;
   onLayout: () => void;
   onGenerateAssets: () => void;
   onShowImporter: () => void;
+  onToggleChat: () => void;
   onSave: () => void;
 }
 
@@ -40,12 +43,14 @@ export default function EditorToolbar({
   viewMode,
   saving,
   assetGenerating,
+  chatOpen,
   onTabChange,
   onToggleViewMode,
   onAddScene,
   onLayout,
   onGenerateAssets,
   onShowImporter,
+  onToggleChat,
   onSave,
 }: EditorToolbarProps) {
   return (
@@ -130,6 +135,21 @@ export default function EditorToolbar({
           title="预览">
           <ExternalLink size={18} />
         </Link>
+
+        {/* AI 助手按钮 - 非 settings tab 显示 */}
+        {activeTab !== 'settings' && (
+          <button
+            onClick={onToggleChat}
+            className={`flex items-center gap-2 px-3 py-2 rounded text-sm border transition-colors ${chatOpen
+                ? 'bg-purple-600 text-white border-purple-600'
+                : 'text-purple-700 hover:bg-purple-50 border-purple-200'
+              }`}
+            title="AI 助手">
+            <BotIcon size={16} />
+            <span className="hidden sm:inline">AI 助手</span>
+          </button>
+        )}
+
         <button
           onClick={onSave}
           disabled={saving}
