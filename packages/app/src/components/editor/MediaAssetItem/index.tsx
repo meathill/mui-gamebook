@@ -3,6 +3,7 @@
 import { useState, useRef, ChangeEvent } from 'react';
 import { Trash2, Loader2, Upload, Sparkles, List } from 'lucide-react';
 import type { SceneNode } from '@mui-gamebook/parser';
+import { IconButton, Button } from '@radix-ui/themes';
 import { useDialog } from '@/components/Dialog';
 import MiniGameSelector from '../MiniGameSelector';
 import { useCmsConfig, getAspectRatios } from '@/hooks/useCmsConfig';
@@ -34,6 +35,7 @@ export default function MediaAssetItem({
   const assetUrl = 'url' in asset ? asset.url : undefined;
   const assetPrompt = 'prompt' in asset ? asset.prompt : '';
   const assetAspectRatio = 'aspectRatio' in asset ? asset.aspectRatio || '1:1' : '1:1';
+
   const isImage = asset.type.includes('image');
   const isAudio = asset.type.includes('audio');
   const isVideo = asset.type.includes('video');
@@ -87,7 +89,6 @@ export default function MediaAssetItem({
     setIsGenerating(true);
     try {
       const fullPrompt = aiStylePrompt ? `${aiStylePrompt}\n${assetPrompt}` : assetPrompt;
-      const aspectRatio = 'aspectRatio' in asset ? asset.aspectRatio : undefined;
 
       const res = await fetch('/api/cms/assets/generate', {
         method: 'POST',
@@ -96,7 +97,7 @@ export default function MediaAssetItem({
           prompt: fullPrompt,
           gameId,
           type: 'ai_image',
-          aspectRatio,
+          aspectRatio: assetAspectRatio,
         }),
       });
       const data = (await res.json()) as { url: string; error?: string };
@@ -131,9 +132,11 @@ export default function MediaAssetItem({
                 variant="featured"
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <button
+                <IconButton
+                  variant="solid"
+                  color="gray"
+                  highContrast
                   onClick={() => fileInputRef.current?.click()}
-                  className="p-2 bg-white rounded-full hover:bg-gray-100"
                   disabled={isUploading}>
                   {isUploading ? (
                     <Loader2
@@ -143,10 +146,12 @@ export default function MediaAssetItem({
                   ) : (
                     <Upload size={16} />
                   )}
-                </button>
-                <button
+                </IconButton>
+                <IconButton
+                  variant="solid"
+                  color="gray"
+                  highContrast
                   onClick={() => setShowGenerator(true)}
-                  className="p-2 bg-white rounded-full hover:bg-gray-100"
                   disabled={isGenerating}>
                   {isGenerating ? (
                     <Loader2
@@ -156,7 +161,7 @@ export default function MediaAssetItem({
                   ) : (
                     <Sparkles size={16} />
                   )}
-                </button>
+                </IconButton>
               </div>
             </>
           ) : isPending ? (
@@ -179,19 +184,21 @@ export default function MediaAssetItem({
                 size={40}
               />
               <div className="flex flex-col gap-2 mt-2">
-                <button
+                <Button
+                  variant="ghost"
+                  color="blue"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                  disabled={isUploading}>
                   {isUploading ? '上传中...' : '上传文件'}
-                </button>
+                </Button>
                 <span className="text-xs text-gray-400">- 或者 -</span>
-                <button
+                <Button
+                  variant="ghost"
+                  color="violet"
                   onClick={() => setShowGenerator(!showGenerator)}
-                  disabled={isGenerating}
-                  className="text-sm text-purple-600 hover:text-purple-800 font-medium">
+                  disabled={isGenerating}>
                   AI 生成
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -235,21 +242,22 @@ export default function MediaAssetItem({
         <span className="font-bold uppercase text-xs">{asset.type.replace('ai_', '').replace('static_', '')}</span>
         <div className="flex gap-1 ms-auto">
           {isMinigame && (
-            <button
+            <IconButton
+              variant="ghost"
+              color="blue"
+              size="1"
               onClick={() => setShowMinigameSelector(!showMinigameSelector)}
-              className="p-1 text-xs text-blue-600 rounded hover:bg-blue-100"
-              title="选择已有小游戏"
-              type="button">
+              title="选择已有小游戏">
               <List size={14} />
-            </button>
+            </IconButton>
           )}
           {!isMinigame && (
-            <button
+            <IconButton
+              variant="ghost"
+              size="1"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="p-1 text-xs rounded disabled:text-gray-300 hover:bg-blue-100"
-              title="上传素材"
-              type="button">
+              title="上传素材">
               {isUploading ? (
                 <Loader2
                   size={14}
@@ -258,23 +266,26 @@ export default function MediaAssetItem({
               ) : (
                 <Upload size={14} />
               )}
-            </button>
+            </IconButton>
           )}
-          <button
-            className="p-1 text-xs text-purple-600 rounded hover:bg-purple-100 disabled:text-purple-300"
+          <IconButton
+            variant="ghost"
+            color="violet"
+            size="1"
             disabled={isGenerating}
             onClick={() => setShowGenerator(!showGenerator)}
-            title="AI 生成素材"
-            type="button">
+            title="AI 生成素材">
             <Sparkles size={14} />
-          </button>
+          </IconButton>
           {showDelete && onAssetDelete && (
-            <button
+            <IconButton
+              variant="ghost"
+              color="red"
+              size="1"
               onClick={onAssetDelete}
-              className="p-1 text-red-600 hover:text-red-500 hover:bg-red-100"
               title="删除素材">
               <Trash2 size={14} />
-            </button>
+            </IconButton>
           )}
         </div>
       </div>

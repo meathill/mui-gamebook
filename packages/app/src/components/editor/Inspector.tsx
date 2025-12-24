@@ -4,6 +4,9 @@ import type { SceneNodeData } from '@/lib/editor/transformers';
 import { Loader2, Volume2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import type { SceneNode } from '@mui-gamebook/parser';
+import type { GameState } from '@mui-gamebook/parser/src/types';
+import { extractRuntimeState } from '@mui-gamebook/parser/src/utils';
+import { interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import AssetEditor from './AssetEditor';
 import type { AiConfig } from '@/lib/ai-prompt-builder';
@@ -12,6 +15,7 @@ interface InspectorProps {
   selectedNode: Node | null;
   selectedEdge: Edge | null;
   aiConfig?: AiConfig;
+  initialState?: GameState;
   onNodeChange: (id: string, data: Partial<SceneNodeData>) => void;
   onNodeIdChange: (oldId: string, newId: string) => void;
   onEdgeChange: (id: string, changes: { label?: string; data?: Record<string, unknown> }) => void;
@@ -21,6 +25,7 @@ export default function Inspector({
   selectedNode,
   selectedEdge,
   aiConfig,
+  initialState,
   onNodeChange,
   onNodeIdChange,
   onEdgeChange,
@@ -49,10 +54,14 @@ export default function Inspector({
     if (!nodeData?.content || !id || !selectedNode) return;
     setGeneratingTTS(true);
     try {
+      // 使用初始状态替换变量，避免 TTS 朗读变量名
+      const runtimeState = initialState ? extractRuntimeState(initialState) : {};
+      const processedText = interpolateVariables(nodeData.content, runtimeState);
+
       const res = await fetch('/api/cms/assets/generate-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: nodeData.content, gameId: id }),
+        body: JSON.stringify({ text: processedText, gameId: id }),
       });
       if (!res.ok) {
         const error = (await res.json()) as { error: string };

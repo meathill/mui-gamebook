@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Button } from '@radix-ui/themes';
 import { X, AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 
 type DialogType = 'alert' | 'confirm' | 'success' | 'error';
@@ -115,16 +116,16 @@ export function DialogProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const getButtonStyles = () => {
+  const getButtonColor = (): 'green' | 'red' | 'orange' | 'blue' => {
     switch (dialog?.type) {
       case 'success':
-        return 'bg-green-600 hover:bg-green-700 focus:ring-green-500';
+        return 'green';
       case 'error':
-        return 'bg-red-600 hover:bg-red-700 focus:ring-red-500';
+        return 'red';
       case 'confirm':
-        return 'bg-amber-600 hover:bg-amber-700 focus:ring-amber-500';
+        return 'orange';
       default:
-        return 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500';
+        return 'blue';
     }
   };
 
@@ -176,17 +177,19 @@ export function DialogProvider({ children }: { children: ReactNode }) {
               {/* Buttons */}
               <div className="flex gap-3 w-full justify-center">
                 {dialog?.type === 'confirm' && (
-                  <button
-                    onClick={() => closeDialog(false)}
-                    className="flex-1 max-w-[120px] px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
+                  <Button
+                    variant="soft"
+                    color="gray"
+                    onClick={() => closeDialog(false)}>
                     {dialog.cancelText}
-                  </button>
+                  </Button>
                 )}
-                <button
-                  onClick={() => closeDialog(true)}
-                  className={`flex-1 max-w-[120px] px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${getButtonStyles()}`}>
+                <Button
+                  variant="solid"
+                  color={getButtonColor()}
+                  onClick={() => closeDialog(true)}>
                   {dialog?.confirmText}
-                </button>
+                </Button>
               </div>
             </div>
           </DialogPrimitive.Content>

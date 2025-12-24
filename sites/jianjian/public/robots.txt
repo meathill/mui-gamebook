@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /sign-in
+Disallow: /api
+
+Sitemap: https://xiaoniaoshuo.com/sitemap.xml

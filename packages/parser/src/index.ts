@@ -3,7 +3,7 @@ import type { AICharacter, Game, GameState, ParseResult, Scene, SceneNode, Varia
 import { isVariableMeta } from './utils';
 import { omitBy } from 'lodash-es';
 import slugify from 'slugify';
-export { Game, SceneNode };
+export type { Game, SceneNode };
 export * from './types';
 export * from './utils';
 

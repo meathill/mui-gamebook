@@ -185,6 +185,86 @@ describe('MediaAssetItem', () => {
       expect(screen.getByPlaceholderText('描述你想要的内容...')).toBeInTheDocument();
       expect(screen.getByText('比例:')).toBeInTheDocument();
     });
+
+    it('修改 prompt 时应该调用 onAssetChange', () => {
+      const asset = { type: 'ai_image' as const, prompt: '初始提示词' };
+      const onAssetChange = vi.fn();
+
+      render(
+        <MediaAssetItem
+          asset={asset}
+          gameId="123"
+          variant="featured"
+          showDelete={false}
+          onAssetChange={onAssetChange}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // 点击 AI 生成按钮显示生成器
+      const aiButton = screen.getByText('AI 生成');
+      fireEvent.click(aiButton);
+
+      // 修改 prompt
+      const textarea = screen.getByPlaceholderText('描述你想要的内容...');
+      fireEvent.change(textarea, { target: { value: '新提示词' } });
+
+      expect(onAssetChange).toHaveBeenCalledWith('prompt', '新提示词');
+    });
+
+    it('修改 aspectRatio 时应该调用 onAssetChange', () => {
+      const asset = { type: 'ai_image' as const, prompt: '测试', aspectRatio: '1:1' };
+      const onAssetChange = vi.fn();
+
+      render(
+        <MediaAssetItem
+          asset={asset}
+          gameId="123"
+          variant="featured"
+          showDelete={false}
+          onAssetChange={onAssetChange}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // 点击 AI 生成按钮显示生成器
+      const aiButton = screen.getByText('AI 生成');
+      fireEvent.click(aiButton);
+
+      // 修改比例
+      const select = screen.getByRole('combobox');
+      fireEvent.change(select, { target: { value: '3:2' } });
+
+      expect(onAssetChange).toHaveBeenCalledWith('aspectRatio', '3:2');
+    });
+
+    it('应该正确显示从 prop 传入的 prompt 和 aspectRatio', () => {
+      const asset = { type: 'ai_image' as const, prompt: '已保存的提示词', aspectRatio: '2:3' };
+      const onAssetChange = vi.fn();
+
+      render(
+        <MediaAssetItem
+          asset={asset}
+          gameId="123"
+          variant="featured"
+          showDelete={false}
+          onAssetChange={onAssetChange}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      // 点击 AI 生成按钮显示生成器
+      const aiButton = screen.getByText('AI 生成');
+      fireEvent.click(aiButton);
+
+      // 检查 prompt 正确显示
+      const textarea = screen.getByPlaceholderText('描述你想要的内容...');
+      expect(textarea).toHaveValue('已保存的提示词');
+
+      // 检查 aspectRatio 正确显示
+      const select = screen.getByRole('combobox');
+      expect(select).toHaveValue('2:3');
+    });
   });
 
   describe('上传功能', () => {

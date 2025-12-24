@@ -172,13 +172,20 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
         {/* Right Column: Cover & Publish */}
         <div className="space-y-6">
           <MediaAssetItem
-            asset={{ type: 'ai_image', url: game.cover_image, prompt: '' }}
+            asset={{
+              type: 'ai_image',
+              url: game.cover_image,
+              prompt: game.cover_prompt || '',
+              aspectRatio: game.cover_aspect_ratio,
+            }}
             gameId={id}
             variant="featured"
             showDelete={false}
             aiStylePrompt={game.ai?.style?.image}
             onAssetChange={(field, value) => {
               if (field === 'url') handleChange('cover_image', value);
+              else if (field === 'prompt') handleChange('cover_prompt', value);
+              else if (field === 'aspectRatio') handleChange('cover_aspect_ratio', value);
             }}
           />
 

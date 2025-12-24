@@ -2,6 +2,7 @@
   "name": "@mui-gamebook/parser",
   "version": "0.0.1",
   "description": "DSL parser for MUI Gamebook",
+  "type": "module",
   "main": "src/index.ts",
   "dependencies": {
     "js-yaml": "^4.1.1",

@@ -1,4 +1,5 @@
 import { Loader2, Sparkles, CheckIcon } from 'lucide-react';
+import { Button, IconButton } from '@radix-ui/themes';
 import type { MediaGeneratorProps } from './types';
 
 export default function MediaGenerator({
@@ -40,10 +41,10 @@ export default function MediaGenerator({
             </select>
           </div>
         )}
-        <button
+        <Button
+          color="violet"
           onClick={onGenerate}
-          disabled={isGenerating || !prompt}
-          className="w-full py-1.5 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2">
+          disabled={isGenerating || !prompt}>
           {isGenerating ? (
             <Loader2
               size={12}
@@ -53,7 +54,7 @@ export default function MediaGenerator({
             <Sparkles size={12} />
           )}
           生成
-        </button>
+        </Button>
       </div>
     );
   }
@@ -85,12 +86,11 @@ export default function MediaGenerator({
             </select>
           </div>
         )}
-        <button
-          className="size-6 bg-purple-600 text-white hover:bg-purple-500 rounded flex items-center justify-center p-1 ms-auto"
+        <IconButton
+          color="violet"
           disabled={isGenerating || !prompt}
           onClick={onGenerate}
-          title="生成素材"
-          type="button">
+          title="生成素材">
           {isGenerating ? (
             <Loader2
               size={16}
@@ -99,7 +99,7 @@ export default function MediaGenerator({
           ) : (
             <CheckIcon size={16} />
           )}
-        </button>
+        </IconButton>
       </footer>
     </div>
   );

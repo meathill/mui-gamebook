@@ -304,6 +304,7 @@ export default function VisualEditor({ id }: { id: string }) {
                 selectedNode={selectedNode}
                 selectedEdge={selectedEdge}
                 aiConfig={originalGame?.ai}
+                initialState={originalGame?.initialState}
                 onNodeChange={handleNodeChange}
                 onNodeIdChange={handleNodeIdChange}
                 onEdgeChange={handleEdgeChange}
