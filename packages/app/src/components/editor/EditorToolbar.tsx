@@ -140,10 +140,11 @@ export default function EditorToolbar({
         {activeTab !== 'settings' && (
           <button
             onClick={onToggleChat}
-            className={`flex items-center gap-2 px-3 py-2 rounded text-sm border transition-colors ${chatOpen
+            className={`flex items-center gap-2 px-3 py-2 rounded text-sm border transition-colors ${
+              chatOpen
                 ? 'bg-purple-600 text-white border-purple-600'
                 : 'text-purple-700 hover:bg-purple-50 border-purple-200'
-              }`}
+            }`}
             title="AI 助手">
             <BotIcon size={16} />
             <span className="hidden sm:inline">AI 助手</span>

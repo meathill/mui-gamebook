@@ -120,11 +120,7 @@ export default function ChatPanel({
           </div>
         )}
 
-        {error && (
-          <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
+        {error && <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>}
 
         <div ref={messagesEndRef} />
       </div>
@@ -145,25 +141,21 @@ export default function ChatPanel({
           />
         </div>
         <footer className="flex items-start justify-between">
-          <p className="text-xs text-gray-400 mt-2">
-            按 Enter 发送，Shift + Enter 换行
-          </p>
+          <p className="text-xs text-gray-400 mt-2">按 Enter 发送，Shift + Enter 换行</p>
           {loading ? (
             <Button
               type="button"
               onClick={cancelRequest}
               size="1"
               variant="solid"
-              color="red"
-            >
+              color="red">
               <SquareIcon className="size-3" />
             </Button>
           ) : (
             <Button
               disabled={!input.trim()}
               size="1"
-              variant="solid"
-            >
+              variant="solid">
               <SendIcon className="size-3" />
             </Button>
           )}
@@ -179,10 +171,9 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[85%] rounded-lg px-3 py-2 ${isUser
-          ? 'bg-purple-600 text-white'
-          : 'bg-gray-100 text-gray-800'
-          }`}>
+        className={`max-w-[85%] rounded-lg px-3 py-2 ${
+          isUser ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-800'
+        }`}>
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
 
         {message.functionCalls && message.functionCalls.length > 0 && (

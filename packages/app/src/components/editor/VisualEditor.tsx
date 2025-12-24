@@ -189,10 +189,10 @@ export default function VisualEditor({ id }: { id: string }) {
       eds.map((edge) =>
         edge.id === edgeId
           ? {
-            ...edge,
-            ...(changes.label ? { label: changes.label } : {}),
-            ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
-          }
+              ...edge,
+              ...(changes.label ? { label: changes.label } : {}),
+              ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
+            }
           : edge,
       ),
     );
@@ -391,8 +391,6 @@ export default function VisualEditor({ id }: { id: string }) {
           onClose={() => setShowImporter(false)}
         />
       )}
-
-
     </div>
   );
 }

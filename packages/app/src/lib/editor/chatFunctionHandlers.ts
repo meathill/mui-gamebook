@@ -108,11 +108,7 @@ function handleUpdateScene(args: UpdateSceneArgs, ctx: HandlerContext): string {
     return `场景 "${sceneId}" 不存在`;
   }
 
-  ctx.setNodes((nds) =>
-    nds.map((node) =>
-      node.id === sceneId ? { ...node, data: { ...node.data, content } } : node,
-    ),
-  );
+  ctx.setNodes((nds) => nds.map((node) => (node.id === sceneId ? { ...node, data: { ...node.data, content } } : node)));
   return `已更新场景 "${sceneId}"`;
 }
 
@@ -154,9 +150,7 @@ function handleRenameScene(args: RenameSceneArgs, ctx: HandlerContext): string {
   }
 
   ctx.setNodes((nds) =>
-    nds.map((node) =>
-      node.id === oldId ? { ...node, id: newId, data: { ...node.data, label: newId } } : node,
-    ),
+    nds.map((node) => (node.id === oldId ? { ...node, id: newId, data: { ...node.data, label: newId } } : node)),
   );
   ctx.setEdges((eds) =>
     eds.map((edge) => {
@@ -244,9 +238,7 @@ function handleAddVariable(args: AddVariableArgs, ctx: HandlerContext): string {
   const parsedValue = parseValue(value);
   const newState: GameState = {
     ...ctx.originalGame.initialState,
-    [name]: visible || label
-      ? { value: parsedValue, visible: visible ?? false, label: label ?? name }
-      : parsedValue,
+    [name]: visible || label ? { value: parsedValue, visible: visible ?? false, label: label ?? name } : parsedValue,
   };
 
   ctx.setOriginalGame((prev) => (prev ? { ...prev, initialState: newState } : null));
@@ -316,9 +308,7 @@ function handleAddCharacter(args: AddCharacterArgs, ctx: HandlerContext): string
     [id]: newChar,
   };
 
-  ctx.setOriginalGame((prev) =>
-    prev ? { ...prev, ai: { ...prev.ai, characters: newCharacters } } : null,
-  );
+  ctx.setOriginalGame((prev) => (prev ? { ...prev, ai: { ...prev.ai, characters: newCharacters } } : null));
   return `已添加角色 "${name}"`;
 }
 
@@ -343,9 +333,7 @@ function handleUpdateCharacter(args: UpdateCharacterArgs, ctx: HandlerContext): 
     [id]: updatedChar,
   };
 
-  ctx.setOriginalGame((prev) =>
-    prev ? { ...prev, ai: { ...prev.ai, characters: newCharacters } } : null,
-  );
+  ctx.setOriginalGame((prev) => (prev ? { ...prev, ai: { ...prev.ai, characters: newCharacters } } : null));
   return `已更新角色 "${currentChar.name}"`;
 }
 
@@ -359,18 +347,12 @@ function handleDeleteCharacter(args: DeleteCharacterArgs, ctx: HandlerContext): 
   }
 
   const { [id]: deleted, ...rest } = characters;
-  ctx.setOriginalGame((prev) =>
-    prev ? { ...prev, ai: { ...prev.ai, characters: rest } } : null,
-  );
+  ctx.setOriginalGame((prev) => (prev ? { ...prev, ai: { ...prev.ai, characters: rest } } : null));
   return `已删除角色 "${deleted.name}"`;
 }
 
 // 主处理函数
-export function handleChatFunctionCall(
-  name: string,
-  args: Record<string, unknown>,
-  ctx: HandlerContext,
-): string {
+export function handleChatFunctionCall(name: string, args: Record<string, unknown>, ctx: HandlerContext): string {
   console.log('执行 AI 函数:', name, args);
 
   switch (name) {

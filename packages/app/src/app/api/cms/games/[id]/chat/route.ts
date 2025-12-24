@@ -262,9 +262,8 @@ export async function POST(req: Request, { params }: Props) {
     contextParts.push(`## 变量定义\n\n${varList}`);
   }
 
-  const userMessage = contextParts.length > 0
-    ? `${contextParts.join('\n\n')}\n\n---\n\n## 用户请求\n\n${message}`
-    : message;
+  const userMessage =
+    contextParts.length > 0 ? `${contextParts.join('\n\n')}\n\n---\n\n## 用户请求\n\n${message}` : message;
 
   // 创建 SSE 响应流
   const encoder = new TextEncoder();
@@ -302,7 +301,9 @@ export async function POST(req: Request, { params }: Props) {
         // 处理响应
         const candidate = response.candidates?.[0];
         if (!candidate?.content?.parts) {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', content: '无法获取 AI 响应' })}\n\n`));
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'error', content: '无法获取 AI 响应' })}\n\n`),
+          );
           controller.close();
           return;
         }
@@ -314,11 +315,15 @@ export async function POST(req: Request, { params }: Props) {
           }
           if (part.functionCall) {
             // Function call 响应
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-              type: 'function_call',
-              name: part.functionCall.name,
-              args: part.functionCall.args,
-            })}\n\n`));
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({
+                  type: 'function_call',
+                  name: part.functionCall.name,
+                  args: part.functionCall.args,
+                })}\n\n`,
+              ),
+            );
           }
         }
 
@@ -326,10 +331,14 @@ export async function POST(req: Request, { params }: Props) {
         controller.close();
       } catch (error) {
         console.error('Chat API Error:', error);
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-          type: 'error',
-          content: (error as Error).message,
-        })}\n\n`));
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              type: 'error',
+              content: (error as Error).message,
+            })}\n\n`,
+          ),
+        );
         controller.close();
       }
     },
@@ -339,7 +348,7 @@ export async function POST(req: Request, { params }: Props) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
     },
   });
 }

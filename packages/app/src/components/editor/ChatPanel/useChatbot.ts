@@ -65,7 +65,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
         });
 
         if (!response.ok) {
-          const data = await response.json() as { error: string };
+          const data = (await response.json()) as { error: string };
           throw new Error(data.error || '请求失败');
         }
 
@@ -97,10 +97,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
                   setMessages((prev) => {
                     const last = prev[prev.length - 1];
                     if (last?.role === 'assistant') {
-                      return [
-                        ...prev.slice(0, -1),
-                        { ...last, content: assistantContent },
-                      ];
+                      return [...prev.slice(0, -1), { ...last, content: assistantContent }];
                     }
                     return [
                       ...prev,
@@ -131,10 +128,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
                     setMessages((prev) => {
                       const last = prev[prev.length - 1];
                       if (last?.role === 'assistant') {
-                        return [
-                          ...prev.slice(0, -1),
-                          { ...last, functionCalls },
-                        ];
+                        return [...prev.slice(0, -1), { ...last, functionCalls }];
                       }
                       return prev;
                     });

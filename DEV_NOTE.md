@@ -248,3 +248,42 @@ pnpm batch --config ./configs/your-config.json [--force]
 - `/packages/app/src/components/editor/AssetEditor.tsx` - 素材列表管理
 - `/packages/app/src/components/editor/EditorSettingsTab.tsx` - 使用封面模式
 
+## AI Chatbot 编辑助手
+
+编辑器内置 AI 对话助手，用户可通过自然语言修改剧本内容。
+
+### 架构设计
+
+1. **API 端点**：`/api/cms/games/[id]/chat`
+   - 使用 Server-Sent Events (SSE) 流式响应
+   - 支持 Function Calling 精确操作 DSL
+
+2. **前端组件**：
+   - `ChatPanel/index.tsx` - 聊天面板 UI
+   - `ChatPanel/useChatbot.ts` - SSE 流解析和状态管理
+
+3. **操作处理器**：`chatFunctionHandlers.ts`
+
+### 支持的操作函数
+
+| 类别 | 函数 |
+|------|------|
+| 场景 | `updateScene`, `addScene`, `deleteScene`, `renameScene` |
+| 选项 | `addChoice`, `updateChoice`, `deleteChoice` |
+| 变量 | `addVariable`, `updateVariable`, `deleteVariable` |
+| 角色 | `addCharacter`, `updateCharacter`, `deleteCharacter` |
+
+### AI 上下文
+
+每次对话会自动注入：
+- 用户原始故事大纲（`backgroundStory`）
+- 当前完整 DSL 内容
+- 角色定义
+- 变量定义
+
+### 相关文件
+
+- `/packages/app/src/app/api/cms/games/[id]/chat/route.ts` - Chat API
+- `/packages/app/src/components/editor/ChatPanel/` - 聊天组件
+- `/packages/app/src/lib/editor/chatFunctionHandlers.ts` - 操作处理器
+
