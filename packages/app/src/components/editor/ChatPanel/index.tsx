@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, SendIcon, Loader2Icon, Trash2Icon, BotIcon } from 'lucide-react';
+import { X, SendIcon, Loader2Icon, Trash2Icon, BotIcon, SquareIcon } from 'lucide-react';
 import { useChatbot, Message } from './useChatbot';
 import { Button } from '@radix-ui/themes';
 
@@ -30,7 +30,7 @@ export default function ChatPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const { messages, loading, error, sendMessage, clearMessages } = useChatbot({
+  const { messages, loading, error, sendMessage, clearMessages, cancelRequest } = useChatbot({
     gameId,
     onFunctionCall,
   });
@@ -96,8 +96,8 @@ export default function ChatPanel({
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages - 使用 min-h-0 确保 flex 子元素可滚动 */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
             <BotIcon className="size-12 mx-auto mb-3 opacity-50" />
@@ -148,13 +148,25 @@ export default function ChatPanel({
           <p className="text-xs text-gray-400 mt-2">
             按 Enter 发送，Shift + Enter 换行
           </p>
-          <Button
-            disabled={!input.trim() || loading}
-            size="1"
-            variant="solid"
-          >
-            <SendIcon className="size-3" />
-          </Button>
+          {loading ? (
+            <Button
+              type="button"
+              onClick={cancelRequest}
+              size="1"
+              variant="solid"
+              color="red"
+            >
+              <SquareIcon className="size-3" />
+            </Button>
+          ) : (
+            <Button
+              disabled={!input.trim()}
+              size="1"
+              variant="solid"
+            >
+              <SendIcon className="size-3" />
+            </Button>
+          )}
         </footer>
       </form>
     </div>

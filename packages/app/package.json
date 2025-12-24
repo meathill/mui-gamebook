@@ -1,6 +1,6 @@
 {
   "name": "@mui-gamebook/app",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "private": true,
   "exports": {
     "./components/GamePlayer": "./src/components/GamePlayer.tsx",
