@@ -90,22 +90,42 @@ export default function MediaAssetItem({
     try {
       const fullPrompt = aiStylePrompt ? `${aiStylePrompt}\n${assetPrompt}` : assetPrompt;
 
-      const res = await fetch('/api/cms/assets/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: fullPrompt,
-          gameId,
-          type: 'ai_image',
-          aspectRatio: assetAspectRatio,
-        }),
-      });
-      const data = (await res.json()) as { url: string; error?: string };
-      if (res.ok) {
-        onAssetChange('url', data.url);
-        setShowGenerator(false);
+      // 根据素材类型选择不同的 API
+      if (isMinigame) {
+        // 小游戏使用独立的生成 API
+        const res = await fetch('/api/cms/minigames', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: fullPrompt,
+          }),
+        });
+        const data = (await res.json()) as { url: string; error?: string };
+        if (res.ok) {
+          onAssetChange('url', data.url);
+          setShowGenerator(false);
+        } else {
+          await dialog.error(data.error || '小游戏生成失败');
+        }
       } else {
-        await dialog.error(data.error || '生成失败');
+        // 图片、音频、视频使用素材生成 API
+        const res = await fetch('/api/cms/assets/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: fullPrompt,
+            gameId,
+            type: asset.type,
+            aspectRatio: assetAspectRatio,
+          }),
+        });
+        const data = (await res.json()) as { url: string; error?: string };
+        if (res.ok) {
+          onAssetChange('url', data.url);
+          setShowGenerator(false);
+        } else {
+          await dialog.error(data.error || '生成失败');
+        }
       }
     } catch (e) {
       await dialog.error('生成失败：' + (e as Error).message);
