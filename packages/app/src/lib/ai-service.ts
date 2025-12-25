@@ -201,7 +201,7 @@ export type TTSVoiceName =
 const DEFAULT_SAMPLE_RATE = 24000;
 /**
  * 生成 TTS 语音并上传到 R2
- * 使用 Gemini TTS 模型
+ * 支持 Google 和 OpenAI TTS
  */
 export async function generateAndUploadTTS(
   text: string,
@@ -210,52 +210,41 @@ export async function generateAndUploadTTS(
 ): Promise<GenerateTTSResult> {
   const { env } = getCloudflareContext();
 
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
-  if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY_NEW not configured');
+  // 使用 AI Provider 工厂创建提供者
+  const provider = await createAiProvider();
+
+  // 检查 provider 是否支持 TTS
+  if (!provider.generateTTS) {
+    throw new Error('当前 AI 提供者不支持 TTS');
   }
 
-  // 使用 @google/genai 生成 TTS
-  const { GoogleGenAI } = await import('@google/genai');
-  const genAI = new GoogleGenAI({ apiKey });
+  const result = await provider.generateTTS(text, voiceName);
 
-  // 为儿童故事添加朗读指导
-  const enhancedText = `请用温柔、有表现力的方式朗读这段故事，语速稍慢，适合小朋友听：
+  // 处理音频数据
+  let audioBuffer: Buffer;
+  let contentType: string;
 
-${text}`;
-
-  const response = await genAI.models.generateContent({
-    model: 'gemini-2.5-flash-preview-tts',
-    contents: [{ parts: [{ text: enhancedText }] }],
-    config: {
-      responseModalities: ['AUDIO'],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: { voiceName },
-        },
-      },
-    },
-  });
-
-  const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  if (!data) {
-    throw new Error('TTS 生成失败：未返回音频数据');
+  if (result.mimeType === 'audio/pcm') {
+    // Google 返回的是 PCM，需要转换为 WAV
+    audioBuffer = wrapWav(result.buffer, DEFAULT_SAMPLE_RATE);
+    contentType = 'audio/wav';
+  } else {
+    // OpenAI 返回的是 MP3
+    audioBuffer = result.buffer;
+    contentType = result.mimeType;
   }
-
-  const sourceBuffer = Buffer.from(data, 'base64');
-  const audioBuffer = wrapWav(sourceBuffer, DEFAULT_SAMPLE_RATE);
 
   // 上传到 R2
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
   await bucket.put(fileName, audioBuffer, {
-    httpMetadata: { contentType: 'audio/wav' },
+    httpMetadata: { contentType },
   });
 
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
   return {
     url: `${publicDomain}/${fileName}`,
-    model: 'gemini-2.5-flash-preview-tts',
+    model: provider.type,
   };
 }

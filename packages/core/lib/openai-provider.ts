@@ -5,9 +5,14 @@ import OpenAI from 'openai';
 import type {
   AiProvider,
   AiUsageInfo,
+  ChatMessage,
+  ChatWithToolsResult,
+  FunctionCallResult,
+  FunctionDeclaration,
   ImageGenerationResult,
   MiniGameGenerationResult,
   TextGenerationResult,
+  TTSResult,
 } from './ai-provider';
 import { buildMiniGamePrompt } from './ai-provider';
 import { extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
@@ -120,5 +125,84 @@ export class OpenAiProvider implements AiProvider {
     }
 
     return { code, usage };
+  }
+
+  async chatWithTools(messages: ChatMessage[], tools: FunctionDeclaration[]): Promise<ChatWithToolsResult> {
+    const model = this.models.text || 'gpt-4o';
+    console.log(`[OpenAI] Chat with tools using model: ${model}`);
+
+    // 转换消息格式为 OpenAI 格式
+    const openaiMessages = messages.map((msg) => ({
+      role: msg.role === 'model' ? ('assistant' as const) : ('user' as const),
+      content: msg.content,
+    }));
+
+    // 转换工具声明为 OpenAI 格式
+    const openaiTools = tools.map((tool) => ({
+      type: 'function' as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters,
+      },
+    }));
+
+    const response = await this.client.chat.completions.create({
+      model,
+      messages: openaiMessages,
+      tools: openaiTools,
+    });
+
+    const usage: AiUsageInfo = {
+      promptTokens: response.usage?.prompt_tokens ?? 0,
+      completionTokens: response.usage?.completion_tokens ?? 0,
+      totalTokens: response.usage?.total_tokens ?? 0,
+    };
+
+    const choice = response.choices[0];
+    if (!choice) {
+      return { usage };
+    }
+
+    const text = choice.message?.content || undefined;
+    const toolCalls = choice.message?.tool_calls;
+    let functionCalls: FunctionCallResult[] | undefined;
+
+    if (toolCalls && toolCalls.length > 0) {
+      functionCalls = toolCalls
+        .filter((tc): tc is typeof tc & { function: { name: string; arguments: string } } => 'function' in tc)
+        .map((tc) => ({
+          name: tc.function.name,
+          args: JSON.parse(tc.function.arguments) as Record<string, unknown>,
+        }));
+    }
+
+    return {
+      text,
+      functionCalls,
+      usage,
+    };
+  }
+
+  async generateTTS(text: string, voiceName: string = 'alloy'): Promise<TTSResult> {
+    console.log(`[OpenAI] Generating TTS with voice: ${voiceName}`);
+
+    // OpenAI 支持的声音: alloy, echo, fable, onyx, nova, shimmer
+    const validVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+    const voice = validVoices.includes(voiceName) ? voiceName : 'alloy';
+
+    const response = await this.client.audio.speech.create({
+      model: 'tts-1',
+      voice: voice as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
+      input: text,
+      response_format: 'mp3',
+    });
+
+    const arrayBuffer = await response.arrayBuffer();
+
+    return {
+      buffer: Buffer.from(arrayBuffer),
+      mimeType: 'audio/mpeg',
+    };
   }
 }
