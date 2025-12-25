@@ -96,32 +96,77 @@ export async function processGlobalAssets(game: Game, force: boolean): Promise<b
 }
 
 /**
+ * 从 prompt 中提取 @角色ID 格式的内联引用
+ */
+function extractInlineCharacterIds(prompt: string): string[] {
+  const matches = prompt.match(/@(\w+)/g);
+  if (!matches) return [];
+  return matches.map((m) => m.slice(1));
+}
+
+/**
  * 处理单个场景节点
  */
 export async function processNode(node: SceneNode, game: Game, force: boolean = false): Promise<boolean> {
   if (node.type === 'ai_image' && (!node.url || force)) {
     let fullPrompt = `${game.ai.style?.image || ''}`;
 
-    // Include character description if available
-    if (node.character && game.ai.characters && game.ai.characters[node.character]) {
-      const char = game.ai.characters[node.character];
-      if (char.image_prompt) {
-        fullPrompt += `, ${char.image_prompt}`;
+    // 收集所有角色引用：DSL 语法 + @角色ID 内联引用
+    const allCharacterIds: string[] = [];
+
+    // Include character from DSL syntax
+    if (node.character) {
+      allCharacterIds.push(node.character);
+    }
+
+    // Include multiple characters from DSL syntax
+    if (node.characters && node.characters.length > 0) {
+      allCharacterIds.push(...node.characters);
+    }
+
+    // Include characters from @角色ID inline syntax
+    const inlineIds = extractInlineCharacterIds(node.prompt);
+    allCharacterIds.push(...inlineIds);
+
+    // 去重
+    const uniqueCharacterIds = [...new Set(allCharacterIds)];
+
+    // 收集角色描述和头像
+    const referenceImages: string[] = [];
+    if (uniqueCharacterIds.length > 0 && game.ai.characters) {
+      for (const charId of uniqueCharacterIds) {
+        const char = game.ai.characters[charId];
+        if (char) {
+          if (char.image_prompt) {
+            fullPrompt += `, ${char.image_prompt}`;
+          }
+          if (char.image_url) {
+            referenceImages.push(char.image_url);
+          }
+        }
       }
     }
 
-    // Include multiple characters descriptions
-    if (node.characters && node.characters.length > 0 && game.ai.characters) {
-      node.characters.forEach((charId) => {
-        const char = game.ai?.characters?.[charId];
-        if (char && char.image_prompt) {
-          fullPrompt += `, ${char.image_prompt}`;
+    // 清理 prompt 中的 @角色ID，替换为角色名称
+    let cleanedPrompt = node.prompt;
+    if (game.ai.characters) {
+      for (const charId of inlineIds) {
+        const char = game.ai.characters[charId];
+        if (char) {
+          cleanedPrompt = cleanedPrompt.replace(new RegExp(`@${charId}\\b`, 'g'), char.name);
         }
-      });
+      }
     }
 
-    fullPrompt += `, ${node.prompt}`;
+    fullPrompt += `, ${cleanedPrompt}`;
+
     try {
+      // TODO: 在未来版本中，可以将 referenceImages 传递给图片生成函数
+      // 目前批量工具暂不支持参考图片，但已收集好以备将来使用
+      if (referenceImages.length > 0) {
+        console.log(`[INFO] Found ${referenceImages.length} reference image(s) for character consistency`);
+      }
+
       const { buffer: imageBuffer, type, usage } = await generateImage(fullPrompt);
       addUsage(usage);
 

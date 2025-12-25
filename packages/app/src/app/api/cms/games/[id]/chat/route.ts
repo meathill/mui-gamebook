@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
+import { createAiProvider } from '@/lib/ai-provider-factory';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 import { recordAiUsage } from '@/lib/ai-usage';
+import type { FunctionDeclaration } from '@mui-gamebook/core/lib/ai-provider';
 
-// Function 声明 - AI 可调用的函数
+// Function 声明 - AI 可调用的函数（使用统一格式）
 const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
   // 场景操作
   {
     name: 'updateScene',
     description: '更新指定场景的内容',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        sceneId: { type: Type.STRING, description: '场景 ID' },
-        content: { type: Type.STRING, description: '新的场景内容（Markdown 格式）' },
+        sceneId: { type: 'string', description: '场景 ID' },
+        content: { type: 'string', description: '新的场景内容（Markdown 格式）' },
       },
       required: ['sceneId', 'content'],
     },
@@ -24,11 +24,11 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'addScene',
     description: '添加新场景',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        sceneId: { type: Type.STRING, description: '新场景的 ID' },
-        content: { type: Type.STRING, description: '场景内容（Markdown 格式）' },
-        afterSceneId: { type: Type.STRING, description: '在哪个场景之后添加（可选）' },
+        sceneId: { type: 'string', description: '新场景的 ID' },
+        content: { type: 'string', description: '场景内容（Markdown 格式）' },
+        afterSceneId: { type: 'string', description: '在哪个场景之后添加（可选）' },
       },
       required: ['sceneId', 'content'],
     },
@@ -37,9 +37,9 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'deleteScene',
     description: '删除场景',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        sceneId: { type: Type.STRING, description: '要删除的场景 ID' },
+        sceneId: { type: 'string', description: '要删除的场景 ID' },
       },
       required: ['sceneId'],
     },
@@ -48,10 +48,10 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'renameScene',
     description: '重命名场景',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        oldId: { type: Type.STRING, description: '原场景 ID' },
-        newId: { type: Type.STRING, description: '新场景 ID' },
+        oldId: { type: 'string', description: '原场景 ID' },
+        newId: { type: 'string', description: '新场景 ID' },
       },
       required: ['oldId', 'newId'],
     },
@@ -61,13 +61,13 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'addChoice',
     description: '为场景添加选项',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        sceneId: { type: Type.STRING, description: '场景 ID' },
-        text: { type: Type.STRING, description: '选项文本' },
-        targetSceneId: { type: Type.STRING, description: '目标场景 ID' },
-        condition: { type: Type.STRING, description: '条件表达式（可选）' },
-        stateChange: { type: Type.STRING, description: '状态变更表达式（可选）' },
+        sceneId: { type: 'string', description: '场景 ID' },
+        text: { type: 'string', description: '选项文本' },
+        targetSceneId: { type: 'string', description: '目标场景 ID' },
+        condition: { type: 'string', description: '条件表达式（可选）' },
+        stateChange: { type: 'string', description: '状态变更表达式（可选）' },
       },
       required: ['sceneId', 'text', 'targetSceneId'],
     },
@@ -76,14 +76,14 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'updateChoice',
     description: '更新场景中的选项',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        sceneId: { type: Type.STRING, description: '场景 ID' },
-        choiceIndex: { type: Type.INTEGER, description: '选项索引（从 0 开始）' },
-        text: { type: Type.STRING, description: '新的选项文本（可选）' },
-        targetSceneId: { type: Type.STRING, description: '新的目标场景 ID（可选）' },
-        condition: { type: Type.STRING, description: '新的条件表达式（可选）' },
-        stateChange: { type: Type.STRING, description: '新的状态变更表达式（可选）' },
+        sceneId: { type: 'string', description: '场景 ID' },
+        choiceIndex: { type: 'integer', description: '选项索引（从 0 开始）' },
+        text: { type: 'string', description: '新的选项文本（可选）' },
+        targetSceneId: { type: 'string', description: '新的目标场景 ID（可选）' },
+        condition: { type: 'string', description: '新的条件表达式（可选）' },
+        stateChange: { type: 'string', description: '新的状态变更表达式（可选）' },
       },
       required: ['sceneId', 'choiceIndex'],
     },
@@ -92,10 +92,10 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'deleteChoice',
     description: '删除场景中的选项',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        sceneId: { type: Type.STRING, description: '场景 ID' },
-        choiceIndex: { type: Type.INTEGER, description: '选项索引（从 0 开始）' },
+        sceneId: { type: 'string', description: '场景 ID' },
+        choiceIndex: { type: 'integer', description: '选项索引（从 0 开始）' },
       },
       required: ['sceneId', 'choiceIndex'],
     },
@@ -105,12 +105,12 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'addVariable',
     description: '添加游戏变量',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        name: { type: Type.STRING, description: '变量名' },
-        value: { type: Type.STRING, description: '初始值' },
-        visible: { type: Type.BOOLEAN, description: '是否在界面显示' },
-        label: { type: Type.STRING, description: '显示名称' },
+        name: { type: 'string', description: '变量名' },
+        value: { type: 'string', description: '初始值' },
+        visible: { type: 'boolean', description: '是否在界面显示' },
+        label: { type: 'string', description: '显示名称' },
       },
       required: ['name', 'value'],
     },
@@ -119,12 +119,12 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'updateVariable',
     description: '更新游戏变量',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        name: { type: Type.STRING, description: '变量名' },
-        value: { type: Type.STRING, description: '新的值（可选）' },
-        visible: { type: Type.BOOLEAN, description: '是否在界面显示（可选）' },
-        label: { type: Type.STRING, description: '显示名称（可选）' },
+        name: { type: 'string', description: '变量名' },
+        value: { type: 'string', description: '新的值（可选）' },
+        visible: { type: 'boolean', description: '是否在界面显示（可选）' },
+        label: { type: 'string', description: '显示名称（可选）' },
       },
       required: ['name'],
     },
@@ -133,9 +133,9 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'deleteVariable',
     description: '删除游戏变量',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        name: { type: Type.STRING, description: '变量名' },
+        name: { type: 'string', description: '变量名' },
       },
       required: ['name'],
     },
@@ -145,12 +145,12 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'addCharacter',
     description: '添加 AI 角色',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        id: { type: Type.STRING, description: '角色 ID' },
-        name: { type: Type.STRING, description: '角色名称' },
-        description: { type: Type.STRING, description: '角色描述' },
-        imagePrompt: { type: Type.STRING, description: '图片生成提示词' },
+        id: { type: 'string', description: '角色 ID' },
+        name: { type: 'string', description: '角色名称' },
+        description: { type: 'string', description: '角色描述' },
+        imagePrompt: { type: 'string', description: '图片生成提示词' },
       },
       required: ['id', 'name'],
     },
@@ -159,12 +159,12 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'updateCharacter',
     description: '更新 AI 角色',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        id: { type: Type.STRING, description: '角色 ID' },
-        name: { type: Type.STRING, description: '新名称（可选）' },
-        description: { type: Type.STRING, description: '新描述（可选）' },
-        imagePrompt: { type: Type.STRING, description: '新图片生成提示词（可选）' },
+        id: { type: 'string', description: '角色 ID' },
+        name: { type: 'string', description: '新名称（可选）' },
+        description: { type: 'string', description: '新描述（可选）' },
+        imagePrompt: { type: 'string', description: '新图片生成提示词（可选）' },
       },
       required: ['id'],
     },
@@ -173,9 +173,9 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
     name: 'deleteCharacter',
     description: '删除 AI 角色',
     parameters: {
-      type: Type.OBJECT,
+      type: 'object',
       properties: {
-        id: { type: Type.STRING, description: '角色 ID' },
+        id: { type: 'string', description: '角色 ID' },
       },
       required: ['id'],
     },
@@ -232,15 +232,6 @@ export async function POST(req: Request, { params }: Props) {
     return NextResponse.json({ error: 'Message is required' }, { status: 400 });
   }
 
-  const { env } = getCloudflareContext();
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'AI API Key not configured' }, { status: 500 });
-  }
-
-  const genAI = new GoogleGenAI({ apiKey });
-  const model = env.GOOGLE_MODEL || process.env.GOOGLE_MODEL || 'gemini-2.5-flash';
-
   // 构建上下文提示
   const contextParts: string[] = [];
   if (context.story) {
@@ -251,7 +242,7 @@ export async function POST(req: Request, { params }: Props) {
   }
   if (context.characters && Object.keys(context.characters).length > 0) {
     const charList = Object.entries(context.characters)
-      .map(([id, char]) => `- ${id}: ${char.name}${char.description ? ` - ${char.description}` : ''}`)
+      .map(([charId, char]) => `- ${charId}: ${char.name}${char.description ? ` - ${char.description}` : ''}`)
       .join('\n');
     contextParts.push(`## 角色定义\n\n${charList}`);
   }
@@ -270,61 +261,55 @@ export async function POST(req: Request, { params }: Props) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const response = await genAI.models.generateContent({
-          model,
-          contents: [
-            { role: 'user', parts: [{ text: SYSTEM_PROMPT }] },
-            { role: 'model', parts: [{ text: '我明白了，我会根据你的请求帮助你编辑剧本。请告诉我你想做什么修改？' }] },
-            { role: 'user', parts: [{ text: userMessage }] },
+        // 使用 AI Provider 工厂创建提供者
+        const provider = await createAiProvider();
+
+        // 检查 provider 是否支持 chatWithTools
+        if (!provider.chatWithTools) {
+          throw new Error('当前 AI 提供者不支持 function calling');
+        }
+
+        const response = await provider.chatWithTools(
+          [
+            { role: 'user', content: SYSTEM_PROMPT },
+            { role: 'model', content: '我明白了，我会根据你的请求帮助你编辑剧本。请告诉我你想做什么修改？' },
+            { role: 'user', content: userMessage },
           ],
-          config: {
-            tools: [{ functionDeclarations: FUNCTION_DECLARATIONS }],
-          },
-        });
+          FUNCTION_DECLARATIONS,
+        );
 
         // 记录 AI 用量
-        const usage = response.usageMetadata;
-        if (usage) {
-          await recordAiUsage({
-            userId: session.user.id,
-            type: 'chat',
-            model,
-            usage: {
-              promptTokens: usage.promptTokenCount ?? 0,
-              completionTokens: usage.candidatesTokenCount ?? 0,
-              totalTokens: usage.totalTokenCount ?? 0,
-            },
-            gameId: Number(id),
-          });
-        }
+        await recordAiUsage({
+          userId: session.user.id,
+          type: 'chat',
+          model: provider.type,
+          usage: response.usage,
+          gameId: Number(id),
+        });
 
         // 处理响应
-        const candidate = response.candidates?.[0];
-        if (!candidate?.content?.parts) {
-          controller.enqueue(
-            encoder.encode(`data: ${JSON.stringify({ type: 'error', content: '无法获取 AI 响应' })}\n\n`),
-          );
-          controller.close();
-          return;
+        if (response.text) {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: response.text })}\n\n`));
         }
 
-        for (const part of candidate.content.parts) {
-          if (part.text) {
-            // 文本响应
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'text', content: part.text })}\n\n`));
-          }
-          if (part.functionCall) {
-            // Function call 响应
+        if (response.functionCalls && response.functionCalls.length > 0) {
+          for (const fc of response.functionCalls) {
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({
                   type: 'function_call',
-                  name: part.functionCall.name,
-                  args: part.functionCall.args,
+                  name: fc.name,
+                  args: fc.args,
                 })}\n\n`,
               ),
             );
           }
+        }
+
+        if (!response.text && (!response.functionCalls || response.functionCalls.length === 0)) {
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: 'error', content: '无法获取 AI 响应' })}\n\n`),
+          );
         }
 
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`));

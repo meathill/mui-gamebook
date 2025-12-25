@@ -1,13 +1,18 @@
 /**
  * Google GenAI 提供者实现
  */
-import { GoogleGenAI, PartUnion, ThinkingLevel } from '@google/genai';
+import { GoogleGenAI, PartUnion, ThinkingLevel, Type } from '@google/genai';
 import type {
   AiProvider,
   AiUsageInfo,
+  ChatMessage,
+  ChatWithToolsResult,
+  FunctionCallResult,
+  FunctionDeclaration,
   ImageGenerationResult,
   MiniGameGenerationResult,
   TextGenerationResult,
+  TTSResult,
   VideoGenerationStartResult,
   VideoGenerationStatusResult,
 } from './ai-provider';
@@ -25,7 +30,7 @@ export class GoogleAiProvider implements AiProvider {
       image?: string;
       video?: string;
     } = {},
-  ) {}
+  ) { }
 
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
     const model = this.models.text || 'gemini-2.5-flash';
@@ -55,16 +60,61 @@ export class GoogleAiProvider implements AiProvider {
     };
   }
 
-  async generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult> {
+  async generateImage(
+    prompt: string,
+    options?: { aspectRatio?: string; referenceImages?: string[] },
+  ): Promise<ImageGenerationResult> {
     const model = this.models.image || 'gemini-3-pro-image-preview';
     console.log(`[Google AI] Generating image with model: ${model}`);
 
     // Google 支持的宽高比: 1:1, 2:3, 3:4, 4:5, 9:16, 16:9, 5:4, 4:3, 3:2, 21:9
     const aspectRatio = options?.aspectRatio || '1:1';
 
+    // 构建内容：可能包含参考图片
+    const contents: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+
+    // 如果有参考图片，添加到请求中
+    if (options?.referenceImages && options.referenceImages.length > 0) {
+      console.log(`[Google AI] Including ${options.referenceImages.length} reference image(s)`);
+
+      for (const imageUrl of options.referenceImages) {
+        try {
+          // 下载图片
+          const response = await fetch(imageUrl);
+          if (!response.ok) {
+            console.warn(`[Google AI] Failed to fetch reference image: ${imageUrl}`);
+            continue;
+          }
+
+          const arrayBuffer = await response.arrayBuffer();
+          const base64Data = Buffer.from(arrayBuffer).toString('base64');
+
+          // 检测 MIME 类型
+          const contentType = response.headers.get('content-type') || 'image/png';
+
+          contents.push({
+            inlineData: {
+              mimeType: contentType,
+              data: base64Data,
+            },
+          });
+        } catch (e) {
+          console.warn(`[Google AI] Failed to process reference image: ${imageUrl}`, e);
+        }
+      }
+
+      // 添加提示词，要求保持角色一致性
+      contents.push({
+        text: `Generate an image based on the following description. Use the provided reference image(s) to maintain character consistency, ensuring the characters look identical to those in the reference images.\n\n${prompt}`,
+      });
+    } else {
+      // 没有参考图片，直接使用提示词
+      contents.push({ text: prompt });
+    }
+
     const response = await this.genAI.models.generateContent({
       model,
-      contents: prompt,
+      contents,
       config: {
         responseModalities: ['IMAGE'],
         imageConfig: {
@@ -224,5 +274,100 @@ export class GoogleAiProvider implements AiProvider {
     }
 
     return { code, usage };
+  }
+
+  async chatWithTools(messages: ChatMessage[], tools: FunctionDeclaration[]): Promise<ChatWithToolsResult> {
+    const model = this.models.text || 'gemini-2.5-flash';
+    console.log(`[Google AI] Chat with tools using model: ${model}`);
+
+    // 转换消息格式为 Google AI 格式
+    const contents = messages.map((msg) => ({
+      role: msg.role === 'model' ? 'model' : 'user',
+      parts: [{ text: msg.content }],
+    }));
+
+    // 转换工具声明为 Google AI 格式
+    // 使用类型断言因为我们的接口与 Google AI 的类型定义略有不同
+    const functionDeclarations = tools.map((tool) => ({
+      name: tool.name,
+      description: tool.description,
+      parameters: {
+        type: Type.OBJECT,
+        properties: tool.parameters.properties,
+        required: tool.parameters.required,
+      },
+    })) as unknown as import('@google/genai').FunctionDeclaration[];
+
+    const response = await this.genAI.models.generateContent({
+      model,
+      contents,
+      config: {
+        tools: [{ functionDeclarations }],
+      },
+    });
+
+    const usage: AiUsageInfo = {
+      promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
+      completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
+      totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
+    };
+
+    const candidate = response.candidates?.[0];
+    if (!candidate?.content?.parts) {
+      return { usage };
+    }
+
+    let text: string | undefined;
+    const functionCalls: FunctionCallResult[] = [];
+
+    for (const part of candidate.content.parts) {
+      if (part.text) {
+        text = part.text;
+      }
+      if (part.functionCall) {
+        functionCalls.push({
+          name: part.functionCall.name || '',
+          args: (part.functionCall.args as Record<string, unknown>) || {},
+        });
+      }
+    }
+
+    return {
+      text,
+      functionCalls: functionCalls.length > 0 ? functionCalls : undefined,
+      usage,
+    };
+  }
+
+  async generateTTS(text: string, voiceName: string = 'Aoede'): Promise<TTSResult> {
+    console.log(`[Google AI] Generating TTS with voice: ${voiceName}`);
+
+    // 为儿童故事添加朗读指导
+    const enhancedText = `请用温柔、有表现力的方式朗读这段故事，语速稍慢，适合小朋友听：
+
+${text}`;
+
+    const response = await this.genAI.models.generateContent({
+      model: 'gemini-2.5-flash-preview-tts',
+      contents: [{ parts: [{ text: enhancedText }] }],
+      config: {
+        responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName },
+          },
+        },
+      },
+    });
+
+    const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!data) {
+      throw new Error('TTS 生成失败：未返回音频数据');
+    }
+
+    return {
+      buffer: Buffer.from(data, 'base64'),
+      mimeType: 'audio/pcm',
+    };
   }
 }

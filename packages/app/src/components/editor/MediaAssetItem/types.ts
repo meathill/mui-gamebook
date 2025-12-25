@@ -1,5 +1,4 @@
-import type { SceneNode } from '@mui-gamebook/parser';
-import type { LucideIcon } from 'lucide-react';
+import type { SceneNode, AICharacter } from '@mui-gamebook/parser';
 
 export interface MediaAssetItemProps {
   /** 资源数据 */
@@ -12,6 +11,8 @@ export interface MediaAssetItemProps {
   showDelete?: boolean;
   /** AI 样式提示词，用于增强生成效果 */
   aiStylePrompt?: string;
+  /** AI 配置的角色列表，用于 @ 提及功能 */
+  aiCharacters?: Record<string, AICharacter>;
   /** 资源变更回调 */
   onAssetChange: (field: string, value: string) => void;
   /** 删除回调 */
@@ -24,6 +25,8 @@ export interface MediaGeneratorProps {
   isImage: boolean;
   isGenerating: boolean;
   aspectRatios: { value: string; label: string }[];
+  /** AI 配置的角色列表，用于 @ 提及功能 */
+  characters?: Record<string, AICharacter>;
   onPromptChange: (value: string) => void;
   onAspectRatioChange: (value: string) => void;
   onGenerate: () => void;

@@ -140,6 +140,48 @@ CMS 对外提供的 API 遵循以下格式：
 - `/packages/app/src/lib/ai-service.ts` - `generateAndUploadTTS` 函数
 - `/packages/app/src/app/api/cms/assets/generate-tts/route.ts` - TTS API
 
+## 多 AI Provider 支持
+
+平台支持在 Google AI 和 OpenAI 之间切换：
+
+### 配置切换
+
+在系统设置中可配置 `defaultAiProvider`：
+- `google` - 使用 Google Gemini 系列模型
+- `openai` - 使用 OpenAI GPT 系列模型
+
+### 统一接口
+
+`@mui-gamebook/core/lib/ai-provider.ts` 定义了统一的 `AiProvider` 接口：
+
+| 方法 | 说明 | 支持 |
+|-----|------|------|
+| `generateText()` | 文本生成 | Google ✅ / OpenAI ✅ |
+| `generateImage()` | 图片生成 | Google ✅ / OpenAI ✅ |
+| `chatWithTools()` | Function Calling | Google ✅ / OpenAI ✅ |
+| `generateTTS()` | 语音合成 | Google ✅ / OpenAI ✅ |
+| `startVideoGeneration()` | 视频生成 | Google ✅ / OpenAI ❌ |
+| `generateMiniGame()` | 小游戏生成 | Google ✅ / OpenAI ✅ |
+
+### 工厂函数
+
+使用 `createAiProvider()` 获取当前配置的 provider：
+
+```typescript
+import { createAiProvider } from '@/lib/ai-provider-factory';
+
+const provider = await createAiProvider();
+const { text } = await provider.generateText('prompt');
+```
+
+### 相关文件
+
+- `/packages/core/lib/ai-provider.ts` - 统一接口定义
+- `/packages/core/lib/google-ai-provider.ts` - Google 实现
+- `/packages/core/lib/openai-provider.ts` - OpenAI 实现
+- `/packages/app/src/lib/ai-provider-factory.ts` - 工厂函数
+
+
 ## 管理员 API
 
 提供管理员级别的 API，用于批量操作剧本：

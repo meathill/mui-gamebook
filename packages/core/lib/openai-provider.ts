@@ -5,9 +5,14 @@ import OpenAI from 'openai';
 import type {
   AiProvider,
   AiUsageInfo,
+  ChatMessage,
+  ChatWithToolsResult,
+  FunctionCallResult,
+  FunctionDeclaration,
   ImageGenerationResult,
   MiniGameGenerationResult,
   TextGenerationResult,
+  TTSResult,
 } from './ai-provider';
 import { buildMiniGamePrompt } from './ai-provider';
 import { extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
@@ -48,7 +53,10 @@ export class OpenAiProvider implements AiProvider {
     };
   }
 
-  async generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult> {
+  async generateImage(
+    prompt: string,
+    options?: { aspectRatio?: string; referenceImages?: string[] },
+  ): Promise<ImageGenerationResult> {
     const model = this.models.image || 'gpt-image-1';
     console.log(`[OpenAI] Generating image with model: ${model}`);
 
@@ -62,15 +70,54 @@ export class OpenAiProvider implements AiProvider {
     };
     const size = sizeMap[aspectRatio] || '1024x1024';
 
-    // gpt-image-1 系列模型默认返回 b64_json，无需 response_format 参数
-    const response = await this.client.images.generate({
-      model,
-      prompt,
-      n: 1,
-      size: size as '1024x1024' | '1536x1024' | '1024x1536',
-    });
+    let imageData: string | undefined;
 
-    const imageData = response.data?.[0]?.b64_json;
+    // 如果有参考图片，使用 edit API 进行图生图
+    if (options?.referenceImages && options.referenceImages.length > 0) {
+      console.log(`[OpenAI] Including ${options.referenceImages.length} reference image(s) for edit`);
+
+      // 下载第一张参考图片作为输入
+      const referenceUrl = options.referenceImages[0];
+      try {
+        const imgResponse = await fetch(referenceUrl);
+        if (!imgResponse.ok) {
+          throw new Error(`Failed to fetch reference image: ${referenceUrl}`);
+        }
+
+        const arrayBuffer = await imgResponse.arrayBuffer();
+
+        // 使用 images.edit API
+        const response = await this.client.images.edit({
+          model,
+          image: new File([arrayBuffer], 'reference.png', { type: 'image/png' }),
+          prompt: `Based on the reference image, ${prompt}`,
+          n: 1,
+          size: size as '1024x1024' | '1536x1024' | '1024x1536',
+        });
+
+        imageData = response.data?.[0]?.b64_json;
+      } catch (e) {
+        console.warn(`[OpenAI] Failed to use reference image, falling back to generation: ${e}`);
+        // 失败时回退到普通生成
+        const response = await this.client.images.generate({
+          model,
+          prompt,
+          n: 1,
+          size: size as '1024x1024' | '1536x1024' | '1024x1536',
+        });
+        imageData = response.data?.[0]?.b64_json;
+      }
+    } else {
+      // gpt-image-1 系列模型默认返回 b64_json，无需 response_format 参数
+      const response = await this.client.images.generate({
+        model,
+        prompt,
+        n: 1,
+        size: size as '1024x1024' | '1536x1024' | '1024x1536',
+      });
+      imageData = response.data?.[0]?.b64_json;
+    }
+
     if (!imageData) {
       throw new Error('No image data received from OpenAI.');
     }
@@ -120,5 +167,84 @@ export class OpenAiProvider implements AiProvider {
     }
 
     return { code, usage };
+  }
+
+  async chatWithTools(messages: ChatMessage[], tools: FunctionDeclaration[]): Promise<ChatWithToolsResult> {
+    const model = this.models.text || 'gpt-4o';
+    console.log(`[OpenAI] Chat with tools using model: ${model}`);
+
+    // 转换消息格式为 OpenAI 格式
+    const openaiMessages = messages.map((msg) => ({
+      role: msg.role === 'model' ? ('assistant' as const) : ('user' as const),
+      content: msg.content,
+    }));
+
+    // 转换工具声明为 OpenAI 格式
+    const openaiTools = tools.map((tool) => ({
+      type: 'function' as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters,
+      },
+    }));
+
+    const response = await this.client.chat.completions.create({
+      model,
+      messages: openaiMessages,
+      tools: openaiTools,
+    });
+
+    const usage: AiUsageInfo = {
+      promptTokens: response.usage?.prompt_tokens ?? 0,
+      completionTokens: response.usage?.completion_tokens ?? 0,
+      totalTokens: response.usage?.total_tokens ?? 0,
+    };
+
+    const choice = response.choices[0];
+    if (!choice) {
+      return { usage };
+    }
+
+    const text = choice.message?.content || undefined;
+    const toolCalls = choice.message?.tool_calls;
+    let functionCalls: FunctionCallResult[] | undefined;
+
+    if (toolCalls && toolCalls.length > 0) {
+      functionCalls = toolCalls
+        .filter((tc): tc is typeof tc & { function: { name: string; arguments: string } } => 'function' in tc)
+        .map((tc) => ({
+          name: tc.function.name,
+          args: JSON.parse(tc.function.arguments) as Record<string, unknown>,
+        }));
+    }
+
+    return {
+      text,
+      functionCalls,
+      usage,
+    };
+  }
+
+  async generateTTS(text: string, voiceName: string = 'alloy'): Promise<TTSResult> {
+    console.log(`[OpenAI] Generating TTS with voice: ${voiceName}`);
+
+    // OpenAI 支持的声音: alloy, echo, fable, onyx, nova, shimmer
+    const validVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
+    const voice = validVoices.includes(voiceName) ? voiceName : 'alloy';
+
+    const response = await this.client.audio.speech.create({
+      model: 'tts-1',
+      voice: voice as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
+      input: text,
+      response_format: 'mp3',
+    });
+
+    const arrayBuffer = await response.arrayBuffer();
+
+    return {
+      buffer: Buffer.from(arrayBuffer),
+      mimeType: 'audio/mpeg',
+    };
   }
 }

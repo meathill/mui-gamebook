@@ -106,6 +106,7 @@ export default function AssetEditor({ gameId, assets, aiConfig, onAssetsChange }
               variant="compact"
               showDelete={true}
               aiStylePrompt={getAiStylePrompt(asset)}
+              aiCharacters={aiConfig?.characters}
               onAssetChange={(field, value) => handleAssetChange(i, field, value)}
               onAssetDelete={() => handleAssetDelete(i)}
             />

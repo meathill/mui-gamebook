@@ -55,6 +55,52 @@ export interface MiniGameGenerationResult {
 }
 
 /**
+ * Function 声明（用于 chatWithTools）
+ */
+export interface FunctionDeclaration {
+  name: string;
+  description: string;
+  parameters: {
+    type: 'object';
+    properties: Record<string, unknown>;
+    required?: string[];
+  };
+}
+
+/**
+ * Function Call 结果
+ */
+export interface FunctionCallResult {
+  name: string;
+  args: Record<string, unknown>;
+}
+
+/**
+ * Chat 消息
+ */
+export interface ChatMessage {
+  role: 'user' | 'model';
+  content: string;
+}
+
+/**
+ * Chat with Tools 结果
+ */
+export interface ChatWithToolsResult {
+  text?: string;
+  functionCalls?: FunctionCallResult[];
+  usage: AiUsageInfo;
+}
+
+/**
+ * TTS 结果
+ */
+export interface TTSResult {
+  buffer: Buffer;
+  mimeType: string;
+}
+
+/**
  * AI 提供者类型
  */
 export type AiProviderType = 'google' | 'openai';
@@ -91,8 +137,12 @@ export interface AiProvider {
    * @param options.aspectRatio 宽高比
    *   - OpenAI 支持: '3:2', '1:1', '2:3'
    *   - Google 支持: '1:1', '2:3', '3:4', '4:5', '9:16', '16:9', '5:4', '4:3', '3:2', '21:9'
+   * @param options.referenceImages 参考图片 URL 列表，用于图生图保持角色一致性
    */
-  generateImage(prompt: string, options?: { aspectRatio?: string }): Promise<ImageGenerationResult>;
+  generateImage(
+    prompt: string,
+    options?: { aspectRatio?: string; referenceImages?: string[] },
+  ): Promise<ImageGenerationResult>;
 
   /**
    * 启动视频生成（异步）
@@ -112,6 +162,18 @@ export interface AiProvider {
    * 生成小游戏
    */
   generateMiniGame(prompt: string, variables?: Record<string, string>): Promise<MiniGameGenerationResult>;
+
+  /**
+   * 使用工具进行对话（function calling）
+   */
+  chatWithTools?(messages: ChatMessage[], tools: FunctionDeclaration[]): Promise<ChatWithToolsResult>;
+
+  /**
+   * 生成 TTS 语音
+   * @param text 要转换的文本
+   * @param voiceName 声音名称（不同提供者有不同的可选值）
+   */
+  generateTTS?(text: string, voiceName?: string): Promise<TTSResult>;
 }
 
 /**
@@ -124,8 +186,8 @@ export interface AiProvider {
 export function buildMiniGamePrompt(minigameApiSpec: string, variables?: Record<string, string>): string {
   const variablesList = variables
     ? Object.entries(variables)
-        .map(([key, desc]) => `- ${key}: ${desc}`)
-        .join('\n')
+      .map(([key, desc]) => `- ${key}: ${desc}`)
+      .join('\n')
     : '无特定变量';
 
   return `你是一个专业的 JavaScript 游戏开发者。你需要生成一个简单的互动小游戏。

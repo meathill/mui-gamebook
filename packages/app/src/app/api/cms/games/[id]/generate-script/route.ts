@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { GoogleGenAI, ThinkingLevel } from '@google/genai';
-import { generateText } from '@mui-gamebook/core/lib/ai';
+import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
@@ -31,26 +30,15 @@ export async function POST(req: Request, { params }: Props) {
   if (!story) return NextResponse.json({ error: 'Story is required' }, { status: 400 });
 
   const { env } = getCloudflareContext();
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
-  if (!apiKey) return NextResponse.json({ error: 'AI API Key not configured' }, { status: 500 });
 
   // fetch DSL
   const f = await fetch(`${env.NEXT_PUBLIC_SITE_URL}/DSL_SPEC.md`);
   const dslSpec = await f.text();
-  const genAI = new GoogleGenAI({ apiKey });
-  const model = env.GOOGLE_MODEL || process.env.GOOGLE_MODEL || 'gemini-3-pro';
-  console.log('xxx', model, `${SYSTEM_PROMPT}
-
-${dslSpec}
-
-## User Story:
-
-"""${story}"""`);
 
   try {
-    const { text: script, usage } = await generateText(
-      genAI,
-      model,
+    // 使用 AI Provider 工厂创建提供者
+    const provider = await createAiProvider();
+    const { text: script, usage } = await provider.generateText(
       `${SYSTEM_PROMPT}
 
 ${dslSpec}
@@ -58,7 +46,7 @@ ${dslSpec}
 ## User Story:
 
 """${story}"""`,
-      ThinkingLevel.LOW,
+      { thinking: true },
     );
     // Cleanup: Remove markdown code blocks if AI wrapped it
     const cleanScript = script
@@ -70,7 +58,7 @@ ${dslSpec}
     await recordAiUsage({
       userId: session.user.id,
       type: 'text_generation',
-      model,
+      model: provider.type,
       usage,
       gameId: Number(id),
     });

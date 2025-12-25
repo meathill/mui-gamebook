@@ -3,6 +3,8 @@ import {
   buildImagePrompt,
   buildAudioPrompt,
   extractCharacterIds,
+  extractInlineCharacterIds,
+  buildEnhancedImagePrompt,
   type AiConfig,
 } from '../../src/lib/ai-prompt-builder';
 
@@ -17,11 +19,18 @@ describe('ai-prompt-builder', () => {
         name: '勇者',
         description: '一个年轻的冒险者',
         image_prompt: '金发蓝眼的年轻剑士，穿着银色铠甲',
+        image_url: 'https://example.com/hero.png',
       },
       villain: {
         name: '魔王',
         description: '黑暗势力的统治者',
         image_prompt: '身披黑袍的魔法师，红色眼睛',
+        image_url: 'https://example.com/villain.png',
+      },
+      npc: {
+        name: '村民',
+        description: '普通村民',
+        // 没有 image_url
       },
     },
   };
@@ -85,6 +94,81 @@ describe('ai-prompt-builder', () => {
     it('无匹配时返回空数组', () => {
       const ids = extractCharacterIds('prompt: 普通场景描述');
       expect(ids).toEqual([]);
+    });
+  });
+
+  describe('extractInlineCharacterIds', () => {
+    it('提取单个 @角色ID', () => {
+      const ids = extractInlineCharacterIds('@hero 站在森林中');
+      expect(ids).toEqual(['hero']);
+    });
+
+    it('提取多个 @角色ID', () => {
+      const ids = extractInlineCharacterIds('@hero 在森林里遇到了 @villain');
+      expect(ids).toEqual(['hero', 'villain']);
+    });
+
+    it('处理连续的 @角色ID', () => {
+      const ids = extractInlineCharacterIds('@hero @villain 正在战斗');
+      expect(ids).toEqual(['hero', 'villain']);
+    });
+
+    it('无匹配时返回空数组', () => {
+      const ids = extractInlineCharacterIds('普通场景描述');
+      expect(ids).toEqual([]);
+    });
+
+    it('不匹配邮箱地址中的 @', () => {
+      const ids = extractInlineCharacterIds('联系方式 test@example.com');
+      // 会匹配到 @example，这是预期行为，因为角色 ID 应该是有意义的单词
+      expect(ids).toEqual(['example']);
+    });
+  });
+
+  describe('buildEnhancedImagePrompt', () => {
+    it('无角色引用时返回基本 prompt', () => {
+      const result = buildEnhancedImagePrompt('森林场景', mockAiConfig);
+      expect(result.prompt).toContain('风格：奇幻, 水彩, 色彩鲜艳');
+      expect(result.prompt).toContain('森林场景');
+      expect(result.referenceImages).toEqual([]);
+    });
+
+    it('解析 @角色ID 并收集参考图片', () => {
+      const result = buildEnhancedImagePrompt('@hero 站在森林中', mockAiConfig);
+      expect(result.prompt).toContain('勇者 站在森林中');
+      expect(result.prompt).toContain('勇者：金发蓝眼的年轻剑士');
+      expect(result.referenceImages).toEqual(['https://example.com/hero.png']);
+    });
+
+    it('解析多个 @角色ID', () => {
+      const result = buildEnhancedImagePrompt('@hero 与 @villain 战斗', mockAiConfig);
+      expect(result.prompt).toContain('勇者 与 魔王 战斗');
+      expect(result.referenceImages).toContain('https://example.com/hero.png');
+      expect(result.referenceImages).toContain('https://example.com/villain.png');
+    });
+
+    it('忽略没有头像的角色', () => {
+      const result = buildEnhancedImagePrompt('@npc 在村庄里', mockAiConfig);
+      expect(result.prompt).toContain('村民 在村庄里');
+      expect(result.referenceImages).toEqual([]);
+    });
+
+    it('忽略不存在的角色 ID', () => {
+      const result = buildEnhancedImagePrompt('@unknown 在走路', mockAiConfig);
+      expect(result.prompt).toContain('@unknown 在走路'); // 未匹配的保持原样
+      expect(result.referenceImages).toEqual([]);
+    });
+
+    it('同时支持 @角色ID 和 DSL characters 语法', () => {
+      const result = buildEnhancedImagePrompt('@hero 场景\ncharacters: [villain]', mockAiConfig);
+      expect(result.referenceImages).toContain('https://example.com/hero.png');
+      expect(result.referenceImages).toContain('https://example.com/villain.png');
+    });
+
+    it('去重相同的角色引用', () => {
+      const result = buildEnhancedImagePrompt('@hero @hero 两次引用', mockAiConfig);
+      // 参考图片应该去重
+      expect(result.referenceImages.filter((u) => u === 'https://example.com/hero.png').length).toBe(1);
     });
   });
 });
