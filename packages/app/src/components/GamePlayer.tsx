@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import ReactMarkdown from 'react-markdown';
 import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
 import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
@@ -278,9 +279,11 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
                   <div
                     key={index}
                     className="space-y-2">
-                    <p className="text-lg leading-relaxed text-gray-800 font-serif">
-                      {interpolateVariables(node.content, runtimeState)}
-                    </p>
+                    <div className="prose prose-lg prose-gray max-w-none">
+                      <ReactMarkdown>
+                        {interpolateVariables(node.content, runtimeState)}
+                      </ReactMarkdown>
+                    </div>
                     {hasTextAudio && (
                       <AudioControls
                         audioPlayer={audioPlayer}
