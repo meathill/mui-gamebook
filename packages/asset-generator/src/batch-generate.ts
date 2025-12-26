@@ -13,7 +13,8 @@ import { readFileSync, existsSync } from 'fs';
 import { parse, stringify } from '@mui-gamebook/parser';
 import type { Game } from '@mui-gamebook/parser';
 import slugify from 'slugify';
-import { genAI, DEFAULT_TTS_VOICE } from './lib/config';
+import { DEFAULT_TTS_VOICE, setProviderType } from './lib/config';
+import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
 import { generateStorySpeech, type VoiceName } from './lib/tts';
 import { uploadToR2 } from './lib/generator';
 import { wavToMp3, checkFfmpeg, isFormatMatch, getFormatFromUrl, downloadFile, convertFormat } from './lib/converter';
@@ -27,6 +28,7 @@ interface BatchConfig {
   adminSecret: string;
   gameSlug: string;
   force?: boolean;
+  providerType?: AiProviderType;
   generate: {
     sceneTTS?: boolean;
     choiceTTS?: boolean;
@@ -105,7 +107,7 @@ async function generateNodeTTS(
   console.log(`[TTS] 生成语音: "${text.substring(0, 30)}..."`);
 
   // 构建 TTS prompt，使用 ai.style.tts 作为风格指导
-  const { buffer: wavBuffer, mimeType } = await generateStorySpeech(genAI, text, voiceName, ttsStyle);
+  const { buffer: wavBuffer, mimeType } = await generateStorySpeech(text, voiceName, ttsStyle);
 
   // 如果配置了 MP3 格式，进行转换
   let finalBuffer = wavBuffer;
@@ -265,12 +267,18 @@ async function main() {
 
   const config: BatchConfig = JSON.parse(readFileSync(configPath, 'utf-8'));
 
+  // 设置 AI Provider（如果配置了）
+  if (config.providerType) {
+    setProviderType(config.providerType);
+  }
+
   // --force 命令行参数优先于配置文件
   const force = forceArg || config.force || false;
 
   console.log('='.repeat(50));
   console.log(`批量生成: ${config.gameSlug}`);
   console.log(`API: ${config.apiUrl}`);
+  console.log(`AI Provider: ${config.providerType || '默认（环境变量）'}`);
   console.log(`强制模式: ${force ? '是' : '否'}`);
   console.log(`测试模式: ${dryRun ? '是（不更新数据库）' : '否'}`);
   console.log(`音频格式: ${config.format?.audio || 'wav'}`);
