@@ -8,12 +8,11 @@ import type { GameState } from '@mui-gamebook/parser/src/types';
 import { extractRuntimeState } from '@mui-gamebook/parser/src/utils';
 import { interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
+import { useEditorStore } from '@/lib/editor/store';
 import AssetEditor from './AssetEditor';
 import type { AiConfig } from '@/lib/ai-prompt-builder';
 
 interface InspectorProps {
-  selectedNode: Node | null;
-  selectedEdge: Edge | null;
   aiConfig?: AiConfig;
   initialState?: GameState;
   onNodeChange: (id: string, data: Partial<SceneNodeData>) => void;
@@ -22,14 +21,14 @@ interface InspectorProps {
 }
 
 export default function Inspector({
-  selectedNode,
-  selectedEdge,
   aiConfig,
   initialState,
   onNodeChange,
   onNodeIdChange,
   onEdgeChange,
 }: InspectorProps) {
+  const selectedNode = useEditorStore((s) => s.selectedNode);
+  const selectedEdge = useEditorStore((s) => s.selectedEdge);
   const { id } = useParams();
   const [generatingTTS, setGeneratingTTS] = useState(false);
   const [generatingEdgeTTS, setGeneratingEdgeTTS] = useState(false);

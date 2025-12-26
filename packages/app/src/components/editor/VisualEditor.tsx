@@ -23,6 +23,7 @@ import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers
 import { getLayoutedElements } from '@/lib/editor/layout';
 import { handleChatFunctionCall } from '@/lib/editor/chatFunctionHandlers';
 import { useEditorData } from '@/lib/editor/useEditorData';
+import { useEditorStore } from '@/lib/editor/store';
 import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
@@ -43,16 +44,25 @@ export default function VisualEditor({ id }: { id: string }) {
   const { screenToFlowPosition, fitView } = useReactFlow();
   const dialog = useDialog();
 
-  const [activeTab, setActiveTab] = useState<Tab>('settings');
+  // 从 store 获取 UI 状态
+  const activeTab = useEditorStore((s) => s.activeTab);
+  const setActiveTab = useEditorStore((s) => s.setActiveTab);
+  const viewMode = useEditorStore((s) => s.viewMode);
+  const setViewMode = useEditorStore((s) => s.setViewMode);
+  const chatOpen = useEditorStore((s) => s.chatOpen);
+  const setChatOpen = useEditorStore((s) => s.setChatOpen);
+  const toggleChatOpen = useEditorStore((s) => s.toggleChatOpen);
+  const showImporter = useEditorStore((s) => s.showImporter);
+  const setShowImporter = useEditorStore((s) => s.setShowImporter);
+  const selectedNode = useEditorStore((s) => s.selectedNode);
+  const setSelectedNode = useEditorStore((s) => s.setSelectedNode);
+  const selectedEdge = useEditorStore((s) => s.selectedEdge);
+  const setSelectedEdge = useEditorStore((s) => s.setSelectedEdge);
+
+  // React Flow 状态（保留原有 hooks 以兼容 React Flow）
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const [viewMode, setViewMode] = useState<'visual' | 'text'>('visual');
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
-  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
   const [assetGenerating, setAssetGenerating] = useState(false);
-  const [showImporter, setShowImporter] = useState(false);
-  const [importerAutoOpened, setImporterAutoOpened] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
 
   const {
     originalGame,
@@ -73,6 +83,9 @@ export default function VisualEditor({ id }: { id: string }) {
     scanAndRegisterPendingOperations: (nodes: Node[]) => void;
   };
 
+  // 临时状态（后续会移到 store）
+  const [importerAutoOpened, setImporterAutoOpened] = useEditorStore(() => [false, () => { }]); // 临时
+
   // 初始化节点和边
   useEffect(() => {
     if (initialFlow) {
@@ -88,12 +101,11 @@ export default function VisualEditor({ id }: { id: string }) {
 
   // 当加载完成后，检查 URL 参数决定是否自动打开导入器
   useEffect(() => {
-    if (!loading && !importerAutoOpened && searchParams.get('showImporter') === 'true') {
+    if (!loading && searchParams.get('showImporter') === 'true') {
       setShowImporter(true);
-      setImporterAutoOpened(true);
       router.replace(`/admin/edit/${id}`);
     }
-  }, [loading, importerAutoOpened, searchParams, router, id]);
+  }, [loading, searchParams, router, id, setShowImporter]);
 
   useOnSelectionChange({
     onChange: ({ nodes, edges }) => {
@@ -153,7 +165,7 @@ export default function VisualEditor({ id }: { id: string }) {
   function handleNodeChange(nodeId: string, data: Partial<SceneNodeData>) {
     setNodes((nds) => nds.map((node) => (node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node)));
     if (selectedNode && selectedNode.id === nodeId) {
-      setSelectedNode((prev) => (prev ? { ...prev, data: { ...prev.data, ...data } } : null));
+      setSelectedNode({ ...selectedNode, data: { ...selectedNode.data, ...data } } as Node);
     }
   }
 
@@ -189,23 +201,20 @@ export default function VisualEditor({ id }: { id: string }) {
       eds.map((edge) =>
         edge.id === edgeId
           ? {
-              ...edge,
-              ...(changes.label ? { label: changes.label } : {}),
-              ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
-            }
+            ...edge,
+            ...(changes.label ? { label: changes.label } : {}),
+            ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
+          }
           : edge,
       ),
     );
-    // 同步更新 selectedEdge 以便 Inspector 立即显示更新
-    // 使用函数式更新以获取最新状态，避免闭包问题
-    setSelectedEdge((prev) => {
-      if (!prev || prev.id !== edgeId) return prev;
-      return {
-        ...prev,
+    if (selectedEdge && selectedEdge.id === edgeId) {
+      setSelectedEdge({
+        ...selectedEdge,
         ...(changes.label ? { label: changes.label } : {}),
-        ...(changes.data ? { data: { ...prev.data, ...changes.data } } : {}),
-      };
-    });
+        ...(changes.data ? { data: { ...selectedEdge.data, ...changes.data } } : {}),
+      } as Edge);
+    }
   }
 
   function handleAddScene() {
@@ -253,18 +262,13 @@ export default function VisualEditor({ id }: { id: string }) {
       <EditorToolbar
         title={originalGame?.title || originalGame?.slug}
         slug={slug}
-        activeTab={activeTab}
-        viewMode={viewMode}
         saving={saving}
         assetGenerating={assetGenerating}
-        onTabChange={setActiveTab}
         onToggleViewMode={toggleViewMode}
         onAddScene={handleAddScene}
         onLayout={handleLayout}
         onGenerateAssets={handleGenerateAssets}
         onShowImporter={() => setShowImporter(true)}
-        chatOpen={chatOpen}
-        onToggleChat={() => setChatOpen((v) => !v)}
         onSave={handleSave}
       />
 
@@ -349,8 +353,6 @@ export default function VisualEditor({ id }: { id: string }) {
                 </ReactFlow>
               </div>
               <Inspector
-                selectedNode={selectedNode}
-                selectedEdge={selectedEdge}
                 aiConfig={originalGame?.ai}
                 initialState={originalGame?.initialState}
                 onNodeChange={handleNodeChange}

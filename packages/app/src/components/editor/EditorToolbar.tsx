@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import {
   Save,
@@ -15,44 +17,42 @@ import {
   Users,
   BotIcon,
 } from 'lucide-react';
+import { useEditorStore } from '@/lib/editor/store';
 
 export type Tab = 'settings' | 'variables' | 'characters' | 'story';
 
 interface EditorToolbarProps {
   title?: string;
   slug: string;
-  activeTab: Tab;
-  viewMode: 'visual' | 'text';
   saving: boolean;
   assetGenerating: boolean;
-  chatOpen: boolean;
-  onTabChange: (tab: Tab) => void;
   onToggleViewMode: () => void;
   onAddScene: () => void;
   onLayout: () => void;
   onGenerateAssets: () => void;
   onShowImporter: () => void;
-  onToggleChat: () => void;
   onSave: () => void;
 }
 
 export default function EditorToolbar({
   title,
   slug,
-  activeTab,
-  viewMode,
   saving,
   assetGenerating,
-  chatOpen,
-  onTabChange,
   onToggleViewMode,
   onAddScene,
   onLayout,
   onGenerateAssets,
   onShowImporter,
-  onToggleChat,
   onSave,
 }: EditorToolbarProps) {
+  // 从 store 读取状态
+  const activeTab = useEditorStore((s) => s.activeTab);
+  const setActiveTab = useEditorStore((s) => s.setActiveTab);
+  const viewMode = useEditorStore((s) => s.viewMode);
+  const chatOpen = useEditorStore((s) => s.chatOpen);
+  const toggleChatOpen = useEditorStore((s) => s.toggleChatOpen);
+
   return (
     <header className="bg-white border-b px-6 py-3 flex justify-between items-center z-10 shadow-sm sticky top-16">
       <div className="flex items-center gap-4">
@@ -66,22 +66,22 @@ export default function EditorToolbar({
         {/* Tabs */}
         <div className="flex bg-gray-100 p-1 rounded-lg ml-4">
           <button
-            onClick={() => onTabChange('settings')}
+            onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'settings' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
             <Settings size={16} /> 设置
           </button>
           <button
-            onClick={() => onTabChange('variables')}
+            onClick={() => setActiveTab('variables')}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'variables' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
             <Variable size={16} /> 变量
           </button>
           <button
-            onClick={() => onTabChange('characters')}
+            onClick={() => setActiveTab('characters')}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'characters' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
             <Users size={16} /> 角色
           </button>
           <button
-            onClick={() => onTabChange('story')}
+            onClick={() => setActiveTab('story')}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'story' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
             <BookOpen size={16} /> 故事
           </button>
@@ -139,12 +139,11 @@ export default function EditorToolbar({
         {/* AI 助手按钮 - 非 settings tab 显示 */}
         {activeTab !== 'settings' && (
           <button
-            onClick={onToggleChat}
-            className={`flex items-center gap-2 px-3 py-2 rounded text-sm border transition-colors ${
-              chatOpen
+            onClick={toggleChatOpen}
+            className={`flex items-center gap-2 px-3 py-2 rounded text-sm border transition-colors ${chatOpen
                 ? 'bg-purple-600 text-white border-purple-600'
                 : 'text-purple-700 hover:bg-purple-50 border-purple-200'
-            }`}
+              }`}
             title="AI 助手">
             <BotIcon size={16} />
             <span className="hidden sm:inline">AI 助手</span>
