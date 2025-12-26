@@ -32,14 +32,20 @@ MUI Gamebook 素材生成器
   local <path>            处理本地文件的素材
 
 选项:
+  --provider <type>       指定 AI 提供者（google 或 openai），默认 google
   --force                 强制重新生成所有素材（即使已有 URL）
   --dry-run               只显示将要生成的素材，不实际执行
   --help, -h              显示帮助信息
 
+环境变量:
+  AI_PROVIDER             默认 AI 提供者（google 或 openai）
+  GOOGLE_API_KEY_NEW      Google AI API Key
+  OPENAI_API_KEY          OpenAI API Key
+
 示例:
   pnpm generate list
   pnpm generate remote 1
-  pnpm generate remote my-game-slug --force
+  pnpm generate remote my-game-slug --provider openai --force
   pnpm generate local demo/my-game.md
 `);
 }

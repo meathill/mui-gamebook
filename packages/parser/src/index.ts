@@ -276,7 +276,7 @@ export function stringify(game: Game): string {
           description: char.description,
           image_prompt: char.image_prompt,
           image_url: char.image_url,
-          voice_sample_url: char.voice_sample_url,
+          voice_name: char.voice_name,
         };
         // Clean up undefined fields
         frontMatter.ai.characters[id] = omitBy(frontMatter.ai.characters[id], (v) => v === undefined) as AICharacter;

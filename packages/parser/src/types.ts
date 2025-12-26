@@ -48,7 +48,7 @@ export interface AICharacter {
   description?: string;
   image_prompt?: string;
   image_url?: string;
-  voice_sample_url?: string;
+  voice_name?: string;
 }
 
 /**

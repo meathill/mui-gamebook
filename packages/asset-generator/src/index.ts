@@ -1,7 +1,8 @@
 /**
  * MUI Gamebook 素材生成器入口
  */
-import { validateRemoteEnv } from './lib/config';
+import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import { validateRemoteEnv, setProviderType } from './lib/config';
 import { showHelp } from './lib/utils';
 import { handleListCommand, handleRemoteCommand, handleLocalCommand } from './commands';
 
@@ -12,6 +13,19 @@ async function main() {
   const force = args.includes('--force');
   const dryRun = args.includes('--dry-run');
   const showHelpFlag = args.includes('--help') || args.includes('-h');
+
+  // 解析 --provider 参数
+  const providerIndex = args.findIndex((arg) => arg === '--provider');
+  if (providerIndex !== -1 && args[providerIndex + 1]) {
+    const providerType = args[providerIndex + 1] as AiProviderType;
+    if (providerType === 'google' || providerType === 'openai') {
+      setProviderType(providerType);
+      console.log(`[Config] AI provider set to: ${providerType}`);
+    } else {
+      console.error(`错误: 无效的 provider "${providerType}"，可选值: google, openai`);
+      process.exit(1);
+    }
+  }
 
   // 过滤出命令和参数
   const positionalArgs = args.filter((arg) => !arg.startsWith('--') && arg !== '-h');

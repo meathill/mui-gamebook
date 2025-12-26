@@ -130,7 +130,7 @@ ai:
       name: "张大侠"
       description: "一位中年剑客，神情冷峻，左眼上有一道长长的伤疤，身穿蓝色长袍。"
       image_prompt: "一位智慧而强大的中国剑客，40岁，左眼有疤"
-      voice_sample_url: "/assets/voices/zhang_daxia_sample.wav"
+      voice_name: "Aoede"
 ---
 ```
 

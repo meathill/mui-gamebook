@@ -2,8 +2,9 @@
  * 配置模块 - 环境变量和客户端初始化
  */
 import 'dotenv/config';
-import { GoogleGenAI } from '@google/genai';
 import { S3Client } from '@aws-sdk/client-s3';
+import { createAiProviderFromEnv } from '@mui-gamebook/core/lib/ai-provider-factory';
+import type { AiProvider, AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
 
 // Cloudflare 配置
 export const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID!;
@@ -20,23 +21,35 @@ export const s3Client = new S3Client({
   },
 });
 
-// Google AI 客户端
-export const genAI = new GoogleGenAI({
-  apiKey: process.env.GOOGLE_API_KEY_NEW!,
-});
-
 // R2 配置
 export const R2_BUCKET = process.env.R2_BUCKET!;
 export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL!;
 
-// Google 图片生成模型
-export const GOOGLE_IMAGE_MODEL = process.env.GOOGLE_IMAGE_MODEL!;
-
-// Google TTS 模型
-export const GOOGLE_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
-
 // TTS 默认声音（适合儿童的温和声音）
 export const DEFAULT_TTS_VOICE = process.env.DEFAULT_TTS_VOICE || 'Aoede';
+
+// 当前 AI Provider 实例（延迟初始化）
+let _aiProvider: AiProvider | null = null;
+let _providerType: AiProviderType | undefined;
+
+/**
+ * 设置 AI Provider 类型（用于命令行参数覆盖）
+ */
+export function setProviderType(type: AiProviderType): void {
+  _providerType = type;
+  _aiProvider = null; // 重置以便下次获取时重新创建
+}
+
+/**
+ * 获取 AI Provider 实例
+ */
+export function getAiProvider(): AiProvider {
+  if (!_aiProvider) {
+    _aiProvider = createAiProviderFromEnv(_providerType);
+    console.log(`[Config] Using AI provider: ${_aiProvider.type}`);
+  }
+  return _aiProvider;
+}
 
 /**
  * 检查远程命令必需的环境变量
