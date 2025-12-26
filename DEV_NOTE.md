@@ -132,11 +132,37 @@ CMS 对外提供的 API 遵循以下格式：
 2. **选项语音**：为每个选项单独生成语音
 
 技术实现：
-- 使用 Gemini TTS 模型 (`gemini-2.5-flash-preview-tts`)
-- 默认使用 Aoede 温和女声
-- 音频存储在 R2，格式为 WAV
+- Google TTS 使用 `gemini-2.5-flash-preview-tts` 模型
+- OpenAI TTS 使用 `gpt-4o-mini-tts` 模型
+- 音频存储在 R2，Google 输出 WAV，OpenAI 输出 MP3
+
+### 文件扩展名自动修正
+
+`generateAndUploadTTS` 和 `generateAndUploadImage` 函数会根据实际 mimeType 自动修正文件扩展名：
+
+| 来源 mimeType | 输出扩展名 |
+|--------------|-----------|
+| `audio/pcm` → `audio/wav` | `.wav` |
+| `audio/mpeg` | `.mp3` |
+| `image/png` | `.png` |
+| `image/jpeg` | `.jpg` |
+| `image/webp` | `.webp` |
+
+测试文件：`/packages/app/tests/lib/file-extension.test.ts`
+
+### 统一音色配置
+
+所有音色配置集中在 `@mui-gamebook/core/lib/voice-config.ts`：
+
+```typescript
+import { GOOGLE_VOICES, OPENAI_VOICES } from '@mui-gamebook/core/lib/voice-config';
+```
+
+- **Google**: 30 种音色（含女声、男声）
+- **OpenAI**: 13 种音色（含推荐音色 Marin、Cedar）
 
 相关文件：
+- `/packages/core/lib/voice-config.ts` - 统一音色配置
 - `/packages/app/src/lib/ai-service.ts` - `generateAndUploadTTS` 函数
 - `/packages/app/src/app/api/cms/assets/generate-tts/route.ts` - TTS API
 
@@ -339,4 +365,41 @@ pnpm batch --config ./configs/your-config.json [--force]
 - `/packages/app/src/app/api/cms/games/[id]/chat/route.ts` - Chat API
 - `/packages/app/src/components/editor/ChatPanel/` - 聊天组件
 - `/packages/app/src/lib/editor/chatFunctionHandlers.ts` - 操作处理器
+
+## 语音配置系统
+
+TTS 语音配置集中管理，支持多 AI 提供者。
+
+### 配置位置
+
+唯一数据源：`/packages/core/lib/voice-config.ts`
+
+App 包通过 re-export 使用：`/packages/app/src/lib/voice-config.ts`
+
+### 支持的提供者
+
+| 提供者 | 音色数量 | 默认音色 |
+|--------|----------|----------|
+| Google Gemini | 30 | Aoede (女) |
+| OpenAI | 13 | marin (男) |
+
+### 主要导出
+
+```typescript
+// 获取音色列表
+getAvailableVoices(provider: 'google' | 'openai'): VoiceOption[]
+
+// 获取默认音色
+getDefaultVoice(provider: 'google' | 'openai'): string
+
+// 验证音色 ID
+isValidVoiceId(voiceId: string, provider): boolean
+```
+
+### 角色语音预览
+
+编辑器支持为角色生成语音预览：
+
+- API: `/api/cms/games/[id]/generate-voice-preview`
+- 组件: `CharacterForm.tsx` 中的语音预览按钮
 

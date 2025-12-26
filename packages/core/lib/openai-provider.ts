@@ -164,7 +164,7 @@ export class OpenAiProvider implements AiProvider {
     const response = await fetch('https://api.openai.com/v1/videos/generations', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -182,7 +182,7 @@ export class OpenAiProvider implements AiProvider {
       throw new Error(`OpenAI 视频生成请求失败: ${response.status} ${errorText}`);
     }
 
-    const data = await response.json() as { id: string };
+    const data = (await response.json()) as { id: string };
 
     if (!data.id) {
       throw new Error('无法获取视频生成任务 ID');
@@ -209,7 +209,7 @@ export class OpenAiProvider implements AiProvider {
       const response = await fetch(`https://api.openai.com/v1/videos/generations/${operationName}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
       });
@@ -222,7 +222,7 @@ export class OpenAiProvider implements AiProvider {
         };
       }
 
-      const data = await response.json() as {
+      const data = (await response.json()) as {
         status: 'queued' | 'in_progress' | 'completed' | 'failed';
         output_url?: string;
         error?: { message: string };
@@ -338,16 +338,16 @@ export class OpenAiProvider implements AiProvider {
     };
   }
 
-  async generateTTS(text: string, voiceName: string = 'alloy'): Promise<TTSResult> {
+  async generateTTS(text: string, voiceName: string = 'marin'): Promise<TTSResult> {
     console.log(`[OpenAI] Generating TTS with voice: ${voiceName}`);
 
-    // OpenAI 支持的声音: alloy, echo, fable, onyx, nova, shimmer
-    const validVoices = ['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'];
-    const voice = validVoices.includes(voiceName) ? voiceName : 'alloy';
+    // 使用 voice-config 中的配置，不再硬编码
+    const { OPENAI_VOICE_IDS, DEFAULT_OPENAI_VOICE } = await import('./voice-config');
+    const voice = OPENAI_VOICE_IDS.includes(voiceName) ? voiceName : DEFAULT_OPENAI_VOICE;
 
     const response = await this.client.audio.speech.create({
-      model: 'tts-1',
-      voice: voice as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer',
+      model: 'gpt-4o-mini-tts',
+      voice,
       input: text,
       response_format: 'mp3',
     });

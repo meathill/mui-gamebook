@@ -4,33 +4,16 @@
  */
 import { retry } from './utils';
 import { getAiProvider, DEFAULT_TTS_VOICE } from './config';
-import type { TTSResult as CoreTTSResult } from '@mui-gamebook/core/lib/ai-provider';
+import {
+  GOOGLE_VOICE_IDS,
+  OPENAI_VOICE_IDS,
+  DEFAULT_GOOGLE_VOICE,
+  DEFAULT_OPENAI_VOICE,
+} from '@mui-gamebook/core/lib/voice-config';
 
-// 可用的声音选项（Google Gemini）
-export type GoogleVoiceName =
-  | 'Aoede' // 温和女声
-  | 'Kore' // 活泼女声
-  | 'Puck' // 活泼男声
-  | 'Charon' // 沉稳男声
-  | 'Fenrir' // 深沉男声
-  | 'Leda' // 温柔女声
-  | 'Orus' // 自然男声
-  | 'Zephyr'; // 中性声音
-
-// OpenAI 声音选项
-export type OpenAIVoiceName =
-  | 'alloy'
-  | 'ash'
-  | 'ballad'
-  | 'coral'
-  | 'echo'
-  | 'fable'
-  | 'nova'
-  | 'onyx'
-  | 'sage'
-  | 'shimmer'
-  | 'verse';
-
+// 音色类型从 core 配置派生
+export type GoogleVoiceName = (typeof GOOGLE_VOICE_IDS)[number];
+export type OpenAIVoiceName = (typeof OPENAI_VOICE_IDS)[number];
 export type VoiceName = GoogleVoiceName | OpenAIVoiceName;
 
 export interface TTSResult {
@@ -86,3 +69,6 @@ ${text}`;
 
   return generateSpeech(enhancedText, voiceName);
 }
+
+// 重新导出默认音色常量供外部使用
+export { DEFAULT_GOOGLE_VOICE, DEFAULT_OPENAI_VOICE };
