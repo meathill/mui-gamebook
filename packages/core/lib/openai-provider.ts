@@ -38,7 +38,7 @@ export class OpenAiProvider implements AiProvider {
     const response = await this.client.chat.completions.create({
       model,
       messages: [{ role: 'user', content: prompt }],
-      ...(options?.thinking && { max_completion_tokens: 16000 }),
+      ...(options?.thinking && { reasoning_effort: 'medium' }),
     });
 
     const usage: AiUsageInfo = {

@@ -180,6 +180,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
                   <Button
                     variant="soft"
                     color="gray"
+                    size="3"
                     onClick={() => closeDialog(false)}>
                     {dialog.cancelText}
                   </Button>

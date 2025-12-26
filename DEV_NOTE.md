@@ -156,12 +156,23 @@ CMS 对外提供的 API 遵循以下格式：
 
 | 方法 | 说明 | 支持 |
 |-----|------|------|
-| `generateText()` | 文本生成 | Google ✅ / OpenAI ✅ |
+| `generateText()` | 文本生成 (支持 reasoning) | Google ✅ / OpenAI ✅ |
 | `generateImage()` | 图片生成 | Google ✅ / OpenAI ✅ |
 | `chatWithTools()` | Function Calling | Google ✅ / OpenAI ✅ |
 | `generateTTS()` | 语音合成 | Google ✅ / OpenAI ✅ |
 | `startVideoGeneration()` | 视频生成 | Google ✅ / OpenAI ❌ |
 | `generateMiniGame()` | 小游戏生成 | Google ✅ / OpenAI ✅ |
+
+### Reasoning 模式
+
+文本生成支持 `thinking` 选项启用深入思考：
+
+```typescript
+const { text } = await provider.generateText(prompt, { thinking: true });
+```
+
+- **Google**: 使用 `thinkingConfig.thinkingLevel: 'MEDIUM'`
+- **OpenAI**: 使用 `reasoning_effort: 'medium'`（需 GPT-5.1 等支持 reasoning 的模型）
 
 ### 工厂函数
 
