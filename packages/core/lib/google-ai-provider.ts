@@ -16,8 +16,7 @@ import type {
   VideoGenerationStartResult,
   VideoGenerationStatusResult,
 } from './ai-provider';
-import { buildMiniGamePrompt } from './ai-provider';
-import { MINIGAME_API_SPEC } from './ai';
+import { buildMiniGamePrompt, MINIGAME_API_SPEC } from './ai';
 
 export class GoogleAiProvider implements AiProvider {
   readonly type = 'google' as const;
@@ -30,7 +29,7 @@ export class GoogleAiProvider implements AiProvider {
       image?: string;
       video?: string;
     } = {},
-  ) { }
+  ) {}
 
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
     const model = this.models.text || 'gemini-2.5-flash';

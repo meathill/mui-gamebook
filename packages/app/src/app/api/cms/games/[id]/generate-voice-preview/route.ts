@@ -24,7 +24,7 @@ export async function POST(req: Request, { params }: Params) {
     if (!characterId || !voiceName || !text) {
       return NextResponse.json(
         { error: 'Missing fields: characterId, voiceName, and text are required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 

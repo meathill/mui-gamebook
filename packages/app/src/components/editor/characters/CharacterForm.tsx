@@ -249,10 +249,11 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
             <select
               value={formData.voice_name || DEFAULT_VOICE}
               onChange={(e) => handleVoiceChange(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               {voices.map((voice) => (
-                <option key={voice.id} value={voice.id}>
+                <option
+                  key={voice.id}
+                  value={voice.id}>
                   {voice.name} - {voice.description}
                 </option>
               ))}
@@ -260,10 +261,12 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
             <button
               onClick={handleVoicePreview}
               disabled={generatingPreview}
-              className="flex items-center gap-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-            >
+              className="flex items-center gap-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
               {generatingPreview ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2
+                  size={16}
+                  className="animate-spin"
+                />
               ) : isPlaying ? (
                 <StopCircleIcon size={16} />
               ) : (

@@ -187,8 +187,7 @@ export default function MentionInput({
           part.type === 'mention' ? (
             <span
               key={index}
-              className="bg-purple-100 text-purple-100 rounded px-0.5"
-            >
+              className="bg-purple-100 text-purple-100 rounded px-0.5">
               {part.content}
             </span>
           ) : (

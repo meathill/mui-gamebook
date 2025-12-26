@@ -14,8 +14,7 @@ import type {
   TextGenerationResult,
   TTSResult,
 } from './ai-provider';
-import { buildMiniGamePrompt } from './ai-provider';
-import { extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
+import { buildMiniGamePrompt, extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
 
 export class OpenAiProvider implements AiProvider {
   readonly type = 'openai' as const;
@@ -93,6 +92,7 @@ export class OpenAiProvider implements AiProvider {
           prompt: `Based on the reference image, ${prompt}`,
           n: 1,
           size: size as '1024x1024' | '1536x1024' | '1024x1536',
+          output_format: 'webp',
         });
 
         imageData = response.data?.[0]?.b64_json;
@@ -104,16 +104,18 @@ export class OpenAiProvider implements AiProvider {
           prompt,
           n: 1,
           size: size as '1024x1024' | '1536x1024' | '1024x1536',
+          output_format: 'webp',
         });
         imageData = response.data?.[0]?.b64_json;
       }
     } else {
-      // gpt-image-1 系列模型默认返回 b64_json，无需 response_format 参数
       const response = await this.client.images.generate({
         model,
+        moderation: 'low',
         prompt,
         n: 1,
         size: size as '1024x1024' | '1536x1024' | '1024x1536',
+        output_format: 'webp',
       });
       imageData = response.data?.[0]?.b64_json;
     }

@@ -8,8 +8,7 @@ export default function CharacterTag({ name }: CharacterTagProps) {
   return (
     <span
       className="inline-flex items-center px-1.5 py-0.5 mx-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium cursor-default select-none"
-      contentEditable={false}
-    >
+      contentEditable={false}>
       @{name}
     </span>
   );
