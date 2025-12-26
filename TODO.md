@@ -4,6 +4,6 @@ TODO
 - 选项倒计时
 - 许愿墙
 - 游戏地图，显示所有已探索的区域，用户可以在可以选择不同的分支进行游戏
-- 国际化支持
+- 修复国际化支持
 - 更多的变量展示图标选项
-- 修复 `sites/jianjian` API 测试（`getGame`、`getPlayableGame` 等测试因 `getCloudflareContext` mock 问题失败）
+
