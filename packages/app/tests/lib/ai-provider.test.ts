@@ -141,3 +141,104 @@ describe('FunctionDeclaration 格式', () => {
     expect(declaration.parameters.required).toContain('param1');
   });
 });
+
+describe('视频生成接口', () => {
+  describe('startVideoGeneration', () => {
+    it('返回 operationName 和用量信息', async () => {
+      const mockProvider: AiProvider = {
+        type: 'openai',
+        generateText: vi.fn(),
+        generateImage: vi.fn(),
+        generateMiniGame: vi.fn(),
+        startVideoGeneration: vi.fn().mockResolvedValue({
+          operationName: 'video-job-123',
+          usage: { promptTokens: 0, completionTokens: 0, totalTokens: 100000 },
+        }),
+        checkVideoGenerationStatus: vi.fn(),
+      };
+
+      const result = await mockProvider.startVideoGeneration!('生成一个视频');
+
+      expect(result.operationName).toBe('video-job-123');
+      expect(result.usage.totalTokens).toBe(100000);
+    });
+
+    it('支持配置参数', async () => {
+      const mockProvider: AiProvider = {
+        type: 'google',
+        generateText: vi.fn(),
+        generateImage: vi.fn(),
+        generateMiniGame: vi.fn(),
+        startVideoGeneration: vi.fn().mockResolvedValue({
+          operationName: 'op-456',
+          usage: { promptTokens: 0, completionTokens: 0, totalTokens: 50000 },
+        }),
+      };
+
+      await mockProvider.startVideoGeneration!('prompt', {
+        durationSeconds: 10,
+        aspectRatio: '16:9',
+      });
+
+      expect(mockProvider.startVideoGeneration).toHaveBeenCalledWith('prompt', {
+        durationSeconds: 10,
+        aspectRatio: '16:9',
+      });
+    });
+  });
+
+  describe('checkVideoGenerationStatus', () => {
+    it('返回 pending 状态', async () => {
+      const mockProvider: AiProvider = {
+        type: 'openai',
+        generateText: vi.fn(),
+        generateImage: vi.fn(),
+        generateMiniGame: vi.fn(),
+        checkVideoGenerationStatus: vi.fn().mockResolvedValue({
+          done: false,
+        }),
+      };
+
+      const result = await mockProvider.checkVideoGenerationStatus!('job-123');
+
+      expect(result.done).toBe(false);
+      expect(result.uri).toBeUndefined();
+    });
+
+    it('返回 completed 状态和视频 URI', async () => {
+      const mockProvider: AiProvider = {
+        type: 'google',
+        generateText: vi.fn(),
+        generateImage: vi.fn(),
+        generateMiniGame: vi.fn(),
+        checkVideoGenerationStatus: vi.fn().mockResolvedValue({
+          done: true,
+          uri: 'https://storage.example.com/video.mp4',
+        }),
+      };
+
+      const result = await mockProvider.checkVideoGenerationStatus!('job-456');
+
+      expect(result.done).toBe(true);
+      expect(result.uri).toBe('https://storage.example.com/video.mp4');
+    });
+
+    it('返回 failed 状态和错误信息', async () => {
+      const mockProvider: AiProvider = {
+        type: 'openai',
+        generateText: vi.fn(),
+        generateImage: vi.fn(),
+        generateMiniGame: vi.fn(),
+        checkVideoGenerationStatus: vi.fn().mockResolvedValue({
+          done: true,
+          error: '视频生成失败：内容不合规',
+        }),
+      };
+
+      const result = await mockProvider.checkVideoGenerationStatus!('job-789');
+
+      expect(result.done).toBe(true);
+      expect(result.error).toBe('视频生成失败：内容不合规');
+    });
+  });
+});

@@ -160,7 +160,7 @@ CMS 对外提供的 API 遵循以下格式：
 | `generateImage()` | 图片生成 | Google ✅ / OpenAI ✅ |
 | `chatWithTools()` | Function Calling | Google ✅ / OpenAI ✅ |
 | `generateTTS()` | 语音合成 | Google ✅ / OpenAI ✅ |
-| `startVideoGeneration()` | 视频生成 | Google ✅ / OpenAI ❌ |
+| `startVideoGeneration()` | 视频生成 | Google ✅ / OpenAI ✅ |
 | `generateMiniGame()` | 小游戏生成 | Google ✅ / OpenAI ✅ |
 
 ### Reasoning 模式

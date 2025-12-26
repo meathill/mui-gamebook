@@ -62,12 +62,20 @@ export async function GET(req: Request) {
       });
     }
 
-    // 检查 Google API 状态
+    // 检查视频生成状态
     if (operation.type === 'video_generation' && operation.operation_name) {
-      const inputData = operation.input_data ? JSON.parse(operation.input_data) : {};
+      const inputData = operation.input_data ? JSON.parse(operation.input_data) as {
+        gameId?: string;
+        provider?: 'google' | 'openai';
+      } : {};
       const fileName = `video/${inputData.gameId}/${Date.now()}.mp4`;
 
-      const result = await checkAndCompleteVideoGeneration(operation.operation_name, fileName);
+      // 从 inputData 中获取 provider 类型
+      const result = await checkAndCompleteVideoGeneration(
+        operation.operation_name,
+        fileName,
+        inputData.provider,
+      );
 
       if (result.done) {
         if (result.error) {

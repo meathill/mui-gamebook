@@ -13,6 +13,8 @@ import type {
   MiniGameGenerationResult,
   TextGenerationResult,
   TTSResult,
+  VideoGenerationStartResult,
+  VideoGenerationStatusResult,
 } from './ai-provider';
 import { buildMiniGamePrompt, extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
 
@@ -21,10 +23,11 @@ export class OpenAiProvider implements AiProvider {
   private client: OpenAI;
 
   constructor(
-    apiKey: string,
+    private apiKey: string,
     private models: {
       text?: string;
       image?: string;
+      video?: string;
     } = {},
   ) {
     this.client = new OpenAI({ apiKey });
@@ -138,8 +141,115 @@ export class OpenAiProvider implements AiProvider {
     };
   }
 
-  // OpenAI 目前不支持视频生成，这些方法不实现
-  // startVideoGeneration 和 checkVideoGenerationStatus 将使用 Google AI
+  /**
+   * 启动视频生成（使用 Sora API）
+   */
+  async startVideoGeneration(
+    prompt: string,
+    config?: { durationSeconds?: number; aspectRatio?: string },
+  ): Promise<VideoGenerationStartResult> {
+    const model = this.models.video || 'sora-2';
+    console.log(`[OpenAI] Starting video generation with model: ${model}`);
+
+    // 映射宽高比到分辨率
+    const aspectRatio = config?.aspectRatio || '16:9';
+    const resolutionMap: Record<string, '480p' | '720p' | '1080p'> = {
+      '16:9': '720p',
+      '9:16': '720p',
+      '1:1': '720p',
+    };
+    const resolution = resolutionMap[aspectRatio] || '720p';
+
+    // 调用 Sora API 创建视频生成任务
+    const response = await fetch('https://api.openai.com/v1/videos/generations', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        prompt,
+        n: 1,
+        size: resolution,
+        duration: config?.durationSeconds ?? 5,
+        aspect_ratio: aspectRatio,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI 视频生成请求失败: ${response.status} ${errorText}`);
+    }
+
+    const data = await response.json() as { id: string };
+
+    if (!data.id) {
+      throw new Error('无法获取视频生成任务 ID');
+    }
+
+    return {
+      operationName: data.id,
+      usage: {
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 100_000, // Sora 视频生成估算用量
+      },
+    };
+  }
+
+  /**
+   * 检查视频生成状态
+   */
+  async checkVideoGenerationStatus(operationName: string): Promise<VideoGenerationStatusResult> {
+    console.log(`[OpenAI] Checking video generation status: ${operationName}`);
+
+    try {
+      // 查询视频生成状态
+      const response = await fetch(`https://api.openai.com/v1/videos/generations/${operationName}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        return {
+          done: false,
+          error: `HTTP error: ${response.status} ${errorText}`,
+        };
+      }
+
+      const data = await response.json() as {
+        status: 'queued' | 'in_progress' | 'completed' | 'failed';
+        output_url?: string;
+        error?: { message: string };
+      };
+
+      if (data.status === 'completed' && data.output_url) {
+        return {
+          done: true,
+          uri: data.output_url,
+        };
+      }
+
+      if (data.status === 'failed') {
+        return {
+          done: true,
+          error: data.error?.message || '视频生成失败',
+        };
+      }
+
+      // queued 或 in_progress
+      console.log(`[OpenAI] 视频生成状态: ${data.status}`);
+      return { done: false };
+    } catch (error) {
+      console.error('[OpenAI] 检查视频状态失败:', error);
+      return { done: false, error: '轮询请求出错' };
+    }
+  }
 
   async generateMiniGame(prompt: string, variables?: Record<string, string>): Promise<MiniGameGenerationResult> {
     const model = this.models.text || 'gpt-4o';

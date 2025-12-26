@@ -76,17 +76,17 @@ export async function generateAndUploadImage(
 /**
  * 启动异步视频生成（不等待完成）
  * 返回 operation name，可用于后续检查状态
- * 注意：视频生成始终使用 Google AI，因为 OpenAI 不支持
+ * 支持 Google AI 和 OpenAI (Sora)
  */
 export async function startAsyncVideoGeneration(
   prompt: string,
   config?: { durationSeconds?: number; aspectRatio?: string },
 ): Promise<StartVideoGenerationResult> {
-  // 视频生成始终使用 Google AI
-  const provider = await createGoogleAiProvider();
+  // 使用配置的 AI provider
+  const provider = await createAiProvider();
 
   if (!provider.startVideoGeneration) {
-    throw new Error('视频生成功能不可用');
+    throw new Error('当前 AI 提供者不支持视频生成');
   }
 
   const { operationName, usage } = await provider.startVideoGeneration(prompt, config);
@@ -94,24 +94,28 @@ export async function startAsyncVideoGeneration(
   return {
     operationName,
     usage,
-    model: 'google-video',
+    model: provider.type,
   };
 }
 
 /**
  * 检查视频生成状态并在完成时上传到 R2
+ * @param operationName 操作名称/ID
+ * @param fileName 上传到 R2 的文件名
+ * @param providerType AI 提供者类型（从 operation 记录中获取）
  */
 export async function checkAndCompleteVideoGeneration(
   operationName: string,
   fileName: string,
+  providerType?: 'google' | 'openai',
 ): Promise<CheckVideoStatusResult> {
   const { env } = getCloudflareContext();
 
-  // 视频状态检查始终使用 Google AI
-  const provider = await createGoogleAiProvider();
+  // 根据 provider 类型创建对应的 provider
+  const provider = await createAiProvider(providerType);
 
   if (!provider.checkVideoGenerationStatus) {
-    throw new Error('视频状态检查功能不可用');
+    throw new Error('当前 AI 提供者不支持视频状态检查');
   }
 
   const status = await provider.checkVideoGenerationStatus(operationName);
@@ -132,12 +136,19 @@ export async function checkAndCompleteVideoGeneration(
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  // 根据 provider 类型设置不同的下载认证
+  const headers: Record<string, string> = {};
+  if (providerType === 'google' || !providerType) {
+    const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+    headers['x-goog-api-key'] = apiKey || '';
+  } else if (providerType === 'openai') {
+    const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+    headers['Authorization'] = `Bearer ${apiKey}`;
+  }
+
   const videoResponse = await fetch(status.uri, {
     method: 'GET',
-    headers: {
-      'x-goog-api-key': apiKey || '',
-    },
+    headers,
   });
   const video = await videoResponse.arrayBuffer();
 
