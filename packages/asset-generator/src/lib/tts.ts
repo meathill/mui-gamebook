@@ -1,16 +1,13 @@
 /**
  * TTS 语音生成模块
- * 使用 Gemini TTS 将文本转换为语音
+ * 使用 AI Provider 将文本转换为语音
  */
-import type { GoogleGenAI } from '@google/genai';
 import { retry } from './utils';
+import { getAiProvider, DEFAULT_TTS_VOICE } from './config';
+import type { TTSResult as CoreTTSResult } from '@mui-gamebook/core/lib/ai-provider';
 
-// TTS 模型
-export const GOOGLE_TTS_MODEL = 'gemini-2.5-flash-preview-tts';
-
-// 可用的声音选项
-// 适合儿童的温和声音推荐：Aoede, Kore, Puck
-export type VoiceName =
+// 可用的声音选项（Google Gemini）
+export type GoogleVoiceName =
   | 'Aoede' // 温和女声
   | 'Kore' // 活泼女声
   | 'Puck' // 活泼男声
@@ -20,39 +17,44 @@ export type VoiceName =
   | 'Orus' // 自然男声
   | 'Zephyr'; // 中性声音
 
+// OpenAI 声音选项
+export type OpenAIVoiceName =
+  | 'alloy'
+  | 'ash'
+  | 'ballad'
+  | 'coral'
+  | 'echo'
+  | 'fable'
+  | 'nova'
+  | 'onyx'
+  | 'sage'
+  | 'shimmer'
+  | 'verse';
+
+export type VoiceName = GoogleVoiceName | OpenAIVoiceName;
+
 export interface TTSResult {
   buffer: Buffer;
   mimeType: string;
 }
 
 /**
- * 生成语音（内部实现）
+ * 生成语音
  */
-async function _generateSpeech(genAI: GoogleGenAI, text: string, voiceName: VoiceName = 'Aoede'): Promise<TTSResult> {
+async function _generateSpeech(text: string, voiceName: VoiceName = 'Aoede'): Promise<TTSResult> {
   console.log(`[TTS] Generating speech for: "${text.substring(0, 50)}..."`);
 
-  const response = await genAI.models.generateContent({
-    model: GOOGLE_TTS_MODEL,
-    contents: [{ parts: [{ text }] }],
-    config: {
-      responseModalities: ['AUDIO'],
-      speechConfig: {
-        voiceConfig: {
-          prebuiltVoiceConfig: { voiceName },
-        },
-      },
-    },
-  });
+  const provider = getAiProvider();
 
-  const data = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-
-  if (!data) {
-    throw new Error('TTS 生成失败：未返回音频数据');
+  if (!provider.generateTTS) {
+    throw new Error(`AI provider ${provider.type} does not support TTS`);
   }
 
+  const result = await provider.generateTTS(text, voiceName);
+
   return {
-    buffer: Buffer.from(data, 'base64'),
-    mimeType: 'audio/wav',
+    buffer: result.buffer,
+    mimeType: result.mimeType,
   };
 }
 
@@ -60,11 +62,10 @@ async function _generateSpeech(genAI: GoogleGenAI, text: string, voiceName: Voic
  * 生成语音（带重试）
  */
 export async function generateSpeech(
-  genAI: GoogleGenAI,
   text: string,
-  voiceName: VoiceName = 'Aoede',
+  voiceName: VoiceName = DEFAULT_TTS_VOICE as VoiceName,
 ): Promise<TTSResult> {
-  return retry(() => _generateSpeech(genAI, text, voiceName));
+  return retry(() => _generateSpeech(text, voiceName));
 }
 
 /**
@@ -72,9 +73,8 @@ export async function generateSpeech(
  * 使用温和、有表现力的方式朗读
  */
 export async function generateStorySpeech(
-  genAI: GoogleGenAI,
   text: string,
-  voiceName: VoiceName = 'Aoede',
+  voiceName: VoiceName = DEFAULT_TTS_VOICE as VoiceName,
   style?: string,
 ): Promise<TTSResult> {
   // 使用自定义风格或默认风格
@@ -84,5 +84,5 @@ export async function generateStorySpeech(
 
 ${text}`;
 
-  return generateSpeech(genAI, enhancedText, voiceName);
+  return generateSpeech(enhancedText, voiceName);
 }

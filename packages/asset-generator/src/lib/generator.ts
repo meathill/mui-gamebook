@@ -2,10 +2,10 @@
  * 素材生成模块
  */
 import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { generateImage as _generateImage, type AiUsageInfo } from '@mui-gamebook/core/lib/ai';
+import type { AiUsageInfo } from '@mui-gamebook/core/lib/ai-provider';
 import type { Game, SceneNode } from '@mui-gamebook/parser';
 import slugify from 'slugify';
-import { genAI, s3Client, R2_BUCKET, R2_PUBLIC_URL, GOOGLE_IMAGE_MODEL, DEFAULT_TTS_VOICE } from './config';
+import { getAiProvider, s3Client, R2_BUCKET, R2_PUBLIC_URL, DEFAULT_TTS_VOICE } from './config';
 import { retry } from './utils';
 import { addUsage } from './usage';
 import { generateStorySpeech, type VoiceName } from './tts';
@@ -22,7 +22,15 @@ export async function generateImage(prompt: string): Promise<{
     buffer: Buffer;
     type: string;
     usage: AiUsageInfo;
-  }>(() => _generateImage(genAI, GOOGLE_IMAGE_MODEL, prompt));
+  }>(async () => {
+    const provider = getAiProvider();
+    const result = await provider.generateImage(prompt);
+    return {
+      buffer: result.buffer,
+      type: result.type,
+      usage: result.usage,
+    };
+  });
 }
 
 /**
@@ -207,7 +215,7 @@ export async function processNodeTTS(
   if (node.type === 'text' && (!node.audio_url || force)) {
     try {
       console.log(`[TTS] Processing text node in scene ${sceneId}...`);
-      const { buffer, mimeType } = await generateStorySpeech(genAI, node.content, voiceName);
+      const { buffer, mimeType } = await generateStorySpeech(node.content, voiceName);
 
       const fileName = `audio/${folder}/${sceneId}-text-${nodeIndex}-${Date.now()}.wav`;
       const publicUrl = await uploadToR2(fileName, buffer, mimeType);
@@ -225,7 +233,7 @@ export async function processNodeTTS(
   if (node.type === 'choice' && (!node.audio_url || force)) {
     try {
       console.log(`[TTS] Processing choice node in scene ${sceneId}...`);
-      const { buffer, mimeType } = await generateStorySpeech(genAI, node.text, voiceName);
+      const { buffer, mimeType } = await generateStorySpeech(node.text, voiceName);
 
       const fileName = `audio/${folder}/${sceneId}-choice-${nodeIndex}-${Date.now()}.wav`;
       const publicUrl = await uploadToR2(fileName, buffer, mimeType);
@@ -253,7 +261,7 @@ export async function processGame(game: Game, force: boolean): Promise<boolean> 
   if (globalChanged) hasChanged = true;
 
   // 处理场景素材
-  for (const scene of game.scenes.values()) {
+  for (const scene of Object.values(game.scenes)) {
     for (let i = 0; i < scene.nodes.length; i++) {
       const node = scene.nodes[i];
 

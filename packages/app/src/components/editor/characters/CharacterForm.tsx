@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { Sparkles, Upload, Loader2 } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Sparkles, Upload, Loader2, PlayIcon, StopCircleIcon } from 'lucide-react';
 import type { CharacterFormData } from './index';
+import { getAvailableVoices, DEFAULT_VOICE } from '@/lib/voice-config';
 
 interface Props {
   formData: CharacterFormData;
@@ -13,6 +14,27 @@ interface Props {
 export default function CharacterForm({ formData, isCreating, gameId, onUpdate, onSave }: Props) {
   const [generatingImage, setGeneratingImage] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [generatingPreview, setGeneratingPreview] = useState(false);
+  // 缓存每个音色的预览 URL，key 为音色名称
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [aiProvider, setAiProvider] = useState<'google' | 'openai'>('google');
+
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const voices = getAvailableVoices(aiProvider);
+
+  // 获取当前 AI provider 配置
+  useEffect(() => {
+    fetch('/api/cms/config')
+      .then((res) => res.json())
+      .then((data) => {
+        const config = data as { defaultAiProvider?: 'google' | 'openai' };
+        if (config.defaultAiProvider) {
+          setAiProvider(config.defaultAiProvider);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handleGenerateImage = async () => {
     if (!formData.image_prompt) return;
@@ -57,6 +79,70 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
       console.error('上传角色图片失败:', e);
     } finally {
       setUploadingImage(false);
+    }
+  };
+
+  const handleVoicePreview = async () => {
+    // 如果正在播放，停止播放
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      setIsPlaying(false);
+      return;
+    }
+
+    const voiceName = formData.voice_name || DEFAULT_VOICE;
+    const text = formData.description || formData.name || '你好，我是这个故事里的角色。';
+
+    // 如果已有该音色的缓存预览 URL，直接播放
+    const cachedUrl = previewUrls[voiceName];
+    if (cachedUrl) {
+      playAudio(cachedUrl);
+      return;
+    }
+
+    // 否则生成新的预览
+    setGeneratingPreview(true);
+    try {
+      const res = await fetch(`/api/cms/games/${gameId}/generate-voice-preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          characterId: formData.id,
+          voiceName,
+          text,
+        }),
+      });
+      if (!res.ok) throw new Error('生成失败');
+      const data = (await res.json()) as { url: string };
+      // 缓存该音色的预览 URL
+      setPreviewUrls((prev) => ({ ...prev, [voiceName]: data.url }));
+      playAudio(data.url);
+    } catch (e) {
+      console.error('生成语音预览失败:', e);
+    } finally {
+      setGeneratingPreview(false);
+    }
+  };
+
+  function playAudio(url: string) {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+    const audio = new Audio(url);
+    audioRef.current = audio;
+    audio.onplay = () => setIsPlaying(true);
+    audio.onended = () => setIsPlaying(false);
+    audio.onerror = () => setIsPlaying(false);
+    audio.play();
+  }
+
+  const handleVoiceChange = (voiceName: string) => {
+    onUpdate({ voice_name: voiceName });
+    // 停止当前播放（不清除缓存，保留已生成的预览）
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
     }
   };
 
@@ -171,16 +257,40 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
           </div>
         </div>
 
-        {/* 语音样本 URL */}
+        {/* 角色音色 */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">语音样本 URL</label>
-          <input
-            type="text"
-            value={formData.voice_sample_url}
-            onChange={(e) => onUpdate({ voice_sample_url: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="用于生成角色语音的样本音频 URL"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">角色音色</label>
+          <div className="flex items-center gap-2">
+            <select
+              value={formData.voice_name || DEFAULT_VOICE}
+              onChange={(e) => handleVoiceChange(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              {voices.map((voice) => (
+                <option
+                  key={voice.id}
+                  value={voice.id}>
+                  {voice.name} - {voice.description}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleVoicePreview}
+              disabled={generatingPreview}
+              className="flex items-center gap-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+              {generatingPreview ? (
+                <Loader2
+                  size={16}
+                  className="animate-spin"
+                />
+              ) : isPlaying ? (
+                <StopCircleIcon size={16} />
+              ) : (
+                <PlayIcon size={16} />
+              )}
+              {generatingPreview ? '生成中...' : isPlaying ? '停止' : '试听'}
+            </button>
+          </div>
+          <p className="mt-1 text-xs text-gray-500">选择角色说话的语音风格，点击试听可以预览效果</p>
         </div>
 
         {/* 保存按钮（仅创建时显示） */}

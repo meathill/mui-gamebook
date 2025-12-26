@@ -9,7 +9,7 @@ export interface CharacterFormData {
   description: string;
   image_prompt: string;
   image_url: string;
-  voice_sample_url: string;
+  voice_name: string;
 }
 
 export const defaultCharacterFormData: CharacterFormData = {
@@ -18,7 +18,7 @@ export const defaultCharacterFormData: CharacterFormData = {
   description: '',
   image_prompt: '',
   image_url: '',
-  voice_sample_url: '',
+  voice_name: '',
 };
 
 export function characterToFormData(id: string, char: AICharacter): CharacterFormData {
@@ -28,7 +28,7 @@ export function characterToFormData(id: string, char: AICharacter): CharacterFor
     description: char.description || '',
     image_prompt: char.image_prompt || '',
     image_url: char.image_url || '',
-    voice_sample_url: char.voice_sample_url || '',
+    voice_name: char.voice_name || '',
   };
 }
 
@@ -38,6 +38,6 @@ export function formDataToCharacter(data: CharacterFormData): AICharacter {
     description: data.description || undefined,
     image_prompt: data.image_prompt || undefined,
     image_url: data.image_url || undefined,
-    voice_sample_url: data.voice_sample_url || undefined,
+    voice_name: data.voice_name || undefined,
   };
 }

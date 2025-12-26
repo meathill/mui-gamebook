@@ -47,8 +47,7 @@ export default function CharacterDropdown({
       <div
         ref={dropdownRef}
         className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-2 text-xs text-gray-500"
-        style={{ top: position.top, left: position.left }}
-      >
+        style={{ top: position.top, left: position.left }}>
         没有匹配的角色
       </div>
     );
@@ -58,17 +57,16 @@ export default function CharacterDropdown({
     <div
       ref={dropdownRef}
       className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 max-h-48 overflow-y-auto min-w-48"
-      style={{ top: position.top, left: position.left }}
-    >
+      style={{ top: position.top, left: position.left }}>
       {filteredCharacters.map(({ id, character }, index) => (
         <button
           key={id}
           type="button"
           data-selected={index === selectedIndex}
-          className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${index === selectedIndex ? 'bg-purple-50 text-purple-700' : ''
-            }`}
-          onClick={() => onSelect(id)}
-        >
+          className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-gray-100 transition-colors ${
+            index === selectedIndex ? 'bg-purple-50 text-purple-700' : ''
+          }`}
+          onClick={() => onSelect(id)}>
           {/* 角色头像 */}
           <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
             {character.image_url ? (
