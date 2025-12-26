@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Upload, Loader2, PlayIcon, StopCircleIcon } from 'lucide-react';
 import type { CharacterFormData } from './index';
 import { getAvailableVoices, DEFAULT_VOICE } from '@/lib/voice-config';
@@ -15,11 +15,26 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
   const [generatingImage, setGeneratingImage] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [generatingPreview, setGeneratingPreview] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // 缓存每个音色的预览 URL，key 为音色名称
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const [isPlaying, setIsPlaying] = useState(false);
+  const [aiProvider, setAiProvider] = useState<'google' | 'openai'>('google');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const voices = getAvailableVoices();
+  const voices = getAvailableVoices(aiProvider);
+
+  // 获取当前 AI provider 配置
+  useEffect(() => {
+    fetch('/api/cms/config')
+      .then((res) => res.json())
+      .then((data) => {
+        const config = data as { defaultAiProvider?: 'google' | 'openai' };
+        if (config.defaultAiProvider) {
+          setAiProvider(config.defaultAiProvider);
+        }
+      })
+      .catch(console.error);
+  }, []);
 
   const handleGenerateImage = async () => {
     if (!formData.image_prompt) return;
@@ -79,9 +94,10 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
     const voiceName = formData.voice_name || DEFAULT_VOICE;
     const text = formData.description || formData.name || '你好，我是这个故事里的角色。';
 
-    // 如果已有缓存的预览 URL 且音色未变，直接播放
-    if (previewUrl) {
-      playAudio(previewUrl);
+    // 如果已有该音色的缓存预览 URL，直接播放
+    const cachedUrl = previewUrls[voiceName];
+    if (cachedUrl) {
+      playAudio(cachedUrl);
       return;
     }
 
@@ -99,7 +115,8 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
       });
       if (!res.ok) throw new Error('生成失败');
       const data = (await res.json()) as { url: string };
-      setPreviewUrl(data.url);
+      // 缓存该音色的预览 URL
+      setPreviewUrls((prev) => ({ ...prev, [voiceName]: data.url }));
       playAudio(data.url);
     } catch (e) {
       console.error('生成语音预览失败:', e);
@@ -122,9 +139,7 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
 
   const handleVoiceChange = (voiceName: string) => {
     onUpdate({ voice_name: voiceName });
-    // 清除缓存的预览 URL，因为音色变了
-    setPreviewUrl(null);
-    // 停止当前播放
+    // 停止当前播放（不清除缓存，保留已生成的预览）
     if (audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);

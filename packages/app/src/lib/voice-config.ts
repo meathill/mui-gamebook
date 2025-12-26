@@ -44,11 +44,10 @@ export const OPENAI_VOICES: VoiceOption[] = [
 ];
 
 /**
- * 获取所有可用的音色列表
- * 目前只返回 Google 音色，因为主要使用 Google TTS
+ * 根据 AI 提供者类型获取可用的音色列表
  */
-export function getAvailableVoices(): VoiceOption[] {
-  return GOOGLE_VOICES;
+export function getAvailableVoices(provider: 'google' | 'openai' = 'google'): VoiceOption[] {
+  return provider === 'openai' ? OPENAI_VOICES : GOOGLE_VOICES;
 }
 
 /**
