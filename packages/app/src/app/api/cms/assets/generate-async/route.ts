@@ -47,13 +47,13 @@ export async function POST(req: Request) {
         usage,
       });
 
-      // 创建待处理操作记录
+      // 创建待处理操作记录，保存 provider 类型用于后续状态检查
       const operationId = await createPendingOperation({
         userId: session.user.id,
         gameId: parseInt(gameId, 10),
         type: 'video_generation',
         operationName,
-        inputData: { prompt, config, gameId },
+        inputData: { prompt, config, gameId, provider: model },
       });
 
       // 返回占位符 URL

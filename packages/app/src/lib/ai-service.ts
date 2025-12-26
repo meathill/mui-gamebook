@@ -5,6 +5,42 @@ import { wrapWav } from './audio';
 
 export type { AiUsageInfo };
 
+/**
+ * 根据 mimeType 获取对应的文件扩展名
+ */
+export function getExtensionForMimeType(mimeType: string): string {
+  const mimeToExt: Record<string, string> = {
+    'audio/wav': '.wav',
+    'audio/mpeg': '.mp3',
+    'audio/mp3': '.mp3',
+    'audio/ogg': '.ogg',
+    'audio/pcm': '.wav', // PCM 会被转为 WAV
+    'image/png': '.png',
+    'image/jpeg': '.jpg',
+    'image/webp': '.webp',
+    'image/gif': '.gif',
+    'video/mp4': '.mp4',
+    'video/webm': '.webm',
+  };
+  return mimeToExt[mimeType] || '';
+}
+
+/**
+ * 修正文件名扩展名以匹配实际的 mimeType
+ */
+export function fixFileExtension(fileName: string, mimeType: string): string {
+  const expectedExt = getExtensionForMimeType(mimeType);
+  if (!expectedExt) return fileName;
+
+  // 移除现有扩展名并添加正确的扩展名
+  const lastDotIndex = fileName.lastIndexOf('.');
+  if (lastDotIndex > fileName.lastIndexOf('/')) {
+    const baseName = fileName.substring(0, lastDotIndex);
+    return baseName + expectedExt;
+  }
+  return fileName + expectedExt;
+}
+
 export interface GenerateImageResult {
   url: string;
   usage: AiUsageInfo;
@@ -53,21 +89,26 @@ export async function generateAndUploadImage(
 
   // 使用 AI 提供者工厂创建提供者
   const provider = await createAiProvider();
-  const { buffer, usage } = await provider.generateImage(prompt, {
+  const { buffer, type, usage } = await provider.generateImage(prompt, {
     aspectRatio: options?.aspectRatio,
     referenceImages: options?.referenceImages,
   });
+
+  // 根据实际 mimeType 修正文件扩展名
+  const finalFileName = fixFileExtension(fileName, type);
 
   // 上传到 R2
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
-  await bucket.put(fileName, buffer);
+  await bucket.put(finalFileName, buffer, {
+    httpMetadata: { contentType: type },
+  });
 
   // 返回公开 URL 和用量信息
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
   return {
-    url: `${publicDomain}/${fileName}`,
+    url: `${publicDomain}/${finalFileName}`,
     usage,
     model: provider.type,
   };
@@ -76,17 +117,17 @@ export async function generateAndUploadImage(
 /**
  * 启动异步视频生成（不等待完成）
  * 返回 operation name，可用于后续检查状态
- * 注意：视频生成始终使用 Google AI，因为 OpenAI 不支持
+ * 支持 Google AI 和 OpenAI (Sora)
  */
 export async function startAsyncVideoGeneration(
   prompt: string,
   config?: { durationSeconds?: number; aspectRatio?: string },
 ): Promise<StartVideoGenerationResult> {
-  // 视频生成始终使用 Google AI
-  const provider = await createGoogleAiProvider();
+  // 使用配置的 AI provider
+  const provider = await createAiProvider();
 
   if (!provider.startVideoGeneration) {
-    throw new Error('视频生成功能不可用');
+    throw new Error('当前 AI 提供者不支持视频生成');
   }
 
   const { operationName, usage } = await provider.startVideoGeneration(prompt, config);
@@ -94,24 +135,28 @@ export async function startAsyncVideoGeneration(
   return {
     operationName,
     usage,
-    model: 'google-video',
+    model: provider.type,
   };
 }
 
 /**
  * 检查视频生成状态并在完成时上传到 R2
+ * @param operationName 操作名称/ID
+ * @param fileName 上传到 R2 的文件名
+ * @param providerType AI 提供者类型（从 operation 记录中获取）
  */
 export async function checkAndCompleteVideoGeneration(
   operationName: string,
   fileName: string,
+  providerType?: 'google' | 'openai',
 ): Promise<CheckVideoStatusResult> {
   const { env } = getCloudflareContext();
 
-  // 视频状态检查始终使用 Google AI
-  const provider = await createGoogleAiProvider();
+  // 根据 provider 类型创建对应的 provider
+  const provider = await createAiProvider(providerType);
 
   if (!provider.checkVideoGenerationStatus) {
-    throw new Error('视频状态检查功能不可用');
+    throw new Error('当前 AI 提供者不支持视频状态检查');
   }
 
   const status = await provider.checkVideoGenerationStatus(operationName);
@@ -132,12 +177,19 @@ export async function checkAndCompleteVideoGeneration(
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  // 根据 provider 类型设置不同的下载认证
+  const headers: Record<string, string> = {};
+  if (providerType === 'google' || !providerType) {
+    const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+    headers['x-goog-api-key'] = apiKey || '';
+  } else if (providerType === 'openai') {
+    const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+    headers['Authorization'] = `Bearer ${apiKey}`;
+  }
+
   const videoResponse = await fetch(status.uri, {
     method: 'GET',
-    headers: {
-      'x-goog-api-key': apiKey || '',
-    },
+    headers,
   });
   const video = await videoResponse.arrayBuffer();
 
@@ -192,22 +244,17 @@ export async function generateAndStoreMiniGame(
 }
 
 /**
- * TTS 声音选项
+ * TTS 声音选项（从 core 配置派生）
  */
-export type TTSVoiceName =
-  | 'Aoede' // 温和女声
-  | 'Kore' // 活泼女声
-  | 'Puck' // 活泼男声
-  | 'Charon' // 沉稳男声
-  | 'Fenrir' // 深沉男声
-  | 'Leda' // 温柔女声
-  | 'Orus' // 自然男声
-  | 'Zephyr'; // 中性声音
+import { GOOGLE_VOICE_IDS, OPENAI_VOICE_IDS } from '@mui-gamebook/core/lib/voice-config';
+export type TTSVoiceName = (typeof GOOGLE_VOICE_IDS)[number] | (typeof OPENAI_VOICE_IDS)[number];
 
 const DEFAULT_SAMPLE_RATE = 24000;
+
 /**
  * 生成 TTS 语音并上传到 R2
  * 支持 Google 和 OpenAI TTS
+ * 会根据实际生成的音频格式自动修正文件扩展名
  */
 export async function generateAndUploadTTS(
   text: string,
@@ -240,17 +287,20 @@ export async function generateAndUploadTTS(
     contentType = result.mimeType;
   }
 
+  // 根据实际 mimeType 修正文件扩展名
+  const finalFileName = fixFileExtension(fileName, contentType);
+
   // 上传到 R2
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
-  await bucket.put(fileName, audioBuffer, {
+  await bucket.put(finalFileName, audioBuffer, {
     httpMetadata: { contentType },
   });
 
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
   return {
-    url: `${publicDomain}/${fileName}`,
+    url: `${publicDomain}/${finalFileName}`,
     model: provider.type,
   };
 }

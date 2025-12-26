@@ -4,6 +4,16 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// Mock @opennextjs/cloudflare
+vi.mock('@opennextjs/cloudflare', () => ({
+  getCloudflareContext: () => ({
+    env: {
+      NEXT_PUBLIC_API_URL: 'https://api.example.com',
+    },
+  }),
+}));
+
 import { getGames, getGame, getPlayableGame } from './api';
 
 // Mock fetch

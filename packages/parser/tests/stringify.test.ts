@@ -235,6 +235,6 @@ title: Audio Test
     const result = stringify(game);
     expect(result).toContain('cover_image: https://example.com/cover.png');
     expect(result).toContain('cover_prompt: 一个幻想风格的城堡');
-    expect(result).toContain('cover_aspect_ratio: "3:2"');
+    expect(result).toContain("cover_aspect_ratio: '3:2'");
   });
 });

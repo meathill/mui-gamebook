@@ -28,6 +28,7 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
     return new OpenAiProvider(apiKey, {
       text: config.openaiTextModel,
       image: config.openaiImageModel,
+      video: config.openaiVideoModel,
     });
   }
 
