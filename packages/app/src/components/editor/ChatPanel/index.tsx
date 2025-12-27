@@ -171,7 +171,7 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[85%] rounded-lg px-3 py-2 ${
+        className={`max-w-[85%] rounded-lg px-3 py-2 max-h-[75dvh] overflow-auto ${
           isUser ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-800'
         }`}>
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>

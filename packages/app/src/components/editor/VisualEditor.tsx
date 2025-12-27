@@ -84,7 +84,7 @@ export default function VisualEditor({ id }: { id: string }) {
   };
 
   // 临时状态（后续会移到 store）
-  const [importerAutoOpened, setImporterAutoOpened] = useEditorStore(() => [false, () => { }]); // 临时
+  const [importerAutoOpened, setImporterAutoOpened] = useEditorStore(() => [false, () => {}]); // 临时
 
   // 初始化节点和边
   useEffect(() => {
@@ -201,10 +201,10 @@ export default function VisualEditor({ id }: { id: string }) {
       eds.map((edge) =>
         edge.id === edgeId
           ? {
-            ...edge,
-            ...(changes.label ? { label: changes.label } : {}),
-            ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
-          }
+              ...edge,
+              ...(changes.label ? { label: changes.label } : {}),
+              ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
+            }
           : edge,
       ),
     );
@@ -226,6 +226,15 @@ export default function VisualEditor({ id }: { id: string }) {
       type: 'scene',
     };
     setNodes((nds) => nds.concat(newNode));
+  }
+
+  function handleDeleteNode(nodeId: string) {
+    // 删除节点
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    // 删除与该节点相关的所有边
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    // 清除选中状态
+    setSelectedNode(null);
   }
 
   const handleLayout = useCallback(() => {
@@ -358,6 +367,8 @@ export default function VisualEditor({ id }: { id: string }) {
                 onNodeChange={handleNodeChange}
                 onNodeIdChange={handleNodeIdChange}
                 onEdgeChange={handleEdgeChange}
+                onDeleteNode={handleDeleteNode}
+                startSceneId={originalGame?.startSceneId}
               />
             </>
           ) : (

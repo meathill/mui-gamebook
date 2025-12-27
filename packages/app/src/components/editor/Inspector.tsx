@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Node, Edge } from '@xyflow/react';
 import type { SceneNodeData } from '@/lib/editor/transformers';
-import { Loader2, Volume2 } from 'lucide-react';
+import { Loader2, Volume2, Trash2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import type { SceneNode } from '@mui-gamebook/parser';
 import type { GameState } from '@mui-gamebook/parser/src/types';
@@ -10,6 +10,7 @@ import { interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import { useEditorStore } from '@/lib/editor/store';
 import AssetEditor from './AssetEditor';
+import CharacterMentionTextarea from './CharacterMentionTextarea';
 import type { AiConfig } from '@/lib/ai-prompt-builder';
 
 interface InspectorProps {
@@ -18,6 +19,8 @@ interface InspectorProps {
   onNodeChange: (id: string, data: Partial<SceneNodeData>) => void;
   onNodeIdChange: (oldId: string, newId: string) => void;
   onEdgeChange: (id: string, changes: { label?: string; data?: Record<string, unknown> }) => void;
+  onDeleteNode: (id: string) => void;
+  startSceneId?: string;
 }
 
 export default function Inspector({
@@ -26,15 +29,34 @@ export default function Inspector({
   onNodeChange,
   onNodeIdChange,
   onEdgeChange,
+  onDeleteNode,
+  startSceneId,
 }: InspectorProps) {
   const selectedNode = useEditorStore((s) => s.selectedNode);
   const selectedEdge = useEditorStore((s) => s.selectedEdge);
+  const edges = useEditorStore((s) => s.edges);
   const { id } = useParams();
   const [generatingTTS, setGeneratingTTS] = useState(false);
   const [generatingEdgeTTS, setGeneratingEdgeTTS] = useState(false);
   const dialog = useDialog();
 
   const nodeData = selectedNode ? (selectedNode.data as unknown as SceneNodeData) : null;
+
+  // 判断选中的节点是否是孤立场景（没有入边，且不是起始场景）
+  const isIsolatedNode = selectedNode
+    ? !edges.some((edge) => edge.target === selectedNode.id) &&
+      selectedNode.id !== startSceneId &&
+      selectedNode.id !== 'start'
+    : false;
+
+  async function handleDeleteNode() {
+    if (!selectedNode) return;
+    const confirmed = await dialog.confirm(
+      `确定要删除场景「${nodeData?.label || selectedNode.id}」吗？此操作无法撤销。`,
+    );
+    if (!confirmed) return;
+    onDeleteNode(selectedNode.id);
+  }
 
   if (!selectedNode && !selectedEdge) {
     return (
@@ -126,9 +148,10 @@ export default function Inspector({
 
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">内容</label>
-              <textarea
+              <CharacterMentionTextarea
                 value={nodeData.content}
-                onChange={(e) => onNodeChange(selectedNode.id, { content: e.target.value })}
+                onChange={(value) => onNodeChange(selectedNode.id, { content: value })}
+                characters={aiConfig?.characters}
                 className="w-full h-32 p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                 placeholder="场景描述..."
               />
@@ -166,6 +189,19 @@ export default function Inspector({
               aiConfig={aiConfig}
               onAssetsChange={handleAssetsChange}
             />
+
+            {/* 孤立场景删除按钮 */}
+            {isIsolatedNode && (
+              <div className="pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleDeleteNode}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-red-600 bg-red-50 rounded-md hover:bg-red-100 transition-colors">
+                  <Trash2 size={16} />
+                  <span>删除此场景</span>
+                </button>
+                <p className="mt-2 text-xs text-gray-500">此场景没有被其他场景引用，可以安全删除。</p>
+              </div>
+            )}
           </>
         )}
 

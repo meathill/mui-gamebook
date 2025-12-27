@@ -53,6 +53,48 @@ export function writeCache(gameSlug: string, fileName: string, data: Buffer): vo
 }
 
 /**
+ * 获取上传记录文件路径
+ */
+function getUploadRecordPath(gameSlug: string): string {
+  return join(CACHE_DIR, gameSlug, '.uploaded.json');
+}
+
+/**
+ * 读取上传记录
+ * 返回 { 缓存文件名: R2 URL } 的映射
+ */
+export function getUploadedUrls(gameSlug: string): Record<string, string> {
+  const path = getUploadRecordPath(gameSlug);
+  if (!existsSync(path)) {
+    return {};
+  }
+  try {
+    return JSON.parse(readFileSync(path, 'utf-8'));
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * 检查文件是否已上传
+ */
+export function isUploaded(gameSlug: string, cacheFileName: string): string | null {
+  const records = getUploadedUrls(gameSlug);
+  return records[cacheFileName] || null;
+}
+
+/**
+ * 记录文件已上传
+ */
+export function markAsUploaded(gameSlug: string, cacheFileName: string, r2Url: string): void {
+  ensureCacheDir(gameSlug);
+  const records = getUploadedUrls(gameSlug);
+  records[cacheFileName] = r2Url;
+  const path = getUploadRecordPath(gameSlug);
+  writeFileSync(path, JSON.stringify(records, null, 2));
+}
+
+/**
  * 生成缓存文件名
  * 基于内容和风格生成唯一标识
  */
@@ -69,6 +111,15 @@ export function generateCacheFileName(
   const contentToHash = ttsStyle ? `${text}|${ttsStyle}` : text;
   const hash = simpleHash(contentToHash);
   return `${sceneId}-${nodeType}-${nodeIndex}-${hash}.${format}`;
+}
+
+/**
+ * 生成图片缓存文件名
+ * 基于 prompt 和类型生成唯一标识
+ */
+export function generateImageCacheFileName(imageType: string, prompt: string, format: string = 'png'): string {
+  const hash = simpleHash(prompt);
+  return `${imageType}-${hash}.${format}`;
 }
 
 /**

@@ -28,6 +28,7 @@ export class OpenAiProvider implements AiProvider {
       text?: string;
       image?: string;
       video?: string;
+      tts?: string;
     } = {},
   ) {
     this.client = new OpenAI({ apiKey });
@@ -339,14 +340,15 @@ export class OpenAiProvider implements AiProvider {
   }
 
   async generateTTS(text: string, voiceName: string = 'marin'): Promise<TTSResult> {
-    console.log(`[OpenAI] Generating TTS with voice: ${voiceName}`);
+    const model = this.models.tts || 'gpt-4o-mini-tts';
+    console.log(`[OpenAI] Generating TTS with model: ${model}, voice: ${voiceName}`);
 
     // 使用 voice-config 中的配置，不再硬编码
     const { OPENAI_VOICE_IDS, DEFAULT_OPENAI_VOICE } = await import('./voice-config');
     const voice = OPENAI_VOICE_IDS.includes(voiceName) ? voiceName : DEFAULT_OPENAI_VOICE;
 
     const response = await this.client.audio.speech.create({
-      model: 'gpt-4o-mini-tts',
+      model,
       voice,
       input: text,
       response_format: 'mp3',

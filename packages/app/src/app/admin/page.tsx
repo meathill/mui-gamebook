@@ -14,7 +14,7 @@ interface GameListItem {
   slug: string;
   title: string;
   description?: string;
-  cover_image?: string;
+  coverImage?: string;
   published: boolean;
   updatedAt: string | number;
 }
@@ -169,12 +169,12 @@ export default function AdminPage() {
                 </div>
               </div>
               <div>
-                {game.cover_image && (
+                {game.coverImage && (
                   <Image
                     alt={game.title}
                     className="w-full object-cover rounded mb-4"
                     height={200}
-                    src={game.cover_image}
+                    src={game.coverImage}
                     width={400}
                   />
                 )}

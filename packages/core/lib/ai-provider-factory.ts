@@ -22,6 +22,7 @@ export interface AiProviderOptions {
     text?: string;
     image?: string;
     video?: string;
+    tts?: string;
   };
 }
 
@@ -40,6 +41,7 @@ export function createAiProvider(options: AiProviderOptions): AiProvider {
     return new OpenAiProvider(options.openaiApiKey, {
       text: options.models?.text,
       image: options.models?.image,
+      tts: options.models?.tts,
     });
   }
 
@@ -72,6 +74,7 @@ export function createAiProviderFromEnv(type?: AiProviderType): AiProvider {
       text: process.env.AI_TEXT_MODEL,
       image: process.env.AI_IMAGE_MODEL || process.env.GOOGLE_IMAGE_MODEL,
       video: process.env.AI_VIDEO_MODEL,
+      tts: process.env.AI_TTS_MODEL,
     },
   });
 }
