@@ -181,7 +181,11 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
     fullPrompt += `, ${cleanedPrompt}`;
 
     try {
-      const { buffer: imageBuffer, type, usage } = await generateImage(fullPrompt, {
+      const {
+        buffer: imageBuffer,
+        type,
+        usage,
+      } = await generateImage(fullPrompt, {
         referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
       });
       addUsage(usage);

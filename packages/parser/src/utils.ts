@@ -11,6 +11,7 @@ import type {
   RuntimeState,
   VariableMeta,
 } from './types';
+import { replaceCharacterMentions } from './replace-character-mentions';
 
 /**
  * 判断值是否为变量元数据对象
@@ -70,6 +71,23 @@ export function toPlayableGame(game: Game): PlayableGame {
   for (const [sceneId, scene] of Object.entries(game.scenes)) {
     const filteredNodes: PlayableSceneNode[] = scene.nodes.map((node) => {
       switch (node.type) {
+        case 'text':
+          // 将 @角色ID 替换为角色名称
+          return {
+            type: 'text' as const,
+            content: replaceCharacterMentions(node.content, characters),
+            audio_url: node.audio_url,
+          };
+        case 'choice':
+          // 将 @角色ID 替换为角色名称
+          return {
+            type: 'choice' as const,
+            text: replaceCharacterMentions(node.text, characters),
+            nextSceneId: node.nextSceneId,
+            condition: node.condition,
+            set: node.set,
+            audio_url: node.audio_url,
+          };
         case 'ai_image':
           return { type: 'ai_image' as const, url: node.url, alt: node.character };
         case 'ai_audio':

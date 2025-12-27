@@ -84,7 +84,7 @@ export default function VisualEditor({ id }: { id: string }) {
   };
 
   // 临时状态（后续会移到 store）
-  const [importerAutoOpened, setImporterAutoOpened] = useEditorStore(() => [false, () => { }]); // 临时
+  const [importerAutoOpened, setImporterAutoOpened] = useEditorStore(() => [false, () => {}]); // 临时
 
   // 初始化节点和边
   useEffect(() => {
@@ -201,10 +201,10 @@ export default function VisualEditor({ id }: { id: string }) {
       eds.map((edge) =>
         edge.id === edgeId
           ? {
-            ...edge,
-            ...(changes.label ? { label: changes.label } : {}),
-            ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
-          }
+              ...edge,
+              ...(changes.label ? { label: changes.label } : {}),
+              ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
+            }
           : edge,
       ),
     );

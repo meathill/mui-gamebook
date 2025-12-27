@@ -280,9 +280,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
                     key={index}
                     className="space-y-2">
                     <div className="prose prose-lg prose-gray max-w-none">
-                      <ReactMarkdown>
-                        {interpolateVariables(node.content, runtimeState)}
-                      </ReactMarkdown>
+                      <ReactMarkdown>{interpolateVariables(node.content, runtimeState)}</ReactMarkdown>
                     </div>
                     {hasTextAudio && (
                       <AudioControls

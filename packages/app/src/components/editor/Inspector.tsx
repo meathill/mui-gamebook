@@ -10,6 +10,7 @@ import { interpolateVariables } from '@/lib/evaluator';
 import { useDialog } from '@/components/Dialog';
 import { useEditorStore } from '@/lib/editor/store';
 import AssetEditor from './AssetEditor';
+import CharacterMentionTextarea from './CharacterMentionTextarea';
 import type { AiConfig } from '@/lib/ai-prompt-builder';
 
 interface InspectorProps {
@@ -126,9 +127,10 @@ export default function Inspector({
 
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">内容</label>
-              <textarea
+              <CharacterMentionTextarea
                 value={nodeData.content}
-                onChange={(e) => onNodeChange(selectedNode.id, { content: e.target.value })}
+                onChange={(value) => onNodeChange(selectedNode.id, { content: value })}
+                characters={aiConfig?.characters}
                 className="w-full h-32 p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                 placeholder="场景描述..."
               />
