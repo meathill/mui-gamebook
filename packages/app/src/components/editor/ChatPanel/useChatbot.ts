@@ -36,6 +36,10 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const messagesRef = useRef<Message[]>([]);
+
+  // 保持 messagesRef 与 messages 同步
+  messagesRef.current = messages;
 
   const sendMessage = useCallback(
     async (content: string, context: ChatContext) => {
@@ -52,7 +56,8 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
         role: 'user',
         content,
       };
-      const updatedMessages = [...messages, userMessage];
+      // 使用 ref 获取最新的 messages
+      const updatedMessages = [...messagesRef.current, userMessage];
       setMessages(updatedMessages);
       setLoading(true);
       setError(null);
@@ -172,7 +177,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
         abortControllerRef.current = null;
       }
     },
-    [gameId, loading, messages, onFunctionCall],
+    [gameId, loading, onFunctionCall],
   );
 
   const clearMessages = useCallback(() => {
