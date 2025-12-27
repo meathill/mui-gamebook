@@ -18,6 +18,7 @@ import {
   isUploaded,
   markAsUploaded,
 } from './cache';
+import { imageToWebp } from './converter';
 
 /**
  * 生成图片选项
@@ -112,9 +113,8 @@ async function smartUpload(
  * 处理全局素材（角色头像、封面图等）
  * 使用本地缓存避免重复生成
  */
-export async function processGlobalAssets(game: Game, force: boolean): Promise<boolean> {
+export async function processGlobalAssets(game: Game, force: boolean, gameSlug: string): Promise<boolean> {
   let changed = false;
-  const gameSlug = game.slug || slugify(game.title, { lower: true, trim: true }) || 'game';
 
   // 1. Characters
   if (game.ai && game.ai.characters) {
@@ -131,6 +131,8 @@ export async function processGlobalAssets(game: Game, force: boolean): Promise<b
             console.log(`[CACHE] Found cached character image: ${cacheFileName}`);
             buffer = readCache(gameSlug, cacheFileName)!;
           } else {
+            console.log(`[PROMPT] Character ${char.name}:`);
+            console.log(`  ${fullPrompt}`);
             const result = await generateImage(fullPrompt);
             buffer = result.buffer;
             type = result.type;
@@ -139,8 +141,12 @@ export async function processGlobalAssets(game: Game, force: boolean): Promise<b
             writeCache(gameSlug, cacheFileName, buffer);
           }
 
-          const r2FileName = `images/${game.title}/characters/${cacheFileName}`;
-          const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, buffer, type, force);
+          // 转换为 webp
+          const webpBuffer = imageToWebp(buffer, 'png');
+          const webpFileName = cacheFileName.replace('.png', '.webp');
+
+          const r2FileName = `images/${gameSlug}/characters/${webpFileName}`;
+          const publicUrl = await smartUpload(gameSlug, webpFileName, r2FileName, webpBuffer, 'image/webp', force);
           char.image_url = publicUrl;
           console.log(`[SUCCESS] Character image for ${char.name}: ${publicUrl}`);
           changed = true;
@@ -166,6 +172,8 @@ export async function processGlobalAssets(game: Game, force: boolean): Promise<b
         console.log(`[CACHE] Found cached cover image: ${cacheFileName}`);
         buffer = readCache(gameSlug, cacheFileName)!;
       } else {
+        console.log(`[PROMPT] Cover image:`);
+        console.log(`  ${fullPrompt}`);
         const result = await generateImage(fullPrompt);
         buffer = result.buffer;
         type = result.type;
@@ -174,8 +182,12 @@ export async function processGlobalAssets(game: Game, force: boolean): Promise<b
         writeCache(gameSlug, cacheFileName, buffer);
       }
 
-      const r2FileName = `images/${game.title}/${cacheFileName}`;
-      const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, buffer, type, force);
+      // 转换为 webp
+      const webpBuffer = imageToWebp(buffer, 'png');
+      const webpFileName = cacheFileName.replace('.png', '.webp');
+
+      const r2FileName = `images/${gameSlug}/${webpFileName}`;
+      const publicUrl = await smartUpload(gameSlug, webpFileName, r2FileName, webpBuffer, 'image/webp', force);
       game.cover_image = publicUrl;
       console.log(`[SUCCESS] Cover image: ${publicUrl}`);
       changed = true;
@@ -201,10 +213,7 @@ function extractInlineCharacterIds(prompt: string): string[] {
  * 处理单个场景节点
  * 使用本地缓存避免重复生成
  */
-export async function processNode(node: SceneNode, game: Game, force: boolean = false): Promise<boolean> {
-  const gameSlug = game.slug || slugify(game.title, { lower: true, trim: true }) || 'game';
-  const folder = slugify(game.title, { lower: true, trim: true }) || game.title;
-
+export async function processNode(node: SceneNode, game: Game, force: boolean, gameSlug: string): Promise<boolean> {
   // AI 图片节点
   if (node.type === 'ai_image' && (!node.url || force)) {
     let fullPrompt = `${game.ai.style?.image || ''}`;
@@ -268,6 +277,12 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
         console.log(`[CACHE] Found cached scene image: ${cacheFileName}`);
         imageBuffer = readCache(gameSlug, cacheFileName)!;
       } else {
+        console.log(`[PROMPT] Scene image:`);
+        console.log(`  ${fullPrompt}`);
+        if (referenceImages.length > 0) {
+          console.log(`  Reference images:`);
+          referenceImages.forEach((url, i) => console.log(`    ${i + 1}. ${url}`));
+        }
         const result = await generateImage(fullPrompt, {
           referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
         });
@@ -278,8 +293,12 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
         writeCache(gameSlug, cacheFileName, imageBuffer);
       }
 
-      const r2FileName = `images/${folder}/${cacheFileName}`;
-      const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, imageBuffer, type, force);
+      // 转换为 webp
+      const webpBuffer = imageToWebp(imageBuffer, 'png');
+      const webpFileName = cacheFileName.replace('.png', '.webp');
+
+      const r2FileName = `images/${gameSlug}/${webpFileName}`;
+      const publicUrl = await smartUpload(gameSlug, webpFileName, r2FileName, webpBuffer, 'image/webp', force);
       node.url = publicUrl;
       console.log(`[SUCCESS] Scene image: ${publicUrl}`);
       return true;
@@ -303,6 +322,8 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
         console.log(`[CACHE] Found cached minigame: ${cacheFileName}`);
         code = readCache(gameSlug, cacheFileName)!.toString('utf-8');
       } else {
+        console.log(`[PROMPT] Minigame:`);
+        console.log(`  ${node.prompt.substring(0, 200)}...`);
         const provider = getAiProvider();
         const result = await provider.generateMiniGame(node.prompt, node.variables);
         code = result.code;
@@ -311,7 +332,7 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
         writeCache(gameSlug, cacheFileName, Buffer.from(code, 'utf-8'));
       }
 
-      const r2FileName = `minigames/${folder}/${cacheFileName}`;
+      const r2FileName = `minigames/${gameSlug}/${cacheFileName}`;
       const publicUrl = await smartUpload(
         gameSlug,
         cacheFileName,
@@ -344,10 +365,9 @@ export async function processNodeTTS(
   game: Game,
   sceneId: string,
   nodeIndex: number,
-  force: boolean = false,
+  force: boolean,
+  gameSlug: string,
 ): Promise<boolean> {
-  const folder = slugify(game.title, { lower: true, trim: true }) || game.title;
-  const gameSlug = game.slug || folder;
   const voiceName = (DEFAULT_TTS_VOICE as VoiceName) || 'Aoede';
 
   // 文本节点 TTS
@@ -374,7 +394,7 @@ export async function processNodeTTS(
       }
 
       // 上传到 R2
-      const r2FileName = `audio/${folder}/${cacheFileName}`;
+      const r2FileName = `audio/${gameSlug}/${cacheFileName}`;
       const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, buffer, mimeType, force);
       node.audio_url = publicUrl;
       console.log(`[SUCCESS] TTS for text: ${publicUrl}`);
@@ -410,7 +430,7 @@ export async function processNodeTTS(
       }
 
       // 上传到 R2
-      const r2FileName = `audio/${folder}/${cacheFileName}`;
+      const r2FileName = `audio/${gameSlug}/${cacheFileName}`;
       const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, buffer, mimeType, force);
       node.audio_url = publicUrl;
       console.log(`[SUCCESS] TTS for choice: ${publicUrl}`);
@@ -429,6 +449,8 @@ export async function processNodeTTS(
  * processGame 的选项
  */
 export interface ProcessGameOptions {
+  /** 游戏 slug（用于缓存和上传路径） */
+  gameSlug: string;
   /** TTS 配置（不配置则不生成 TTS） */
   tts?: {
     /** 是否为场景文本生成语音 */
@@ -441,21 +463,41 @@ export interface ProcessGameOptions {
 /**
  * 处理游戏素材生成的核心逻辑
  */
-export async function processGame(game: Game, force: boolean, options?: ProcessGameOptions): Promise<boolean> {
+export async function processGame(game: Game, force: boolean, options: ProcessGameOptions): Promise<boolean> {
   let hasChanged = false;
+  const { gameSlug } = options;
+
+  // 统计信息
+  const scenes = Object.values(game.scenes);
+  const totalScenes = scenes.length;
+  const totalNodes = scenes.reduce((sum, scene) => sum + scene.nodes.length, 0);
+  let processedNodes = 0;
+  let generatedAssets = 0;
+  let skippedAssets = 0;
+
+  console.log(`\n📊 素材统计: ${totalScenes} 个场景, ${totalNodes} 个节点`);
 
   // 处理全局素材（角色头像、封面图等）
-  const globalChanged = await processGlobalAssets(game, force);
+  const globalChanged = await processGlobalAssets(game, force, gameSlug);
   if (globalChanged) hasChanged = true;
 
   // 处理场景素材
-  for (const scene of Object.values(game.scenes)) {
+  for (let sceneIndex = 0; sceneIndex < scenes.length; sceneIndex++) {
+    const scene = scenes[sceneIndex];
+    console.log(`\n🎬 [${sceneIndex + 1}/${totalScenes}] 场景: ${scene.id}`);
+
     for (let i = 0; i < scene.nodes.length; i++) {
       const node = scene.nodes[i];
+      processedNodes++;
 
       // 处理图片/音频/视频素材
-      const assetUpdated = await processNode(node, game, force);
-      if (assetUpdated) hasChanged = true;
+      const assetUpdated = await processNode(node, game, force, gameSlug);
+      if (assetUpdated) {
+        hasChanged = true;
+        generatedAssets++;
+      } else if (node.type === 'ai_image' || node.type === 'minigame') {
+        skippedAssets++;
+      }
 
       // 处理 TTS 语音（仅当配置了 tts 选项时）
       if (options?.tts) {
@@ -463,12 +505,23 @@ export async function processGame(game: Game, force: boolean, options?: ProcessG
           (node.type === 'text' && options.tts.sceneText) || (node.type === 'choice' && options.tts.choices);
 
         if (shouldProcessTTS) {
-          const ttsUpdated = await processNodeTTS(node, game, scene.id, i, force);
-          if (ttsUpdated) hasChanged = true;
+          const ttsUpdated = await processNodeTTS(node, game, scene.id, i, force, gameSlug);
+          if (ttsUpdated) {
+            hasChanged = true;
+            generatedAssets++;
+          } else {
+            skippedAssets++;
+          }
         }
       }
     }
   }
+
+  // 最终统计
+  console.log(`\n✅ 完成统计:`);
+  console.log(`   - 处理节点: ${processedNodes}/${totalNodes}`);
+  console.log(`   - 生成素材: ${generatedAssets}`);
+  console.log(`   - 跳过素材: ${skippedAssets} (已存在或使用缓存)`);
 
   return hasChanged;
 }

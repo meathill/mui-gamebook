@@ -141,7 +141,7 @@ async function main() {
   // 使用 generator.ts 中的 processGame 处理所有资源
   // 包括：封面图、角色头像、场景图片、视频、音乐、小游戏
   // TTS 仅在配置了 tts 选项时生成
-  const hasChanged = await processGame(game, force, { tts: config.tts });
+  const hasChanged = await processGame(game, force, { gameSlug: config.gameSlug, tts: config.tts });
 
   // 3. 更新剧本（dry-run 模式下跳过）
   if (dryRun) {
