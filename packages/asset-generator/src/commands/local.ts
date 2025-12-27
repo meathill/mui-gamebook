@@ -21,7 +21,13 @@ export async function handleLocalCommand(relativePath: string, force: boolean): 
   }
 
   const game = parseResult.data;
-  const hasChanged = await processGame(game, force);
+  const gameSlug =
+    game.slug ||
+    relativePath
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-z0-9]/gi, '-')
+      .toLowerCase();
+  const hasChanged = await processGame(game, force, { gameSlug });
 
   if (hasChanged) {
     console.log('\n素材已更新，正在保存文件...');

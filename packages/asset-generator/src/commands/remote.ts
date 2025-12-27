@@ -47,7 +47,7 @@ export async function handleRemoteCommand(idOrSlug: string, force: boolean, dryR
     }
 
     // 场景素材
-    for (const scene of game.scenes.values()) {
+    for (const scene of Object.values(game.scenes)) {
       for (const node of scene.nodes) {
         if (node.type === 'ai_image' && (!node.url || force)) {
           console.log(`[场景 ${scene.id}] 图片: ${node.prompt.substring(0, 50)}...`);
@@ -70,7 +70,7 @@ export async function handleRemoteCommand(idOrSlug: string, force: boolean, dryR
     return;
   }
 
-  const hasChanged = await processGame(game, force);
+  const hasChanged = await processGame(game, force, { gameSlug: gameRow.slug });
 
   if (hasChanged) {
     console.log('\n素材已更新，正在保存到数据库...');
