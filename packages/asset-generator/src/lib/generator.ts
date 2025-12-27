@@ -11,9 +11,20 @@ import { addUsage } from './usage';
 import { generateStorySpeech, type VoiceName } from './tts';
 
 /**
+ * 生成图片选项
+ */
+interface GenerateImageOptions {
+  aspectRatio?: string;
+  referenceImages?: string[];
+}
+
+/**
  * 生成图片（带重试）
  */
-export async function generateImage(prompt: string): Promise<{
+export async function generateImage(
+  prompt: string,
+  options?: GenerateImageOptions,
+): Promise<{
   buffer: Buffer;
   type: string;
   usage: AiUsageInfo;
@@ -24,7 +35,7 @@ export async function generateImage(prompt: string): Promise<{
     usage: AiUsageInfo;
   }>(async () => {
     const provider = getAiProvider();
-    const result = await provider.generateImage(prompt);
+    const result = await provider.generateImage(prompt, options);
     return {
       buffer: result.buffer,
       type: result.type,
@@ -116,6 +127,7 @@ function extractInlineCharacterIds(prompt: string): string[] {
  * 处理单个场景节点
  */
 export async function processNode(node: SceneNode, game: Game, force: boolean = false): Promise<boolean> {
+  // AI 图片节点
   if (node.type === 'ai_image' && (!node.url || force)) {
     let fullPrompt = `${game.ai.style?.image || ''}`;
 
@@ -169,13 +181,9 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
     fullPrompt += `, ${cleanedPrompt}`;
 
     try {
-      // TODO: 在未来版本中，可以将 referenceImages 传递给图片生成函数
-      // 目前批量工具暂不支持参考图片，但已收集好以备将来使用
-      if (referenceImages.length > 0) {
-        console.log(`[INFO] Found ${referenceImages.length} reference image(s) for character consistency`);
-      }
-
-      const { buffer: imageBuffer, type, usage } = await generateImage(fullPrompt);
+      const { buffer: imageBuffer, type, usage } = await generateImage(fullPrompt, {
+        referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+      });
       addUsage(usage);
 
       const folder = slugify(game.title, {
@@ -193,6 +201,28 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
       return false;
     }
   }
+
+  // 小游戏节点
+  if (node.type === 'minigame' && (!node.url || force)) {
+    try {
+      console.log(`[MiniGame] Generating minigame: "${node.prompt.substring(0, 50)}..."`);
+      const provider = getAiProvider();
+      const { code, usage } = await provider.generateMiniGame(node.prompt, node.variables);
+      addUsage(usage);
+
+      const folder = slugify(game.title, { lower: true, trim: true }) || game.title;
+      const fileName = `minigames/${folder}/${Date.now()}.js`;
+      const publicUrl = await uploadToR2(fileName, Buffer.from(code, 'utf-8'), 'application/javascript');
+      node.url = publicUrl;
+      console.log(`[SUCCESS] Generated and uploaded minigame: ${publicUrl}`);
+      return true;
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[ERROR] Failed to generate minigame: ${message}`);
+      return false;
+    }
+  }
+
   // TODO: Add logic for 'ai_audio' and 'ai_video' here in the future
   return false;
 }
