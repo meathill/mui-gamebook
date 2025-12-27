@@ -211,6 +211,38 @@ interface ChatRequest {
     characters?: Record<string, { name: string; description?: string }>;
     variables?: Record<string, unknown>;
   };
+  history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+}
+
+// 构建聊天历史记录
+function buildChatHistory(
+  history: ChatRequest['history'],
+  currentUserMessageWithContext: string,
+): Array<{ role: 'user' | 'model'; content: string }> {
+  const messages: Array<{ role: 'user' | 'model'; content: string }> = [
+    // 系统提示作为第一条用户消息
+    { role: 'user', content: SYSTEM_PROMPT },
+    { role: 'model', content: '我明白了，我会根据你的请求帮助你编辑剧本。请告诉我你想做什么修改？' },
+  ];
+
+  // 添加历史对话（如果有）
+  if (history && history.length > 0) {
+    // 历史记录已包含当前消息，但需要把最后一条（当前消息）替换为带上下文的版本
+    for (let i = 0; i < history.length; i++) {
+      const msg = history[i];
+      const isLastMessage = i === history.length - 1;
+      messages.push({
+        role: msg.role === 'user' ? 'user' : 'model',
+        // 最后一条用户消息需要带上下文
+        content: isLastMessage && msg.role === 'user' ? currentUserMessageWithContext : msg.content,
+      });
+    }
+  } else {
+    // 没有历史时，只添加当前消息（带上下文）
+    messages.push({ role: 'user', content: currentUserMessageWithContext });
+  }
+
+  return messages;
 }
 
 export async function POST(req: Request, { params }: Props) {
@@ -226,7 +258,7 @@ export async function POST(req: Request, { params }: Props) {
   }
 
   const { id } = await params;
-  const { message, context } = (await req.json()) as ChatRequest;
+  const { message, context, history } = (await req.json()) as ChatRequest;
 
   if (!message) {
     return NextResponse.json({ error: 'Message is required' }, { status: 400 });
@@ -269,14 +301,7 @@ export async function POST(req: Request, { params }: Props) {
           throw new Error('当前 AI 提供者不支持 function calling');
         }
 
-        const response = await provider.chatWithTools(
-          [
-            { role: 'user', content: SYSTEM_PROMPT },
-            { role: 'model', content: '我明白了，我会根据你的请求帮助你编辑剧本。请告诉我你想做什么修改？' },
-            { role: 'user', content: userMessage },
-          ],
-          FUNCTION_DECLARATIONS,
-        );
+        const response = await provider.chatWithTools(buildChatHistory(history, userMessage), FUNCTION_DECLARATIONS);
 
         // 记录 AI 用量
         await recordAiUsage({
