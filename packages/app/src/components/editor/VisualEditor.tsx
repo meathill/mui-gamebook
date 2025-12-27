@@ -228,6 +228,15 @@ export default function VisualEditor({ id }: { id: string }) {
     setNodes((nds) => nds.concat(newNode));
   }
 
+  function handleDeleteNode(nodeId: string) {
+    // 删除节点
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    // 删除与该节点相关的所有边
+    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
+    // 清除选中状态
+    setSelectedNode(null);
+  }
+
   const handleLayout = useCallback(() => {
     const { nodes: ln, edges: le } = getLayoutedElements(nodes, edges);
     setNodes([...ln]);
@@ -358,6 +367,8 @@ export default function VisualEditor({ id }: { id: string }) {
                 onNodeChange={handleNodeChange}
                 onNodeIdChange={handleNodeIdChange}
                 onEdgeChange={handleEdgeChange}
+                onDeleteNode={handleDeleteNode}
+                startSceneId={originalGame?.startSceneId}
               />
             </>
           ) : (

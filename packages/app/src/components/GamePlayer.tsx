@@ -257,12 +257,12 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
 
       {/* Persistent Image Display */}
       {currentImageUrl && (
-        <div className="w-full aspect-video relative overflow-hidden bg-gray-100 shadow-inner">
+        <div className="w-full relative overflow-hidden bg-gray-100 shadow-inner">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={currentImageUrl}
             alt="Scene"
-            className={`object-cover w-full h-full transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}
+            className={`w-full transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}
             onLoad={() => setImageLoading(false)}
           />
         </div>
