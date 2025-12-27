@@ -9,6 +9,15 @@ import { getAiProvider, s3Client, R2_BUCKET, R2_PUBLIC_URL, DEFAULT_TTS_VOICE } 
 import { retry } from './utils';
 import { addUsage } from './usage';
 import { generateStorySpeech, type VoiceName } from './tts';
+import {
+  generateCacheFileName,
+  generateImageCacheFileName,
+  cacheExists,
+  readCache,
+  writeCache,
+  isUploaded,
+  markAsUploaded,
+} from './cache';
 
 /**
  * 生成图片选项
@@ -65,10 +74,47 @@ async function _uploadToR2(fileName: string, body: Buffer, type: string = 'image
 }
 
 /**
+ * 智能上传：检查是否已上传，已上传则直接返回 URL，否则上传并记录
+ * @param gameSlug - 游戏 slug，用于查找上传记录
+ * @param cacheFileName - 缓存文件名，用作上传记录的 key
+ * @param r2FileName - R2 文件路径
+ * @param body - 文件内容
+ * @param type - MIME 类型
+ * @param force - 是否强制重新上传
+ */
+async function smartUpload(
+  gameSlug: string,
+  cacheFileName: string,
+  r2FileName: string,
+  body: Buffer,
+  type: string,
+  force: boolean,
+): Promise<string> {
+  // 检查是否已上传
+  if (!force) {
+    const existingUrl = isUploaded(gameSlug, cacheFileName);
+    if (existingUrl) {
+      console.log(`[SKIP] Already uploaded: ${cacheFileName}`);
+      return existingUrl;
+    }
+  }
+
+  // 上传到 R2
+  const publicUrl = await uploadToR2(r2FileName, body, type);
+
+  // 记录已上传
+  markAsUploaded(gameSlug, cacheFileName, publicUrl);
+
+  return publicUrl;
+}
+
+/**
  * 处理全局素材（角色头像、封面图等）
+ * 使用本地缓存避免重复生成
  */
 export async function processGlobalAssets(game: Game, force: boolean): Promise<boolean> {
   let changed = false;
+  const gameSlug = game.slug || slugify(game.title, { lower: true, trim: true }) || 'game';
 
   // 1. Characters
   if (game.ai && game.ai.characters) {
@@ -76,13 +122,27 @@ export async function processGlobalAssets(game: Game, force: boolean): Promise<b
       if (char.image_prompt && (!char.image_url || force)) {
         const fullPrompt = `${game.ai.style?.image || ''}, character portrait of ${char.image_prompt}`;
         try {
-          const { buffer, type, usage } = await generateImage(fullPrompt);
-          addUsage(usage);
+          // 检查本地缓存
+          const cacheFileName = generateImageCacheFileName(`char-${id}`, fullPrompt, 'png');
+          let buffer: Buffer;
+          let type = 'image/png';
 
-          const fileName = `images/${game.title}/characters/${id}-${Date.now()}.png`;
-          const publicUrl = await uploadToR2(fileName, buffer, type);
+          if (!force && cacheExists(gameSlug, cacheFileName)) {
+            console.log(`[CACHE] Found cached character image: ${cacheFileName}`);
+            buffer = readCache(gameSlug, cacheFileName)!;
+          } else {
+            const result = await generateImage(fullPrompt);
+            buffer = result.buffer;
+            type = result.type;
+            addUsage(result.usage);
+            // 保存到本地缓存
+            writeCache(gameSlug, cacheFileName, buffer);
+          }
+
+          const r2FileName = `images/${game.title}/characters/${cacheFileName}`;
+          const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, buffer, type, force);
           char.image_url = publicUrl;
-          console.log(`[SUCCESS] Generated character image for ${char.name}: ${publicUrl}`);
+          console.log(`[SUCCESS] Character image for ${char.name}: ${publicUrl}`);
           changed = true;
         } catch (e: unknown) {
           const message = e instanceof Error ? e.message : String(e);
@@ -97,13 +157,27 @@ export async function processGlobalAssets(game: Game, force: boolean): Promise<b
     const prompt = game.cover_image.replace(/^prompt:\s*/, '');
     const fullPrompt = `${game.ai.style?.image || ''}, cover art, ${prompt}`;
     try {
-      const { buffer, type, usage } = await generateImage(fullPrompt);
-      addUsage(usage);
+      // 检查本地缓存
+      const cacheFileName = generateImageCacheFileName('cover', fullPrompt, 'png');
+      let buffer: Buffer;
+      let type = 'image/png';
 
-      const fileName = `images/${game.title}/cover-${Date.now()}.png`;
-      const publicUrl = await uploadToR2(fileName, buffer, type);
+      if (!force && cacheExists(gameSlug, cacheFileName)) {
+        console.log(`[CACHE] Found cached cover image: ${cacheFileName}`);
+        buffer = readCache(gameSlug, cacheFileName)!;
+      } else {
+        const result = await generateImage(fullPrompt);
+        buffer = result.buffer;
+        type = result.type;
+        addUsage(result.usage);
+        // 保存到本地缓存
+        writeCache(gameSlug, cacheFileName, buffer);
+      }
+
+      const r2FileName = `images/${game.title}/${cacheFileName}`;
+      const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, buffer, type, force);
       game.cover_image = publicUrl;
-      console.log(`[SUCCESS] Generated cover image: ${publicUrl}`);
+      console.log(`[SUCCESS] Cover image: ${publicUrl}`);
       changed = true;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -125,8 +199,12 @@ function extractInlineCharacterIds(prompt: string): string[] {
 
 /**
  * 处理单个场景节点
+ * 使用本地缓存避免重复生成
  */
 export async function processNode(node: SceneNode, game: Game, force: boolean = false): Promise<boolean> {
+  const gameSlug = game.slug || slugify(game.title, { lower: true, trim: true }) || 'game';
+  const folder = slugify(game.title, { lower: true, trim: true }) || game.title;
+
   // AI 图片节点
   if (node.type === 'ai_image' && (!node.url || force)) {
     let fullPrompt = `${game.ai.style?.image || ''}`;
@@ -181,23 +259,29 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
     fullPrompt += `, ${cleanedPrompt}`;
 
     try {
-      const {
-        buffer: imageBuffer,
-        type,
-        usage,
-      } = await generateImage(fullPrompt, {
-        referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
-      });
-      addUsage(usage);
+      // 检查本地缓存
+      const cacheFileName = generateImageCacheFileName('scene', fullPrompt, 'png');
+      let imageBuffer: Buffer;
+      let type = 'image/png';
 
-      const folder = slugify(game.title, {
-        lower: true,
-        trim: true,
-      });
-      const fileName = `images/${folder || game.title}/${Date.now()}.png`;
-      const publicUrl = await uploadToR2(fileName, imageBuffer, type);
+      if (!force && cacheExists(gameSlug, cacheFileName)) {
+        console.log(`[CACHE] Found cached scene image: ${cacheFileName}`);
+        imageBuffer = readCache(gameSlug, cacheFileName)!;
+      } else {
+        const result = await generateImage(fullPrompt, {
+          referenceImages: referenceImages.length > 0 ? referenceImages : undefined,
+        });
+        imageBuffer = result.buffer;
+        type = result.type;
+        addUsage(result.usage);
+        // 保存到本地缓存
+        writeCache(gameSlug, cacheFileName, imageBuffer);
+      }
+
+      const r2FileName = `images/${folder}/${cacheFileName}`;
+      const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, imageBuffer, type, force);
       node.url = publicUrl;
-      console.log(`[SUCCESS] Generated and uploaded image: ${publicUrl}`);
+      console.log(`[SUCCESS] Scene image: ${publicUrl}`);
       return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -210,15 +294,34 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
   if (node.type === 'minigame' && (!node.url || force)) {
     try {
       console.log(`[MiniGame] Generating minigame: "${node.prompt.substring(0, 50)}..."`);
-      const provider = getAiProvider();
-      const { code, usage } = await provider.generateMiniGame(node.prompt, node.variables);
-      addUsage(usage);
 
-      const folder = slugify(game.title, { lower: true, trim: true }) || game.title;
-      const fileName = `minigames/${folder}/${Date.now()}.js`;
-      const publicUrl = await uploadToR2(fileName, Buffer.from(code, 'utf-8'), 'application/javascript');
+      // 小游戏使用 prompt 作为缓存 key
+      const cacheFileName = generateImageCacheFileName('minigame', node.prompt, 'js');
+      let code: string;
+
+      if (!force && cacheExists(gameSlug, cacheFileName)) {
+        console.log(`[CACHE] Found cached minigame: ${cacheFileName}`);
+        code = readCache(gameSlug, cacheFileName)!.toString('utf-8');
+      } else {
+        const provider = getAiProvider();
+        const result = await provider.generateMiniGame(node.prompt, node.variables);
+        code = result.code;
+        addUsage(result.usage);
+        // 保存到本地缓存
+        writeCache(gameSlug, cacheFileName, Buffer.from(code, 'utf-8'));
+      }
+
+      const r2FileName = `minigames/${folder}/${cacheFileName}`;
+      const publicUrl = await smartUpload(
+        gameSlug,
+        cacheFileName,
+        r2FileName,
+        Buffer.from(code, 'utf-8'),
+        'application/javascript',
+        force,
+      );
       node.url = publicUrl;
-      console.log(`[SUCCESS] Generated and uploaded minigame: ${publicUrl}`);
+      console.log(`[SUCCESS] Minigame: ${publicUrl}`);
       return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -234,6 +337,7 @@ export async function processNode(node: SceneNode, game: Game, force: boolean = 
 /**
  * 为节点生成 TTS 语音
  * 支持文本节点和选项节点
+ * 使用本地缓存避免重复生成
  */
 export async function processNodeTTS(
   node: SceneNode,
@@ -243,18 +347,37 @@ export async function processNodeTTS(
   force: boolean = false,
 ): Promise<boolean> {
   const folder = slugify(game.title, { lower: true, trim: true }) || game.title;
+  const gameSlug = game.slug || folder;
   const voiceName = (DEFAULT_TTS_VOICE as VoiceName) || 'Aoede';
 
   // 文本节点 TTS
   if (node.type === 'text' && (!node.audio_url || force)) {
     try {
       console.log(`[TTS] Processing text node in scene ${sceneId}...`);
-      const { buffer, mimeType } = await generateStorySpeech(node.content, voiceName);
 
-      const fileName = `audio/${folder}/${sceneId}-text-${nodeIndex}-${Date.now()}.wav`;
-      const publicUrl = await uploadToR2(fileName, buffer, mimeType);
+      // 生成缓存文件名（基于内容哈希）
+      const cacheFileName = generateCacheFileName(sceneId, nodeIndex, 'text', node.content, 'wav', voiceName);
+      let buffer: Buffer;
+      let mimeType = 'audio/wav';
+
+      // 检查本地缓存
+      if (!force && cacheExists(gameSlug, cacheFileName)) {
+        console.log(`[CACHE] Found cached TTS: ${cacheFileName}`);
+        buffer = readCache(gameSlug, cacheFileName)!;
+      } else {
+        // 生成新的 TTS
+        const result = await generateStorySpeech(node.content, voiceName);
+        buffer = result.buffer;
+        mimeType = result.mimeType;
+        // 保存到本地缓存
+        writeCache(gameSlug, cacheFileName, buffer);
+      }
+
+      // 上传到 R2
+      const r2FileName = `audio/${folder}/${cacheFileName}`;
+      const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, buffer, mimeType, force);
       node.audio_url = publicUrl;
-      console.log(`[SUCCESS] Generated TTS for text: ${publicUrl}`);
+      console.log(`[SUCCESS] TTS for text: ${publicUrl}`);
       return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -267,12 +390,30 @@ export async function processNodeTTS(
   if (node.type === 'choice' && (!node.audio_url || force)) {
     try {
       console.log(`[TTS] Processing choice node in scene ${sceneId}...`);
-      const { buffer, mimeType } = await generateStorySpeech(node.text, voiceName);
 
-      const fileName = `audio/${folder}/${sceneId}-choice-${nodeIndex}-${Date.now()}.wav`;
-      const publicUrl = await uploadToR2(fileName, buffer, mimeType);
+      // 生成缓存文件名（基于内容哈希）
+      const cacheFileName = generateCacheFileName(sceneId, nodeIndex, 'choice', node.text, 'wav', voiceName);
+      let buffer: Buffer;
+      let mimeType = 'audio/wav';
+
+      // 检查本地缓存
+      if (!force && cacheExists(gameSlug, cacheFileName)) {
+        console.log(`[CACHE] Found cached TTS: ${cacheFileName}`);
+        buffer = readCache(gameSlug, cacheFileName)!;
+      } else {
+        // 生成新的 TTS
+        const result = await generateStorySpeech(node.text, voiceName);
+        buffer = result.buffer;
+        mimeType = result.mimeType;
+        // 保存到本地缓存
+        writeCache(gameSlug, cacheFileName, buffer);
+      }
+
+      // 上传到 R2
+      const r2FileName = `audio/${folder}/${cacheFileName}`;
+      const publicUrl = await smartUpload(gameSlug, cacheFileName, r2FileName, buffer, mimeType, force);
       node.audio_url = publicUrl;
-      console.log(`[SUCCESS] Generated TTS for choice: ${publicUrl}`);
+      console.log(`[SUCCESS] TTS for choice: ${publicUrl}`);
       return true;
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
@@ -285,9 +426,22 @@ export async function processNodeTTS(
 }
 
 /**
+ * processGame 的选项
+ */
+export interface ProcessGameOptions {
+  /** TTS 配置（不配置则不生成 TTS） */
+  tts?: {
+    /** 是否为场景文本生成语音 */
+    sceneText?: boolean;
+    /** 是否为选项生成语音 */
+    choices?: boolean;
+  };
+}
+
+/**
  * 处理游戏素材生成的核心逻辑
  */
-export async function processGame(game: Game, force: boolean): Promise<boolean> {
+export async function processGame(game: Game, force: boolean, options?: ProcessGameOptions): Promise<boolean> {
   let hasChanged = false;
 
   // 处理全局素材（角色头像、封面图等）
@@ -303,9 +457,16 @@ export async function processGame(game: Game, force: boolean): Promise<boolean> 
       const assetUpdated = await processNode(node, game, force);
       if (assetUpdated) hasChanged = true;
 
-      // 处理 TTS 语音
-      const ttsUpdated = await processNodeTTS(node, game, scene.id, i, force);
-      if (ttsUpdated) hasChanged = true;
+      // 处理 TTS 语音（仅当配置了 tts 选项时）
+      if (options?.tts) {
+        const shouldProcessTTS =
+          (node.type === 'text' && options.tts.sceneText) || (node.type === 'choice' && options.tts.choices);
+
+        if (shouldProcessTTS) {
+          const ttsUpdated = await processNodeTTS(node, game, scene.id, i, force);
+          if (ttsUpdated) hasChanged = true;
+        }
+      }
     }
   }
 

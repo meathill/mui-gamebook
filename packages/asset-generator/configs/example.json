@@ -3,9 +3,9 @@
   "adminSecret": "YOUR_ADMIN_PASSWORD",
   "gameSlug": "your-game-slug",
   "force": false,
-  "generate": {
-    "sceneTTS": true,
-    "choiceTTS": true
+  "tts": {
+    "sceneText": true,
+    "choices": true
   },
   "format": {
     "audio": "mp3"
