@@ -97,7 +97,7 @@ export default function ChatPanel({
       </div>
 
       {/* Messages - 使用 min-h-0 确保 flex 子元素可滚动 */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 min-h-0 max-h-[calc(100vh-23rem)] overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
             <BotIcon className="size-12 mx-auto mb-3 opacity-50" />
@@ -171,7 +171,7 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
-        className={`max-w-[85%] rounded-lg px-3 py-2 max-h-[75dvh] overflow-auto ${
+        className={`max-w-[85%] rounded-lg px-3 py-2 max-h-[50dvh] overflow-auto ${
           isUser ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-800'
         }`}>
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
