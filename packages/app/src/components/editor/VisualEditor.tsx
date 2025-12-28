@@ -33,6 +33,7 @@ import EditorToolbar, { Tab } from '@/components/editor/EditorToolbar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import ChatPanel from '@/components/editor/ChatPanel';
 import { useDialog } from '@/components/Dialog';
+import { useUnsavedChangesWarning, useUndoRedoShortcuts } from '@/hooks/useUndoRedo';
 import type { GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
 const nodeTypes = { scene: SceneNode };
@@ -43,6 +44,10 @@ export default function VisualEditor({ id }: { id: string }) {
   const { data: session, isPending: isAuthPending } = authClient.useSession();
   const { screenToFlowPosition, fitView } = useReactFlow();
   const dialog = useDialog();
+
+  // Undo/Redo 支持
+  useUnsavedChangesWarning();
+  useUndoRedoShortcuts();
 
   // 从 store 获取 UI 状态
   const activeTab = useEditorStore((s) => s.activeTab);
@@ -102,6 +107,16 @@ export default function VisualEditor({ id }: { id: string }) {
       router.replace(`/admin/edit/${id}`);
     }
   }, [loading, searchParams, router, id, setShowImporter]);
+
+  // 当 nodes/edges 变化时，如果在文本编辑模式下，同步更新 textContent
+  // 这确保 AI chatbot 更新 nodes 后，textContent 也会更新
+  useEffect(() => {
+    if (viewMode === 'text' && originalGame && nodes.length > 0) {
+      const newGame = flowToGame(nodes as Node<SceneNodeData>[], edges, originalGame);
+      const content = stringify(newGame);
+      setTextContent(content);
+    }
+  }, [nodes, edges, viewMode, originalGame, setTextContent]);
 
   useOnSelectionChange({
     onChange: ({ nodes, edges }) => {
