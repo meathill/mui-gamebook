@@ -82,10 +82,6 @@ export default function VisualEditor({ id }: { id: string }) {
   } = useEditorData({ id, setNodes }) as ReturnType<typeof useEditorData> & {
     scanAndRegisterPendingOperations: (nodes: Node[]) => void;
   };
-
-  // 临时状态（后续会移到 store）
-  const [importerAutoOpened, setImporterAutoOpened] = useEditorStore(() => [false, () => {}]); // 临时
-
   // 初始化节点和边
   useEffect(() => {
     if (initialFlow) {
