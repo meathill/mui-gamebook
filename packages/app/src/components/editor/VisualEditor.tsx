@@ -29,7 +29,7 @@ import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
 import EditorVariablesTab from '@/components/editor/EditorVariablesTab';
 import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
-import EditorToolbar, { Tab } from '@/components/editor/EditorToolbar';
+import EditorToolbar from '@/components/editor/EditorToolbar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import ChatPanel from '@/components/editor/ChatPanel';
 import { useDialog } from '@/components/Dialog';
@@ -51,12 +51,10 @@ export default function VisualEditor({ id }: { id: string }) {
 
   // 从 store 获取 UI 状态
   const activeTab = useEditorStore((s) => s.activeTab);
-  const setActiveTab = useEditorStore((s) => s.setActiveTab);
   const viewMode = useEditorStore((s) => s.viewMode);
   const setViewMode = useEditorStore((s) => s.setViewMode);
   const chatOpen = useEditorStore((s) => s.chatOpen);
   const setChatOpen = useEditorStore((s) => s.setChatOpen);
-  const toggleChatOpen = useEditorStore((s) => s.toggleChatOpen);
   const showImporter = useEditorStore((s) => s.showImporter);
   const setShowImporter = useEditorStore((s) => s.setShowImporter);
   const selectedNode = useEditorStore((s) => s.selectedNode);
@@ -239,15 +237,6 @@ export default function VisualEditor({ id }: { id: string }) {
     setNodes((nds) => nds.concat(newNode));
   }
 
-  function handleDeleteNode(nodeId: string) {
-    // 删除节点
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    // 删除与该节点相关的所有边
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-    // 清除选中状态
-    setSelectedNode(null);
-  }
-
   const handleLayout = useCallback(() => {
     const { nodes: ln, edges: le } = getLayoutedElements(nodes, edges);
     setNodes([...ln]);
@@ -378,8 +367,6 @@ export default function VisualEditor({ id }: { id: string }) {
                 onNodeChange={handleNodeChange}
                 onNodeIdChange={handleNodeIdChange}
                 onEdgeChange={handleEdgeChange}
-                onDeleteNode={handleDeleteNode}
-                startSceneId={originalGame?.startSceneId}
               />
             </>
           ) : (
