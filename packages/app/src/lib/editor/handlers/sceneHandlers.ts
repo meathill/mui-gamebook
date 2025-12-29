@@ -6,7 +6,16 @@
  */
 import type { Node } from '@xyflow/react';
 import type { SceneNodeData } from '@/lib/editor/transformers';
-import type { HandlerContext, UpdateSceneArgs, AddSceneArgs, DeleteSceneArgs, RenameSceneArgs } from './types';
+import type { SceneAiImageNode, SceneNode } from '@mui-gamebook/parser/src/types';
+import type {
+  HandlerContext,
+  UpdateSceneArgs,
+  AddSceneArgs,
+  DeleteSceneArgs,
+  RenameSceneArgs,
+  UpdateSceneTextArgs,
+  UpdateSceneImagePromptArgs,
+} from './types';
 
 export function handleUpdateScene(args: UpdateSceneArgs, ctx: HandlerContext): string {
   const { sceneId, content } = args;
@@ -91,4 +100,64 @@ export function handleRenameScene(args: RenameSceneArgs, ctx: HandlerContext): s
   );
 
   return `已将场景 "${oldId}" 重命名为 "${newId}"`;
+}
+
+/**
+ * 只更新场景文案（content 字段）
+ */
+export function handleUpdateSceneText(args: UpdateSceneTextArgs, ctx: HandlerContext): string {
+  const { sceneId, text } = args;
+
+  ctx.setNodes((nds) => {
+    const nodeExists = nds.some((n) => n.id === sceneId);
+    if (!nodeExists) {
+      console.warn(`场景 "${sceneId}" 不存在，跳过更新文案`);
+      return nds;
+    }
+    return nds.map((node) => (node.id === sceneId ? { ...node, data: { ...node.data, content: text } } : node));
+  });
+
+  return `已更新场景 "${sceneId}" 的文案`;
+}
+
+/**
+ * 只更新场景的图片生成 prompt
+ */
+export function handleUpdateSceneImagePrompt(args: UpdateSceneImagePromptArgs, ctx: HandlerContext): string {
+  const { sceneId, imagePrompt } = args;
+
+  ctx.setNodes((nds) => {
+    const nodeExists = nds.some((n) => n.id === sceneId);
+    if (!nodeExists) {
+      console.warn(`场景 "${sceneId}" 不存在，跳过更新图片 prompt`);
+      return nds;
+    }
+    return nds.map((node) => {
+      if (node.id !== sceneId) return node;
+      const nodeData = node.data as SceneNodeData;
+      // 查找或创建 ai_image 资源
+      const assets = nodeData.assets || [];
+      const aiImageIndex = assets.findIndex((a) => a.type === 'ai_image');
+      if (aiImageIndex >= 0) {
+        // 更新现有的 ai_image prompt
+        const existingAsset = assets[aiImageIndex] as SceneAiImageNode;
+        const updatedAsset: SceneAiImageNode = { ...existingAsset, prompt: imagePrompt };
+        const newAssets: SceneNode[] = [...assets];
+        newAssets[aiImageIndex] = updatedAsset;
+        return { ...node, data: { ...nodeData, assets: newAssets } };
+      } else {
+        // 添加新的 ai_image 资源
+        const newAsset: SceneAiImageNode = { type: 'ai_image', prompt: imagePrompt };
+        return {
+          ...node,
+          data: {
+            ...nodeData,
+            assets: [...assets, newAsset],
+          },
+        };
+      }
+    });
+  });
+
+  return `已更新场景 "${sceneId}" 的图片 prompt`;
 }

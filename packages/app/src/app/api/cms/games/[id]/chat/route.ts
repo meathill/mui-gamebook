@@ -10,7 +10,7 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
   // 场景操作
   {
     name: 'updateScene',
-    description: '更新指定场景的内容',
+    description: '更新指定场景的完整内容（慎用，会覆盖整个场景）',
     parameters: {
       type: 'object',
       properties: {
@@ -18,6 +18,30 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
         content: { type: 'string', description: '新的场景内容（Markdown 格式）' },
       },
       required: ['sceneId', 'content'],
+    },
+  },
+  {
+    name: 'updateSceneText',
+    description: '只更新场景的文案内容，不影响其他属性（推荐使用）',
+    parameters: {
+      type: 'object',
+      properties: {
+        sceneId: { type: 'string', description: '场景 ID' },
+        text: { type: 'string', description: '新的文案内容（Markdown 格式）' },
+      },
+      required: ['sceneId', 'text'],
+    },
+  },
+  {
+    name: 'updateSceneImagePrompt',
+    description: '只更新场景的图片生成 prompt，不影响其他属性（推荐使用）',
+    parameters: {
+      type: 'object',
+      properties: {
+        sceneId: { type: 'string', description: '场景 ID' },
+        imagePrompt: { type: 'string', description: '新的图片生成 prompt' },
+      },
+      required: ['sceneId', 'imagePrompt'],
     },
   },
   {
@@ -74,7 +98,7 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
   },
   {
     name: 'updateChoice',
-    description: '更新场景中的选项',
+    description: '更新场景中选项的多个属性（慎用）',
     parameters: {
       type: 'object',
       properties: {
@@ -86,6 +110,45 @@ const FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
         stateChange: { type: 'string', description: '新的状态变更表达式（可选）' },
       },
       required: ['sceneId', 'choiceIndex'],
+    },
+  },
+  {
+    name: 'updateChoiceText',
+    description: '只更新选项文本，不影响其他属性（推荐使用）',
+    parameters: {
+      type: 'object',
+      properties: {
+        sceneId: { type: 'string', description: '场景 ID' },
+        choiceIndex: { type: 'integer', description: '选项索引（从 0 开始）' },
+        text: { type: 'string', description: '新的选项文本' },
+      },
+      required: ['sceneId', 'choiceIndex', 'text'],
+    },
+  },
+  {
+    name: 'updateChoiceTarget',
+    description: '只更新选项的目标场景，不影响其他属性（推荐使用）',
+    parameters: {
+      type: 'object',
+      properties: {
+        sceneId: { type: 'string', description: '场景 ID' },
+        choiceIndex: { type: 'integer', description: '选项索引（从 0 开始）' },
+        targetSceneId: { type: 'string', description: '新的目标场景 ID' },
+      },
+      required: ['sceneId', 'choiceIndex', 'targetSceneId'],
+    },
+  },
+  {
+    name: 'updateChoiceCondition',
+    description: '只更新选项的条件表达式，不影响其他属性（推荐使用）',
+    parameters: {
+      type: 'object',
+      properties: {
+        sceneId: { type: 'string', description: '场景 ID' },
+        choiceIndex: { type: 'integer', description: '选项索引（从 0 开始）' },
+        condition: { type: 'string', description: '新的条件表达式' },
+      },
+      required: ['sceneId', 'choiceIndex', 'condition'],
     },
   },
   {

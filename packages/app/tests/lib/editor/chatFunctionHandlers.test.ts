@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { handleChatFunctionCall } from '@/lib/editor/chatFunctionHandlers';
+import {
+  handleChatFunctionCall,
+  handleBatchFunctionCalls,
+  cleanupInvalidEdges,
+  FunctionCall,
+} from '@/lib/editor/chatFunctionHandlers';
 import type { Node, Edge } from '@xyflow/react';
 import type { SceneNodeData } from '@/lib/editor/transformers';
 import type { Game } from '@mui-gamebook/parser/src/types';
@@ -52,13 +57,17 @@ function createMockContext() {
     originalGame,
     setNodes: vi.fn((fn) => {
       const result = fn(nodes);
+      // 先复制结果，避免返回相同引用时的数据丢失
+      const newNodes = [...result];
       nodes.length = 0;
-      nodes.push(...result);
+      nodes.push(...newNodes);
     }),
     setEdges: vi.fn((fn) => {
       const result = fn(edges);
+      // 先复制结果，避免返回相同引用时的数据丢失
+      const newEdges = [...result];
       edges.length = 0;
-      edges.push(...result);
+      edges.push(...newEdges);
     }),
     setOriginalGame: vi.fn((fn) => {
       if (typeof fn === 'function') {
@@ -80,11 +89,15 @@ describe('chatFunctionHandlers', () => {
       expect(ctx.nodes[0].data.content).toBe('新的开始场景内容');
     });
 
-    it('updateScene 对不存在的场景应返回错误', () => {
+    it('updateScene 对不存在的场景应跳过（不抛错）', () => {
       const ctx = createMockContext();
+      const initialLength = ctx.nodes.length;
       const result = handleChatFunctionCall('updateScene', { sceneId: 'not_exist', content: '内容' }, ctx);
 
-      expect(result).toBe('场景 "not_exist" 不存在');
+      // 现在的行为是跳过而不是返回错误
+      expect(result).toBe('已更新场景 "not_exist"');
+      // 节点应该不变（通过长度检查）
+      expect(ctx.nodes.length).toBe(initialLength);
     });
 
     it('addScene 应该添加新场景', () => {
@@ -97,11 +110,13 @@ describe('chatFunctionHandlers', () => {
       expect(ctx.nodes[ctx.nodes.length - 1].id).toBe('new_scene');
     });
 
-    it('addScene 对已存在的场景应返回错误', () => {
+    it('addScene 对已存在的场景应跳过', () => {
       const ctx = createMockContext();
-      const result = handleChatFunctionCall('addScene', { sceneId: 'start', content: '内容' }, ctx);
+      const initialLength = ctx.nodes.length;
+      handleChatFunctionCall('addScene', { sceneId: 'start', content: '内容' }, ctx);
 
-      expect(result).toBe('场景 "start" 已存在');
+      // 长度不变
+      expect(ctx.nodes.length).toBe(initialLength);
     });
 
     it('deleteScene 应该删除场景和相关边', () => {
@@ -127,6 +142,45 @@ describe('chatFunctionHandlers', () => {
       expect(result).toBe('已将场景 "scene_1" 重命名为 "renamed_scene"');
       expect(ctx.nodes.find((n) => n.id === 'renamed_scene')).toBeDefined();
       expect(ctx.edges[0].target).toBe('renamed_scene');
+    });
+  });
+
+  describe('细粒度场景操作', () => {
+    it('updateSceneText 应该只更新场景文案', () => {
+      const ctx = createMockContext();
+      const result = handleChatFunctionCall('updateSceneText', { sceneId: 'start', text: '新文案' }, ctx);
+
+      expect(result).toBe('已更新场景 "start" 的文案');
+      expect(ctx.nodes[0].data.content).toBe('新文案');
+    });
+
+    it('updateSceneImagePrompt 应该更新图片 prompt', () => {
+      const ctx = createMockContext();
+      const result = handleChatFunctionCall(
+        'updateSceneImagePrompt',
+        { sceneId: 'start', imagePrompt: '一个美丽的森林' },
+        ctx,
+      );
+
+      expect(result).toBe('已更新场景 "start" 的图片 prompt');
+      const startNode = ctx.nodes.find((n) => n.id === 'start');
+      expect(startNode?.data.assets).toContainEqual({ type: 'ai_image', prompt: '一个美丽的森林' });
+    });
+
+    it('updateSceneImagePrompt 应该更新已有的 ai_image prompt', () => {
+      const ctx = createMockContext();
+      // 先添加一个 ai_image
+      ctx.nodes[0].data.assets = [{ type: 'ai_image', prompt: '旧 prompt' }];
+
+      const result = handleChatFunctionCall(
+        'updateSceneImagePrompt',
+        { sceneId: 'start', imagePrompt: '新 prompt' },
+        ctx,
+      );
+
+      expect(result).toBe('已更新场景 "start" 的图片 prompt');
+      expect(ctx.nodes[0].data.assets).toHaveLength(1);
+      expect(ctx.nodes[0].data.assets[0]).toMatchObject({ type: 'ai_image', prompt: '新 prompt' });
     });
   });
 
@@ -162,6 +216,52 @@ describe('chatFunctionHandlers', () => {
 
       expect(result).toBe('已删除场景 "start" 的第 1 个选项');
       expect(ctx.edges.length).toBe(0);
+    });
+  });
+
+  describe('细粒度选项操作', () => {
+    it('updateChoiceText 应该只更新选项文本', () => {
+      const ctx = createMockContext();
+      const result = handleChatFunctionCall(
+        'updateChoiceText',
+        { sceneId: 'start', choiceIndex: 0, text: '新文本' },
+        ctx,
+      );
+
+      expect(result).toBe('已更新场景 "start" 第 1 个选项的文本');
+      expect(ctx.edges[0].label).toBe('新文本');
+    });
+
+    it('updateChoiceTarget 应该只更新选项目标', () => {
+      const ctx = createMockContext();
+      // 先添加另一个场景
+      ctx.nodes.push({
+        id: 'scene_2',
+        position: { x: 200, y: 200 },
+        data: { label: 'scene_2', content: '场景2', assets: [] },
+        type: 'scene',
+      });
+
+      const result = handleChatFunctionCall(
+        'updateChoiceTarget',
+        { sceneId: 'start', choiceIndex: 0, targetSceneId: 'scene_2' },
+        ctx,
+      );
+
+      expect(result).toBe('已更新场景 "start" 第 1 个选项的目标');
+      expect(ctx.edges[0].target).toBe('scene_2');
+    });
+
+    it('updateChoiceCondition 应该只更新选项条件', () => {
+      const ctx = createMockContext();
+      const result = handleChatFunctionCall(
+        'updateChoiceCondition',
+        { sceneId: 'start', choiceIndex: 0, condition: 'gold > 50' },
+        ctx,
+      );
+
+      expect(result).toBe('已更新场景 "start" 第 1 个选项的条件');
+      expect(ctx.edges[0].data?.condition).toBe('gold > 50');
     });
   });
 
@@ -233,5 +333,91 @@ describe('chatFunctionHandlers', () => {
 
       expect(result).toBe('未知的函数: unknownFunction');
     });
+  });
+});
+
+describe('handleBatchFunctionCalls', () => {
+  it('应该按优先级排序执行：添加 > 删除 > 更新', () => {
+    const ctx = createMockContext();
+    const executionOrder: string[] = [];
+
+    // Mock console.log to track execution order
+    const originalLog = console.log;
+    console.log = (...args) => {
+      if (args[0] === '执行 AI 函数:') {
+        executionOrder.push(args[1]);
+      }
+    };
+
+    const calls: FunctionCall[] = [
+      { name: 'updateScene', args: { sceneId: 'start', content: '更新' } },
+      { name: 'deleteScene', args: { sceneId: 'scene_1' } },
+      { name: 'addScene', args: { sceneId: 'new_scene', content: '新场景' } },
+    ];
+
+    handleBatchFunctionCalls(calls, ctx);
+
+    console.log = originalLog;
+
+    // 验证顺序：添加 > 删除 > 更新
+    expect(executionOrder[0]).toBe('addScene');
+    expect(executionOrder[1]).toBe('deleteScene');
+    expect(executionOrder[2]).toBe('updateScene');
+  });
+
+  it('应该返回所有操作的结果', () => {
+    const ctx = createMockContext();
+
+    const calls: FunctionCall[] = [
+      { name: 'addScene', args: { sceneId: 'new_scene', content: '新场景' } },
+      { name: 'updateScene', args: { sceneId: 'start', content: '更新' } },
+    ];
+
+    const results = handleBatchFunctionCalls(calls, ctx);
+
+    expect(results).toHaveLength(2);
+    expect(results).toContain('已添加场景 "new_scene"');
+    expect(results).toContain('已更新场景 "start"');
+  });
+});
+
+describe('cleanupInvalidEdges', () => {
+  it('应该删除指向不存在节点的边', () => {
+    const ctx = createMockContext();
+    // 添加一条指向不存在节点的边
+    ctx.edges.push({
+      id: 'invalid-edge',
+      source: 'start',
+      target: 'non_existent_scene',
+      label: '无效边',
+    });
+
+    cleanupInvalidEdges(ctx);
+
+    expect(ctx.edges.find((e) => e.id === 'invalid-edge')).toBeUndefined();
+    expect(ctx.edges.find((e) => e.id === 'start-scene_1-0')).toBeDefined();
+  });
+
+  it('应该删除来源不存在的边', () => {
+    const ctx = createMockContext();
+    ctx.edges.push({
+      id: 'invalid-source-edge',
+      source: 'non_existent_source',
+      target: 'scene_1',
+      label: '来源无效',
+    });
+
+    cleanupInvalidEdges(ctx);
+
+    expect(ctx.edges.find((e) => e.id === 'invalid-source-edge')).toBeUndefined();
+  });
+
+  it('不应该删除有效的边', () => {
+    const ctx = createMockContext();
+    const initialValidEdgesCount = ctx.edges.length;
+
+    cleanupInvalidEdges(ctx);
+
+    expect(ctx.edges.length).toBe(initialValidEdgesCount);
   });
 });

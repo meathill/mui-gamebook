@@ -21,7 +21,7 @@ import '@xyflow/react/dist/style.css';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
 import { getLayoutedElements } from '@/lib/editor/layout';
-import { handleChatFunctionCall } from '@/lib/editor/chatFunctionHandlers';
+import { handleBatchFunctionCalls } from '@/lib/editor/chatFunctionHandlers';
 import { useEditorData } from '@/lib/editor/useEditorData';
 import { useEditorStore } from '@/lib/editor/store';
 import SceneNode from '@/components/editor/SceneNode';
@@ -244,10 +244,10 @@ export default function VisualEditor({ id }: { id: string }) {
     window.requestAnimationFrame(() => fitView());
   }, [nodes, edges, setNodes, setEdges, fitView]);
 
-  // AI function call 处理器
+  // AI function call 处理器（批量处理）
   const handleFunctionCall = useCallback(
-    (name: string, args: Record<string, unknown>) => {
-      handleChatFunctionCall(name, args, {
+    (calls: Array<{ name: string; args: Record<string, unknown> }>) => {
+      handleBatchFunctionCalls(calls, {
         nodes: nodes as Node<SceneNodeData>[],
         edges,
         originalGame,
