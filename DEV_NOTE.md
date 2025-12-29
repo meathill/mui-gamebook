@@ -345,12 +345,32 @@ pnpm batch --config ./configs/your-config.json [--force]
 
 ### 支持的操作函数
 
-| 类别 | 函数 |
-|------|------|
-| 场景 | `updateScene`, `addScene`, `deleteScene`, `renameScene` |
-| 选项 | `addChoice`, `updateChoice`, `deleteChoice` |
-| 变量 | `addVariable`, `updateVariable`, `deleteVariable` |
-| 角色 | `addCharacter`, `updateCharacter`, `deleteCharacter` |
+| 类别 | 完整操作 | 细粒度操作（推荐） |
+|------|----------|-------------------|
+| 场景 | `updateScene`, `addScene`, `deleteScene`, `renameScene` | `updateSceneText`, `updateSceneImagePrompt` |
+| 选项 | `addChoice`, `updateChoice`, `deleteChoice` | `updateChoiceText`, `updateChoiceTarget`, `updateChoiceCondition` |
+| 变量 | `addVariable`, `updateVariable`, `deleteVariable` | — |
+| 角色 | `addCharacter`, `updateCharacter`, `deleteCharacter` | — |
+
+**细粒度操作优势**：只修改指定属性，避免 AI 幻觉导致的数据意外覆盖。
+
+### 批量处理和排序
+
+当 AI 返回多个 function calls 时，系统会按优先级排序执行：
+
+1. **添加操作**（优先级 1）：`addScene`, `addChoice`, `addVariable`, `addCharacter`
+2. **删除操作**（优先级 2）：`deleteScene`, `deleteChoice`, `deleteVariable`, `deleteCharacter`
+3. **更新操作**（优先级 3）：所有 `update*` 和 `rename*` 操作
+
+这确保了操作顺序的正确性，例如先添加新场景再更新它。
+
+### 无效连线清理
+
+所有批量操作执行完成后，系统会自动调用 `cleanupInvalidEdges` 清理：
+- 删除指向不存在节点的边
+- 删除来源不存在的边
+
+这避免了 AI 幻觉或删除操作导致的悬空连线。
 
 ### AI 上下文
 
@@ -362,9 +382,13 @@ pnpm batch --config ./configs/your-config.json [--force]
 
 ### 相关文件
 
-- `/packages/app/src/app/api/cms/games/[id]/chat/route.ts` - Chat API
-- `/packages/app/src/components/editor/ChatPanel/` - 聊天组件
-- `/packages/app/src/lib/editor/chatFunctionHandlers.ts` - 操作处理器
+| 文件 | 说明 |
+|------|------|
+| `/packages/app/src/app/api/cms/games/[id]/chat/route.ts` | Chat API 和函数声明 |
+| `/packages/app/src/components/editor/ChatPanel/` | 聊天组件 |
+| `/packages/app/src/lib/editor/chatFunctionHandlers.ts` | 批量处理、排序和清理 |
+| `/packages/app/src/lib/editor/handlers/` | 各类操作处理器 |
+| `/packages/app/tests/lib/editor/chatFunctionHandlers.test.ts` | 单元测试 |
 
 ## 语音配置系统
 

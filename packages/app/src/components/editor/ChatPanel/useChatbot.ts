@@ -28,7 +28,7 @@ interface ChatContext {
 
 interface UseChatbotProps {
   gameId: string;
-  onFunctionCall: (name: string, args: Record<string, unknown>) => void;
+  onFunctionCall: (calls: FunctionCall[]) => void;
 }
 
 export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
@@ -125,8 +125,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
                 case 'function_call':
                   if (data.name && data.args) {
                     functionCalls.push({ name: data.name, args: data.args });
-                    // 调用函数处理器
-                    onFunctionCall(data.name, data.args);
+                    // 不再立即调用，等 done 时批量处理
                   }
                   break;
 
@@ -135,8 +134,9 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
                   break;
 
                 case 'done':
-                  // 最终更新消息，添加 function calls
+                  // 批量处理所有 function calls
                   if (functionCalls.length > 0) {
+                    onFunctionCall(functionCalls);
                     setMessages((prev) => {
                       const last = prev[prev.length - 1];
                       if (last?.role === 'assistant') {

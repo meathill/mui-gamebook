@@ -51,8 +51,8 @@ export default async function PlayPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-neutral-100 py-12">
-      <div className="max-w-3xl mx-auto bg-white shadow-xl rounded-2xl overflow-hidden">
+    <main className="min-h-screen bg-neutral-100 sm:py-12">
+      <div className="max-w-3xl mx-auto bg-white sm:shadow-xl sm:rounded-2xl overflow-hidden">
         <GamePlayer
           game={game}
           slug={slug}

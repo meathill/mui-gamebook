@@ -21,7 +21,7 @@ import '@xyflow/react/dist/style.css';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
 import { getLayoutedElements } from '@/lib/editor/layout';
-import { handleChatFunctionCall } from '@/lib/editor/chatFunctionHandlers';
+import { handleBatchFunctionCalls } from '@/lib/editor/chatFunctionHandlers';
 import { useEditorData } from '@/lib/editor/useEditorData';
 import { useEditorStore } from '@/lib/editor/store';
 import SceneNode from '@/components/editor/SceneNode';
@@ -29,10 +29,11 @@ import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
 import EditorVariablesTab from '@/components/editor/EditorVariablesTab';
 import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
-import EditorToolbar, { Tab } from '@/components/editor/EditorToolbar';
+import EditorToolbar from '@/components/editor/EditorToolbar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import ChatPanel from '@/components/editor/ChatPanel';
 import { useDialog } from '@/components/Dialog';
+import { useUnsavedChangesWarning, useUndoRedoShortcuts } from '@/hooks/useUndoRedo';
 import type { GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
 const nodeTypes = { scene: SceneNode };
@@ -44,14 +45,16 @@ export default function VisualEditor({ id }: { id: string }) {
   const { screenToFlowPosition, fitView } = useReactFlow();
   const dialog = useDialog();
 
+  // Undo/Redo 支持
+  useUnsavedChangesWarning();
+  useUndoRedoShortcuts();
+
   // 从 store 获取 UI 状态
   const activeTab = useEditorStore((s) => s.activeTab);
-  const setActiveTab = useEditorStore((s) => s.setActiveTab);
   const viewMode = useEditorStore((s) => s.viewMode);
   const setViewMode = useEditorStore((s) => s.setViewMode);
   const chatOpen = useEditorStore((s) => s.chatOpen);
   const setChatOpen = useEditorStore((s) => s.setChatOpen);
-  const toggleChatOpen = useEditorStore((s) => s.toggleChatOpen);
   const showImporter = useEditorStore((s) => s.showImporter);
   const setShowImporter = useEditorStore((s) => s.setShowImporter);
   const selectedNode = useEditorStore((s) => s.selectedNode);
@@ -102,6 +105,16 @@ export default function VisualEditor({ id }: { id: string }) {
       router.replace(`/admin/edit/${id}`);
     }
   }, [loading, searchParams, router, id, setShowImporter]);
+
+  // 当 nodes/edges 变化时，如果在文本编辑模式下，同步更新 textContent
+  // 这确保 AI chatbot 更新 nodes 后，textContent 也会更新
+  useEffect(() => {
+    if (viewMode === 'text' && originalGame && nodes.length > 0) {
+      const newGame = flowToGame(nodes as Node<SceneNodeData>[], edges, originalGame);
+      const content = stringify(newGame);
+      setTextContent(content);
+    }
+  }, [nodes, edges, viewMode, originalGame, setTextContent]);
 
   useOnSelectionChange({
     onChange: ({ nodes, edges }) => {
@@ -224,15 +237,6 @@ export default function VisualEditor({ id }: { id: string }) {
     setNodes((nds) => nds.concat(newNode));
   }
 
-  function handleDeleteNode(nodeId: string) {
-    // 删除节点
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
-    // 删除与该节点相关的所有边
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId));
-    // 清除选中状态
-    setSelectedNode(null);
-  }
-
   const handleLayout = useCallback(() => {
     const { nodes: ln, edges: le } = getLayoutedElements(nodes, edges);
     setNodes([...ln]);
@@ -240,10 +244,10 @@ export default function VisualEditor({ id }: { id: string }) {
     window.requestAnimationFrame(() => fitView());
   }, [nodes, edges, setNodes, setEdges, fitView]);
 
-  // AI function call 处理器
+  // AI function call 处理器（批量处理）
   const handleFunctionCall = useCallback(
-    (name: string, args: Record<string, unknown>) => {
-      handleChatFunctionCall(name, args, {
+    (calls: Array<{ name: string; args: Record<string, unknown> }>) => {
+      handleBatchFunctionCalls(calls, {
         nodes: nodes as Node<SceneNodeData>[],
         edges,
         originalGame,
@@ -363,8 +367,6 @@ export default function VisualEditor({ id }: { id: string }) {
                 onNodeChange={handleNodeChange}
                 onNodeIdChange={handleNodeIdChange}
                 onEdgeChange={handleEdgeChange}
-                onDeleteNode={handleDeleteNode}
-                startSceneId={originalGame?.startSceneId}
               />
             </>
           ) : (

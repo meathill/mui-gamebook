@@ -12,7 +12,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row gap-2 items-center">
           <div className="text-sm text-gray-500">{t('copyright', { year: new Date().getFullYear() })}</div>
           <div className="text-xs text-gray-400 mt-2 md:mt-0">v{process.env.NEXT_PUBLIC_APP_VERSION || 'dev'}</div>
-          <div className="flex items-center gap-4 ms-auto">
+          <div className="flex items-center gap-4 sm:ms-auto">
             <Link
               href="/privacy"
               className="text-gray-500 hover:text-gray-700 text-sm">

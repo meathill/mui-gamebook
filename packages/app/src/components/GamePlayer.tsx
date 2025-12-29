@@ -221,7 +221,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   return (
-    <div className="flex flex-col min-h-[600px]">
+    <div className="flex flex-col min-h-dvh sm:min-h-[600px]">
       {/* Header */}
       <div className="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10 bg-opacity-90 backdrop-blur-sm">
         <h1 className="text-lg font-bold truncate text-gray-800">{game.title}</h1>
@@ -242,7 +242,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
       {/* 可见变量状态栏 */}
       {visibleVariables.length > 0 && (
         <div className="bg-gray-50 border-b px-4 py-2">
-          <div className="max-w-2xl mx-auto flex flex-wrap gap-4">
+          <div className="max-w-2xl mx-auto grid grid-cols-3 sm:flex sm:flex-wrap gap-4">
             {visibleVariables.map(({ key, meta }) => (
               <VariableIndicator
                 key={key}
@@ -269,8 +269,8 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
       )}
 
       {/* Scene Content */}
-      <div className="flex-1 p-6 md:p-8 max-w-2xl mx-auto w-full">
-        <div className="space-y-6">
+      <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full">
+        <div className="space-y-2 sm:space-y-6">
           {currentScene.nodes.map((node, index) => {
             switch (node.type) {
               case 'text': {
@@ -278,7 +278,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
                 return (
                   <div
                     key={index}
-                    className="space-y-2">
+                    className="sm:space-y-2">
                     <div className="prose prose-lg prose-gray max-w-none">
                       <ReactMarkdown>{interpolateVariables(node.content, runtimeState)}</ReactMarkdown>
                     </div>
@@ -316,7 +316,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
                 return (
                   <button
                     key={index}
-                    className="w-full text-left p-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md flex items-center gap-3"
+                    className="w-full text-left px-4 py-2 sm:py-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md flex items-center gap-3"
                     onClick={() => handleChoice(node.nextSceneId, node.set)}>
                     {hasChoiceAudio && (
                       <button

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, SendIcon, Loader2Icon, Trash2Icon, BotIcon, SquareIcon } from 'lucide-react';
-import { useChatbot, Message } from './useChatbot';
+import { useChatbot, Message, FunctionCall } from './useChatbot';
 import { Button } from '@radix-ui/themes';
 
 interface ChatPanelProps {
@@ -13,7 +13,7 @@ interface ChatPanelProps {
   story?: string;
   characters?: Record<string, { name: string; description?: string }>;
   variables?: Record<string, unknown>;
-  onFunctionCall: (name: string, args: Record<string, unknown>) => void;
+  onFunctionCall: (calls: FunctionCall[]) => void;
 }
 
 export default function ChatPanel({

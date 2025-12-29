@@ -97,6 +97,36 @@ export interface DeleteCharacterArgs {
   id: string;
 }
 
+// 细粒度场景操作参数
+export interface UpdateSceneTextArgs {
+  sceneId: string;
+  text: string;
+}
+
+export interface UpdateSceneImagePromptArgs {
+  sceneId: string;
+  imagePrompt: string;
+}
+
+// 细粒度选项操作参数
+export interface UpdateChoiceTextArgs {
+  sceneId: string;
+  choiceIndex: number;
+  text: string;
+}
+
+export interface UpdateChoiceTargetArgs {
+  sceneId: string;
+  choiceIndex: number;
+  targetSceneId: string;
+}
+
+export interface UpdateChoiceConditionArgs {
+  sceneId: string;
+  choiceIndex: number;
+  condition: string;
+}
+
 // 工具函数：解析变量值
 export function parseValue(value: string): string | number | boolean {
   if (value === 'true') return true;
