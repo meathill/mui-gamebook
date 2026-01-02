@@ -79,14 +79,14 @@ export function extractCharacterIds(prompt: string): string[] {
   const ids: string[] = [];
 
   // 匹配 characters: [id1, id2] 格式
-  const multiMatch = prompt.match(/characters:\s*\[([^\]]+)\]/i);
+  const multiMatch = prompt?.match(/characters:\s*\[([^\]]+)\]/i);
   if (multiMatch) {
     const idList = multiMatch[1];
     ids.push(...idList.split(',').map((id) => id.trim()));
   }
 
   // 匹配 character: id 格式
-  const singleMatch = prompt.match(/character:\s*(\w+)/i);
+  const singleMatch = prompt?.match(/character:\s*(\w+)/i);
   if (singleMatch) {
     ids.push(singleMatch[1]);
   }
