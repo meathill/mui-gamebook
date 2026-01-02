@@ -10,34 +10,12 @@
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { parse } from '@mui-gamebook/parser';
+import { updateGame, type BaseConfig } from './lib/api-client';
 
 /**
  * 配置文件类型
  */
-interface UploadConfig {
-  apiUrl: string;
-  adminSecret: string;
-  gameSlug: string;
-}
-
-/**
- * 更新剧本到 API
- */
-async function updateGame(config: UploadConfig, content: string): Promise<void> {
-  const res = await fetch(`${config.apiUrl}/api/admin/games/${config.gameSlug}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${config.adminSecret}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ content }),
-  });
-
-  if (!res.ok) {
-    const error = (await res.json()) as { error: string };
-    throw new Error(`更新剧本失败: ${error.error}`);
-  }
-}
+type UploadConfig = BaseConfig;
 
 /**
  * 主函数

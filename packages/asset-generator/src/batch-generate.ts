@@ -15,14 +15,12 @@ import { setProviderType } from './lib/config';
 import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
 import { processGame } from './lib/generator';
 import { checkFfmpeg } from './lib/converter';
+import { fetchGame, updateGame, type BaseConfig } from './lib/api-client';
 
 /**
  * 配置文件格式
  */
-interface BatchConfig {
-  apiUrl: string;
-  adminSecret: string;
-  gameSlug: string;
+interface BatchConfig extends BaseConfig {
   force?: boolean;
   providerType?: AiProviderType;
   /** TTS 配置（可选） */
@@ -36,41 +34,6 @@ interface BatchConfig {
     audio?: 'mp3' | 'wav';
     image?: 'webp' | 'png';
   };
-}
-
-/**
- * 从 API 获取剧本
- */
-async function fetchGame(config: BatchConfig): Promise<{ id: number; content: string }> {
-  const res = await fetch(`${config.apiUrl}/api/admin/games/${config.gameSlug}`, {
-    headers: { Authorization: `Bearer ${config.adminSecret}` },
-  });
-
-  if (!res.ok) {
-    const error = (await res.json()) as { error: string };
-    throw new Error(`获取剧本失败: ${error.error}`);
-  }
-
-  return (await res.json()) as { id: number; content: string };
-}
-
-/**
- * 更新剧本到 API
- */
-async function updateGame(config: BatchConfig, content: string): Promise<void> {
-  const res = await fetch(`${config.apiUrl}/api/admin/games/${config.gameSlug}`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${config.adminSecret}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ content }),
-  });
-
-  if (!res.ok) {
-    const error = (await res.json()) as { error: string };
-    throw new Error(`更新剧本失败: ${error.error}`);
-  }
 }
 
 /**

@@ -13,6 +13,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { setProviderType } from './lib/config';
+import { fetchGame, type BaseConfig } from './lib/api-client';
 import {
   findScenesWithoutImages,
   generateImagePrompts,
@@ -20,29 +21,10 @@ import {
 } from './lib/prompt-generator';
 
 /**
- * 配置文件类型（复用 batch-generate 的配置）
+ * 配置文件类型
  */
-interface EnhanceConfig {
-  apiUrl: string;
-  adminSecret: string;
-  gameSlug: string;
+interface EnhanceConfig extends BaseConfig {
   providerType?: 'google' | 'openai';
-}
-
-/**
- * 从 API 获取剧本
- */
-async function fetchGame(config: EnhanceConfig): Promise<{ id: number; content: string }> {
-  const res = await fetch(`${config.apiUrl}/api/admin/games/${config.gameSlug}`, {
-    headers: { Authorization: `Bearer ${config.adminSecret}` },
-  });
-
-  if (!res.ok) {
-    const error = (await res.json()) as { error: string };
-    throw new Error(`获取剧本失败: ${error.error}`);
-  }
-
-  return (await res.json()) as { id: number; content: string };
 }
 
 /**
