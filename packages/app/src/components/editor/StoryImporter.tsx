@@ -43,12 +43,14 @@ const STORY_PROMPTS = [
 
 interface Props {
   id: string;
+  initialStory?: string;
   onImport: (script: string) => void;
   onClose: () => void;
+  onSaveStory?: (story: string) => void;
 }
 
-export default function StoryImporter({ id, onImport, onClose }: Props) {
-  const [story, setStory] = useState('');
+export default function StoryImporter({ id, initialStory, onImport, onClose, onSaveStory }: Props) {
+  const [story, setStory] = useState(initialStory || '');
   const [loading, setLoading] = useState(false);
   const dialog = useDialog();
 
@@ -58,10 +60,15 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
     return STORY_PROMPTS[index];
   }, []);
 
-  const handleGenerate = async () => {
+  async function handleGenerate() {
     if (!story.trim()) return;
     setLoading(true);
     try {
+      // 先保存 storyPrompt，确保用户输入不丢失
+      if (onSaveStory) {
+        onSaveStory(story);
+      }
+
       const res = await fetch(`/api/cms/games/${id}/generate-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,7 +92,7 @@ export default function StoryImporter({ id, onImport, onClose }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const handleUseExample = () => {
     setStory(randomPrompt.example);

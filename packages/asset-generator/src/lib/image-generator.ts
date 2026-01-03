@@ -134,9 +134,11 @@ export async function processGlobalAssets(game: Game, force: boolean, gameSlug: 
 
 /**
  * 从 prompt 中提取 @角色ID 格式的内联引用
+ * 支持中文、英文等任意语言的角色名
  */
 function extractInlineCharacterIds(prompt: string): string[] {
-  const matches = prompt.match(/@(\w+)/g);
+  // 使用 Unicode 属性匹配任何语言的字母、数字和下划线
+  const matches = prompt.match(/@([\p{L}\p{N}_]+)/gu);
   if (!matches) return [];
   return matches.map((m) => m.slice(1));
 }
@@ -173,6 +175,7 @@ export async function processNode(node: SceneNode, game: Game, force: boolean, g
     // 收集角色描述和头像
     const referenceImages: string[] = [];
     if (uniqueCharacterIds.length > 0 && game.ai.characters) {
+      console.log(`  [角色引用] 找到 ${uniqueCharacterIds.length} 个角色: ${uniqueCharacterIds.join(', ')}`);
       for (const charId of uniqueCharacterIds) {
         const char = game.ai.characters[charId];
         if (char) {
@@ -181,7 +184,12 @@ export async function processNode(node: SceneNode, game: Game, force: boolean, g
           }
           if (char.image_url) {
             referenceImages.push(char.image_url);
+            console.log(`    ✓ ${charId}: 有头像 ${char.image_url.substring(0, 50)}...`);
+          } else {
+            console.log(`    ✗ ${charId}: 无头像 (需要先生成角色头像)`);
           }
+        } else {
+          console.log(`    ⚠ ${charId}: 角色未定义`);
         }
       }
     }

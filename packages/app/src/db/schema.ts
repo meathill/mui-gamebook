@@ -65,6 +65,7 @@ export const games = sqliteTable('Games', {
   ipTxHash: text('ip_tx_hash'), // 注册交易哈希
   ipTokenId: text('ip_token_id'), // NFT Token ID
   ipRegisteredAt: integer('ip_registered_at', { mode: 'timestamp' }), // 注册时间
+  storyPrompt: text('story_prompt'), // AI 故事导入器的故事 prompt
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 });
