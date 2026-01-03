@@ -205,7 +205,11 @@ async function checkOpenAIBatchStatus(batchId: string): Promise<BatchStatus> {
           }
         }
 
-        status.results.push(base64 ? { custom_id: customId, success: true, base64 } : { custom_id: customId, success: false, error: 'No image' });
+        status.results.push(
+          base64
+            ? { custom_id: customId, success: true, base64 }
+            : { custom_id: customId, success: false, error: 'No image' },
+        );
       } catch {
         // 忽略解析错误
       }

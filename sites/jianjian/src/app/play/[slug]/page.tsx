@@ -40,6 +40,7 @@ export default async function PlayPage({ params }: Props) {
     <div className="min-h-screen bg-background">
       <GamePlayerWrapper
         game={playableGame}
+        gameId={game.id}
         slug={slug}
       />
     </div>
