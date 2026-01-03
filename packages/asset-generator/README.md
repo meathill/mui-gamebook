@@ -56,12 +56,29 @@ pnpm upload --config <配置文件路径>
 ### batch - 批量生成
 
 ```bash
-pnpm batch --config <配置文件路径> [--force] [--dry-run]
+pnpm batch --config <配置文件路径> [--force] [--dry-run] [--batch]
 ```
 
 **选项：**
 - `--force` - 强制重新生成所有素材
 - `--dry-run` - 只生成和上传，不更新数据库
+- `--batch` - 使用 Batch API 生成图片（节省 50% 成本）
+
+**Batch 模式说明：**
+
+使用 `--batch` 选项可利用 OpenAI/Gemini 的 Batch API 批量生成图片，节省 50% 成本。
+
+```bash
+# 第一次运行：创建 Batch 任务
+pnpm batch --config configs/my-game.json --batch
+# 输出：Batch 任务已创建，请稍后再次运行
+
+# 第二次运行：检查状态并下载图片
+pnpm batch --config configs/my-game.json --batch
+# 输出：Batch 完成! 成功生成 N 张图片
+```
+
+注意：Batch API 最长 24 小时返回结果，适合非紧急的批量任务。
 
 ## 配置文件格式
 

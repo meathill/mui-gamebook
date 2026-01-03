@@ -52,6 +52,13 @@ export function getAiProvider(): AiProvider {
 }
 
 /**
+ * 获取当前 Provider 类型
+ */
+export function getProviderType(): 'openai' | 'google' {
+  return getAiProvider().type as 'openai' | 'google';
+}
+
+/**
  * 检查远程命令必需的环境变量
  */
 export function validateRemoteEnv(): boolean {
