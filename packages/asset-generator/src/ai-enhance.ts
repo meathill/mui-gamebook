@@ -14,11 +14,7 @@ import { readFile } from 'fs/promises';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { setProviderType } from './lib/config';
 import { fetchGame, type BaseConfig } from './lib/api-client';
-import {
-  findScenesWithoutImages,
-  generateImagePrompts,
-  insertImageNodes,
-} from './lib/prompt-generator';
+import { findScenesWithoutImages, generateImagePrompts, insertImageNodes } from './lib/prompt-generator';
 
 /**
  * 配置文件类型

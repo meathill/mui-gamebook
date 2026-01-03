@@ -43,9 +43,14 @@ export async function PUT(req: Request, { params }: Props) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const id = Number((await params).id);
-  const { content, slug: newSlug } = (await req.json()) as {
+  const {
+    content,
+    slug: newSlug,
+    storyPrompt,
+  } = (await req.json()) as {
     content: string;
     slug?: string;
+    storyPrompt?: string;
   };
 
   // Validate content with parser
@@ -98,6 +103,7 @@ export async function PUT(req: Request, { params }: Props) {
       tags: JSON.stringify(tags),
       published: published,
       updatedAt: now,
+      ...(storyPrompt !== undefined && { storyPrompt }),
     })
     .where(eq(schema.games.id, id));
 

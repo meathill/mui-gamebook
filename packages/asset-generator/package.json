@@ -7,7 +7,10 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "generate": "tsx src/index.ts",
-    "batch": "tsx src/batch-generate.ts --config configs/safe.json"
+    "batch": "tsx src/batch-generate.ts --config configs/corlenka.my.json",
+    "enhance": "tsx src/ai-enhance.ts",
+    "check": "tsx src/check-images.ts",
+    "upload": "tsx src/upload-content.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.956.0",

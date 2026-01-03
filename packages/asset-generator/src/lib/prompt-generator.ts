@@ -30,9 +30,7 @@ export function findScenesWithoutImages(game: Game): SceneImageInfo[] {
   const result: SceneImageInfo[] = [];
 
   for (const scene of Object.values(game.scenes)) {
-    const hasImage = scene.nodes.some(
-      (node: SceneNode) => node.type === 'ai_image' || node.type === 'static_image',
-    );
+    const hasImage = scene.nodes.some((node: SceneNode) => node.type === 'ai_image' || node.type === 'static_image');
 
     // 收集场景的文本内容
     const textContent = scene.nodes
@@ -187,9 +185,7 @@ export function insertImageNodes(game: Game, prompts: GeneratedPrompt[]): Game {
     }
 
     // 检查是否已有图片节点
-    const hasImage = scene.nodes.some(
-      (node: SceneNode) => node.type === 'ai_image' || node.type === 'static_image',
-    );
+    const hasImage = scene.nodes.some((node: SceneNode) => node.type === 'ai_image' || node.type === 'static_image');
 
     if (hasImage) {
       console.log(`[跳过] 场景 ${prompt.sceneId} 已有图片节点`);

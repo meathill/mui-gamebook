@@ -398,8 +398,21 @@ export default function VisualEditor({ id }: { id: string }) {
       {showImporter && (
         <StoryImporter
           id={id}
+          initialStory={originalGame?.storyPrompt}
           onImport={handleImport}
           onClose={() => setShowImporter(false)}
+          onSaveStory={async (story) => {
+            try {
+              await fetch(`/api/cms/games/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: textContent, slug, storyPrompt: story }),
+              });
+              setOriginalGame((prev) => (prev ? { ...prev, storyPrompt: story } : prev));
+            } catch (e) {
+              console.error('Failed to save story prompt:', e);
+            }
+          }}
         />
       )}
     </div>

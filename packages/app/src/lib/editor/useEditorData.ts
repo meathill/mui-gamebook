@@ -9,14 +9,19 @@ import type { Game } from '@mui-gamebook/parser/src/types';
 import type { SceneNode } from '@mui-gamebook/parser';
 import type { Node, Edge } from '@xyflow/react';
 
+// 扩展 Game 类型，添加编辑器特有的字段
+export interface EditorGame extends Game {
+  storyPrompt?: string;
+}
+
 interface UseEditorDataProps {
   id: string;
   setNodes: (fn: (nodes: Node[]) => Node[]) => void;
 }
 
 interface UseEditorDataReturn {
-  originalGame: Game | null;
-  setOriginalGame: React.Dispatch<React.SetStateAction<Game | null>>;
+  originalGame: EditorGame | null;
+  setOriginalGame: React.Dispatch<React.SetStateAction<EditorGame | null>>;
   slug: string;
   setSlug: React.Dispatch<React.SetStateAction<string>>;
   textContent: string;
@@ -39,7 +44,7 @@ interface UseEditorDataReturn {
 export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDataReturn {
   const dialog = useDialog();
 
-  const [originalGame, setOriginalGame] = useState<Game | null>(null);
+  const [originalGame, setOriginalGame] = useState<EditorGame | null>(null);
   const [slug, setSlug] = useState('');
   const [textContent, setTextContent] = useState('');
   const [loading, setLoading] = useState(true);
@@ -96,7 +101,7 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
     fetch(`/api/cms/games/${id}`)
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to load game');
-        const data = (await res.json()) as { content: string; slug: string } & Game;
+        const data = (await res.json()) as { content: string; slug: string; storyPrompt?: string } & Game;
         const result = parse(data.content);
         if (result.success) {
           setOriginalGame({ ...result.data, ...data });
