@@ -2,15 +2,13 @@
 
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { Button } from '@radix-ui/themes';
 import { authClient } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
 import { useLocale } from '@/i18n/client';
 import type { Locale } from '@/i18n/config';
+import UserDropdown from '@/components/admin/UserDropdown';
 
 export default function Header() {
   const { data: session } = authClient.useSession();
-  const router = useRouter();
   const t = useTranslations('header');
   const { setLocale } = useLocale();
 
@@ -39,30 +37,8 @@ export default function Header() {
               <option value="zh">中文</option>
             </select>
 
-            <Link
-              href="/"
-              className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
-              {t('home')}
-            </Link>
-
             {session ? (
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/admin"
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                  {t('admin')}
-                </Link>
-                <span className="text-sm text-gray-600">{session.user.name}</span>
-                <Button
-                  variant="ghost"
-                  color="red"
-                  onClick={async () => {
-                    await authClient.signOut();
-                    router.refresh();
-                  }}>
-                  {t('signOut')}
-                </Button>
-              </div>
+              <UserDropdown email={session?.user.email || ''} />
             ) : (
               <Link
                 href="/sign-in"

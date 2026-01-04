@@ -1,7 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, Users, Star, Clock, GamepadIcon } from 'lucide-react';
+import Link from 'next/link';
+import { TrendingUp, Users, Star, Clock, GamepadIcon, Edit } from 'lucide-react';
 
 interface GameAnalytics {
   id: number;
@@ -183,9 +184,15 @@ export default function DashboardPage() {
                     key={game.id}
                     className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">{game.title}</div>
-                        <div className="text-sm text-gray-500">/{game.slug}</div>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <Link
+                            href={`/admin/edit/${game.id}`}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                            {game.title}
+                          </Link>
+                          <div className="text-sm text-gray-500">/{game.slug}</div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
