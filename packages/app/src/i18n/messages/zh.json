@@ -16,6 +16,8 @@
   "header": {
     "title": "姆伊游戏书",
     "home": "首页",
+    "games": "剧本",
+    "minigames": "小游戏",
     "admin": "管理后台",
     "signIn": "登录",
     "signOut": "退出"
@@ -26,14 +28,95 @@
     "terms": "服务条款"
   },
   "home": {
-    "aboutTitle": "关于「姆伊故事书」",
-    "aboutContent": "你好，欢迎来到姆伊故事书。有一天我突然想到，利用 AI 可以把互动小说/文字冒险游戏的开发门槛降到最低，让更多人能够创作和分享自己的故事。同时，开发得当的话，让作者控制 AI 而不是受制于 AI，还能保证故事质量和游戏性。于是，我就在 AI 开发工具的帮助下，创造出这个平台。",
+    "hero": {
+      "badge": "AI 驱动的互动故事平台",
+      "title": "创作属于你的互动故事",
+      "subtitle": "使用 AI 辅助工具，轻松创建引人入胜的文字冒险游戏。零代码门槛，无限创意可能。",
+      "playNow": "开始体验",
+      "createStory": "创作故事"
+    },
+    "recentGames": "最近更新",
+    "minigamesTitle": "小游戏体验",
+    "minigamesSubtitle": "感受与众不同的互动体验",
+    "viewAll": "查看全部",
+    "features": {
+      "title": "为什么选择姆伊游戏书",
+      "subtitle": "强大的 AI 辅助工具，让创作变得简单有趣",
+      "aiAssist": {
+        "title": "AI 辅助创作",
+        "description": "零代码门槛，用自然语言描述你的创意，AI 帮你生成完整剧本。"
+      },
+      "aiChatbot": {
+        "title": "AI Chatbot 全天候辅助",
+        "description": "24 小时智能助手，随时解答问题、优化剧情、修改细节。"
+      },
+      "variables": {
+        "title": "支持变量，无限可能",
+        "description": "引入变量系统，根据玩家选择改变故事走向，创造真正的分支剧情。"
+      },
+      "minigames": {
+        "title": "场景小游戏",
+        "description": "在故事中嵌入互动小游戏，游戏性更强，玩家体验更丰富多样。"
+      },
+      "richInteractive": {
+        "title": "丰富的互动元素",
+        "description": "支持图片、音频、动画等多媒体内容，打造沉浸式阅读体验。"
+      },
+      "crossPlatform": {
+        "title": "跨平台发布",
+        "description": "一键发布到 Web，随时随地畅玩，轻松分享给朋友。"
+      }
+    },
+    "faq": {
+      "title": "常见问题",
+      "subtitle": "关于姆伊游戏书，你想知道的都在这里",
+      "whatIs": {
+        "question": "什么是姆伊游戏书？",
+        "answer": "姆伊游戏书是一个 AI 驱动的互动故事创作平台。你可以用自然语言描述故事创意，AI 会帮你生成完整的互动剧本。玩家可以通过选择不同选项，体验不同的故事走向。"
+      },
+      "howCreate": {
+        "question": "如何创建自己的故事？",
+        "answer": "注册账号后，进入管理后台，点击「创建游戏」。你可以直接用 AI 导入功能，输入故事大纲让 AI 生成剧本，也可以使用可视化编辑器手动创作。"
+      },
+      "pricing": {
+        "question": "使用是否收费？",
+        "answer": "目前平台处于早期阶段，核心功能免费使用。我们会持续优化产品，未来可能推出付费增值功能。"
+      },
+      "variables": {
+        "question": "什么是变量系统？",
+        "answer": "变量可以记录玩家的选择和状态，比如好感度、物品数量等。通过变量，你可以创造真正的分支剧情，让不同玩家获得不同的游戏体验。"
+      },
+      "minigames": {
+        "question": "小游戏是什么？",
+        "answer": "小游戏是嵌入故事场景的互动环节，比如解谜、战斗等。AI 可以根据你的描述自动生成小游戏代码，让故事更具游戏性。"
+      }
+    },
+    "aboutTitle": "关于「姆伊游戏书」",
+    "aboutContent": "你好，欢迎来到姆伊游戏书。有一天我突然想到，利用 AI 可以把互动小说/文字冒险游戏的开发门槛降到最低，让更多人能够创作和分享自己的故事。同时，开发得当的话，让作者控制 AI 而不是受制于 AI，还能保证故事质量和游戏性。于是，我就在 AI 开发工具的帮助下，创造出这个平台。",
     "aboutContent2": "目前这里仍在早创阶段，功能和内容都比较有限，但我会持续改进和完善。如果你有任何建议或想法，欢迎随时联系我！",
     "contactLink": "邮件联系，获得创作资格",
     "signature": "—— Meathill",
     "gameLibrary": "游戏库",
     "noCover": "暂无封面",
     "noGames": "暂无已发布的游戏，请稍后再来！"
+  },
+  "games": {
+    "pageTitle": "全部剧本 - 姆伊游戏书",
+    "pageDescription": "探索姆伊游戏书上的所有互动故事剧本",
+    "title": "全部剧本",
+    "subtitle": "发现精彩的互动故事，开启你的冒险之旅",
+    "noGames": "暂无已发布的游戏"
+  },
+  "minigames": {
+    "pageTitle": "小游戏 - 姆伊游戏书",
+    "pageDescription": "体验姆伊游戏书上的各种互动小游戏",
+    "title": "小游戏体验",
+    "subtitle": "感受与众不同的游戏互动体验",
+    "noMinigames": "暂无可用的小游戏",
+    "noDescription": "暂无描述",
+    "notFound": "小游戏未找到",
+    "defaultDescription": "体验这个有趣的互动小游戏",
+    "backToList": "返回列表"
   },
   "game": {
     "loading": "加载中...",
@@ -50,7 +133,8 @@
     "backToTitle": "返回标题",
     "restartConfirm": "确定要重新开始吗？游戏进度将会丢失。",
     "startGame": "开始游戏",
-    "generating": "生成中..."
+    "generating": "生成中...",
+    "relatedGames": "更多推荐"
   },
   "share": {
     "share": "分享",

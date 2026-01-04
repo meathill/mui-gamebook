@@ -20,7 +20,7 @@ export default function EndScreen({ title, shareUrl, onRestart }: EndScreenProps
       <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
         <button
           onClick={() => onRestart(true)}
-          className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 shadow transition-transform hover:-translate-y-0.5 font-medium">
+          className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full hover:from-orange-600 hover:to-amber-600 shadow transition-transform hover:-translate-y-0.5 font-medium">
           {t('playAgain')}
         </button>
         <Link

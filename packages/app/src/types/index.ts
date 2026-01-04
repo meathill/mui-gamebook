@@ -7,3 +7,6 @@ export type GameRow = {
   created_at: string;
   updated_at: string;
 };
+
+// tags 已解析为数组的游戏行
+export type ParsedGameRow = Omit<GameRow, 'tags'> & { tags: string[] };

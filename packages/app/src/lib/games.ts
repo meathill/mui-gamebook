@@ -2,23 +2,31 @@ import { parse } from '@mui-gamebook/parser';
 import { toPlayableGame } from '@mui-gamebook/parser/src/utils';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { GameRow } from '@/types';
+import { GameRow, ParsedGameRow } from '@/types';
 import { cache } from 'react';
 import { getSession } from '@/lib/auth-server';
 
-export async function getPublishedGames() {
+export async function getPublishedGames(options?: { limit?: number; offset?: number }) {
   try {
     const { env } = getCloudflareContext();
-    const DB = env.DB; // Assume binding name is DB
+    const DB = env.DB;
 
     if (!DB) {
       console.error("D1 database binding 'DB' not found.");
       return [];
     }
 
-    const { results } = (await DB.prepare(
-      'SELECT slug, title, description, cover_image, tags, created_at, updated_at FROM Games WHERE published = 1 ORDER BY updated_at DESC',
-    ).all()) as { results: GameRow[] };
+    let query =
+      'SELECT slug, title, description, cover_image, tags, created_at, updated_at FROM Games WHERE published = 1 ORDER BY updated_at DESC';
+
+    if (options?.limit) {
+      query += ` LIMIT ${options.limit}`;
+      if (options?.offset) {
+        query += ` OFFSET ${options.offset}`;
+      }
+    }
+
+    const { results } = (await DB.prepare(query).all()) as { results: GameRow[] };
 
     return results.map((row: GameRow) => ({
       ...row,
@@ -26,6 +34,62 @@ export async function getPublishedGames() {
     }));
   } catch (e) {
     console.error('Failed to fetch from D1:', e);
+    return [];
+  }
+}
+
+export async function getPublishedGamesCount(): Promise<number> {
+  try {
+    const { env } = getCloudflareContext();
+    const DB = env.DB;
+
+    if (!DB) return 0;
+
+    const result = await DB.prepare('SELECT COUNT(*) as count FROM Games WHERE published = 1').first<{
+      count: number;
+    }>();
+    return result?.count ?? 0;
+  } catch (e) {
+    console.error('Failed to get games count:', e);
+    return 0;
+  }
+}
+
+export async function getRelatedGames(currentSlug: string, tags: string[], limit = 4): Promise<ParsedGameRow[]> {
+  try {
+    const { env } = getCloudflareContext();
+    const DB = env.DB;
+
+    if (!DB || tags.length === 0) return [];
+
+    // 获取所有已发布游戏（除当前游戏外），然后在内存中按标签匹配排序
+    const { results } = (await DB.prepare(
+      `SELECT slug, title, description, cover_image, tags, created_at, updated_at
+       FROM Games WHERE published = 1 AND slug != ?
+       ORDER BY updated_at DESC`,
+    )
+      .bind(currentSlug)
+      .all()) as { results: GameRow[] };
+
+    // 计算每个游戏与当前游戏的标签匹配数
+    const gamesWithScore = results.map((row) => {
+      const gameTags: string[] = row.tags ? JSON.parse(row.tags) : [];
+      const matchCount = gameTags.filter((tag) => tags.includes(tag)).length;
+      return {
+        ...row,
+        tags: gameTags,
+        matchCount,
+      };
+    });
+
+    // 按匹配数排序，取前 N 个
+    return gamesWithScore
+      .filter((g) => g.matchCount > 0)
+      .sort((a, b) => b.matchCount - a.matchCount)
+      .slice(0, limit)
+      .map(({ matchCount: _, ...rest }) => rest);
+  } catch (e) {
+    console.error('Failed to get related games:', e);
     return [];
   }
 }

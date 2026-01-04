@@ -16,6 +16,8 @@
   "header": {
     "title": "MuiStory",
     "home": "Home",
+    "games": "Stories",
+    "minigames": "Mini Games",
     "admin": "Dashboard",
     "signIn": "Sign In",
     "signOut": "Sign Out"
@@ -26,6 +28,69 @@
     "terms": "Terms of Service"
   },
   "home": {
+    "hero": {
+      "badge": "AI-Powered Interactive Story Platform",
+      "title": "Create Your Own Interactive Stories",
+      "subtitle": "Use AI-powered tools to easily create engaging text adventure games. Zero coding required, unlimited creativity.",
+      "playNow": "Start Playing",
+      "createStory": "Create Story"
+    },
+    "recentGames": "Recently Updated",
+    "minigamesTitle": "Mini Games",
+    "minigamesSubtitle": "Experience unique interactive gameplay",
+    "viewAll": "View All",
+    "features": {
+      "title": "Why Choose MuiStory",
+      "subtitle": "Powerful AI tools make storytelling simple and fun",
+      "aiAssist": {
+        "title": "AI-Assisted Creation",
+        "description": "Zero coding required. Describe your ideas in natural language, and AI generates complete scripts for you."
+      },
+      "aiChatbot": {
+        "title": "24/7 AI Chatbot Assistant",
+        "description": "Always-available smart assistant to answer questions, optimize plots, and refine details anytime."
+      },
+      "variables": {
+        "title": "Variable System, Infinite Possibilities",
+        "description": "Use variables to change story paths based on player choices, creating truly branching narratives."
+      },
+      "minigames": {
+        "title": "Scene Mini Games",
+        "description": "Embed interactive mini games in your story for enhanced gameplay and richer player experiences."
+      },
+      "richInteractive": {
+        "title": "Rich Interactive Elements",
+        "description": "Support images, audio, animations, and more multimedia content for immersive reading experiences."
+      },
+      "crossPlatform": {
+        "title": "Cross-Platform Publishing",
+        "description": "One-click publish to Web, play anywhere anytime, and easily share with friends."
+      }
+    },
+    "faq": {
+      "title": "FAQ",
+      "subtitle": "Everything you want to know about MuiStory",
+      "whatIs": {
+        "question": "What is MuiStory?",
+        "answer": "MuiStory is an AI-powered interactive story creation platform. You can describe your story ideas in natural language, and AI will generate complete interactive scripts. Players can experience different story paths by making different choices."
+      },
+      "howCreate": {
+        "question": "How do I create my own story?",
+        "answer": "After registering, go to the dashboard and click 'Create Game'. You can use the AI Import feature to generate scripts from your outline, or use the visual editor to create manually."
+      },
+      "pricing": {
+        "question": "Is it free to use?",
+        "answer": "The platform is currently in early stages, and core features are free to use. We'll continue improving the product and may introduce premium features in the future."
+      },
+      "variables": {
+        "question": "What is the variable system?",
+        "answer": "Variables can track player choices and states, such as affection levels or item counts. With variables, you can create true branching narratives where different players get different experiences."
+      },
+      "minigames": {
+        "question": "What are mini games?",
+        "answer": "Mini games are interactive segments embedded in story scenes, like puzzles or battles. AI can automatically generate mini game code based on your descriptions, making stories more engaging."
+      }
+    },
     "aboutTitle": "About MuiStory",
     "aboutContent": "Welcome to MuiStory. One day I realized that AI can lower the barrier to creating interactive fiction/text adventure games, allowing more people to create and share their stories. Meanwhile, with proper development, letting authors control AI rather than be controlled by it can ensure story quality and gameplay. So, with the help of AI development tools, I created this platform.",
     "aboutContent2": "This platform is still in its early stages with limited features and content, but I will continue to improve it. If you have any suggestions or ideas, feel free to contact me!",
@@ -34,6 +99,24 @@
     "gameLibrary": "Game Library",
     "noCover": "No Cover",
     "noGames": "No published games yet, please check back later!"
+  },
+  "games": {
+    "pageTitle": "All Stories - MuiStory",
+    "pageDescription": "Explore all interactive story scripts on MuiStory",
+    "title": "All Stories",
+    "subtitle": "Discover amazing interactive stories and start your adventure",
+    "noGames": "No published games yet"
+  },
+  "minigames": {
+    "pageTitle": "Mini Games - MuiStory",
+    "pageDescription": "Experience various interactive mini games on MuiStory",
+    "title": "Mini Games",
+    "subtitle": "Experience unique interactive gameplay",
+    "noMinigames": "No mini games available",
+    "noDescription": "No description",
+    "notFound": "Mini game not found",
+    "defaultDescription": "Experience this fun interactive mini game",
+    "backToList": "Back to list"
   },
   "game": {
     "loading": "Loading...",
@@ -50,7 +133,8 @@
     "backToTitle": "Back to Title",
     "restartConfirm": "Are you sure you want to restart? Your progress will be lost.",
     "startGame": "Start Game",
-    "generating": "Generating..."
+    "generating": "Generating...",
+    "relatedGames": "More Games"
   },
   "share": {
     "share": "Share",

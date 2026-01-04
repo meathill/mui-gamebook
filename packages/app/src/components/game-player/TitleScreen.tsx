@@ -68,7 +68,7 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
 
         <button
           onClick={onStart}
-          className="px-8 py-3 bg-blue-600 text-white text-lg font-semibold rounded-full shadow-lg hover:bg-blue-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5">
+          className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-lg font-semibold rounded-full shadow-lg hover:from-orange-600 hover:to-amber-600 hover:shadow-xl transition-all transform hover:-translate-y-0.5">
           {t('startAdventure')}
         </button>
 

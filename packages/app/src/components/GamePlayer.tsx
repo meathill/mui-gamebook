@@ -316,7 +316,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
                 return (
                   <button
                     key={index}
-                    className="w-full text-left px-4 py-2 sm:py-4 border-2 border-blue-100 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group shadow-sm hover:shadow-md flex items-center gap-3"
+                    className="w-full text-left px-4 py-2 sm:py-4 border-2 border-amber-100 rounded-xl hover:border-orange-400 hover:bg-orange-50 transition-all group shadow-sm hover:shadow-md flex items-center gap-3"
                     onClick={() => handleChoice(node.nextSceneId, node.set)}>
                     {hasChoiceAudio && (
                       <button
@@ -324,12 +324,12 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
                           e.stopPropagation();
                           audioPlayer.play((node as { audio_url: string }).audio_url);
                         }}
-                        className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors flex-shrink-0"
+                        className="p-2 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-600 transition-colors flex-shrink-0"
                         title="播放语音">
                         <Volume2 size={16} />
                       </button>
                     )}
-                    <span className="font-medium text-blue-700 group-hover:text-blue-900 text-lg flex-1">
+                    <span className="font-medium text-amber-800 group-hover:text-orange-700 text-lg flex-1">
                       {interpolateVariables(node.text, runtimeState)}
                     </span>
                   </button>
