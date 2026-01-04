@@ -29,8 +29,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex gap-8">
           <aside className="w-56 flex-shrink-0">
             <div className="sticky top-6">
-              <h2 className="text-lg font-bold text-gray-900">管理后台</h2>
-              <CreateGameModal className="mb-6" />
+              <header className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-gray-900">管理后台</h2>
+                <CreateGameModal />
+              </header>
 
               <AdminNav />
             </div>

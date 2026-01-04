@@ -24,20 +24,6 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <div className="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 mb-8 p-6 shadow">
-          <h2 className="text-2xl font-medium mb-4">{t('aboutTitle')}</h2>
-          <p className="mb-2">{t('aboutContent')}</p>
-          <p className="mb-2">
-            {t('aboutContent2')}
-            <Link
-              className="text-sky-600 underline ml-1"
-              href="mailto:meathill@gmail.com"
-              target="_blank">
-              {t('contactLink')}
-            </Link>
-          </p>
-          <p className="mb-4 text-end">{t('signature')}</p>
-        </div>
         <h2 className="text-4xl font-extrabold text-gray-900 text-center mb-10">{t('gameLibrary')}</h2>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
