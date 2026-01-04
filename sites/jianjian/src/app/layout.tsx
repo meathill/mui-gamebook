@@ -3,6 +3,7 @@ import { Noto_Sans_SC } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import CookieConsent from '@/components/CookieConsent';
 import type { ReactNode } from 'react';
 
 // 使用思源黑体 - 更适合中文阅读
@@ -76,6 +77,7 @@ export default function RootLayout({
         <Header />
         <main className="grow flex flex-col">{children}</main>
         <Footer />
+        <CookieConsent />
       </body>
     </html>
   );

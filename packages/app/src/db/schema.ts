@@ -121,3 +121,62 @@ export const minigames = sqliteTable('Minigames', {
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 });
+
+// ========== 统计相关表 ==========
+
+// 游戏统计汇总表（从 KV 同步）
+export const gameAnalytics = sqliteTable('GameAnalytics', {
+  id: integer('id').primaryKey(),
+  gameId: integer('game_id')
+    .notNull()
+    .unique()
+    .references(() => games.id, { onDelete: 'cascade' }),
+  openCount: integer('open_count').default(0),
+  completionCount: integer('completion_count').default(0),
+  totalDuration: integer('total_duration').default(0),
+  sessionCount: integer('session_count').default(0),
+  ratingCount: integer('rating_count').default(0),
+  ratingSum: integer('rating_sum').default(0),
+  syncedAt: integer('synced_at', { mode: 'timestamp' }),
+});
+
+// 热门场景表
+export const sceneAnalytics = sqliteTable('SceneAnalytics', {
+  id: integer('id').primaryKey(),
+  gameId: integer('game_id')
+    .notNull()
+    .references(() => games.id, { onDelete: 'cascade' }),
+  sceneId: text('scene_id').notNull(),
+  visitCount: integer('visit_count').default(0),
+});
+
+// 选项分布表
+export const choiceAnalytics = sqliteTable('ChoiceAnalytics', {
+  id: integer('id').primaryKey(),
+  gameId: integer('game_id')
+    .notNull()
+    .references(() => games.id, { onDelete: 'cascade' }),
+  sceneId: text('scene_id').notNull(),
+  choiceIndex: integer('choice_index').notNull(),
+  clickCount: integer('click_count').default(0),
+});
+
+// 来源统计表
+export const referrerAnalytics = sqliteTable('ReferrerAnalytics', {
+  id: integer('id').primaryKey(),
+  gameId: integer('game_id')
+    .notNull()
+    .references(() => games.id, { onDelete: 'cascade' }),
+  referrer: text('referrer').notNull(),
+  count: integer('count').default(0),
+});
+
+// 设备统计表
+export const deviceAnalytics = sqliteTable('DeviceAnalytics', {
+  id: integer('id').primaryKey(),
+  gameId: integer('game_id')
+    .notNull()
+    .references(() => games.id, { onDelete: 'cascade' }),
+  deviceType: text('device_type').notNull(),
+  count: integer('count').default(0),
+});

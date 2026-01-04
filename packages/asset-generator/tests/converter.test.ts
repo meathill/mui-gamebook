@@ -11,22 +11,4 @@ describe('converter', () => {
       expect(typeof result).toBe('boolean');
     });
   });
-
-  // 注意：wavToMp3 和 imageToWebp 测试需要实际的 ffmpeg
-  // 这些是集成测试，通常应该在 CI 中设置 ffmpeg 后运行
-  // 或者使用 mock
-
-  describe('wavToMp3', () => {
-    it.skip('应该将 WAV 转换为 MP3', async () => {
-      // 此测试需要实际的 WAV 文件和 ffmpeg
-      // 跳过以避免 CI 失败
-    });
-  });
-
-  describe('imageToWebp', () => {
-    it.skip('应该将图片转换为 WebP', async () => {
-      // 此测试需要实际的图片文件和 ffmpeg
-      // 跳过以避免 CI 失败
-    });
-  });
 });

@@ -18,13 +18,7 @@ import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
 import { processGame } from './lib/generator';
 import { checkFfmpeg, imageToWebp } from './lib/converter';
 import { fetchGame, updateGame, type BaseConfig } from './lib/api-client';
-import {
-  hasPendingBatch,
-  createBatch,
-  checkBatchStatus,
-  clearBatchRecord,
-  type BatchTask,
-} from './lib/batch-client';
+import { hasPendingBatch, createBatch, checkBatchStatus, clearBatchRecord, type BatchTask } from './lib/batch-client';
 import { smartUpload } from './lib/uploader';
 
 /**
@@ -70,12 +64,7 @@ function collectImageTasks(game: Game, force: boolean): BatchTask[] {
 /**
  * 处理 Batch 模式
  */
-async function handleBatchMode(
-  config: BatchConfig,
-  game: Game,
-  force: boolean,
-  dryRun: boolean,
-): Promise<void> {
+async function handleBatchMode(config: BatchConfig, game: Game, force: boolean, dryRun: boolean): Promise<void> {
   const gameSlug = config.gameSlug;
   const provider = getProviderType();
   const apiKey = provider === 'google' ? process.env.GOOGLE_API_KEY : undefined;
@@ -114,9 +103,7 @@ async function handleBatchMode(
         const scene = game.scenes[task.sceneId];
         if (!scene) continue;
 
-        const node = scene.nodes.find(
-          (n: SceneNode) => n.type === 'ai_image' && n.prompt === task.prompt,
-        );
+        const node = scene.nodes.find((n: SceneNode) => n.type === 'ai_image' && n.prompt === task.prompt);
         if (!node || node.type !== 'ai_image') continue;
 
         // 保存图片
@@ -274,4 +261,3 @@ main().catch((e) => {
   console.error('发生错误:', e);
   process.exit(1);
 });
-

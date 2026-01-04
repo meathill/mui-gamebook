@@ -12,13 +12,14 @@ import GameEndScreen from './components/GameEndScreen';
 
 interface Props {
   game: PlayableGame;
+  gameId: number;
   slug: string;
 }
 
 /**
  * GamePlayerWrapper - 简简站点的儿童友好游戏播放器
  */
-export default function GamePlayerWrapper({ game, slug }: Props) {
+export default function GamePlayerWrapper({ game, gameId, slug }: Props) {
   const audioPlayer = useAudioPlayer();
   const choiceAudioRef = useRef<HTMLAudioElement | null>(null);
   const [playingChoiceIndex, setPlayingChoiceIndex] = useState<number | null>(null);
@@ -31,13 +32,14 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
     currentImageUrl,
     imageLoading,
     visibleVariables,
+    gameStartTime,
     setImageLoading,
     handleStartGame,
     handleRestart,
     handleChoice,
     getSceneImage,
     getSceneAudioUrl,
-  } = useGameState({ game, slug });
+  } = useGameState({ game, gameId, slug });
 
   // 场景切换时自动播放语音并预加载下一场景
   useEffect(() => {
@@ -83,13 +85,13 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, isGameStarted, getSceneImage, getSceneAudioUrl]);
 
-  function handleChoiceWithAudio(nextSceneId: string, setInstruction?: string) {
+  function handleChoiceWithAudio(nextSceneId: string, choiceIndex: number, setInstruction?: string) {
     audioPlayer.stop();
     if (choiceAudioRef.current) {
       choiceAudioRef.current.pause();
       setPlayingChoiceIndex(null);
     }
-    handleChoice(nextSceneId, setInstruction);
+    handleChoice(nextSceneId, choiceIndex, setInstruction);
   }
 
   function handleRestartWithAudio() {
@@ -252,7 +254,7 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
                     )}
                     <button
                       className="choice-btn flex-1"
-                      onClick={() => handleChoiceWithAudio(node.nextSceneId, node.set)}>
+                      onClick={() => handleChoiceWithAudio(node.nextSceneId, index, node.set)}>
                       <span className="mr-2">👉</span>
                       {interpolateVariables(node.text, runtimeState)}
                     </button>
@@ -269,7 +271,13 @@ export default function GamePlayerWrapper({ game, slug }: Props) {
           })}
 
           {/* 结局画面 */}
-          {showEndScreen && <GameEndScreen onRestart={handleRestartWithAudio} />}
+          {showEndScreen && (
+            <GameEndScreen
+              gameId={gameId}
+              gameStartTime={gameStartTime}
+              onRestart={handleRestartWithAudio}
+            />
+          )}
         </div>
       </div>
     </div>

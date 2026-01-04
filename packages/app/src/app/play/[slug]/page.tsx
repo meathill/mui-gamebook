@@ -1,5 +1,6 @@
 import { cachedGetGameBySlug } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
+import RelatedGames from '@/components/RelatedGames';
 import { Metadata } from 'next';
 
 type Props = {
@@ -52,12 +53,24 @@ export default async function PlayPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-neutral-100 sm:py-12">
-      <div className="max-w-3xl mx-auto bg-white sm:shadow-xl sm:rounded-2xl overflow-hidden">
-        <GamePlayer
-          game={game}
-          slug={slug}
-        />
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-white sm:shadow-xl sm:rounded-2xl overflow-hidden">
+          <GamePlayer
+            game={game}
+            slug={slug}
+          />
+        </div>
       </div>
+
+      {/* 相关游戏推荐 */}
+      {game.tags && game.tags.length > 0 && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-0">
+          <RelatedGames
+            currentSlug={slug}
+            tags={game.tags}
+          />
+        </div>
+      )}
     </main>
   );
 }
