@@ -122,6 +122,15 @@
     "sourceGame": "来源剧本",
     "playFullStory": "体验完整故事"
   },
+  "tags": {
+    "pageTitle": "{tag} - 姆伊游戏书",
+    "pageDescription": "浏览所有带有「{tag}」标签的互动故事",
+    "indexTitle": "所有标签",
+    "indexSubtitle": "按标签浏览互动故事",
+    "backToGames": "返回剧本列表",
+    "gamesCount": "共 {count} 个剧本",
+    "noGames": "该标签下暂无剧本"
+  },
   "game": {
     "loading": "加载中...",
     "startAdventure": "开始冒险",

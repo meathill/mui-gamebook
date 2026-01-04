@@ -67,7 +67,7 @@
     "OPENAI_TTS_MODEL": "gpt-4o-mini-tts",
     "OPENAI_VIDEO_MODEL": "sora-2",
     "NEXT_PUBLIC_GA_ID": "G-244NXPS1H0",
-    "NEXT_PUBLIC_SITE_URL": "https://muistory.com/",
+    "NEXT_PUBLIC_SITE_URL": "https://muistory.com",
     "ROOT_USER_EMAIL": "meathill@gmail.com",
     "RPC_PROVIDER_URL": "https://aeneid.storyrpc.io",
     "TRUSTED_ORIGINS": ""

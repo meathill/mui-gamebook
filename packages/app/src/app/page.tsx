@@ -76,7 +76,7 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-4">
               {minigames.map((minigame) => (
                 <MiniGameCard
                   key={minigame.id}

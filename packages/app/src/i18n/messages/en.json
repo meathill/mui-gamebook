@@ -122,6 +122,15 @@
     "sourceGame": "Source Story",
     "playFullStory": "Play Full Story"
   },
+  "tags": {
+    "pageTitle": "{tag} - MuiStory",
+    "pageDescription": "Browse all interactive stories tagged with \"{tag}\"",
+    "indexTitle": "All Tags",
+    "indexSubtitle": "Browse stories by tag",
+    "backToGames": "Back to Stories",
+    "gamesCount": "{count} stories",
+    "noGames": "No stories with this tag yet"
+  },
   "game": {
     "loading": "Loading...",
     "startAdventure": "Start Adventure",
