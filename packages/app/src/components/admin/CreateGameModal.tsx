@@ -5,8 +5,12 @@ import { useRouter } from 'next/navigation';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Plus, X } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { cn } from '@/lib';
 
-export default function CreateGameModal() {
+type Props = {
+  className?: string;
+};
+export default function CreateGameModal({ className }: Props) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -42,7 +46,11 @@ export default function CreateGameModal() {
       open={open}
       onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+        <button
+          className={cn(
+            'w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium',
+            className,
+          )}>
           <Plus size={18} />
           创建新游戏
         </button>
