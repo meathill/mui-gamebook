@@ -1,9 +1,18 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "mui-gamebook-cron",
+  "name": "mui-gamebook-cronjob",
   "main": "src/index.ts",
   "compatibility_date": "2025-11-20",
   "compatibility_flags": ["nodejs_compat"],
+  "account_id": "fdc63eeea83ae8f5234357308b9a638b",
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
   // Service Binding 到主应用
   "services": [
     {
