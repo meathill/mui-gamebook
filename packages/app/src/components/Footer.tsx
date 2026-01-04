@@ -68,6 +68,11 @@ export default function Footer() {
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('terms')}
             </Link>
+            <Link
+              href="/contact"
+              className="text-gray-500 hover:text-gray-700 text-sm">
+              {t('contact')}
+            </Link>
           </div>
         </div>
       </div>

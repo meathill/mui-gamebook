@@ -2,9 +2,9 @@ import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeftIcon } from 'lucide-react';
+import { ArrowLeftIcon, BookOpenIcon } from 'lucide-react';
 import { getMinigameById } from '@/lib/minigames';
-import MiniGamePlayer from '@/components/game-player/MiniGamePlayer';
+import StandaloneMiniGamePlayer from '@/components/game-player/StandaloneMiniGamePlayer';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,12 +36,8 @@ export default async function MinigameDetailPage({ params }: Props) {
     notFound();
   }
 
-  // 构建小游戏代码 URL（通过 data URL 传递代码）
-  const codeBlob = new Blob([minigame.code], { type: 'application/javascript' });
-  const codeDataUrl = `data:application/javascript;base64,${Buffer.from(minigame.code).toString('base64')}`;
-
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4">
+    <div className="min-h-screen bg-stone-50 py-12 px-4">
       <div className="max-w-3xl mx-auto">
         <Link
           href="/minigames"
@@ -56,33 +52,32 @@ export default async function MinigameDetailPage({ params }: Props) {
             {minigame.description && <p className="text-gray-600">{minigame.description}</p>}
           </div>
 
+          {/* 小游戏播放器 */}
           <div className="p-6">
-            <MiniGamePlayerWrapper code={minigame.code} />
+            <StandaloneMiniGamePlayer code={minigame.code} />
           </div>
+
+          {/* 来源剧本链接 */}
+          {minigame.source_game_slug && minigame.source_game_title && (
+            <div className="p-6 bg-gradient-to-r from-orange-50 to-amber-50 border-t border-orange-100">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center flex-shrink-0">
+                  <BookOpenIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-orange-600 font-medium mb-1">{t('sourceGame')}</p>
+                  <p className="text-gray-900 font-semibold">{minigame.source_game_title}</p>
+                </div>
+                <Link
+                  href={`/play/${minigame.source_game_slug}`}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 font-medium shadow-sm hover:shadow-md transition-all">
+                  {t('playFullStory')}
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
-  );
-}
-
-// 客户端组件包装器
-function MiniGamePlayerWrapper({ code }: { code: string }) {
-  'use client';
-
-  // 创建一个简化版的 MiniGamePlayer，用于独立试玩
-  return (
-    <div className="relative">
-      <StandaloneMiniGamePlayer code={code} />
-    </div>
-  );
-}
-
-// 独立小游戏播放器组件
-function StandaloneMiniGamePlayer({ code }: { code: string }) {
-  return (
-    <div className="text-center py-12 text-gray-500">
-      {/* 这里需要一个客户端组件来执行小游戏代码 */}
-      <p>小游戏体验功能即将上线</p>
     </div>
   );
 }

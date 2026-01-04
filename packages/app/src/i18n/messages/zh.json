@@ -18,6 +18,7 @@
     "home": "首页",
     "games": "剧本",
     "minigames": "小游戏",
+    "about": "关于",
     "admin": "管理后台",
     "signIn": "登录",
     "signOut": "退出"
@@ -25,7 +26,8 @@
   "footer": {
     "copyright": "© {year} 姆伊游戏书. 保留所有权利.",
     "privacy": "隐私政策",
-    "terms": "服务条款"
+    "terms": "服务条款",
+    "contact": "联系我们"
   },
   "home": {
     "hero": {
@@ -116,7 +118,9 @@
     "noDescription": "暂无描述",
     "notFound": "小游戏未找到",
     "defaultDescription": "体验这个有趣的互动小游戏",
-    "backToList": "返回列表"
+    "backToList": "返回列表",
+    "sourceGame": "来源剧本",
+    "playFullStory": "体验完整故事"
   },
   "game": {
     "loading": "加载中...",
@@ -197,6 +201,109 @@
     "aiProvider": "AI 提供商",
     "dailyTokenLimit": "每日 Token 限额",
     "videoWhitelist": "视频生成白名单"
+  },
+  "about": {
+    "pageTitle": "关于我们 - 姆伊游戏书",
+    "pageDescription": "了解姆伊游戏书的核心功能、技术架构和愿景",
+    "heroTitle": "关于姆伊游戏书",
+    "heroSubtitle": "AI 驱动的互动故事创作平台，让每个人都能成为故事创作者",
+    "missionTitle": "我们的愿景",
+    "missionContent": "我们相信，每个人心中都有想要讲述的故事。姆伊游戏书通过 AI 技术，将互动小说和文字冒险游戏的创作门槛降到最低，让创意不再被技术所限制。我们的目标是让作者掌控 AI，而不是被 AI 控制，从而保证故事的质量和游戏性。",
+    "featuresTitle": "核心功能",
+    "featuresSubtitle": "强大的 AI 辅助工具，让创作变得简单有趣",
+    "features": {
+      "aiAssist": {
+        "title": "AI 辅助创作",
+        "description": "零代码门槛，用自然语言描述你的创意，AI 帮你生成完整剧本。支持故事大纲导入，一键生成分支剧情。"
+      },
+      "aiChatbot": {
+        "title": "AI Chatbot 全天候辅助",
+        "description": "24 小时智能助手，随时解答问题、优化剧情、修改细节。像和专业编剧对话一样简单。"
+      },
+      "variables": {
+        "title": "变量系统，无限可能",
+        "description": "引入变量系统，根据玩家选择改变故事走向。支持好感度、物品、属性等多种变量类型。"
+      },
+      "minigames": {
+        "title": "场景小游戏",
+        "description": "AI 自动生成互动小游戏，如解谜、战斗等。让故事不仅可读，更可玩。"
+      },
+      "richInteractive": {
+        "title": "丰富的多媒体",
+        "description": "支持 AI 生成图片、语音等多媒体内容，打造沉浸式阅读体验。"
+      },
+      "crossPlatform": {
+        "title": "跨平台发布",
+        "description": "一键发布到 Web，响应式设计适配各种设备。轻松分享给朋友。"
+      }
+    },
+    "aiSectionTitle": "AI 驱动的创作体验",
+    "aiSectionContent1": "我们的 AI 助手不仅能帮你生成剧本，还能理解你的创作意图。通过自然语言对话，你可以随时调整故事走向、优化对话内容、增加互动元素。",
+    "aiSectionContent2": "支持多种 AI 模型，包括 GPT-4、Gemini 等，确保创作质量。同时内置 Prompt 模板，让 AI 更懂互动叙事。",
+    "editorSectionTitle": "可视化故事编辑器",
+    "editorSectionContent1": "直观的节点式编辑器，让你像搭积木一样构建故事。拖拽连线即可创建分支剧情，所见即所得。",
+    "editorSectionContent2": "支持多场景管理、角色系统、变量编辑等高级功能。即使是复杂的多分支故事，也能轻松驾驭。",
+    "toolchainTitle": "完整的技术栈",
+    "toolchainSubtitle": "开源、现代、高性能的技术架构",
+    "toolchain": {
+      "parser": {
+        "title": "DSL 解析器",
+        "description": "自研的故事脚本语言，支持变量、条件、循环等高级特性。TypeScript 实现，类型安全。"
+      },
+      "assetGenerator": {
+        "title": "素材生成器",
+        "description": "集成多种 AI 图像生成服务，支持批量生成、缓存优化。自动压缩和 CDN 分发。"
+      },
+      "cloudflare": {
+        "title": "边缘部署",
+        "description": "基于 Cloudflare Workers 和 D1 数据库，全球边缘部署，毫秒级响应。"
+      }
+    },
+    "platformSectionTitle": "随时随地，畅玩故事",
+    "platformSectionContent1": "响应式设计确保在手机、平板、电脑上都有完美体验。PWA 支持让你可以像原生 App 一样使用。",
+    "platformSectionContent2": "云端存储游戏进度，切换设备无缝续玩。分享链接即可让朋友体验你的作品。",
+    "ctaTitle": "准备好开始了吗？",
+    "ctaContent": "无论你是想体验精彩的互动故事，还是创作属于自己的冒险，姆伊游戏书都在这里等你。",
+    "ctaPlay": "开始体验",
+    "ctaCreate": "开始创作"
+  },
+  "contact": {
+    "pageTitle": "联系我们 - 姆伊游戏书",
+    "pageDescription": "与姆伊游戏书团队取得联系，或参与开源项目",
+    "heroTitle": "联系我们",
+    "heroSubtitle": "我们很乐意听到您的声音，无论是反馈、建议还是合作意向",
+    "contactTitle": "联系方式",
+    "methods": {
+      "email": {
+        "title": "电子邮件"
+      },
+      "github": {
+        "title": "GitHub"
+      },
+      "twitter": {
+        "title": "Twitter / X"
+      }
+    },
+    "openSourceTitle": "开源项目",
+    "openSourceSubtitle": "姆伊游戏书是一个完全开源的项目，欢迎参与贡献",
+    "repoDescription": "AI 驱动的互动小说创作平台，基于 Next.js、Cloudflare Workers 和多种 AI 服务构建。",
+    "viewOnGithub": "在 GitHub 上查看",
+    "contributingTitle": "参与贡献",
+    "contributing": {
+      "issues": {
+        "title": "提交 Issue",
+        "description": "发现 Bug 或有新功能建议？欢迎在 GitHub 上提交 Issue。",
+        "link": "查看 Issues"
+      },
+      "pullRequests": {
+        "title": "提交 Pull Request",
+        "description": "想要直接贡献代码？Fork 项目后提交 PR，我们会尽快审核。",
+        "link": "查看 Pull Requests"
+      }
+    },
+    "ctaTitle": "开始你的故事之旅",
+    "ctaContent": "无论是体验还是创作，姆伊游戏书都欢迎你的加入。",
+    "ctaButton": "返回首页"
   },
   "auth": {
     "signIn": "登录",

@@ -18,6 +18,7 @@
     "home": "Home",
     "games": "Stories",
     "minigames": "Mini Games",
+    "about": "About",
     "admin": "Dashboard",
     "signIn": "Sign In",
     "signOut": "Sign Out"
@@ -25,7 +26,8 @@
   "footer": {
     "copyright": "© {year} MuiStory. All rights reserved.",
     "privacy": "Privacy Policy",
-    "terms": "Terms of Service"
+    "terms": "Terms of Service",
+    "contact": "Contact Us"
   },
   "home": {
     "hero": {
@@ -116,7 +118,9 @@
     "noDescription": "No description",
     "notFound": "Mini game not found",
     "defaultDescription": "Experience this fun interactive mini game",
-    "backToList": "Back to list"
+    "backToList": "Back to list",
+    "sourceGame": "Source Story",
+    "playFullStory": "Play Full Story"
   },
   "game": {
     "loading": "Loading...",
@@ -197,6 +201,109 @@
     "aiProvider": "AI Provider",
     "dailyTokenLimit": "Daily Token Limit",
     "videoWhitelist": "Video Generation Whitelist"
+  },
+  "about": {
+    "pageTitle": "About Us - MuiStory",
+    "pageDescription": "Learn about MuiStory's core features, technical architecture, and vision",
+    "heroTitle": "About MuiStory",
+    "heroSubtitle": "An AI-powered interactive story creation platform, empowering everyone to become storytellers",
+    "missionTitle": "Our Vision",
+    "missionContent": "We believe everyone has a story to tell. MuiStory uses AI technology to lower the barrier to creating interactive fiction and text adventure games, so creativity is no longer limited by technical skills. Our goal is to let authors control AI, rather than be controlled by it, ensuring story quality and gameplay.",
+    "featuresTitle": "Core Features",
+    "featuresSubtitle": "Powerful AI tools make storytelling simple and fun",
+    "features": {
+      "aiAssist": {
+        "title": "AI-Assisted Creation",
+        "description": "Zero coding required. Describe your ideas in natural language, and AI generates complete scripts. Import story outlines and generate branching narratives with one click."
+      },
+      "aiChatbot": {
+        "title": "24/7 AI Chatbot Assistant",
+        "description": "Always-available smart assistant to answer questions, optimize plots, and refine details. As simple as talking to a professional screenwriter."
+      },
+      "variables": {
+        "title": "Variable System, Infinite Possibilities",
+        "description": "Use variables to change story paths based on player choices. Supports affection, items, attributes, and more."
+      },
+      "minigames": {
+        "title": "Scene Mini Games",
+        "description": "AI automatically generates interactive mini-games like puzzles and combat. Stories become not just readable, but playable."
+      },
+      "richInteractive": {
+        "title": "Rich Multimedia",
+        "description": "Support AI-generated images, voice, and other multimedia content for immersive reading experiences."
+      },
+      "crossPlatform": {
+        "title": "Cross-Platform Publishing",
+        "description": "One-click publish to Web with responsive design for all devices. Easy sharing with friends."
+      }
+    },
+    "aiSectionTitle": "AI-Powered Creative Experience",
+    "aiSectionContent1": "Our AI assistant can not only generate scripts but also understand your creative intent. Through natural language conversation, you can adjust story direction, optimize dialogue, and add interactive elements anytime.",
+    "aiSectionContent2": "Supports multiple AI models including GPT-4 and Gemini to ensure creative quality. Built-in prompt templates help AI better understand interactive storytelling.",
+    "editorSectionTitle": "Visual Story Editor",
+    "editorSectionContent1": "Intuitive node-based editor lets you build stories like building blocks. Drag and connect to create branching narratives, what you see is what you get.",
+    "editorSectionContent2": "Supports multi-scene management, character systems, variable editing, and other advanced features. Even complex multi-branch stories are easy to handle.",
+    "toolchainTitle": "Complete Tech Stack",
+    "toolchainSubtitle": "Open-source, modern, high-performance architecture",
+    "toolchain": {
+      "parser": {
+        "title": "DSL Parser",
+        "description": "Custom story scripting language supporting variables, conditions, loops, and more. TypeScript implementation, type-safe."
+      },
+      "assetGenerator": {
+        "title": "Asset Generator",
+        "description": "Integrated with multiple AI image generation services, supporting batch generation and cache optimization. Auto compression and CDN distribution."
+      },
+      "cloudflare": {
+        "title": "Edge Deployment",
+        "description": "Built on Cloudflare Workers and D1 database, global edge deployment with millisecond response times."
+      }
+    },
+    "platformSectionTitle": "Play Stories Anytime, Anywhere",
+    "platformSectionContent1": "Responsive design ensures perfect experience on phones, tablets, and computers. PWA support lets you use it like a native app.",
+    "platformSectionContent2": "Cloud-stored game progress, seamless cross-device continuation. Share links to let friends experience your creations.",
+    "ctaTitle": "Ready to Get Started?",
+    "ctaContent": "Whether you want to experience amazing interactive stories or create your own adventures, MuiStory is here for you.",
+    "ctaPlay": "Start Playing",
+    "ctaCreate": "Start Creating"
+  },
+  "contact": {
+    "pageTitle": "Contact Us - MuiStory",
+    "pageDescription": "Get in touch with the MuiStory team or contribute to the open source project",
+    "heroTitle": "Contact Us",
+    "heroSubtitle": "We'd love to hear from you, whether it's feedback, suggestions, or collaboration",
+    "contactTitle": "Get in Touch",
+    "methods": {
+      "email": {
+        "title": "Email"
+      },
+      "github": {
+        "title": "GitHub"
+      },
+      "twitter": {
+        "title": "Twitter / X"
+      }
+    },
+    "openSourceTitle": "Open Source Project",
+    "openSourceSubtitle": "MuiStory is fully open source and welcomes contributions",
+    "repoDescription": "AI-powered interactive fiction creation platform, built with Next.js, Cloudflare Workers, and various AI services.",
+    "viewOnGithub": "View on GitHub",
+    "contributingTitle": "Contributing",
+    "contributing": {
+      "issues": {
+        "title": "Submit an Issue",
+        "description": "Found a bug or have a feature request? Feel free to submit an issue on GitHub.",
+        "link": "View Issues"
+      },
+      "pullRequests": {
+        "title": "Submit a Pull Request",
+        "description": "Want to contribute code directly? Fork the repo and submit a PR, we'll review it promptly.",
+        "link": "View Pull Requests"
+      }
+    },
+    "ctaTitle": "Start Your Story Journey",
+    "ctaContent": "Whether you want to play or create, MuiStory welcomes you.",
+    "ctaButton": "Back to Home"
   },
   "auth": {
     "signIn": "Sign In",

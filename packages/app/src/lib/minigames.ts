@@ -7,6 +7,9 @@ export interface MinigameRow {
   code: string;
   status: string;
   created_at: number;
+  source_game_id: number | null;
+  source_game_slug: string | null;
+  source_game_title: string | null;
 }
 
 /**
@@ -22,9 +25,12 @@ export async function getPublicMinigames(options?: { limit?: number; offset?: nu
       return [];
     }
 
-    let query = `SELECT id, name, description, code, status, created_at
-                 FROM Minigames WHERE status = 'completed'
-                 ORDER BY created_at DESC`;
+    let query = `SELECT m.id, m.name, m.description, m.code, m.status, m.created_at,
+                        m.source_game_id, g.slug as source_game_slug, g.title as source_game_title
+                 FROM Minigames m
+                 LEFT JOIN Games g ON m.source_game_id = g.id
+                 WHERE m.status = 'completed'
+                 ORDER BY m.created_at DESC`;
 
     if (options?.limit) {
       query += ` LIMIT ${options.limit}`;
@@ -72,7 +78,11 @@ export async function getMinigameById(id: number): Promise<MinigameRow | null> {
     if (!DB) return null;
 
     const result = await DB.prepare(
-      "SELECT id, name, description, code, status, created_at FROM Minigames WHERE id = ? AND status = 'completed'",
+      `SELECT m.id, m.name, m.description, m.code, m.status, m.created_at,
+              m.source_game_id, g.slug as source_game_slug, g.title as source_game_title
+       FROM Minigames m
+       LEFT JOIN Games g ON m.source_game_id = g.id
+       WHERE m.id = ? AND m.status = 'completed'`,
     )
       .bind(id)
       .first<MinigameRow>();
