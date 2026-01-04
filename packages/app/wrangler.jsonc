@@ -57,6 +57,7 @@
   "vars": {
     "ASSETS_PUBLIC_DOMAIN": "https://i.muistory.com",
     "COOKIE_DOMAIN": "",
+    "CRON_SECRET": "mui-gamebook-cron",
     "HEADLESS_MODE": "",
     "GOOGLE_MODEL": "gemini-3-pro-preview",
     "GOOGLE_IMAGE_MODEL": "gemini-2.5-flash-image",

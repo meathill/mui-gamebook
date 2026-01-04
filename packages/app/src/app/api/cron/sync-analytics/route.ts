@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 
 /**
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     // 验证 Cron 密钥（可选，建议在生产环境启用）
     const authHeader = request.headers.get('Authorization');
-    const cronSecret = (env as unknown as Record<string, string | undefined>).CRON_SECRET;
+    const cronSecret = env.CRON_SECRET;
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

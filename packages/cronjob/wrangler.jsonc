@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mui-gamebook-cron",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-20",
+  "compatibility_flags": ["nodejs_compat"],
+  // Service Binding 到主应用
+  "services": [
+    {
+      "binding": "MAIN_APP",
+      "service": "mui-gamebook"
+    }
+  ],
+  // 定时任务配置
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
+  // 环境变量
+  "vars": {
+    "CRON_SECRET": "mui-gamebook-cron"
+  }
+}
