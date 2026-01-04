@@ -70,9 +70,14 @@ describe('batch-client', () => {
     if (existsSync(CACHE_DIR)) {
       rmSync(CACHE_DIR, { recursive: true });
     }
+    // 确保 temp 目录存在，避免 createReadStream 失败
+    const tempDir = join(CACHE_DIR, 'temp');
+    mkdirSync(tempDir, { recursive: true });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // 等待所有异步操作完成
+    await new Promise((resolve) => setTimeout(resolve, 10));
     // 清理
     if (existsSync(CACHE_DIR)) {
       rmSync(CACHE_DIR, { recursive: true });

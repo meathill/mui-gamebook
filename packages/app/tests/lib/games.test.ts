@@ -22,7 +22,15 @@ describe('games tag functions', () => {
   describe('getGamesByTag', () => {
     it('should return games matching the tag using GameTags table', async () => {
       const mockGames = [
-        { slug: 'game1', title: 'Game 1', description: 'Desc 1', cover_image: null, tags: '["修仙"]', created_at: 1000, updated_at: 2000 },
+        {
+          slug: 'game1',
+          title: 'Game 1',
+          description: 'Desc 1',
+          cover_image: null,
+          tags: '["修仙"]',
+          created_at: 1000,
+          updated_at: 2000,
+        },
       ];
 
       // Mock count query
@@ -49,8 +57,24 @@ describe('games tag functions', () => {
 
     it('should fall back to JSON parsing when GameTags table does not exist', async () => {
       const mockGames = [
-        { slug: 'game1', title: 'Game 1', description: 'Desc 1', cover_image: null, tags: '["修仙","冒险"]', created_at: 1000, updated_at: 2000 },
-        { slug: 'game2', title: 'Game 2', description: 'Desc 2', cover_image: null, tags: '["童话"]', created_at: 1000, updated_at: 2000 },
+        {
+          slug: 'game1',
+          title: 'Game 1',
+          description: 'Desc 1',
+          cover_image: null,
+          tags: '["修仙","冒险"]',
+          created_at: 1000,
+          updated_at: 2000,
+        },
+        {
+          slug: 'game2',
+          title: 'Game 2',
+          description: 'Desc 2',
+          cover_image: null,
+          tags: '["童话"]',
+          created_at: 1000,
+          updated_at: 2000,
+        },
       ];
 
       // Mock GameTags query failure
@@ -93,11 +117,7 @@ describe('games tag functions', () => {
 
   describe('getAllTags', () => {
     it('should return all tags with counts sorted by count descending', async () => {
-      const mockGames = [
-        { tags: '["修仙","冒险"]' },
-        { tags: '["修仙","东方玄幻"]' },
-        { tags: '["童话"]' },
-      ];
+      const mockGames = [{ tags: '["修仙","冒险"]' }, { tags: '["修仙","东方玄幻"]' }, { tags: '["童话"]' }];
 
       mockDB.prepare.mockReturnValueOnce({
         all: vi.fn().mockResolvedValue({ results: mockGames }),
@@ -107,7 +127,7 @@ describe('games tag functions', () => {
 
       expect(result).toHaveLength(4);
       expect(result[0]).toEqual({ tag: '修仙', count: 2 });
-      expect(result.find(t => t.tag === '冒险')).toEqual({ tag: '冒险', count: 1 });
+      expect(result.find((t) => t.tag === '冒险')).toEqual({ tag: '冒险', count: 1 });
     });
 
     it('should return empty array when no games exist', async () => {
@@ -121,10 +141,7 @@ describe('games tag functions', () => {
     });
 
     it('should handle games with null tags', async () => {
-      const mockGames = [
-        { tags: null },
-        { tags: '["修仙"]' },
-      ];
+      const mockGames = [{ tags: null }, { tags: '["修仙"]' }];
 
       mockDB.prepare.mockReturnValueOnce({
         all: vi.fn().mockResolvedValue({ results: mockGames }),
