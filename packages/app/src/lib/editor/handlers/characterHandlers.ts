@@ -8,6 +8,12 @@ export function handleAddCharacter(args: AddCharacterArgs, ctx: HandlerContext):
   const { id, name, description, imagePrompt } = args;
   if (!ctx.originalGame) return '游戏数据未加载';
 
+  // 去重检查：如果角色已存在，跳过添加
+  if (ctx.originalGame.ai.characters?.[id]) {
+    console.log(`跳过重复角色: "${id}" 已存在`);
+    return `跳过重复角色 "${name}"（ID "${id}" 已存在）`;
+  }
+
   const newChar: AICharacter = {
     name,
     description,

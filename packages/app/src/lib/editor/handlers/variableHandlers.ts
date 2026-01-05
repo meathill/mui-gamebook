@@ -9,6 +9,12 @@ export function handleAddVariable(args: AddVariableArgs, ctx: HandlerContext): s
   const { name, value, visible, label } = args;
   if (!ctx.originalGame) return '游戏数据未加载';
 
+  // 去重检查：如果变量已存在，跳过添加
+  if (name in ctx.originalGame.initialState) {
+    console.log(`跳过重复变量: "${name}" 已存在`);
+    return `跳过重复变量 "${name}"（已存在）`;
+  }
+
   const parsedValue = parseValue(value);
   const newState: GameState = {
     ...ctx.originalGame.initialState,
