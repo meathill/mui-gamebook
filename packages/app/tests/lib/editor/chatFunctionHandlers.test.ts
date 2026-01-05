@@ -217,6 +217,74 @@ describe('chatFunctionHandlers', () => {
       expect(result).toBe('已删除场景 "start" 的第 1 个选项');
       expect(ctx.edges.length).toBe(0);
     });
+
+    it('addChoice 应该跳过完全相同的重复选项', () => {
+      const ctx = createMockContext();
+      // 初始状态有一条边: start -> scene_1, label: '继续'
+      const initialLength = ctx.edges.length;
+
+      // 尝试添加完全相同的选项
+      const result = handleChatFunctionCall(
+        'addChoice',
+        { sceneId: 'start', text: '继续', targetSceneId: 'scene_1' },
+        ctx,
+      );
+
+      expect(result).toBe('跳过重复选项 "继续"（场景 "start"）');
+      expect(ctx.edges.length).toBe(initialLength); // 长度不变
+    });
+
+    it('addChoice 应该允许添加不同目标的相同文本选项', () => {
+      const ctx = createMockContext();
+      // 先添加一个新场景
+      ctx.nodes.push({
+        id: 'scene_2',
+        position: { x: 200, y: 200 },
+        data: { label: 'scene_2', content: '场景2', assets: [] },
+        type: 'scene',
+      });
+      const initialLength = ctx.edges.length;
+
+      // 添加相同文本但不同目标的选项
+      const result = handleChatFunctionCall(
+        'addChoice',
+        { sceneId: 'start', text: '继续', targetSceneId: 'scene_2' },
+        ctx,
+      );
+
+      expect(result).toBe('已为场景 "start" 添加选项 "继续"');
+      expect(ctx.edges.length).toBe(initialLength + 1);
+    });
+
+    it('addChoice 应该允许添加相同目标但不同文本的选项', () => {
+      const ctx = createMockContext();
+      const initialLength = ctx.edges.length;
+
+      // 添加不同文本的选项
+      const result = handleChatFunctionCall(
+        'addChoice',
+        { sceneId: 'start', text: '前进', targetSceneId: 'scene_1' },
+        ctx,
+      );
+
+      expect(result).toBe('已为场景 "start" 添加选项 "前进"');
+      expect(ctx.edges.length).toBe(initialLength + 1);
+    });
+
+    it('addChoice 应该区分有条件和无条件的选项', () => {
+      const ctx = createMockContext();
+      const initialLength = ctx.edges.length;
+
+      // 添加带条件的选项（原始选项无条件）
+      const result = handleChatFunctionCall(
+        'addChoice',
+        { sceneId: 'start', text: '继续', targetSceneId: 'scene_1', condition: 'gold > 10' },
+        ctx,
+      );
+
+      expect(result).toBe('已为场景 "start" 添加选项 "继续"');
+      expect(ctx.edges.length).toBe(initialLength + 1);
+    });
   });
 
   describe('细粒度选项操作', () => {
@@ -294,6 +362,16 @@ describe('chatFunctionHandlers', () => {
 
       expect(result).toBe('已删除变量 "gold"');
     });
+
+    it('addVariable 应该跳过已存在的变量', () => {
+      const ctx = createMockContext();
+      // gold 在 createMockContext 中已存在
+      const result = handleChatFunctionCall('addVariable', { name: 'gold', value: '999' }, ctx);
+
+      expect(result).toBe('跳过重复变量 "gold"（已存在）');
+      // 原值不应被覆盖
+      expect(ctx.originalGame.initialState.gold).toBe(100);
+    });
   });
 
   describe('角色操作', () => {
@@ -323,6 +401,17 @@ describe('chatFunctionHandlers', () => {
       const result = handleChatFunctionCall('deleteCharacter', { id: 'hero' }, ctx);
 
       expect(result).toBe('已删除角色 "英雄"');
+    });
+
+    it('addCharacter 应该跳过已存在的角色', () => {
+      const ctx = createMockContext();
+      // hero 在 createMockContext 中已存在
+      const originalName = ctx.originalGame.ai.characters?.hero?.name;
+      const result = handleChatFunctionCall('addCharacter', { id: 'hero', name: '新英雄', description: '新描述' }, ctx);
+
+      expect(result).toBe('跳过重复角色 "新英雄"（ID "hero" 已存在）');
+      // 原角色名不应被覆盖
+      expect(ctx.originalGame.ai.characters?.hero?.name).toBe(originalName);
     });
   });
 
