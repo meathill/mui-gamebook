@@ -260,9 +260,91 @@ variables:
 
 ---
 
+## 阶段六：资源生成与整理
+
+### 6.1 生成游戏 Slug
+
+1. 根据游戏标题生成 slug（如 `harry-potter`）
+2. 创建资源目录：`/Users/meathill/Documents/GitHub/mui-gamebook/demo/${slug}`
+
+### 6.2 生成小游戏
+
+1. 遍历剧本中所有 `minigame-gen` 块
+2. 使用 `write_to_file` 在 `demo/${slug}/minigames/` 目录下创建 JS 文件
+3. 确保 JS 文件导出符合 DSL 规范的接口：
+   ```typescript
+   export const init = (container, variables) => { ... };
+   export const onComplete = (cb) => { ... };
+   ```
+4. 将本地路径填入剧本 `url` 字段（上传阶段替换为线上 URL）
+
+### 6.3 生成图片
+
+完成剧本文本后，为每个场景生成配图。
+
+**6.3.1 提取图片 Prompt**
+// turbo
+1. 遍历剧本中所有 `image-gen` 块
+2. 提取 `prompt` 字段内容
+3. 如果有 `character` 或 `characters` 引用，合并 `ai.characters` 中的 `image_prompt`
+
+**6.3.2 生成图片**
+对每个 `image-gen` 块使用 `generate_image` 工具：
+
+// turbo
+```
+generate_image({
+  Prompt: "合并后的完整 prompt + ai.style.image 风格描述",
+  ImageName: "scene_id_场景名"
+})
+```
+
+**6.3.3 保存图片**
+将生成的 artifact 图片移动到资源目录：
+`mv /path/to/artifact.webp /Users/meathill/Documents/GitHub/mui-gamebook/demo/${slug}/scene_id.webp`
+
+---
+
+## 阶段七：上传与提交
+
+将剧本和图片提交到服务器，形成完整游戏。
+
+### 7.1 上传资源到 R2
+
+遍历 `demo/${slug}` 下的所有资源（图片和小游戏 JS）：
+
+```bash
+# 图片上传
+curl -X POST https://your-domain/api/agent/assets/upload \
+  -H "Authorization: Bearer $MUI_ADMIN_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gameSlug": "game-slug",
+    "fileName": "scene_id.webp",
+    "base64": "'$(base64 -i demo/${slug}/scene_id.webp | tr -d '\n')'",
+    "contentType": "image/webp"
+  }'
+
+# 小游戏上传（contentType: application/javascript）
+```
+
+将返回的 `url` 填入剧本对应字段。
+
+### 7.2 创建游戏
+
+// turbo
+```bash
+curl -X POST https://your-domain/api/agent/games \
+  -H "Authorization: Bearer $MUI_ADMIN_PASSWORD" \
+  -H "Content-Type: application/json" \
+  -d '{"title": "游戏标题", "slug": "slug", "content": "完整剧本内容"}'
+```
+
+---
+
 ## 输出文件格式
 
-最终剧本保存为 `.md` 文件，结构：
+最终剧本（包含线上资源链接）保存为 `.md` 文件，结构：
 
 ```markdown
 ---
@@ -286,6 +368,7 @@ ai:
 # start
 ```image-gen
 prompt: 开场场景描述
+url: https://your-assets-domain.com/images/slug/timestamp-scene_id.webp
 ```
 
 开场叙述文本...
@@ -328,94 +411,12 @@ A: 在 `ai.characters` 中详细定义角色，并在 `image-gen` 中引用
 
 ---
 
-## 阶段六：图片生成
-
-完成剧本文本后，为每个场景生成配图。
-
-### 6.1 提取图片 Prompt
-
-// turbo
-1. 遍历剧本中所有 `image-gen` 块
-2. 提取 `prompt` 字段内容
-3. 如果有 `character` 或 `characters` 引用，合并 `ai.characters` 中的 `image_prompt`
-
-### 6.2 生成图片
-
-对每个 `image-gen` 块使用 `generate_image` 工具：
-
-// turbo
-```
-generate_image({
-  Prompt: "合并后的完整 prompt + ai.style.image 风格描述",
-  ImageName: "scene_id_场景名"
-})
-```
-
-**生成顺序**：
-1. 封面图（如有 `cover_prompt`）
-2. `start` 场景
-3. 其他场景
-
-### 6.3 记录本地路径
-
-生成后记录每张图片的本地路径（artifacts 目录），用于后续上传：
-
-```
-{
-  "scene_id": "/path/to/image.webp",
-  ...
-}
-```
-
----
-
-## 阶段七：上传与提交
-
-将剧本和图片提交到服务器，形成完整游戏。
-
-### 7.1 上传图片到 R2
-
-使用 `run_command` 调用 curl 将图片上传：
-
-```bash
-# 读取图片并转为 base64
-base64 -i /path/to/image.webp | tr -d '\n' > /tmp/img.b64
-
-# 上传
-curl -X POST https://your-domain/api/agent/assets/upload \
-  -H "Authorization: Bearer $ADMIN_PASSWORD" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "gameSlug": "game-slug",
-    "fileName": "scene_id.webp",
-    "base64": "'$(cat /tmp/img.b64)'",
-    "contentType": "image/webp"
-  }'
-```
-
-返回的 `url` 填入对应 `image-gen` 块的 `url` 字段。
-
-### 7.2 创建游戏
-
-// turbo
-```bash
-curl -X POST https://your-domain/api/agent/games \
-  -H "Authorization: Bearer $ADMIN_PASSWORD" \
-  -H "Content-Type: application/json" \
-  -d '{"title": "游戏标题", "content": "完整剧本内容"}'
-```
-
-### 7.3 验证结果
-
-1. 检查返回的 `id` 和 `slug`
-2. 提供游戏预览链接给用户
-
----
-
 ## 环境变量
 
 执行阶段七需要以下环境变量：
 
-- `ADMIN_PASSWORD`: Admin 认证密钥
-- `API_URL`: API 基础地址（如 `https://gamebook.example.com`）
+- `MUI_ADMIN_PASSWORD`: Admin 认证密钥
 
+配置文件 `.agent/config.json` 包含：
+- `apiUrl`: API 基础地址
+- `assetsPublicDomain`: R2 公开域名
