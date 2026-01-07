@@ -165,6 +165,7 @@ async function main() {
   for (const file of assetFiles) {
     const ext = path.extname(file).toLowerCase();
     const basename = path.basename(file, ext);
+    const isMinigame = ext === '.js';
 
     // Handle Cover
     if (basename.includes('cover')) {
@@ -175,13 +176,18 @@ async function main() {
     }
 
     // Handle Scenes & Minigames
-    // Logic: hp1_sceneName_timestamp -> sceneName
-    // Fallback: filename -> filename
     const parts = basename.split('_');
     let assetKey = basename;
 
     if (parts.length >= 3) {
+      // For images: hp2_scene_01_bedroom_timestamp -> scene_01_bedroom
+      // For minigames: harry-potter-2_de_gnoming_game_minigame -> de_gnoming_game_minigame
       assetKey = parts.slice(1, -1).join('_');
+    }
+
+    // For minigames, add _minigame suffix for matching
+    if (isMinigame && !assetKey.endsWith('_minigame')) {
+      assetKey = assetKey + '_minigame';
     }
 
     // Keep the latest file for each key
@@ -192,6 +198,34 @@ async function main() {
   }
 
   console.log(`Mapped ${assetMap.size} assets (scenes/minigames) and cover: ${!!coverPath}`);
+  console.log('Asset keys:', Array.from(assetMap.keys()).join(', '));
+
+  // Load scene ID mapping from external config file (if exists)
+  // This allows per-game customization without modifying the script
+  const mappingFilePath = path.join(assetsDir, 'mapping.json');
+  let sceneIdMap: Record<string, string> = {};
+
+  if (fs.existsSync(mappingFilePath)) {
+    try {
+      const mappingContent = fs.readFileSync(mappingFilePath, 'utf-8');
+      sceneIdMap = JSON.parse(mappingContent);
+      console.log(`Loaded ${Object.keys(sceneIdMap).length} mappings from mapping.json`);
+    } catch (e) {
+      console.warn('Failed to parse mapping.json, using empty mapping.');
+    }
+  } else {
+    console.log('No mapping.json found, asset keys will be used directly as scene IDs.');
+  }
+
+  // Apply scene ID mapping
+  const mappedAssetMap = new Map<string, string>();
+  for (const [key, filePath] of assetMap.entries()) {
+    const mappedKey = sceneIdMap[key] || key;
+    mappedAssetMap.set(mappedKey, filePath);
+    if (sceneIdMap[key]) {
+      console.log(`  Mapped: ${key} -> ${mappedKey}`);
+    }
+  }
 
   // 2. Upload and get URLs
   const urlMap = new Map<string, string>();
@@ -206,7 +240,7 @@ async function main() {
     });
   }
 
-  for (const [key, filePath] of assetMap.entries()) {
+  for (const [key, filePath] of mappedAssetMap.entries()) {
     uploadQueue.push(async () => {
       const url = await uploadAsset(filePath, gameSlug);
       if (url) urlMap.set(key, url);

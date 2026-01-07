@@ -302,8 +302,37 @@ generate_image({
 })
 ```
 
-**6.3.3 保存图片**
+**6.3.3 转换为 WebP 格式**
+
+生成的图片默认为 PNG 格式，体积较大。使用 `cwebp` 工具批量转换为 WebP 格式以减小文件体积（约 75% 压缩率）：
+
+// turbo
+```bash
+cd demo/${slug}/assets && for f in *.png; do cwebp -q 85 "$f" -o "${f%.png}.webp" && rm "$f"; done
+```
+
+**6.3.4 保存图片**
 将生成的 artifact 图片移动到资源目录 `demo/${slug}/assets/`。
+
+### 6.4 创建资源映射配置（可选）
+
+如果资源文件名与场景 ID 不一致（例如使用 `scene_01_bedroom` 命名但场景 ID 是 `start`），需要创建 `mapping.json` 配置文件：
+
+```json
+// demo/${slug}/assets/mapping.json
+{
+  "scene_01_bedroom": "start",
+  "scene_02_dobby_warning": "dobby_warning",
+  "de_gnoming_game_minigame": "de_gnoming_game"
+}
+```
+
+**映射规则说明：**
+- 左侧：资源文件名提取的 key（去掉 slug 前缀和时间戳后缀）
+- 右侧：Markdown 中的场景 ID（`# scene_id` 的 scene_id 部分）
+- 小游戏 key 格式：`${scene_id}_minigame`
+
+如果资源文件名直接使用场景 ID 命名（如 `hp1_start_timestamp.webp`），则无需此配置文件。
 
 ---
 
