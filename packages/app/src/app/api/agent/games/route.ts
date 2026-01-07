@@ -56,33 +56,75 @@ published: false
 `;
 
   const db = drizzle(env.DB);
+  const { eq } = await import('drizzle-orm');
 
   try {
-    const users = await db.select().from(schema.user).limit(1);
-    const defaultOwnerId = users[0]?.id || null;
-    const ownerId = requestOwnerId || defaultOwnerId;
+    // 1. 确定 Owner ID
+    let finalOwnerId: string | null = null;
+    if (requestOwnerId) {
+      const userExists = await db.select().from(schema.user).where(eq(schema.user.id, requestOwnerId)).get();
+      if (!userExists) {
+        return NextResponse.json({ error: `User ID ${requestOwnerId} not found` }, { status: 400 });
+      }
+      finalOwnerId = requestOwnerId;
+    } else {
+      // Fallback to first user
+      const users = await db.select().from(schema.user).limit(1);
+      finalOwnerId = users[0]?.id || null;
+    }
 
-    const result = await db
-      .insert(schema.games)
-      .values({
-        slug,
-        title,
-        ownerId,
-        createdAt: now,
-        updatedAt: now,
-        published: false,
-      })
-      .returning();
+    // 2. Check slug
+    const existingGame = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
 
-    const id = result[0].id;
-    await db.insert(schema.gameContent).values({
-      gameId: id,
-      content: defaultContent,
-    });
+    let id: number;
 
-    return NextResponse.json({ id, slug, title });
+    if (existingGame) {
+      // Update
+      id = existingGame.id;
+      await db.update(schema.games)
+        .set({
+          title,
+          ownerId: finalOwnerId,
+          updatedAt: now,
+        })
+        .where(eq(schema.games.id, id));
+
+      // Update Content
+      const contentRecord = await db.select().from(schema.gameContent).where(eq(schema.gameContent.gameId, id)).get();
+      if (contentRecord) {
+        await db.update(schema.gameContent)
+          .set({ content: defaultContent })
+          .where(eq(schema.gameContent.id, contentRecord.id));
+      } else {
+        await db.insert(schema.gameContent).values({
+          gameId: id,
+          content: defaultContent
+        });
+      }
+    } else {
+      // Insert
+      const result = await db
+        .insert(schema.games)
+        .values({
+          slug,
+          title,
+          ownerId: finalOwnerId,
+          createdAt: now,
+          updatedAt: now,
+          published: false,
+        })
+        .returning();
+
+      id = result[0].id;
+      await db.insert(schema.gameContent).values({
+        gameId: id,
+        content: defaultContent,
+      });
+    }
+
+    return NextResponse.json({ id, slug, title, action: existingGame ? 'updated' : 'created' });
   } catch (e: unknown) {
-    console.error('Create game error:', e);
+    console.error('Create/Update game error:', e);
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }
