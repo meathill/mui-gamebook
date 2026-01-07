@@ -5,3 +5,4 @@ dist
 packages/asset-generator/.env
 tmp
 package-lock.json
+demo/assets

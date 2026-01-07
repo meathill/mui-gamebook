@@ -28,10 +28,12 @@ export async function POST(req: Request) {
     title,
     slug: customSlug,
     content,
+    ownerId: requestOwnerId,
   } = (await req.json()) as {
     title: string;
     slug?: string;
     content?: string;
+    ownerId?: string;
   };
 
   if (!title) {
@@ -56,12 +58,16 @@ published: false
   const db = drizzle(env.DB);
 
   try {
+    const users = await db.select().from(schema.user).limit(1);
+    const defaultOwnerId = users[0]?.id || null;
+    const ownerId = requestOwnerId || defaultOwnerId;
+
     const result = await db
       .insert(schema.games)
       .values({
         slug,
         title,
-        ownerId: 'agent', // 标记为 agent 创建
+        ownerId,
         createdAt: now,
         updatedAt: now,
         published: false,
