@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
@@ -19,8 +19,9 @@ import {
   useAudioPlayer,
 } from '@/components/game-player';
 import { Volume2 } from 'lucide-react';
+import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 
-export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: string }) {
+export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?: number }; slug: string }) {
   const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
   const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
   const [isLoaded, setIsLoaded] = useState(false);
@@ -31,6 +32,8 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
   const dialog = useDialog();
   const t = useTranslations('game');
   const audioPlayer = useAudioPlayer();
+  const analytics = useGameAnalytics();
+  const trackedScenes = useRef<Set<string>>(new Set());
 
   const visibleVariables = getVisibleVariables(game.initialState);
 
@@ -57,9 +60,11 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
   // Load progress from localStorage on mount
   useEffect(() => {
     const savedProgress = localStorage.getItem(`game_progress_${slug}`);
+
     if (savedProgress) {
       try {
         const { sceneId, state, imageUrl } = JSON.parse(savedProgress);
+
         if (game.scenes[sceneId]) {
           setCurrentSceneId(sceneId);
           setIsGameStarted(true);
@@ -79,7 +84,34 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
     setIsLoaded(true);
   }, [slug, game.scenes, game.startSceneId]);
 
+  // Track game open
+  useEffect(() => {
+    if (game.id) {
+      analytics.trackOpen(game.id);
+    }
+    // Only track once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
+
   const currentScene = game.scenes[currentSceneId];
+
+  // Track completion
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const hasConfiguredChoices = currentScene && currentSceneId ? game.scenes[currentSceneId].nodes.some((node) => node.type === 'choice') : false;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const hasMinigame = currentScene && currentSceneId ? game.scenes[currentSceneId].nodes.some((node) => node.type === 'minigame' && node.url) : false;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const showEndScreen = !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
+
+  useEffect(() => {
+    if (showEndScreen && game.id) {
+      analytics.trackComplete(game.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showEndScreen]);
+
 
   // Update image when scene changes
   useEffect(() => {
@@ -91,7 +123,14 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
           setCurrentImageUrl(newImageNode.url);
         }
       }
+
+      // Track scene visit
+      if (game.id) {
+        // Simple logic: track every time scene changes
+        analytics.trackScene(game.id, currentSceneId);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, currentScene, currentImageUrl, isGameStarted]);
 
   // 场景切换时自动播放语音
@@ -143,6 +182,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
     setRuntimeState(extractRuntimeState(game.initialState));
     setCurrentImageUrl(undefined);
     setIsGameStarted(false);
+    trackedScenes.current.clear(); // Clear tracked scenes
 
     const startScene = game.scenes[game.startSceneId || 'start'];
     const firstImage = startScene?.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
@@ -151,7 +191,11 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
     }
   };
 
-  const handleChoice = (nextSceneId: string, setInstruction?: string) => {
+  const handleChoice = (nextSceneId: string, setInstruction?: string, choiceIndex?: number) => {
+    if (game.id && typeof choiceIndex === 'number') {
+      analytics.trackChoice(game.id, currentSceneId, choiceIndex);
+    }
+
     let newState = runtimeState;
     if (setInstruction) {
       newState = executeSet(setInstruction, runtimeState);
@@ -211,13 +255,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
     );
   }
 
-  // 检查作者是否配置了任何选项（不管条件是否满足）
-  const hasConfiguredChoices = currentScene.nodes.some((node) => node.type === 'choice');
-  // 检查场景是否有小游戏
-  const hasMinigame = currentScene.nodes.some((node) => node.type === 'minigame' && node.url);
-  // 只有当作者没有配置任何选项时才显示"剧终"，而不是基于选项是否可见
-  // 如果有小游戏且未完成，也不显示结局
-  const showEndScreen = !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
+
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
 
   return (
@@ -317,7 +355,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame; slug: s
                   <button
                     key={index}
                     className="w-full text-left px-4 py-2 sm:py-4 border-2 border-amber-100 rounded-xl hover:border-orange-400 hover:bg-orange-50 transition-all group shadow-sm hover:shadow-md flex items-center gap-3"
-                    onClick={() => handleChoice(node.nextSceneId, node.set)}>
+                    onClick={() => handleChoice(node.nextSceneId, node.set, index)}>
                     {hasChoiceAudio && (
                       <button
                         onClick={(e) => {
