@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { TrendingUp, Users, Star, Clock, GamepadIcon, Edit } from 'lucide-react';
+import { TrendingUp, Users, Star, GamepadIcon } from 'lucide-react';
 
 interface GameAnalytics {
   id: number;

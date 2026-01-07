@@ -81,7 +81,8 @@ published: false
     if (existingGame) {
       // Update
       id = existingGame.id;
-      await db.update(schema.games)
+      await db
+        .update(schema.games)
         .set({
           title,
           ownerId: finalOwnerId,
@@ -92,13 +93,14 @@ published: false
       // Update Content
       const contentRecord = await db.select().from(schema.gameContent).where(eq(schema.gameContent.gameId, id)).get();
       if (contentRecord) {
-        await db.update(schema.gameContent)
+        await db
+          .update(schema.gameContent)
           .set({ content: defaultContent })
           .where(eq(schema.gameContent.id, contentRecord.id));
       } else {
         await db.insert(schema.gameContent).values({
           gameId: id,
-          content: defaultContent
+          content: defaultContent,
         });
       }
     } else {

@@ -1,4 +1,3 @@
-
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -28,7 +27,7 @@ function findAssets(dir: string): string[] {
   if (!fs.existsSync(dir)) return results;
 
   const list = fs.readdirSync(dir);
-  list.forEach(file => {
+  list.forEach((file) => {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
     if (stat && stat.isDirectory()) {
@@ -70,7 +69,9 @@ const gameSlug = argv.slug as string;
 const dryRun = !!argv.dryRun;
 
 if (!mdFilePath || !assetsDir || !gameSlug) {
-  console.error('Usage: npx tsx scripts/upload-game-assets.ts --file <path/to/script.md> --assets <path/to/assets> --slug <game-slug>');
+  console.error(
+    'Usage: npx tsx scripts/upload-game-assets.ts --file <path/to/script.md> --assets <path/to/assets> --slug <game-slug>',
+  );
   process.exit(1);
 }
 
@@ -93,7 +94,7 @@ async function uploadAsset(filePath: string, gameSlug: string): Promise<string |
     const response = await fetch(`${API_URL}/api/agent/assets/upload`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${ADMIN_PASSWORD}`,
+        Authorization: `Bearer ${ADMIN_PASSWORD}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -130,7 +131,7 @@ async function createOrUpdateGame(slug: string, title: string, content: string, 
     const response = await fetch(`${API_URL}/api/agent/games`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${ADMIN_PASSWORD}`,
+        Authorization: `Bearer ${ADMIN_PASSWORD}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
