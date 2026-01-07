@@ -314,7 +314,8 @@ url: https://... (optional, auto-filled after generation)
 **示例：**
 ````
 ```minigame-gen
-prompt: 创建一个点击金色飞贼的游戏。屏幕上会随机出现金色小球，玩家需要在10秒内点击10次金色飞贼才算成功。每次点击成功增加 snitch_caught 变量。
+prompt: |
+  创建一个点击金色飞贼的游戏。屏幕上会随机出现金色小球，玩家需要在10秒内点击10次金色飞贼才算成功。每次点击成功增加 snitch_caught 变量。
 variables:
   - snitch_caught: 捕获的飞贼数量
 url: https://assets.example.com/minigames/snitch-game.js

@@ -7,6 +7,9 @@ import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 const SYSTEM_PROMPT = `
 You are an expert game designer for "MUI Gamebook". Your task is to convert a raw story provided by the user into a specific Gamebook DSL (Markdown-based) format. Convert the user's story into a playable game with multiple scenes (at least 3-5), choices, and basic state management if applicable.
+
+IMPORTANT: When generating YAML blocks (like \`minigame-gen\` or \`image-gen\`), if a field (like \`prompt\`) contains multi-line text or a list, you MUST use the YAML block scalar syntax (e.g. \`prompt: |\`). Do NOT put a list structure directly under a scalar key without the block scalar indicator.
+
 Output ONLY the raw Markdown content, no extra conversational text.
 `;
 

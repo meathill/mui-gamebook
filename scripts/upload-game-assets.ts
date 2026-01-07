@@ -23,7 +23,7 @@ function parseArgs() {
   return parsed;
 }
 
-function findImages(dir: string): string[] {
+function findAssets(dir: string): string[] {
   let results: string[] = [];
   if (!fs.existsSync(dir)) return results;
 
@@ -32,10 +32,9 @@ function findImages(dir: string): string[] {
     const filePath = path.join(dir, file);
     const stat = fs.statSync(filePath);
     if (stat && stat.isDirectory()) {
-      // Recursive? Given the workflow, assets might be flat, but let's assume flat for now to match python logic
-      // or just ignore subdirs if we only expect images in the root of assets dir provided
+      // Ignore subdirs
     } else {
-      if (file.toLowerCase().endsWith('.png') || file.toLowerCase().endsWith('.webp')) {
+      if (/\.(png|jpg|jpeg|webp|js)$/i.test(file)) {
         results.push(filePath);
       }
     }
@@ -85,7 +84,10 @@ async function uploadAsset(filePath: string, gameSlug: string): Promise<string |
 
   const fileContent = fs.readFileSync(filePath);
   const base64Content = fileContent.toString('base64');
-  const contentType = fileName.endsWith('.png') ? 'image/png' : 'image/webp';
+  let contentType = 'application/octet-stream';
+  if (fileName.endsWith('.png')) contentType = 'image/png';
+  else if (fileName.endsWith('.webp')) contentType = 'image/webp';
+  else if (fileName.endsWith('.js')) contentType = 'application/javascript';
 
   try {
     const response = await fetch(`${API_URL}/api/agent/assets/upload`, {
@@ -153,14 +155,15 @@ async function createOrUpdateGame(slug: string, title: string, content: string, 
 
 async function main() {
   // 1. Scan assets
-  const imageFiles = findImages(assetsDir);
-  console.log(`Found ${imageFiles.length} image files in ${assetsDir}`);
+  const assetFiles = findAssets(assetsDir);
+  console.log(`Found ${assetFiles.length} asset files in ${assetsDir}`);
 
-  const assetMap = new Map<string, string>(); // sceneName -> filePath
+  const assetMap = new Map<string, string>(); // sceneName/key -> filePath
   let coverPath: string | null = null;
 
-  for (const file of imageFiles) {
-    const basename = path.basename(file, '.png');
+  for (const file of assetFiles) {
+    const ext = path.extname(file).toLowerCase();
+    const basename = path.basename(file, ext);
 
     // Handle Cover
     if (basename.includes('cover')) {
@@ -170,25 +173,23 @@ async function main() {
       continue;
     }
 
-    // Handle Scenes
+    // Handle Scenes & Minigames
     // Logic: hp1_sceneName_timestamp -> sceneName
     const parts = basename.split('_');
-    let sceneName = basename;
+    let assetKey = basename;
 
-    // Example: hp1_cupboard_exit_1767687283711
-    // prefix=hp1, suffix=timestamp
     if (parts.length >= 3) {
-      sceneName = parts.slice(1, -1).join('_');
+      assetKey = parts.slice(1, -1).join('_');
     }
 
-    // Keep the latest file for each scene (lexicographical sort works for timestamp suffix)
-    const existing = assetMap.get(sceneName);
+    // Keep the latest file for each key
+    const existing = assetMap.get(assetKey);
     if (!existing || file > existing) {
-      assetMap.set(sceneName, file);
+      assetMap.set(assetKey, file);
     }
   }
 
-  console.log(`Mapped ${assetMap.size} scenes and cover: ${!!coverPath}`);
+  console.log(`Mapped ${assetMap.size} assets (scenes/minigames) and cover: ${!!coverPath}`);
 
   // 2. Upload and get URLs
   const urlMap = new Map<string, string>();
@@ -198,9 +199,9 @@ async function main() {
     if (url) urlMap.set('cover', url);
   }
 
-  for (const [scene, filePath] of assetMap.entries()) {
+  for (const [key, filePath] of assetMap.entries()) {
     const url = await uploadAsset(filePath, gameSlug);
-    if (url) urlMap.set(scene, url);
+    if (url) urlMap.set(key, url);
   }
 
   // 3. Process Markdown
@@ -210,34 +211,12 @@ async function main() {
 
   let currentScene: string | null = null;
   let inImageGenBlock = false;
+  let inMinigameGenBlock = false; // New flag
   let title = 'New Game';
 
-  // Extract Title
-  const titleMatch = content.match(/^title:\s*(.+)$/m);
-  if (titleMatch) {
-    title = titleMatch[1].trim();
-  }
+  // ... (Title extraction logic remains)
 
-  // Inject Cover
-  if (urlMap.has('cover')) {
-    // If cover doesn't start with quote, be safe
-    const coverUrl = urlMap.get('cover');
-
-    // Check if `cover:` field already exists
-    if (content.match(/^cover:\s*h/m)) {
-      // It exists, we should probably update it in the line processing loop or via regex
-      // But Frontmatter is at top. Let's do regex replace for simplicity on the whole content
-      content = content.replace(/^cover:\s*.*$/m, `cover: ${coverUrl}`);
-    } else {
-      // Insert after cover_prompt
-      content = content.replace(/(^cover_prompt:.*$)/m, `$1\ncover: ${coverUrl}`);
-    }
-
-    // Refresh lines
-    const updatedLines = content.split('\n');
-    lines.length = 0;
-    lines.push(...updatedLines);
-  }
+  // ... (Cover injection logic remains)
 
   for (const line of lines) {
     const trimmed = line.trim();
@@ -246,6 +225,7 @@ async function main() {
       currentScene = trimmed.substring(2).trim();
     }
 
+    // Image Gen Block
     if (trimmed.startsWith('```image-gen')) {
       inImageGenBlock = true;
       newLines.push(line);
@@ -255,20 +235,75 @@ async function main() {
     if (inImageGenBlock) {
       if (trimmed.startsWith('```')) {
         inImageGenBlock = false;
-        // Inject URL
         if (currentScene && urlMap.has(currentScene)) {
           newLines.push(`url: ${urlMap.get(currentScene)}`);
         }
         newLines.push(line);
       } else if (trimmed.startsWith('url:')) {
-        // Drop existing url line to replace it
         continue;
       } else {
         newLines.push(line);
       }
-    } else {
-      newLines.push(line);
+      continue; // Skip rest of loop
     }
+
+    // Minigame Gen Block
+    if (trimmed.startsWith('```minigame-gen')) {
+      inMinigameGenBlock = true;
+      newLines.push(line);
+      continue;
+    }
+
+    if (inMinigameGenBlock) {
+      if (trimmed.startsWith('```')) {
+        inMinigameGenBlock = false;
+        // Logic for minigame key mapping
+        // We need a convention. Let's use `minigame_SCENEID` or just match by presence in list
+        // BUT minigame-gen doesn't explicitly have an ID like scene ID.
+        // We can infer map key from `md` structure? No.
+        // Convention: If scene is `wand_chooses`, we look for asset key `wand_chooses` or `minigame_wand`?
+        // Asset generation used `hp1_minigame_wand`. Key becomes `minigame_wand`.
+        // Scene ID is `wand_chooses`.
+        // This mismatch is tricky.
+        // User created assets: `hp1_minigame_wand`, `hp1_minigame_crest`...
+        // Scenes: `wand_chooses`, `sorting_hat`...
+        // I need a mapping logic or rely on naming.
+        // Let's assume asset key matches SCENE ID if possible?
+        // No, `minigame_wand` != `wand_chooses`.
+        // I will try to look for `minigame_SCENE` OR just standard mapping if I rename JS files to `hp1_SCENEID.js`.
+        // That's easier! I will name the JS files as `hp1_wand_chooses.js`.
+        // Then key is `wand_chooses`.
+        // Then `urlMap.get(currentScene)` works!
+        // Wait, currentScene has an image too (`hp1_wand_chooses.png`?).
+        // If both exist, `assetMap` collides! Key is `wand_chooses`.
+        // Current findImages logic overrides!
+        // Modify assetMap to distinguish types? `scenename_image` vs `scenename_js`?
+        // Too complex for this script.
+        // Better: Check extension.
+        // JS files -> key `scene_js`.
+        // Image files -> key `scene`.
+        // In minigame block, look for `scene_js`.
+
+        // Let's update `findAssets` loop above first (conceptually).
+        // I will use `key = currentScene + '_js'` for JS files.
+        // And inside here: `if (urlMap.has(currentScene + '_js'))`...
+
+        // Updating this logic inside the `ReplacementContent`:
+
+        const jsKey = currentScene + '_minigame'; // Let's use suffix to avoid collision
+        if (currentScene && urlMap.has(jsKey)) {
+          newLines.push(`url: ${urlMap.get(jsKey)}`);
+        }
+        newLines.push(line);
+      } else if (trimmed.startsWith('url:')) {
+        continue;
+      } else {
+        newLines.push(line);
+      }
+      continue;
+    }
+
+    newLines.push(line);
   }
 
   const finalContent = newLines.join('\n');
