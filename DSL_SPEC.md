@@ -114,7 +114,12 @@ state:
   - **`image`**: 图片生成的风格描述
   - **`audio`**: 背景音乐的风格描述
   - **`tts`**: TTS 语音朗读的风格（如语气、语速、情感等）
-- **`characters`**: 角色“设定卡”的集合。每个角色拥有一个唯一的 ID，并包含名称、描述以及用于生成其图片或声音的特定提示词等属性。
+- **`characters`**: 角色“设定卡”的集合。每个角色拥有一个唯一的 ID，并包含以下属性：
+  - **`name`** (必须): 角色的显示名称
+  - **`description`** (必须): 角色的描述，用于叙事和对话
+  - **`image_prompt`** (可选): 用于生成该角色图片的提示词
+  - **`image_url`** (可选): 角色立绘/头像的 URL，用于编辑器预览和作为 AI 生成的参考图
+  - **`voice_name`** (可选): TTS 语音名称
 
 **示例：**
 
@@ -130,6 +135,7 @@ ai:
       name: "张大侠"
       description: "一位中年剑客，神情冷峻，左眼上有一道长长的伤疤，身穿蓝色长袍。"
       image_prompt: "一位智慧而强大的中国剑客，40岁，左眼有疤"
+      image_url: "https://assets.example.com/characters/zhang_daxia_portrait.webp"
       voice_name: "Aoede"
 ---
 ```

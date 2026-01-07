@@ -108,6 +108,27 @@ start ──► scene_a ──► scene_b
 - 所有场景 ID 和基本描述
 - 选项骨架（不含详细文本）
 
+### 2.5 ⚠️ 场景数量校验（重要检查点）
+
+在完成剧本骨架后，**必须校验场景数量是否符合目标时长**：
+
+| 目标时长 | 最少场景数 | 推荐场景数 |
+|---------|----------|----------|
+| 30 分钟 | 15       | 20-25    |
+| 1 小时  | 30       | 35-45    |
+| 1.5 小时 | 45       | 50-60    |
+| 2 小时  | 60       | 70-80    |
+
+**校验方法**：
+```bash
+grep -c '^# ' demo/${slug}/${script}.md
+```
+
+如果场景数量不足，需要返回扩展剧本：
+- 增加支线任务和探索场景
+- 拆分复杂场景为多个步骤
+- 添加更多分支选择点
+
 ---
 
 ## 阶段三：场景内容创作
@@ -258,6 +279,48 @@ variables:
 - [ ] 游玩时长符合预期
 - [ ] 变量系统增加可玩性
 
+### 5.5 自动化验证（必须执行）
+
+使用验证脚本检查剧本语法和结构：
+
+// turbo
+```bash
+pnpx tsx scripts/validate-game-script.ts demo/${slug}/${script}.md
+```
+
+**验证内容：**
+- YAML 语法正确性（检测特殊字符、引号问题）
+- 场景引用完整性（无未定义的场景引用）
+- 孤立场景检测
+- 场景数量统计
+
+**YAML 特殊字符转义：**
+
+当 prompt 值包含特殊字符时，使用**单引号或双引号**包裹整个值：
+
+```yaml
+# ❌ 错误：特殊字符未转义
+prompt: Writing on the wall: "DANGER" ahead
+
+# ✅ 正确：用单引号包裹
+prompt: 'Writing on the wall: "DANGER" ahead'
+
+# ✅ 正确：用双引号包裹（内部双引号需转义）
+prompt: "Writing on the wall: \"DANGER\" ahead"
+
+# ✅ 正确：使用多行语法
+prompt: |
+  Writing on the wall: "DANGER" ahead
+  Attack > Defense > Counter > Attack
+```
+
+**需要转义的特殊字符：**
+- `:` 冒号（后跟空格时）
+- `"` 双引号
+- `>` 和 `|` 开头的行
+- `#` 井号（会被解析为注释）
+- `[` `]` `{` `}` 数组/对象语法
+
 ---
 
 ## 阶段六：资源生成与整理
@@ -267,12 +330,19 @@ variables:
 1. 根据游戏标题生成 slug（如 `harry-potter`）
 2. 创建资源目录：`/Users/meathill/Documents/GitHub/mui-gamebook/demo/${slug}`
 
-### 6.2 生成小游戏
+### 6.2 生成小游戏（完整代码）
 
-1. 遍历剧本中所有 `minigame-gen` 块
+小游戏必须是**完整可运行的 JS 代码**，不是占位符。
+
+1. 遍历剧本中所有 `minigame-gen` 块，根据 prompt 生成完整的小游戏逻辑
 2. 使用 `write_to_file` 在 `demo/${slug}/assets/` 目录下创建 JS 文件
-3. **关键命名规则**：文件名必须为 `${slug}_${key}_minigame.js`（例如 `harry-potter-1_wand_chooses_minigame.js`），以便上传脚本自动识别。
-4. 确保 JS 文件导出符合 DSL 规范的接口：
+3. **关键命名规则**：文件名必须为 `${slug}_${scene_id}_minigame.js`（例如 `harry-potter-2_de_gnoming_game_minigame.js`）
+4. **每个小游戏必须包含**：
+   - 完整的游戏初始化逻辑
+   - 用户交互处理（点击、拖拽等）
+   - 游戏结束判定和回调
+   - 清理函数
+5. 确保 JS 文件导出符合 DSL 规范的接口：
    ```javascript
    export default {
      init(container, variables) { ... },
@@ -282,23 +352,51 @@ variables:
    ```
 5. `url` 字段暂时留空或填入本地占位符，上传脚本会自动填充。
 
-### 6.3 生成图片
+### 6.3 生成角色立绘（保持一致性的关键）
+
+**先于场景图片生成角色立绘！** 这是保持角色一致性的关键步骤。
+
+1. 为每个主要角色生成独立的立绘
+2. 命名规则：`${character_name}_portrait_${timestamp}.png`
+3. 转换为 WebP 并保存到 assets 目录
+
+**生成示例**：
+```
+generate_image({
+  Prompt: "${character description} 详细的人物立绘，上半身，正面，白色背景，清晰细节",
+  ImageName: "harry_potter_portrait"
+})
+```
+
+**立绘生成后，在剧本 YAML 中添加引用**：
+```yaml
+ai:
+  characters:
+    harry:
+      name: "Harry Potter"
+      description: "12 year old boy, messy black hair, round glasses..."
+      image_url: https://...harry_potter_portrait.webp  # 上传后填入
+```
+
+### 6.4 生成场景图片
 
 完成剧本文本后，为每个场景生成配图。
 
-**6.3.1 提取图片 Prompt**
+**6.4.1 提取图片 Prompt**
 // turbo
 1. 遍历剧本中所有 `image-gen` 块
 2. 提取 `prompt` 字段内容
 
-**6.3.2 生成图片**
-对每个 `image-gen` 块使用 `generate_image` 工具：
+**6.4.2 生成图片（使用立绘作为参考）**
+
+**重要**：在生成场景图时，将相关角色的立绘作为参考图传入，以保持角色外观一致性。
 
 // turbo
 ```
 generate_image({
   Prompt: "...",
-  ImageName: "${slug}_${scene_id}_${timestamp}" // 例如 hp1_start_12345678.png
+  ImageName: "${slug}_${scene_id}_${timestamp}",
+  ImagePaths: ["/path/to/harry_portrait.png", "/path/to/ron_portrait.png"]  // 传入相关角色立绘
 })
 ```
 
