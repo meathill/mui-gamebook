@@ -270,13 +270,17 @@ variables:
 ### 6.2 生成小游戏
 
 1. 遍历剧本中所有 `minigame-gen` 块
-2. 使用 `write_to_file` 在 `demo/${slug}/minigames/` 目录下创建 JS 文件
-3. 确保 JS 文件导出符合 DSL 规范的接口：
-   ```typescript
-   export const init = (container, variables) => { ... };
-   export const onComplete = (cb) => { ... };
+2. 使用 `write_to_file` 在 `demo/${slug}/assets/` 目录下创建 JS 文件
+3. **关键命名规则**：文件名必须为 `${slug}_${key}_minigame.js`（例如 `harry-potter-1_wand_chooses_minigame.js`），以便上传脚本自动识别。
+4. 确保 JS 文件导出符合 DSL 规范的接口：
+   ```javascript
+   export default {
+     init(container, variables) { ... },
+     onComplete(callback) { ... },
+     destroy() { ... }
+   };
    ```
-4. 将本地路径填入剧本 `url` 字段（上传阶段替换为线上 URL）
+5. `url` 字段暂时留空或填入本地占位符，上传脚本会自动填充。
 
 ### 6.3 生成图片
 
@@ -286,7 +290,6 @@ variables:
 // turbo
 1. 遍历剧本中所有 `image-gen` 块
 2. 提取 `prompt` 字段内容
-3. 如果有 `character` 或 `characters` 引用，合并 `ai.characters` 中的 `image_prompt`
 
 **6.3.2 生成图片**
 对每个 `image-gen` 块使用 `generate_image` 工具：
@@ -294,51 +297,47 @@ variables:
 // turbo
 ```
 generate_image({
-  Prompt: "合并后的完整 prompt + ai.style.image 风格描述",
-  ImageName: "scene_id_场景名"
+  Prompt: "...",
+  ImageName: "${slug}_${scene_id}_${timestamp}" // 例如 hp1_start_12345678.png
 })
 ```
 
 **6.3.3 保存图片**
-将生成的 artifact 图片移动到资源目录：
-`mv /path/to/artifact.webp /Users/meathill/Documents/GitHub/mui-gamebook/demo/${slug}/scene_id.webp`
+将生成的 artifact 图片移动到资源目录 `demo/${slug}/assets/`。
 
 ---
 
 ## 阶段七：上传与提交
 
-将剧本和图片提交到服务器，形成完整游戏。
+使用项目内置的自动化脚本将剧本、图片和小游戏代码一键部署到服务器。
 
-### 7.1 上传资源到 R2
+### 7.1 配置准备
 
-遍历 `demo/${slug}` 下的所有资源（图片和小游戏 JS）：
-
-```bash
-# 图片上传
-curl -X POST https://your-domain/api/agent/assets/upload \
-  -H "Authorization: Bearer $MUI_ADMIN_PASSWORD" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "gameSlug": "game-slug",
-    "fileName": "scene_id.webp",
-    "base64": "'$(base64 -i demo/${slug}/scene_id.webp | tr -d '\n')'",
-    "contentType": "image/webp"
-  }'
-
-# 小游戏上传（contentType: application/javascript）
+确保项目根目录下的 `.agent/config.json` 包含以下配置（如无则新建）：
+```json
+{
+  "apiUrl": "https://muistory.com",
+  "userId": "YOUR_USER_ID" // 必须是数据库中已存在的用户 ID
+}
 ```
 
-将返回的 `url` 填入剧本对应字段。
+### 7.2 执行上传脚本
 
-### 7.2 创建游戏
+运行以下命令，脚本将自动扫描 `assets` 目录、上传所有资源、更新 Markdown 中的 URL 并提交游戏：
 
 // turbo
 ```bash
-curl -X POST https://your-domain/api/agent/games \
-  -H "Authorization: Bearer $MUI_ADMIN_PASSWORD" \
-  -H "Content-Type: application/json" \
-  -d '{"title": "游戏标题", "slug": "slug", "content": "完整剧本内容"}'
+MUI_ADMIN_PASSWORD=${MUI_ADMIN_PASSWORD} npx tsx scripts/upload-game-assets.ts \
+  --file demo/${slug}/${script_name}.md \
+  --assets demo/${slug}/assets \
+  --slug ${slug}
 ```
+
+### 7.3 验证结果
+
+1. 检查终端输出是否显示 "Game submitted successfully!"
+2. 打开剧本文件，确认 `url:` 字段已被替换为线上链接
+3. 访问游戏后台预览链接进行测试
 
 ---
 

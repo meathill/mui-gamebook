@@ -176,6 +176,7 @@ async function main() {
 
     // Handle Scenes & Minigames
     // Logic: hp1_sceneName_timestamp -> sceneName
+    // Fallback: filename -> filename
     const parts = basename.split('_');
     let assetKey = basename;
 
@@ -194,15 +195,29 @@ async function main() {
 
   // 2. Upload and get URLs
   const urlMap = new Map<string, string>();
+  const CONCURRENCY = 5;
+
+  const uploadQueue = [];
 
   if (coverPath) {
-    const url = await uploadAsset(coverPath, gameSlug);
-    if (url) urlMap.set('cover', url);
+    uploadQueue.push(async () => {
+      const url = await uploadAsset(coverPath!, gameSlug);
+      if (url) urlMap.set('cover', url);
+    });
   }
 
   for (const [key, filePath] of assetMap.entries()) {
-    const url = await uploadAsset(filePath, gameSlug);
-    if (url) urlMap.set(key, url);
+    uploadQueue.push(async () => {
+      const url = await uploadAsset(filePath, gameSlug);
+      if (url) urlMap.set(key, url);
+    });
+  }
+
+  // Process queue with concurrency limit
+  const results = [];
+  for (let i = 0; i < uploadQueue.length; i += CONCURRENCY) {
+    const batch = uploadQueue.slice(i, i + CONCURRENCY);
+    await Promise.all(batch.map(fn => fn()));
   }
 
   // 3. Process Markdown
