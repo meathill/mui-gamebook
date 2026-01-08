@@ -114,7 +114,12 @@ state:
   - **`image`**: 图片生成的风格描述
   - **`audio`**: 背景音乐的风格描述
   - **`tts`**: TTS 语音朗读的风格（如语气、语速、情感等）
-- **`characters`**: 角色“设定卡”的集合。每个角色拥有一个唯一的 ID，并包含名称、描述以及用于生成其图片或声音的特定提示词等属性。
+- **`characters`**: 角色“设定卡”的集合。每个角色拥有一个唯一的 ID，并包含以下属性：
+  - **`name`** (必须): 角色的显示名称
+  - **`description`** (必须): 角色的描述，用于叙事和对话
+  - **`image_prompt`** (可选): 用于生成该角色图片的提示词
+  - **`image_url`** (可选): 角色立绘/头像的 URL，用于编辑器预览和作为 AI 生成的参考图
+  - **`voice_name`** (可选): TTS 语音名称
 
 **示例：**
 
@@ -130,6 +135,7 @@ ai:
       name: "张大侠"
       description: "一位中年剑客，神情冷峻，左眼上有一道长长的伤疤，身穿蓝色长袍。"
       image_prompt: "一位智慧而强大的中国剑客，40岁，左眼有疤"
+      image_url: "https://assets.example.com/characters/zhang_daxia_portrait.webp"
       voice_name: "Aoede"
 ---
 ```
@@ -299,24 +305,24 @@ url: https://... (optional, auto-filled after generation)
 **语法：**
 ````
 ```minigame-gen
-prompt: 描述小游戏的玩法和规则
+prompt: '描述小游戏的玩法和规则（单行，用单引号包裹）'
 variables:
-  - variable_name: 变量用途说明
+  variable_name: 变量用途说明
 url: https://... (optional, auto-filled after generation)
 ```
 ````
 
 **参数说明：**
-- **`prompt`** (必须): 描述小游戏的详细规则和玩法
-- **`variables`** (可选): 小游戏会使用和修改的变量列表，键为变量名，值为用途说明
+- **`prompt`** (必须): 描述小游戏的详细规则和玩法。**建议使用单引号包裹的单行文本**，避免多行语法中 `-` 开头行被解析为 YAML 列表
+- **`variables`** (可选): 小游戏会使用和修改的变量。**使用对象格式**（`key: value`），不要使用列表格式（`- key: value`）
 - **`url`** (可选): 生成后的小游戏 JS 链接，或 `pending:operationId` 表示正在生成中
 
 **示例：**
 ````
 ```minigame-gen
-prompt: 创建一个点击金色飞贼的游戏。屏幕上会随机出现金色小球，玩家需要在10秒内点击10次金色飞贼才算成功。每次点击成功增加 snitch_caught 变量。
+prompt: '创建一个点击金色飞贼的游戏。屏幕上会随机出现金色小球，玩家需要0秒内点击10次金色飞贼才算成功。每次点击成功增加 snitch_caught 变量。'
 variables:
-  - snitch_caught: 捕获的飞贼数量
+  snitch_caught: 捕获的飞贼数量
 url: https://assets.example.com/minigames/snitch-game.js
 ```
 ````
@@ -346,9 +352,9 @@ interface MiniGameAPI {
 魁地奇比赛开始了！你需要抓住金色飞贼！
 
 ```minigame-gen
-prompt: 创建一个点击金色飞贼的游戏，10秒内点击10次随机出现的金色小球即可获胜
+prompt: '创建一个点击金色飞贼的游戏，10秒内点击10次随机出现的金色小球即可获胜'
 variables:
-  - snitch_caught: 捕获的飞贼数量
+  snitch_caught: 捕获的飞贼数量
 ```
 
 * [比赛结束] -> quidditch_win (if: snitch_caught >= 10)

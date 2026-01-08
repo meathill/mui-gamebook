@@ -2,7 +2,6 @@
 
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import AdminNav from '@/components/admin/AdminNav';
 import CreateGameModal from '@/components/admin/CreateGameModal';
 
