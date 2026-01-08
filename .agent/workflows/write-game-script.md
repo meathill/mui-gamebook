@@ -70,8 +70,9 @@ ai:
   characters:
     角色ID:
       name: "显示名称"
-      description: "角色背景描述"
+      description: "角色的描述，用于叙事和对话"
       image_prompt: "用于 AI 生成图片的详细描述，包含外貌、服装、气质"
+      image_url: "角色立绘 URL（上传后填入）"
       voice_name: "TTS 声音（可选）"
 ```
 
@@ -377,7 +378,35 @@ prompt: |
 1. 根据游戏标题生成 slug（如 `harry-potter`）
 2. 创建资源目录：`/Users/meathill/Documents/GitHub/mui-gamebook/demo/${slug}`
 
-### 6.2 生成小游戏（完整代码）
+### 6.2 生成封面图
+
+封面图是游戏在列表中展示的主图，**必须生成**。
+
+1. 根据剧本中的 `cover_prompt` 生成封面图
+2. 命名为 `cover.png` 或 `cover.webp`
+3. 保存到 `demo/${slug}/assets/` 目录
+4. 在剧本 YAML 中添加 `cover` 字段指向上传后的 URL
+
+**封面图 Prompt 要求**：
+- 体现游戏核心主题和氛围
+- 避免复杂文字
+- 推荐尺寸：1024x1024
+
+**生成示例**：
+```
+generate_image({
+  Prompt: "Harry Potter casting silver stag Patronus against Dementors, dramatic magical scene, epic fantasy",
+  ImageName: "cover"
+})
+```
+
+**在剧本 YAML 中配置**：
+```yaml
+cover_prompt: "封面图生成提示词"
+cover: "https://.../cover.webp"  # 上传后自动填入
+```
+
+### 6.3 生成小游戏（完整代码）
 
 小游戏必须是**完整可运行的 JS 代码**，不是占位符。
 
@@ -399,7 +428,7 @@ prompt: |
    ```
 5. `url` 字段暂时留空或填入本地占位符，上传脚本会自动填充。
 
-### 6.3 生成角色立绘（保持一致性的关键）
+### 6.4 生成角色立绘（保持一致性的关键）
 
 **先于场景图片生成角色立绘！** 这是保持角色一致性的关键步骤。
 
@@ -415,17 +444,20 @@ generate_image({
 })
 ```
 
-**立绘生成后，在剧本 YAML 中添加引用**：
+**立绘生成后，在剧本 YAML 中添加 image_url 引用**：
 ```yaml
 ai:
   characters:
     harry:
       name: "Harry Potter"
-      description: "12 year old boy, messy black hair, round glasses..."
-      image_url: https://...harry_potter_portrait.webp  # 上传后填入
+      description: "哈利·波特，一个勇敢的男孩，额头上有闪电形伤疤"
+      image_prompt: "12 year old boy, messy black hair, round glasses, lightning scar on forehead, Gryffindor robes"
+      image_url: "https://...harry_potter_portrait.webp"  # 上传后填入
 ```
 
-### 6.4 生成场景图片
+> ⚠️ **重要**：上传脚本目前不会自动更新角色 `image_url`，需要手动填写或在生成立绘时直接写入。
+
+### 6.5 生成场景图片
 
 完成剧本文本后，为每个场景生成配图。
 
@@ -459,7 +491,7 @@ cd demo/${slug}/assets && for f in *.png; do cwebp -q 85 "$f" -o "${f%.png}.webp
 **6.3.4 保存图片**
 将生成的 artifact 图片移动到资源目录 `demo/${slug}/assets/`。
 
-### 6.4 创建资源映射配置（可选）
+### 6.6 创建资源映射配置（可选）
 
 如果资源文件名与场景 ID 不一致（例如使用 `scene_01_bedroom` 命名但场景 ID 是 `start`），需要创建 `mapping.json` 配置文件：
 
@@ -507,7 +539,17 @@ MUI_ADMIN_PASSWORD=${MUI_ADMIN_PASSWORD} npx tsx scripts/upload-game-assets.ts \
   --slug ${slug}
 ```
 
-### 7.3 验证结果
+### 7.3 脚本自动处理
+
+上传脚本会自动完成以下操作：
+
+1. **资源上传**：扫描 assets 目录，将所有图片和 JS 文件上传到 R2
+2. **URL 填充**：更新 Markdown 中 `image-gen` 和 `minigame-gen` 块的 `url` 字段
+3. **封面图处理**：识别 `cover.webp`/`cover.png` 文件作为封面
+4. **游戏提交**：将游戏内容保存到 Games 表
+5. **小游戏入库**：自动读取 `minigame-gen` 块，将 JS 代码写入 Minigames 表
+
+### 7.4 验证结果
 
 1. 检查终端输出是否显示 "Game submitted successfully!"
 2. 打开剧本文件，确认 `url:` 字段已被替换为线上链接

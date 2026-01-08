@@ -154,6 +154,48 @@ async function createOrUpdateGame(slug: string, title: string, content: string, 
   }
 }
 
+interface MinigameData {
+  name: string;
+  description?: string;
+  prompt: string;
+  code: string;
+  variables?: Record<string, string>;
+}
+
+async function submitMinigames(minigames: MinigameData[], ownerId?: string) {
+  if (minigames.length === 0) return;
+
+  console.log(`Submitting ${minigames.length} minigames to database...`);
+
+  if (dryRun) {
+    console.log('Dry run: Skipping minigames submission.');
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/api/agent/minigames`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${ADMIN_PASSWORD}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(minigames.map((mg) => ({ ...mg, ownerId }))),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Minigames submission failed: ${response.status} ${response.statusText} - ${errorText}`);
+      return;
+    }
+
+    const result = await response.json();
+    console.log(`Minigames submitted: ${result.results?.length || 0} processed`);
+  } catch (error) {
+    console.error('Minigames submission error:', error);
+  }
+}
+
+
 async function main() {
   // 1. Scan assets
   const assetFiles = findAssets(assetsDir);
@@ -261,7 +303,9 @@ async function main() {
 
   let currentScene: string | null = null;
   let inImageGenBlock = false;
-  let inMinigameGenBlock = false; // New flag
+  let inMinigameGenBlock = false;
+  let currentMinigameBlock: string[] = [];
+  const collectedMinigames: MinigameData[] = [];
   let title = 'New Game';
 
   // ... (Title extraction logic remains)
@@ -300,6 +344,7 @@ async function main() {
     // Minigame Gen Block
     if (trimmed.startsWith('```minigame-gen')) {
       inMinigameGenBlock = true;
+      currentMinigameBlock = [];
       newLines.push(line);
       continue;
     }
@@ -307,47 +352,54 @@ async function main() {
     if (inMinigameGenBlock) {
       if (trimmed.startsWith('```')) {
         inMinigameGenBlock = false;
-        // Logic for minigame key mapping
-        // We need a convention. Let's use `minigame_SCENEID` or just match by presence in list
-        // BUT minigame-gen doesn't explicitly have an ID like scene ID.
-        // We can infer map key from `md` structure? No.
-        // Convention: If scene is `wand_chooses`, we look for asset key `wand_chooses` or `minigame_wand`?
-        // Asset generation used `hp1_minigame_wand`. Key becomes `minigame_wand`.
-        // Scene ID is `wand_chooses`.
-        // This mismatch is tricky.
-        // User created assets: `hp1_minigame_wand`, `hp1_minigame_crest`...
-        // Scenes: `wand_chooses`, `sorting_hat`...
-        // I need a mapping logic or rely on naming.
-        // Let's assume asset key matches SCENE ID if possible?
-        // No, `minigame_wand` != `wand_chooses`.
-        // I will try to look for `minigame_SCENE` OR just standard mapping if I rename JS files to `hp1_SCENEID.js`.
-        // That's easier! I will name the JS files as `hp1_wand_chooses.js`.
-        // Then key is `wand_chooses`.
-        // Then `urlMap.get(currentScene)` works!
-        // Wait, currentScene has an image too (`hp1_wand_chooses.png`?).
-        // If both exist, `assetMap` collides! Key is `wand_chooses`.
-        // Current findImages logic overrides!
-        // Modify assetMap to distinguish types? `scenename_image` vs `scenename_js`?
-        // Too complex for this script.
-        // Better: Check extension.
-        // JS files -> key `scene_js`.
-        // Image files -> key `scene`.
-        // In minigame block, look for `scene_js`.
 
-        // Let's update `findAssets` loop above first (conceptually).
-        // I will use `key = currentScene + '_js'` for JS files.
-        // And inside here: `if (urlMap.has(currentScene + '_js'))`...
-
-        // Updating this logic inside the `ReplacementContent`:
-
-        const jsKey = currentScene + '_minigame'; // Let's use suffix to avoid collision
+        const jsKey = currentScene + '_minigame';
         if (currentScene && urlMap.has(jsKey)) {
           newLines.push(`url: ${urlMap.get(jsKey)}`);
+
+          // Collect minigame data for DB submission
+          const blockText = currentMinigameBlock.join('\n');
+          const promptMatch = blockText.match(/prompt:\s*['"](.+?)['"]/s);
+          const variablesMatch = blockText.match(/variables:\s*\n((?:\s+\w+:.+\n?)+)/);
+
+          if (promptMatch) {
+            const prompt = promptMatch[1];
+            const variables: Record<string, string> = {};
+
+            if (variablesMatch) {
+              const varsText = variablesMatch[1];
+              const varLines = varsText.split('\n').filter((l) => l.trim());
+              for (const vl of varLines) {
+                const match = vl.match(/\s*(\w+):\s*(.+)/);
+                if (match) {
+                  variables[match[1]] = match[2].trim();
+                }
+              }
+            }
+
+            // Read JS code from asset file
+            const jsFilePath = mappedAssetMap.get(jsKey);
+            let code = '';
+            if (jsFilePath && fs.existsSync(jsFilePath)) {
+              code = fs.readFileSync(jsFilePath, 'utf-8');
+            }
+
+            if (code) {
+              collectedMinigames.push({
+                name: currentScene,
+                description: prompt.slice(0, 200),
+                prompt,
+                code,
+                variables,
+              });
+            }
+          }
         }
         newLines.push(line);
       } else if (trimmed.startsWith('url:')) {
         continue;
       } else {
+        currentMinigameBlock.push(line);
         newLines.push(line);
       }
       continue;
@@ -365,6 +417,9 @@ async function main() {
   // 4. Submit to DB
   const userId = (config as any).userId;
   await createOrUpdateGame(gameSlug, title, finalContent, userId);
+
+  // 5. Submit minigames to DB
+  await submitMinigames(collectedMinigames, userId);
 }
 
 main()
@@ -373,3 +428,4 @@ main()
     console.error(err);
     process.exit(1);
   });
+
