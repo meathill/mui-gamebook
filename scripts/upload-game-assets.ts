@@ -251,7 +251,7 @@ async function main() {
   const results = [];
   for (let i = 0; i < uploadQueue.length; i += CONCURRENCY) {
     const batch = uploadQueue.slice(i, i + CONCURRENCY);
-    await Promise.all(batch.map(fn => fn()));
+    await Promise.all(batch.map((fn) => fn()));
   }
 
   // 3. Process Markdown

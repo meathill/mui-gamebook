@@ -56,9 +56,7 @@ const mockGame: PlayableGame & { id: number } = {
     },
     'next-scene': {
       id: 'next-scene',
-      nodes: [
-        { type: 'text', content: 'Next Scene' },
-      ],
+      nodes: [{ type: 'text', content: 'Next Scene' }],
     },
   },
 };
@@ -72,8 +70,11 @@ describe('GamePlayer Analytics', () => {
   it('tracks game open on mount', () => {
     render(
       <Theme>
-        <GamePlayer game={mockGame} slug="test-game" />
-      </Theme>
+        <GamePlayer
+          game={mockGame}
+          slug="test-game"
+        />
+      </Theme>,
     );
     expect(mockTrackOpen).toHaveBeenCalledWith(123);
   });
@@ -81,8 +82,11 @@ describe('GamePlayer Analytics', () => {
   it('tracks scene visit on mount', async () => {
     render(
       <Theme>
-        <GamePlayer game={mockGame} slug="test-game" />
-      </Theme>
+        <GamePlayer
+          game={mockGame}
+          slug="test-game"
+        />
+      </Theme>,
     );
 
     // Start the game
@@ -96,8 +100,11 @@ describe('GamePlayer Analytics', () => {
   it('tracks choice selection', async () => {
     render(
       <Theme>
-        <GamePlayer game={mockGame} slug="test-game" />
-      </Theme>
+        <GamePlayer
+          game={mockGame}
+          slug="test-game"
+        />
+      </Theme>,
     );
 
     // Find and click the choice button
@@ -116,8 +123,11 @@ describe('GamePlayer Analytics', () => {
   it('tracks new scene visit after choice', async () => {
     render(
       <Theme>
-        <GamePlayer game={mockGame} slug="test-game" />
-      </Theme>
+        <GamePlayer
+          game={mockGame}
+          slug="test-game"
+        />
+      </Theme>,
     );
 
     // Start the game
@@ -139,19 +149,19 @@ describe('GamePlayer Analytics', () => {
       scenes: {
         start: {
           id: 'start',
-          nodes: [
-            { type: 'text', content: 'The End' },
-          ],
+          nodes: [{ type: 'text', content: 'The End' }],
         },
       },
     };
 
     render(
       <Theme>
-        <GamePlayer game={endMockGame} slug="test-game-complete" />
-      </Theme>
+        <GamePlayer
+          game={endMockGame}
+          slug="test-game-complete"
+        />
+      </Theme>,
     );
-
 
     // Start the game
     fireEvent.click(screen.getByText('startAdventure'));
