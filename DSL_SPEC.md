@@ -305,25 +305,24 @@ url: https://... (optional, auto-filled after generation)
 **语法：**
 ````
 ```minigame-gen
-prompt: 描述小游戏的玩法和规则
+prompt: '描述小游戏的玩法和规则（单行，用单引号包裹）'
 variables:
-  - variable_name: 变量用途说明
+  variable_name: 变量用途说明
 url: https://... (optional, auto-filled after generation)
 ```
 ````
 
 **参数说明：**
-- **`prompt`** (必须): 描述小游戏的详细规则和玩法
-- **`variables`** (可选): 小游戏会使用和修改的变量列表，键为变量名，值为用途说明
+- **`prompt`** (必须): 描述小游戏的详细规则和玩法。**建议使用单引号包裹的单行文本**，避免多行语法中 `-` 开头行被解析为 YAML 列表
+- **`variables`** (可选): 小游戏会使用和修改的变量。**使用对象格式**（`key: value`），不要使用列表格式（`- key: value`）
 - **`url`** (可选): 生成后的小游戏 JS 链接，或 `pending:operationId` 表示正在生成中
 
 **示例：**
 ````
 ```minigame-gen
-prompt: |
-  创建一个点击金色飞贼的游戏。屏幕上会随机出现金色小球，玩家需要在10秒内点击10次金色飞贼才算成功。每次点击成功增加 snitch_caught 变量。
+prompt: '创建一个点击金色飞贼的游戏。屏幕上会随机出现金色小球，玩家需要0秒内点击10次金色飞贼才算成功。每次点击成功增加 snitch_caught 变量。'
 variables:
-  - snitch_caught: 捕获的飞贼数量
+  snitch_caught: 捕获的飞贼数量
 url: https://assets.example.com/minigames/snitch-game.js
 ```
 ````
@@ -353,9 +352,9 @@ interface MiniGameAPI {
 魁地奇比赛开始了！你需要抓住金色飞贼！
 
 ```minigame-gen
-prompt: 创建一个点击金色飞贼的游戏，10秒内点击10次随机出现的金色小球即可获胜
+prompt: '创建一个点击金色飞贼的游戏，10秒内点击10次随机出现的金色小球即可获胜'
 variables:
-  - snitch_caught: 捕获的飞贼数量
+  snitch_caught: 捕获的飞贼数量
 ```
 
 * [比赛结束] -> quidditch_win (if: snitch_caught >= 10)

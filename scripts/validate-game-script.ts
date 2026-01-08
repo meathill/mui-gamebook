@@ -7,8 +7,9 @@
  */
 
 import * as fs from 'fs';
+import { parse as parseYaml } from 'yaml';
 
-const BLOCK_TYPES = ['image-gen', 'audio-gen', 'minigame-gen'];
+const BLOCK_TYPES = ['image-gen', 'audio-gen', 'minigame-gen', 'video-gen'];
 
 interface ValidationError {
   line: number;
@@ -17,9 +18,15 @@ interface ValidationError {
   content: string;
 }
 
-function extractBlocks(content: string): { type: string; content: string; startLine: number }[] {
+interface Block {
+  type: string;
+  content: string;
+  startLine: number;
+}
+
+function extractBlocks(content: string): Block[] {
   const lines = content.split('\n');
-  const blocks: { type: string; content: string; startLine: number }[] = [];
+  const blocks: Block[] = [];
 
   let inBlock = false;
   let currentBlockType = '';
@@ -35,9 +42,14 @@ function extractBlocks(content: string): { type: string; content: string; startL
         inBlock = true;
         currentBlockType = blockType;
         currentBlockContent = '';
-        blockStartLine = i + 1; // 1-indexed
+        blockStartLine = i + 2; // 1-indexed, +1 for next line
         break;
       }
+    }
+
+    // Skip if we just started a block
+    if (line.trim().startsWith('```') && BLOCK_TYPES.some(bt => line.trim() === '```' + bt)) {
+      continue;
     }
 
     // Check for front matter
@@ -69,63 +81,25 @@ function extractBlocks(content: string): { type: string; content: string; startL
   return blocks;
 }
 
-/**
- * 简单的 YAML 语法检查（不依赖外部库）
- */
-function validateYamlSimple(content: string, blockType: string, startLine: number): ValidationError[] {
-  const errors: ValidationError[] = [];
-  const lines = content.split('\n');
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const lineNum = startLine + i + 1;
-
-    // 检查未转义的特殊字符
-    // 1. 值中的引号不匹配
-    const colonMatch = line.match(/^(\s*)(\w+):\s*(.+)$/);
-    if (colonMatch) {
-      const value = colonMatch[3];
-
-      // 检查未闭合的引号
-      const doubleQuotes = (value.match(/"/g) || []).length;
-      if (doubleQuotes % 2 !== 0) {
-        errors.push({
-          line: lineNum,
-          blockType,
-          message: 'Unbalanced double quotes in value',
-          content: line,
-        });
-      }
-
-      // 检查值中包含特殊 YAML 字符（需要引号包裹）
-      if (!value.startsWith('"') && !value.startsWith("'") && !value.startsWith('|') && !value.startsWith('>')) {
-        if (value.includes(': ') || value.includes(' #')) {
-          errors.push({
-            line: lineNum,
-            blockType,
-            message: 'Value contains special characters (: or #) - should be quoted',
-            content: line,
-          });
-        }
-        // 检查 > 符号（在非引号值中）
-        if (/[^=!<]>/.test(value)) {
-          errors.push({
-            line: lineNum,
-            blockType,
-            message: 'Value contains ">" character - may cause YAML parsing issues',
-            content: line,
-          });
-        }
-      }
+function validateYaml(block: Block): ValidationError | null {
+  try {
+    parseYaml(block.content);
+    return null;
+  } catch (e: unknown) {
+    const error = e as Error & { mark?: { line?: number } };
+    // Extract line number from YAML error if available
+    let errorLine = block.startLine;
+    if (error.mark?.line) {
+      errorLine = block.startLine + error.mark.line;
     }
 
-    // 检查缩进问题
-    if (i > 0 && line.trim() && !line.startsWith(' ') && !line.startsWith('-') && !line.match(/^\w+:/)) {
-      // 可疑的缩进
-    }
+    return {
+      line: errorLine,
+      blockType: block.type,
+      message: error.message || 'Unknown YAML parsing error',
+      content: block.content.substring(0, 200) + (block.content.length > 200 ? '...' : ''),
+    };
   }
-
-  return errors;
 }
 
 function validateScript(filePath: string): ValidationError[] {
@@ -136,8 +110,10 @@ function validateScript(filePath: string): ValidationError[] {
   console.log(`Found ${blocks.length} YAML blocks to validate...\n`);
 
   for (const block of blocks) {
-    const blockErrors = validateYamlSimple(block.content, block.type, block.startLine);
-    errors.push(...blockErrors);
+    const error = validateYaml(block);
+    if (error) {
+      errors.push(error);
+    }
   }
 
   return errors;
@@ -215,13 +191,12 @@ console.log('\n📋 YAML Block Validation\n');
 const yamlErrors = validateScript(filePath);
 
 if (yamlErrors.length === 0) {
-  console.log('✅ All YAML blocks look valid!\n');
+  console.log('✅ All YAML blocks are valid!\n');
 } else {
-  console.log(`⚠️  Found ${yamlErrors.length} potential issue(s):\n`);
+  console.log(`❌ Found ${yamlErrors.length} YAML parsing error(s):\n`);
   for (const error of yamlErrors) {
     console.log(`  Line ${error.line} [${error.blockType}]:`);
-    console.log(`    ${error.message}`);
-    console.log(`    Content: ${error.content.substring(0, 80)}...`);
+    console.log(`    ${error.message.split('\n')[0]}`);
     console.log();
   }
 }

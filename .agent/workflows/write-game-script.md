@@ -204,14 +204,35 @@ moonlight casting long shadows, dramatic lighting, epic fantasy style
 
 ### 4.1 添加小游戏
 
-在适当位置插入小游戏增强体验：
+在适当位置插入小游戏增强体验。
+
+**⚠️ 关键格式要求（避免 YAML 解析失败）**：
 
 ```yaml
 ```minigame-gen
-prompt: 详细描述游戏玩法和规则
+prompt: '单行描述游戏玩法和规则，用单引号包裹避免特殊字符问题'
 variables:
-  - score: 玩家得分
+  score: 玩家得分
+  time_left: 剩余时间
+url: https://...minigame.js
 ```
+```
+
+**✅ 正确格式要点**：
+- `prompt:` 使用单引号包裹的单行文本，避免使用 `|` 多行语法中的 `-` 开头行
+- `variables:` 使用对象格式（`key: value`），**不要使用列表格式**（`- key: value`）
+- `url:` 在小游戏 JS 上传后填写
+
+**❌ 常见错误格式**：
+```yaml
+# 错误1：variables 使用列表格式
+variables:
+  - score: 玩家得分  # ← 不要有这个 -
+
+# 错误2：prompt 多行中使用 - 开头
+prompt: |
+  这是游戏说明
+  - 操作方法  # ← - 会被解析为 YAML 列表
 ```
 
 **适合场景**：
@@ -265,7 +286,33 @@ variables:
 - [ ] 所有 `(set:)` 中修改的变量都在 `state` 中定义
 - [ ] 触发器条件合理（如 health <= 0）
 
-### 5.3 内容质量
+### 5.3 ⚠️ YAML 格式检查（关键！避免返工）
+
+在填充完剧本内容后，**必须逐项检查以下格式要求**，避免解析失败：
+
+- [ ] **minigame-gen 块**：
+  - [ ] `prompt:` 使用单引号包裹的单行文本
+  - [ ] `variables:` 使用对象格式（`key: value`），**不要有 `-` 前缀**
+  - [ ] 已添加 `url:` 字段
+- [ ] **image-gen 块**：
+  - [ ] `prompt:` 中没有未转义的双引号 `"`
+  - [ ] `prompt:` 中冒号后没有空格（`text: more` → `text - more`）
+  - [ ] 已添加 `url:` 字段
+- [ ] **所有 YAML 块**：
+  - [ ] 没有以 `-` 开头的内容行（除非是真正的列表）
+  - [ ] 没有以 `>` 或 `|` 开头的意外行
+  - [ ] 没有未闭合的引号
+
+**常见问题快速修复表**：
+
+| 问题 | 错误写法 | 正确写法 |
+|------|---------|---------|
+| 列表式 variables | `- score: 得分` | `score: 得分` |
+| 多行 prompt 中有列表 | `prompt: \|` + `- 操作方法` | `prompt: '操作方法...'` |
+| prompt 中有引号 | `prompt: say "hello"` | `prompt: 'say "hello"'` |
+| prompt 中有冒号 | `prompt: 提示：继续` | `prompt: '提示：继续'` |
+
+### 5.4 内容质量
 
 - [ ] 每个场景都有 `image-gen` 块
 - [ ] 关键场景有背景音乐
