@@ -73,7 +73,7 @@ export default async function RootLayout({
             radius="medium"
             scaling="100%">
             <Providers>
-              <Header />
+              <Header siteName={env.NEXT_PUBLIC_SITE_NAME} />
               <main className="grow flex flex-col">{children}</main>
               <Footer />
             </Providers>

@@ -38,7 +38,7 @@ import type { GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
 const nodeTypes = { scene: SceneNode };
 
-export default function VisualEditor({ id }: { id: string }) {
+export default function VisualEditor({ id, previewUrl }: { id: string; previewUrl?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, isPending: isAuthPending } = authClient.useSession();
@@ -273,6 +273,7 @@ export default function VisualEditor({ id }: { id: string }) {
         slug={slug}
         saving={saving}
         assetGenerating={assetGenerating}
+        previewUrl={previewUrl}
         onToggleViewMode={toggleViewMode}
         onAddScene={handleAddScene}
         onLayout={handleLayout}

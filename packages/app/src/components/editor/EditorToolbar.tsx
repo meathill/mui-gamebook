@@ -28,6 +28,8 @@ interface EditorToolbarProps {
   slug: string;
   saving: boolean;
   assetGenerating: boolean;
+  /** 预览目标 URL，headless 模式下为主站地址，否则为空（使用相对路径） */
+  previewUrl?: string;
   onToggleViewMode: () => void;
   onAddScene: () => void;
   onLayout: () => void;
@@ -41,6 +43,7 @@ export default function EditorToolbar({
   slug,
   saving,
   assetGenerating,
+  previewUrl,
   onToggleViewMode,
   onAddScene,
   onLayout,
@@ -154,13 +157,14 @@ export default function EditorToolbar({
           <Redo2Icon size={18} />
         </button>
 
-        <Link
-          href={`/play/${slug}`}
+        <a
+          href={`${previewUrl || ''}/play/${slug}`}
           target="_blank"
+          rel="noopener noreferrer"
           className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200"
           title="预览">
           <ExternalLinkIcon size={18} />
-        </Link>
+        </a>
 
         {/* AI 助手按钮 - 非 settings tab 显示 */}
         {activeTab !== 'settings' && (

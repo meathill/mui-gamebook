@@ -5,7 +5,12 @@ import { useTranslations } from 'next-intl';
 import { authClient } from '@/lib/auth-client';
 import UserDropdown from '@/components/admin/UserDropdown';
 
-export default function Header() {
+interface HeaderProps {
+  /** headless 模式下的站点名称 */
+  siteName?: string;
+}
+
+export default function Header({ siteName }: HeaderProps) {
   const { data: session } = authClient.useSession();
   const t = useTranslations('header');
 
@@ -17,7 +22,7 @@ export default function Header() {
             <Link
               href="/"
               className="shrink-0 flex items-center">
-              <span className="text-xl font-bold text-gray-900 tracking-tight">{t('title')}</span>
+              <span className="text-xl font-bold text-gray-900 tracking-tight">{siteName || t('title')}</span>
             </Link>
             <nav className="hidden sm:flex items-center gap-6">
               <Link
