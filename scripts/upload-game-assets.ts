@@ -119,7 +119,20 @@ async function uploadAsset(filePath: string, gameSlug: string): Promise<string |
   }
 }
 
-async function createOrUpdateGame(slug: string, title: string, content: string, ownerId?: string) {
+interface GameMetadata {
+  description?: string;
+  backgroundStory?: string;
+  coverImage?: string;
+  tags?: string[];
+}
+
+async function createOrUpdateGame(
+  slug: string,
+  title: string,
+  content: string,
+  metadata: GameMetadata,
+  ownerId?: string,
+) {
   console.log('Submitting game to database...');
 
   if (dryRun) {
@@ -139,10 +152,12 @@ async function createOrUpdateGame(slug: string, title: string, content: string, 
         slug,
         content,
         ownerId,
+        ...metadata,
       }),
     });
 
     if (!response.ok) {
+      // ... existing error handling
       const errorText = await response.text();
       console.error(`Game submission failed: ${response.status} ${response.statusText} - ${errorText}`);
       return;
@@ -203,6 +218,7 @@ async function main() {
 
   const assetMap = new Map<string, string>(); // sceneName/key -> filePath
   let coverPath: string | null = null;
+  const portraitMap = new Map<string, string>(); // characterName -> filePath
 
   for (const file of assetFiles) {
     const ext = path.extname(file).toLowerCase();
@@ -213,6 +229,20 @@ async function main() {
     if (basename.includes('cover')) {
       if (!coverPath || file > coverPath) {
         coverPath = file;
+      }
+      continue;
+    }
+
+    // Handle Portraits (e.g., harry_potter_portrait_timestamp.webp)
+    if (basename.includes('_portrait')) {
+      // Extract character name: harry_potter_portrait_123 -> harry_potter
+      const match = basename.match(/^(.+)_portrait/);
+      if (match) {
+        const charName = match[1].toLowerCase();
+        const existing = portraitMap.get(charName);
+        if (!existing || file > existing) {
+          portraitMap.set(charName, file);
+        }
       }
       continue;
     }
@@ -271,6 +301,7 @@ async function main() {
 
   // 2. Upload and get URLs
   const urlMap = new Map<string, string>();
+  const portraitUrlMap = new Map<string, string>(); // characterName -> url
   const CONCURRENCY = 5;
 
   const uploadQueue = [];
@@ -279,6 +310,14 @@ async function main() {
     uploadQueue.push(async () => {
       const url = await uploadAsset(coverPath!, gameSlug);
       if (url) urlMap.set('cover', url);
+    });
+  }
+
+  // Upload portraits
+  for (const [charName, filePath] of portraitMap.entries()) {
+    uploadQueue.push(async () => {
+      const url = await uploadAsset(filePath, gameSlug);
+      if (url) portraitUrlMap.set(charName, url);
     });
   }
 
@@ -306,14 +345,136 @@ async function main() {
   let inMinigameGenBlock = false;
   let currentMinigameBlock: string[] = [];
   const collectedMinigames: MinigameData[] = [];
+
+  // Game metadata from YAML front matter
   let title = 'New Game';
+  let description = '';
+  let backgroundStory = '';
+  let coverUrl = '';
+  let tags: string[] = [];
+  let inMultilineField: string | null = null;
+  let multilineContent: string[] = [];
 
-  // ... (Title extraction logic remains)
-
-  // ... (Cover injection logic remains)
+  // Track YAML front matter processing
+  let inFrontMatter = false;
+  let frontMatterEnded = false;
+  let currentCharacter: string | null = null;
 
   for (const line of lines) {
     const trimmed = line.trim();
+
+    // Handle YAML front matter
+    if (trimmed === '---' && !frontMatterEnded) {
+      if (!inFrontMatter) {
+        inFrontMatter = true;
+      } else {
+        inFrontMatter = false;
+        frontMatterEnded = true;
+      }
+      newLines.push(line);
+      continue;
+    }
+
+    // Inside YAML front matter
+    if (inFrontMatter) {
+      // Handle multiline field content
+      if (inMultilineField) {
+        if (/^\S/.test(line) && !line.startsWith('  ')) {
+          // New top-level field - save collected content
+          if (inMultilineField === 'backgroundStory') {
+            backgroundStory = multilineContent.join('\n').trim();
+          }
+          inMultilineField = null;
+          multilineContent = [];
+        } else {
+          // Continue collecting multiline content
+          multilineContent.push(line.replace(/^  /, ''));
+          newLines.push(line);
+          continue;
+        }
+      }
+
+      // Extract title
+      if (trimmed.startsWith('title:')) {
+        const match = trimmed.match(/title:\s*["']?(.+?)["']?\s*$/);
+        if (match) title = match[1];
+      }
+
+      // Extract description
+      if (trimmed.startsWith('description:')) {
+        const match = trimmed.match(/description:\s*["']?(.+?)["']?\s*$/);
+        if (match) description = match[1];
+      }
+
+      // Extract backgroundStory (multiline)
+      if (trimmed.startsWith('backgroundStory:')) {
+        if (trimmed.endsWith('|')) {
+          inMultilineField = 'backgroundStory';
+          multilineContent = [];
+        } else {
+          const match = trimmed.match(/backgroundStory:\s*["']?(.+?)["']?\s*$/);
+          if (match) backgroundStory = match[1];
+        }
+      }
+
+      // Extract tags
+      if (trimmed.startsWith('- ') && tags.length >= 0) {
+        // Check if we're in tags section by looking at previous lines
+        const prevNonEmpty = newLines.slice(-5).find(l => l.trim() && !l.trim().startsWith('-'));
+        if (prevNonEmpty?.trim()?.startsWith('tags:')) {
+          tags.push(trimmed.substring(2).trim());
+        }
+      }
+      if (trimmed.startsWith('tags:') && trimmed.includes('[')) {
+        // Inline array format: tags: [tag1, tag2]
+        const match = trimmed.match(/tags:\s*\[([^\]]+)\]/);
+        if (match) {
+          tags = match[1].split(',').map(t => t.trim().replace(/["']/g, ''));
+        }
+      }
+
+      // Update cover URL and save it
+      if (trimmed.startsWith('cover:') && !trimmed.startsWith('cover_prompt:')) {
+        if (urlMap.has('cover')) {
+          coverUrl = urlMap.get('cover')!;
+          newLines.push(`cover: "${coverUrl}"`);
+        } else {
+          // Still extract existing cover URL
+          const match = trimmed.match(/cover:\s*["']?(.+?)["']?\s*$/);
+          if (match) coverUrl = match[1];
+          newLines.push(line);
+        }
+        continue;
+      }
+
+      // Track character definitions
+      if (/^    [a-z_]+:$/.test(line) || /^    \w+:$/.test(line)) {
+        // This is a character ID line like "    harry:"
+        const match = line.match(/^    (\w+):$/);
+        if (match) {
+          currentCharacter = match[1].toLowerCase();
+        }
+      }
+
+      // Update character image_url
+      if (trimmed.startsWith('image_url:') && currentCharacter) {
+        // Try to find matching portrait (e.g., harry -> harry_potter, ron -> ron_weasley)
+        let foundUrl: string | undefined;
+        for (const [charName, url] of portraitUrlMap.entries()) {
+          if (charName.startsWith(currentCharacter) || charName.includes(currentCharacter)) {
+            foundUrl = url;
+            break;
+          }
+        }
+        if (foundUrl) {
+          newLines.push(`      image_url: "${foundUrl}"`);
+          continue;
+        }
+      }
+
+      newLines.push(line);
+      continue;
+    }
 
     if (trimmed.startsWith('# ')) {
       currentScene = trimmed.substring(2).trim();
@@ -415,8 +576,20 @@ async function main() {
   console.log(`Updated markdown saved to ${mdFilePath}`);
 
   // 4. Submit to DB
+  // 4. Submit to DB
   const userId = (config as any).userId;
-  await createOrUpdateGame(gameSlug, title, finalContent, userId);
+  await createOrUpdateGame(
+    gameSlug,
+    title,
+    finalContent,
+    {
+      description,
+      backgroundStory,
+      coverImage: coverUrl,
+      tags,
+    },
+    userId,
+  );
 
   // 5. Submit minigames to DB
   await submitMinigames(collectedMinigames, userId);
