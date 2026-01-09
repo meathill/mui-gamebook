@@ -347,6 +347,9 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
                 );
 
               case 'choice':
+                if (hasMinigame && !minigameCompleted) {
+                  return null;
+                }
                 if (!evaluateCondition(node.condition, runtimeState)) {
                   return null;
                 }
