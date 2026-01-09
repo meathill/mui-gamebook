@@ -70,8 +70,9 @@ ai:
   characters:
     角色ID:
       name: "显示名称"
-      description: "角色背景描述"
+      description: "角色的描述，用于叙事和对话"
       image_prompt: "用于 AI 生成图片的详细描述，包含外貌、服装、气质"
+      image_url: "角色立绘 URL（上传后填入）"
       voice_name: "TTS 声音（可选）"
 ```
 
@@ -377,7 +378,35 @@ prompt: |
 1. 根据游戏标题生成 slug（如 `harry-potter`）
 2. 创建资源目录：`/Users/meathill/Documents/GitHub/mui-gamebook/demo/${slug}`
 
-### 6.2 生成小游戏（完整代码）
+### 6.2 生成封面图
+
+封面图是游戏在列表中展示的主图，**必须生成**。
+
+1. 根据剧本中的 `cover_prompt` 生成封面图
+2. 命名为 `cover.png` 或 `cover.webp`
+3. 保存到 `demo/${slug}/assets/` 目录
+4. 在剧本 YAML 中添加 `cover` 字段指向上传后的 URL
+
+**封面图 Prompt 要求**：
+- 体现游戏核心主题和氛围
+- 避免复杂文字
+- 推荐尺寸：1024x1024
+
+**生成示例**：
+```
+generate_image({
+  Prompt: "Harry Potter casting silver stag Patronus against Dementors, dramatic magical scene, epic fantasy",
+  ImageName: "cover"
+})
+```
+
+**在剧本 YAML 中配置**：
+```yaml
+cover_prompt: "封面图生成提示词"
+cover: "https://.../cover.webp"  # 上传后自动填入
+```
+
+### 6.3 生成小游戏（完整代码）
 
 小游戏必须是**完整可运行的 JS 代码**，不是占位符。
 
@@ -399,7 +428,9 @@ prompt: |
    ```
 5. `url` 字段暂时留空或填入本地占位符，上传脚本会自动填充。
 
-### 6.3 生成角色立绘（保持一致性的关键）
+> **注意**：每个小游戏对应剧本中的一个 `minigame-gen` 块，上传脚本会自动将 JS 代码内容插入到数据库的 Minigames 表。
+
+### 6.4 生成角色立绘（保持一致性的关键）
 
 **先于场景图片生成角色立绘！** 这是保持角色一致性的关键步骤。
 
@@ -415,26 +446,44 @@ generate_image({
 })
 ```
 
-**立绘生成后，在剧本 YAML 中添加引用**：
+**立绘生成后，在剧本 YAML 中添加 image_url 引用**：
 ```yaml
 ai:
   characters:
     harry:
       name: "Harry Potter"
-      description: "12 year old boy, messy black hair, round glasses..."
-      image_url: https://...harry_potter_portrait.webp  # 上传后填入
+      description: "哈利·波特，一个勇敢的男孩，额头上有闪电形伤疤"
+      image_prompt: "12 year old boy, messy black hair, round glasses, lightning scar on forehead, Gryffindor robes"
+      image_url: "https://...harry_potter_portrait.webp"  # 上传后填入
 ```
 
-### 6.4 生成场景图片
+> ⚠️ **重要**：上传脚本目前不会自动更新角色 `image_url`，需要手动填写或在生成立绘时直接写入。
+
+### 6.5 生成场景图片
 
 完成剧本文本后，为每个场景生成配图。
 
-**6.4.1 提取图片 Prompt**
+> ⚠️ **配额限制警告**：Gemini 图片生成 API 有配额限制（通常每5小时约25-30张）。
+> 对于场景数较多的游戏（如60+场景），需要分批次生成，每批约5张。
+> 如果遇到 `RESOURCE_EXHAUSTED` 错误，需等待配额重置后继续。
+
+**6.5.1 提取图片 Prompt**
 // turbo
 1. 遍历剧本中所有 `image-gen` 块
 2. 提取 `prompt` 字段内容
 
-**6.4.2 生成图片（使用立绘作为参考）**
+**6.5.2 批量生成策略**
+
+对于大型游戏（30+场景），建议：
+1. 先生成角色立绘和封面图（最重要）
+2. 按剧情顺序分批生成场景图（每批5张）
+3. 使用以下命令检查已生成数量：
+   ```bash
+   ls demo/${slug}/assets/scene_*.webp | wc -l
+   ```
+4. 记录未生成的场景，配额重置后继续
+
+**6.5.3 生成图片（使用立绘作为参考）**
 
 **重要**：在生成场景图时，将相关角色的立绘作为参考图传入，以保持角色外观一致性。
 
@@ -442,12 +491,15 @@ ai:
 ```
 generate_image({
   Prompt: "...",
-  ImageName: "${slug}_${scene_id}_${timestamp}",
+  ImageName: "scene_${scene_id}",  // 推荐用 scene_前缀+场景ID，方便自动匹配
   ImagePaths: ["/path/to/harry_portrait.png", "/path/to/ron_portrait.png"]  // 传入相关角色立绘
 })
 ```
 
-**6.3.3 转换为 WebP 格式**
+> **命名规范**：推荐使用 `scene_${scene_id}` 格式（如 `scene_start`、`scene_hogwarts_express`），
+> 上传脚本会自动去除 `scene_` 前缀和时间戳后缀进行匹配。
+
+**6.5.4 转换为 WebP 格式**
 
 生成的图片默认为 PNG 格式，体积较大。使用 `cwebp` 工具批量转换为 WebP 格式以减小文件体积（约 75% 压缩率）：
 
@@ -459,7 +511,7 @@ cd demo/${slug}/assets && for f in *.png; do cwebp -q 85 "$f" -o "${f%.png}.webp
 **6.3.4 保存图片**
 将生成的 artifact 图片移动到资源目录 `demo/${slug}/assets/`。
 
-### 6.4 创建资源映射配置（可选）
+### 6.6 创建资源映射配置（可选）
 
 如果资源文件名与场景 ID 不一致（例如使用 `scene_01_bedroom` 命名但场景 ID 是 `start`），需要创建 `mapping.json` 配置文件：
 
@@ -507,7 +559,20 @@ MUI_ADMIN_PASSWORD=${MUI_ADMIN_PASSWORD} npx tsx scripts/upload-game-assets.ts \
   --slug ${slug}
 ```
 
-### 7.3 验证结果
+### 7.3 脚本自动处理
+
+上传脚本会自动完成以下操作：
+
+1. **资源上传**：扫描 assets 目录，将所有图片和 JS 文件上传到 R2
+2. **URL 填充**：更新 Markdown 中以下字段：
+   - `image-gen` 块的 `url` 字段（场景图片）
+   - `minigame-gen` 块的 `url` 字段（小游戏代码）
+   - YAML front matter 中的 `cover` 字段（封面图）
+   - YAML front matter 中角色的 `image_url` 字段（立绘）
+3. **游戏提交**：将游戏内容保存到 Games 表
+4. **小游戏入库**：自动读取 `minigame-gen` 块，将 JS 代码写入 Minigames 表
+
+### 7.4 验证结果
 
 1. 检查终端输出是否显示 "Game submitted successfully!"
 2. 打开剧本文件，确认 `url:` 字段已被替换为线上链接
@@ -581,6 +646,22 @@ A: 小游戏需要单独生成 JS 文件，确保 `url` 字段指向有效链接
 
 **Q: 如何让角色形象一致？**
 A: 在 `ai.characters` 中详细定义角色，并在 `image-gen` 中引用
+
+**Q: 图片生成配额耗尽怎么办？**
+A: Gemini 图片生成有每5小时约25-30张的配额限制。遇到 `RESOURCE_EXHAUSTED` 错误时：
+   1. 记录已生成的场景和待生成的场景列表
+   2. 等待配额重置（通常5小时后）
+   3. 继续生成剩余场景
+   4. 可以先上传已有资源，剩余场景由游戏运行时 AI 动态生成
+
+**Q: 如何查看还有多少场景未生成图片？**
+A: 使用以下命令对比：
+   ```bash
+   # 查看剧本中所有场景
+   grep -c '^# ' demo/${slug}/${script}.md
+   # 查看已生成的场景图片
+   ls demo/${slug}/assets/scene_*.webp | wc -l
+   ```
 
 ---
 

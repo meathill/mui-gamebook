@@ -35,16 +35,34 @@ export class GoogleAiProvider implements AiProvider {
     const model = this.models.text || 'gemini-2.5-flash';
     console.log(`[Google AI] Generating text with model: ${model}`);
 
+    // 根据模型类型选择正确的思考配置
+    // Gemini 2.5 使用 thinkingBudget，Gemini 3 使用 thinkingLevel
+    const getThinkingConfig = () => {
+      if (!options?.thinking) return undefined;
+
+      // Gemini 2.5 系列使用 thinkingBudget
+      if (model.includes('2.5')) {
+        return {
+          thinkingConfig: {
+            thinkingBudget: 8192,
+          },
+        };
+      }
+
+      // Gemini 3 系列使用 thinkingLevel
+      // 注意：MEDIUM 仅支持 Gemini 3 Flash，Gemini 3 Pro 只支持 LOW/HIGH
+      const isFlash = model.toLowerCase().includes('flash');
+      return {
+        thinkingConfig: {
+          thinkingLevel: (isFlash ? 'MEDIUM' : 'HIGH') as ThinkingLevel,
+        },
+      };
+    };
+
     const response = await this.genAI.models.generateContent({
       model,
       contents: prompt as PartUnion,
-      ...(options?.thinking && {
-        config: {
-          thinkingConfig: {
-            thinkingLevel: 'MEDIUM' as ThinkingLevel,
-          },
-        },
-      }),
+      config: getThinkingConfig(),
     });
 
     const usage: AiUsageInfo = {

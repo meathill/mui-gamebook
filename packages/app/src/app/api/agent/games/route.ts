@@ -29,11 +29,19 @@ export async function POST(req: Request) {
     slug: customSlug,
     content,
     ownerId: requestOwnerId,
+    description,
+    backgroundStory,
+    coverImage,
+    tags,
   } = (await req.json()) as {
     title: string;
     slug?: string;
     content?: string;
     ownerId?: string;
+    description?: string;
+    backgroundStory?: string;
+    coverImage?: string;
+    tags?: string[];
   };
 
   if (!title) {
@@ -78,14 +86,22 @@ published: false
 
     let id: number;
 
+    const commonFields = {
+      title,
+      description,
+      backgroundStory,
+      coverImage,
+      tags: tags ? JSON.stringify(tags) : undefined,
+      ownerId: finalOwnerId,
+    };
+
     if (existingGame) {
       // Update
       id = existingGame.id;
       await db
         .update(schema.games)
         .set({
-          title,
-          ownerId: finalOwnerId,
+          ...commonFields,
           updatedAt: now,
         })
         .where(eq(schema.games.id, id));
@@ -109,8 +125,7 @@ published: false
         .insert(schema.games)
         .values({
           slug,
-          title,
-          ownerId: finalOwnerId,
+          ...commonFields,
           createdAt: now,
           updatedAt: now,
           published: false,

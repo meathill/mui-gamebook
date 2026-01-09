@@ -48,7 +48,7 @@ function extractBlocks(content: string): Block[] {
     }
 
     // Skip if we just started a block
-    if (line.trim().startsWith('```') && BLOCK_TYPES.some(bt => line.trim() === '```' + bt)) {
+    if (line.trim().startsWith('```') && BLOCK_TYPES.some((bt) => line.trim() === '```' + bt)) {
       continue;
     }
 
@@ -226,5 +226,6 @@ console.log(`  Estimated playtime: ${Math.round(sceneCount * 1.5)} - ${Math.roun
 console.log();
 
 // Exit code
-const hasErrors = yamlErrors.length > 0 || structureIssues.some(i => i.includes('Missing') || i.includes('not defined'));
+const hasErrors =
+  yamlErrors.length > 0 || structureIssues.some((i) => i.includes('Missing') || i.includes('not defined'));
 process.exit(hasErrors ? 1 : 0);

@@ -93,15 +93,17 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-
-
   const currentScene = game.scenes[currentSceneId];
 
   // Track completion
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const hasConfiguredChoices = currentScene && currentSceneId ? game.scenes[currentSceneId].nodes.some((node) => node.type === 'choice') : false;
+  const hasConfiguredChoices =
+    currentScene && currentSceneId ? game.scenes[currentSceneId].nodes.some((node) => node.type === 'choice') : false;
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const hasMinigame = currentScene && currentSceneId ? game.scenes[currentSceneId].nodes.some((node) => node.type === 'minigame' && node.url) : false;
+  const hasMinigame =
+    currentScene && currentSceneId
+      ? game.scenes[currentSceneId].nodes.some((node) => node.type === 'minigame' && node.url)
+      : false;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const showEndScreen = !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
 
@@ -111,7 +113,6 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showEndScreen]);
-
 
   // Update image when scene changes
   useEffect(() => {
@@ -254,7 +255,6 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
       </div>
     );
   }
-
 
   const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
 

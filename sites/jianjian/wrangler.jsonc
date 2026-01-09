@@ -3,10 +3,7 @@
   "main": ".open-next/worker.js",
   "name": "xiaoniaoshuo",
   "compatibility_date": "2025-11-20",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
-  ],
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "account_id": "fdc63eeea83ae8f5234357308b9a638b",
   "assets": {
     "directory": ".open-next/assets",
@@ -51,6 +48,7 @@
   ],
   "vars": {
     "NEXT_PUBLIC_API_URL": "https://cms.xiaoniaoshuo.com",
-    "NEXT_PUBLIC_SITE_URL": "https://xiaoniaoshuo.com"
+    "NEXT_PUBLIC_SITE_URL": "https://xiaoniaoshuo.com",
+    "NEXT_PUBLIC_SITE_NAME": "小鸟说"
   }
 }

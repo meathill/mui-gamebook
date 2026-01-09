@@ -28,6 +28,7 @@ declare namespace Cloudflare {
     GOOGLE_MODEL: string;
     GOOGLE_IMAGE_MODEL: string;
     NEXT_PUBLIC_SITE_URL: string;
+    NEXT_PUBLIC_SITE_NAME: string;
     PINATA_JWT: string;
     RPC_PROVIDER_URL: string;
     STORY_PRIVATE_KEY: string;
@@ -70,6 +71,7 @@ declare namespace NodeJS {
         | 'GOOGLE_MODEL'
         | 'GOOGLE_IMAGE_MODEL'
         | 'NEXT_PUBLIC_SITE_URL'
+        | 'NEXT_PUBLIC_SITE_NAME'
         | 'PINATA_JWT'
         | 'RPC_PROVIDER_URL'
         | 'STORY_PRIVATE_KEY'
