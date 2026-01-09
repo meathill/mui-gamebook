@@ -210,7 +210,6 @@ async function submitMinigames(minigames: MinigameData[], ownerId?: string) {
   }
 }
 
-
 async function main() {
   // 1. Scan assets
   const assetFiles = findAssets(assetsDir);
@@ -420,7 +419,7 @@ async function main() {
       // Extract tags
       if (trimmed.startsWith('- ') && tags.length >= 0) {
         // Check if we're in tags section by looking at previous lines
-        const prevNonEmpty = newLines.slice(-5).find(l => l.trim() && !l.trim().startsWith('-'));
+        const prevNonEmpty = newLines.slice(-5).find((l) => l.trim() && !l.trim().startsWith('-'));
         if (prevNonEmpty?.trim()?.startsWith('tags:')) {
           tags.push(trimmed.substring(2).trim());
         }
@@ -429,7 +428,7 @@ async function main() {
         // Inline array format: tags: [tag1, tag2]
         const match = trimmed.match(/tags:\s*\[([^\]]+)\]/);
         if (match) {
-          tags = match[1].split(',').map(t => t.trim().replace(/["']/g, ''));
+          tags = match[1].split(',').map((t) => t.trim().replace(/["']/g, ''));
         }
       }
 
@@ -601,4 +600,3 @@ main()
     console.error(err);
     process.exit(1);
   });
-

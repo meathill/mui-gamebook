@@ -16,6 +16,16 @@ import type { RuntimeState } from '@mui-gamebook/parser/src/types';
 export function evaluateCondition(condition: string | undefined, state: RuntimeState): boolean {
   if (!condition) return true;
 
+  // Handle multiple conditions (AND logic)
+  // Split by comma or &&
+  const subConditions = condition
+    .split(/,|&&/)
+    .map((s) => s.trim())
+    .filter((s) => s);
+  if (subConditions.length > 1) {
+    return subConditions.every((sub) => evaluateCondition(sub, state));
+  }
+
   // Simple parser for "A op B"
   // This regex splits by operators but keeps them in the result
   const parts = condition
