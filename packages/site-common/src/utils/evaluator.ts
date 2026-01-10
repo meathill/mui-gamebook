@@ -3,9 +3,20 @@ import type { RuntimeState } from '@mui-gamebook/parser/src/types';
 /**
  * 评估条件字符串
  * 支持: ==, !=, >, <, >=, <= 以及布尔值
+ * 支持多条件 AND 逻辑（使用逗号或 && 分隔）
  */
 export function evaluateCondition(condition: string | undefined, state: RuntimeState): boolean {
   if (!condition) return true;
+
+  // 处理多条件（AND 逻辑）
+  // 支持逗号和 && 分隔
+  const subConditions = condition
+    .split(/,|&&/)
+    .map((s) => s.trim())
+    .filter((s) => s);
+  if (subConditions.length > 1) {
+    return subConditions.every((sub) => evaluateCondition(sub, state));
+  }
 
   const parts = condition
     .split(/(\s*==\s*|\s*!=\s*|\s*>=\s*|\s*<=\s*|\s*>\s*|\s*<\s*)/)

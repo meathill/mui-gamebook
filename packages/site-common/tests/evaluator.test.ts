@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateCondition, executeSet, interpolateVariables } from '../src/lib/evaluator';
+import { evaluateCondition, executeSet, interpolateVariables } from '../src/utils/evaluator';
 
 describe('evaluator', () => {
   describe('evaluateCondition', () => {

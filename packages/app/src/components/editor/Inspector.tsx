@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import type { SceneNode } from '@mui-gamebook/parser';
 import type { GameState } from '@mui-gamebook/parser/src/types';
 import { extractRuntimeState } from '@mui-gamebook/parser/src/utils';
-import { interpolateVariables } from '@/lib/evaluator';
+import { interpolateVariables } from '@mui-gamebook/site-common/utils';
 import { useDialog } from '@/components/Dialog';
 import { useEditorStore } from '@/lib/editor/store';
 import AssetEditor from './AssetEditor';

@@ -5,10 +5,10 @@ import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
-import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
+import { evaluateCondition, executeSet, interpolateVariables } from '@mui-gamebook/site-common/utils';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
-import { Button, IconButton } from '@radix-ui/themes';
+import { Button } from '@radix-ui/themes';
 import {
   TitleScreen,
   EndScreen,
