@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  reactStrictMode: false,
 };
 
 const withMDX = createMDX({});

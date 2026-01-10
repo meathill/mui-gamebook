@@ -124,15 +124,17 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
           setCurrentImageUrl(newImageNode.url);
         }
       }
-
-      // Track scene visit
-      if (game.id) {
-        // Simple logic: track every time scene changes
-        analytics.trackScene(game.id, currentSceneId);
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, currentScene, currentImageUrl, isGameStarted]);
+
+  // Track scene visit (separate effect to avoid duplicate calls)
+  useEffect(() => {
+    if (isGameStarted && game.id && currentSceneId) {
+      analytics.trackScene(game.id, currentSceneId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSceneId, isGameStarted]);
 
   // 场景切换时自动播放语音
   useEffect(() => {
