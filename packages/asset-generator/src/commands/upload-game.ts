@@ -21,7 +21,7 @@ export async function uploadGame(options: UploadOptions) {
   if (fs.existsSync(configPath)) {
     try {
       Object.assign(config, JSON.parse(fs.readFileSync(configPath, 'utf-8')));
-    } catch { }
+    } catch {}
   }
 
   const API_URL = process.env.API_URL || config.apiUrl;
@@ -50,10 +50,13 @@ export async function uploadGame(options: UploadOptions) {
       if (dryRun) return `https://mock.url/${path.basename(filePath)}`;
 
       const content = fs.readFileSync(filePath);
-      const mime = filePath.endsWith('.js') ? 'application/javascript' :
-        filePath.endsWith('.png') ? 'image/png' : 'image/webp'; // simplified
+      const mime = filePath.endsWith('.js')
+        ? 'application/javascript'
+        : filePath.endsWith('.png')
+          ? 'image/png'
+          : 'image/webp'; // simplified
       return apiService.uploadAsset(path.basename(filePath), content, mime, slug);
-    }
+    },
   );
 
   // 3. Save Markdown

@@ -1,4 +1,3 @@
-
 import { describe, it, expect, vi } from 'vitest';
 import { processGame } from '../src/lib/upload/game-processor';
 import fs from 'node:fs';
@@ -25,13 +24,7 @@ prompt: Start scene
     const portraits = new Map<string, string>();
     const uploadFn = vi.fn().mockResolvedValue('https://example.com/start.webp');
 
-    const result = await processGame(
-      'dummy.md',
-      keyMap,
-      portraits,
-      null,
-      uploadFn
-    );
+    const result = await processGame('dummy.md', keyMap, portraits, null, uploadFn);
 
     // Expect the markdown to contain the URL
     expect(result.markdown).toContain('url: https://example.com/start.webp');

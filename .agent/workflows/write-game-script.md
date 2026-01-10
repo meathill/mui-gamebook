@@ -572,6 +572,12 @@ MUI_ADMIN_PASSWORD=${MUI_ADMIN_PASSWORD} npx tsx scripts/upload-game-assets.ts \
 3. **游戏提交**：将游戏内容保存到 Games 表
 4. **小游戏入库**：自动读取 `minigame-gen` 块，将 JS 代码写入 Minigames 表
 
+**智能去重**：如果 `url` 字段已经是 `http://` 或 `https://` 开头，脚本会跳过该资源的上传，避免重复上传。
+
+**自动重试**：上传失败时自动重试 3 次，采用指数退避策略（1s, 2s, 3s）。
+
+> 📖 **资源命名规范**：详见 [docs/ASSET_NAMING.md](docs/ASSET_NAMING.md)
+
 ### 7.4 验证结果
 
 1. 检查终端输出是否显示 "Game submitted successfully!"

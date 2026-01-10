@@ -267,7 +267,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
 
   return (
-    <div className="grow flex flex-col bg-gray-50">
+    <div className="grow flex flex-col bg-gray-50 game-editor">
       <EditorToolbar
         title={originalGame?.title || originalGame?.slug}
         slug={slug}

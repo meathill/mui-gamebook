@@ -23,3 +23,9 @@ body {
   display: flex;
   flex-direction: column;
 }
+
+.game-editor {
+  @media (max-width: 768px) {
+    height: calc(100vh - 4rem);
+  }
+}

@@ -40,7 +40,7 @@ export async function processGame(
   keyMap: Map<string, string>, // sceneId/AssetKey -> FilePath
   portraits: Map<string, string>, // charName -> FilePath
   coverPath: string | null,
-  uploadFn: UploadCallback
+  uploadFn: UploadCallback,
 ): Promise<ProcessedGame> {
   const source = fs.readFileSync(markdownPath, 'utf-8');
   const parseResult = parse(source);
@@ -53,16 +53,33 @@ export async function processGame(
   const minigames: MinigameData[] = [];
   const uploads = new Map<string, string>(); // filePath -> uploadedUrl
 
-  // Helper to handle upload caching
-  const d_upload = async (filePath: string, type: 'image' | 'minigame'): Promise<string | null> => {
+  // Helper to handle upload caching with retry
+  const d_upload = async (filePath: string, type: 'image' | 'minigame', retries = 3): Promise<string | null> => {
     if (uploads.has(filePath)) return uploads.get(filePath)!;
-    const url = await uploadFn(filePath, type);
-    if (url) uploads.set(filePath, url);
-    return url;
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const url = await uploadFn(filePath, type);
+        if (url) {
+          uploads.set(filePath, url);
+          return url;
+        }
+        return null;
+      } catch (err) {
+        if (attempt === retries) {
+          console.error(`Failed to upload ${filePath} after ${retries} attempts:`, err);
+          return null;
+        }
+        console.warn(`Retry ${attempt}/${retries} for ${filePath}...`);
+        await new Promise((r) => setTimeout(r, 1000 * attempt)); // Exponential backoff
+      }
+    }
+    return null;
   };
 
   // 1. Process Metadata (Cover & Portraits)
-  if (coverPath) {
+  // Skip if already has a remote URL
+  if (coverPath && (!game.cover_image || !game.cover_image.startsWith('http'))) {
     const url = await d_upload(coverPath, 'image');
     if (url) game.cover_image = url;
   }
@@ -99,9 +116,8 @@ export async function processGame(
   // 2. Process Scenes
   for (const scene of Object.values(game.scenes)) {
     for (const node of scene.nodes) {
-
-      // AI Image
-      if (node.type === 'ai_image') {
+      // AI Image - skip if already has remote URL
+      if (node.type === 'ai_image' && (!node.url || !node.url.startsWith('http'))) {
         // Try multiple key patterns: scene_sceneId, sceneId
         const assetPath = keyMap.get(`scene_${scene.id}`) || keyMap.get(scene.id);
         if (assetPath) {
@@ -110,16 +126,19 @@ export async function processGame(
         }
       }
 
-      // Minigame
+      // Minigame - skip upload if already has remote URL, but still collect for submission
       if (node.type === 'minigame') {
         const minigameKey = `${scene.id}_minigame`;
         const assetPath = keyMap.get(minigameKey);
 
         if (assetPath) {
-          const url = await d_upload(assetPath, 'minigame');
-          if (url) node.url = url;
+          // Only upload if no remote URL yet
+          if (!node.url || !node.url.startsWith('http')) {
+            const url = await d_upload(assetPath, 'minigame');
+            if (url) node.url = url;
+          }
 
-          // Read code
+          // Always collect minigame data for submission
           const code = fs.readFileSync(assetPath, 'utf-8');
           minigames.push({
             name: scene.id,

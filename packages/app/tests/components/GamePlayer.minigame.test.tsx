@@ -26,10 +26,12 @@ vi.mock('@/components/game-player', async () => {
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
     <Theme>
-      <NextIntlClientProvider messages={messages} locale="en">
+      <NextIntlClientProvider
+        messages={messages}
+        locale="en">
         <DialogProvider>{component}</DialogProvider>
       </NextIntlClientProvider>
-    </Theme>
+    </Theme>,
   );
 };
 
@@ -57,7 +59,12 @@ const mockGameWithMinigame: PlayableGame = {
 
 describe('GamePlayer Minigame Logic', () => {
   it('should not show choices until minigame is completed', async () => {
-    renderWithProviders(<GamePlayer game={mockGameWithMinigame} slug="minigame-test" />);
+    renderWithProviders(
+      <GamePlayer
+        game={mockGameWithMinigame}
+        slug="minigame-test"
+      />,
+    );
 
     // Start game
     fireEvent.click(screen.getByText('Start Adventure'));

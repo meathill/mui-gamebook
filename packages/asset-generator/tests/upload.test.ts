@@ -27,7 +27,6 @@ vi.mock('@mui-gamebook/parser', async () => {
 });
 
 describe('Upload Modules', () => {
-
   describe('findAssets', () => {
     it('should map assets correctly', () => {
       const mockDir = '/assets';
@@ -44,7 +43,7 @@ describe('Upload Modules', () => {
         'hero_portrait.webp',
         'scene_01.png',
         `scene_02_${timestamp}.png`,
-        'minigame.js'
+        'minigame.js',
       ]);
       (fs.statSync as any).mockReturnValue({ isDirectory: () => false });
 
