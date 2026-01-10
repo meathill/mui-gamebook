@@ -102,7 +102,8 @@ export async function processGame(
 
       // AI Image
       if (node.type === 'ai_image') {
-        const assetPath = keyMap.get(scene.id);
+        // Try multiple key patterns: scene_sceneId, sceneId
+        const assetPath = keyMap.get(`scene_${scene.id}`) || keyMap.get(scene.id);
         if (assetPath) {
           const url = await d_upload(assetPath, 'image');
           if (url) node.url = url;
