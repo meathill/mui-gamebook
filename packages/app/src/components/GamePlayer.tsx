@@ -5,10 +5,10 @@ import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
-import { evaluateCondition, executeSet, interpolateVariables } from '@/lib/evaluator';
+import { evaluateCondition, executeSet, interpolateVariables } from '@mui-gamebook/site-common/utils';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
-import { Button, IconButton } from '@radix-ui/themes';
+import { Button } from '@radix-ui/themes';
 import {
   TitleScreen,
   EndScreen,
@@ -124,15 +124,17 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
           setCurrentImageUrl(newImageNode.url);
         }
       }
-
-      // Track scene visit
-      if (game.id) {
-        // Simple logic: track every time scene changes
-        analytics.trackScene(game.id, currentSceneId);
-      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, currentScene, currentImageUrl, isGameStarted]);
+
+  // Track scene visit (separate effect to avoid duplicate calls)
+  useEffect(() => {
+    if (isGameStarted && game.id && currentSceneId) {
+      analytics.trackScene(game.id, currentSceneId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSceneId, isGameStarted]);
 
   // 场景切换时自动播放语音
   useEffect(() => {
@@ -347,6 +349,9 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
                 );
 
               case 'choice':
+                if (hasMinigame && !minigameCompleted) {
+                  return null;
+                }
                 if (!evaluateCondition(node.condition, runtimeState)) {
                   return null;
                 }

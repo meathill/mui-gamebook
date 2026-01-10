@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluateCondition, executeSet, interpolateVariables } from '../src/lib/evaluator';
+import { evaluateCondition, executeSet, interpolateVariables } from '../src/utils/evaluator';
 
 describe('evaluator', () => {
   describe('evaluateCondition', () => {
@@ -34,6 +34,18 @@ describe('evaluator', () => {
       const state = { a: 10, b: 10, c: 5 };
       expect(evaluateCondition('a == b', state)).toBe(true);
       expect(evaluateCondition('a > c', state)).toBe(true);
+    });
+
+    it('should evaluate multiple conditions (comma separated)', () => {
+      const state = { a: 10, b: 5 };
+      expect(evaluateCondition('a > 5, b < 10', state)).toBe(true);
+      expect(evaluateCondition('a > 5, b > 10', state)).toBe(false);
+    });
+
+    it('should evaluate multiple conditions (&& separated)', () => {
+      const state = { a: 10, b: 5 };
+      expect(evaluateCondition('a > 5 && b < 10', state)).toBe(true);
+      expect(evaluateCondition('a > 5 && b > 10', state)).toBe(false);
     });
   });
 

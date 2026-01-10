@@ -66,6 +66,9 @@ importers:
       '@mui-gamebook/parser':
         specifier: workspace:*
         version: link:../parser
+      '@mui-gamebook/site-common':
+        specifier: workspace:*
+        version: link:../site-common
       '@next/mdx':
         specifier: ^16.1.0
         version: 16.1.0(@mdx-js/loader@3.1.1)(@mdx-js/react@3.1.1(@types/react@19.2.7)(react@19.2.3))

@@ -94,7 +94,7 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
   }
 }
 
-export async function getGameBySlug(slug: string): Promise<PlayableGame | null> {
+export async function getGameBySlug(slug: string): Promise<(PlayableGame & { id?: number }) | null> {
   try {
     const { env } = getCloudflareContext();
     const DB = env.DB;
@@ -137,8 +137,11 @@ WHERE g.slug = ?`,
 
     const result = parse(gameRecord.content);
     if (result.success) {
-      // 返回可玩游戏数据（已经是 Record 类型）
-      return toPlayableGame(result.data);
+      // 返回可玩游戏数据（包含 id 用于分析追踪）
+      return {
+        ...toPlayableGame(result.data),
+        id: gameRecord.id,
+      };
     }
 
     return null;

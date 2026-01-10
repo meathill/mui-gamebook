@@ -421,9 +421,24 @@ cover: "https://.../cover.webp"  # 上传后自动填入
 5. 确保 JS 文件导出符合 DSL 规范的接口：
    ```javascript
    export default {
-     init(container, variables) { ... },
-     onComplete(callback) { ... },
-     destroy() { ... }
+     // ⚠️ 关键：callbacks 必须在模块级别初始化，不能在 init 内初始化
+     // 因为 onComplete 会在 init 之前被调用
+     callbacks: [],
+
+     init(container, variables) {
+       // 游戏初始化逻辑
+       this.container = container;
+       this.variables = { ...variables };
+       // ... 其他初始化代码
+     },
+
+     onComplete(callback) {
+       this.callbacks.push(callback);
+     },
+
+     destroy() {
+       // 清理资源
+     }
    };
    ```
 5. `url` 字段暂时留空或填入本地占位符，上传脚本会自动填充。
@@ -571,6 +586,12 @@ MUI_ADMIN_PASSWORD=${MUI_ADMIN_PASSWORD} npx tsx scripts/upload-game-assets.ts \
    - YAML front matter 中角色的 `image_url` 字段（立绘）
 3. **游戏提交**：将游戏内容保存到 Games 表
 4. **小游戏入库**：自动读取 `minigame-gen` 块，将 JS 代码写入 Minigames 表
+
+**智能去重**：如果 `url` 字段已经是 `http://` 或 `https://` 开头，脚本会跳过该资源的上传，避免重复上传。
+
+**自动重试**：上传失败时自动重试 3 次，采用指数退避策略（1s, 2s, 3s）。
+
+> 📖 **资源命名规范**：详见 [docs/ASSET_NAMING.md](docs/ASSET_NAMING.md)
 
 ### 7.4 验证结果
 

@@ -67,8 +67,8 @@ export default function EditorToolbar({
   const canRedo = futureStates.length > 0;
 
   return (
-    <header className="bg-white border-b px-6 py-3 flex justify-between items-center z-10 shadow-sm sticky top-16">
-      <div className="flex items-center gap-4">
+    <header className="bg-white border-b px-3 sm:px-6 py-3 sm:flex justify-between items-center z-10 shadow-sm sticky top-16">
+      <div className="flex items-center gap-4 mb-2 sm:mb-0">
         <Link
           href="/admin"
           className="text-gray-500 hover:text-gray-700">
@@ -81,22 +81,22 @@ export default function EditorToolbar({
           <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'settings' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-            <SettingsIcon size={16} /> 设置
+            <SettingsIcon size={16} /> <span className="hidden sm:inline">设置</span>
           </button>
           <button
             onClick={() => setActiveTab('variables')}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'variables' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-            <VariableIcon size={16} /> 变量
+            <VariableIcon size={16} /> <span className="hidden sm:inline">变量</span>
           </button>
           <button
             onClick={() => setActiveTab('characters')}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'characters' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-            <UsersIcon size={16} /> 角色
+            <UsersIcon size={16} /> <span className="hidden sm:inline">角色</span>
           </button>
           <button
             onClick={() => setActiveTab('story')}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'story' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-            <BookOpenIcon size={16} /> 故事
+            <BookOpenIcon size={16} /> <span className="hidden sm:inline">故事</span>
           </button>
         </div>
       </div>
@@ -156,7 +156,9 @@ export default function EditorToolbar({
           title="重做 (Ctrl+Shift+Z)">
           <Redo2Icon size={18} />
         </button>
+      </div>
 
+      <div className="flex sm:gap-2 absolute top-3 right-3 sm:static">
         <a
           href={`${previewUrl || ''}/play/${slug}`}
           target="_blank"
@@ -184,8 +186,8 @@ export default function EditorToolbar({
         <button
           onClick={onSave}
           disabled={saving}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-medium">
-          <SaveIcon size={16} /> {saving ? '保存中...' : '保存'}
+          className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-medium">
+          <SaveIcon size={16} /> <span className="hidden sm:inline">{saving ? '保存中...' : '保存'}</span>
         </button>
       </div>
     </header>
