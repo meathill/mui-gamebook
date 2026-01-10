@@ -49,7 +49,9 @@ export default function MiniGamePlayer({ url, variables, runtimeState, onComplet
 
       try {
         // 获取小游戏代码
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          mode: 'cors',
+        });
         if (!response.ok) {
           throw new Error(`加载失败: ${response.status}`);
         }

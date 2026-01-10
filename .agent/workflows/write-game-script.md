@@ -421,9 +421,24 @@ cover: "https://.../cover.webp"  # 上传后自动填入
 5. 确保 JS 文件导出符合 DSL 规范的接口：
    ```javascript
    export default {
-     init(container, variables) { ... },
-     onComplete(callback) { ... },
-     destroy() { ... }
+     // ⚠️ 关键：callbacks 必须在模块级别初始化，不能在 init 内初始化
+     // 因为 onComplete 会在 init 之前被调用
+     callbacks: [],
+
+     init(container, variables) {
+       // 游戏初始化逻辑
+       this.container = container;
+       this.variables = { ...variables };
+       // ... 其他初始化代码
+     },
+
+     onComplete(callback) {
+       this.callbacks.push(callback);
+     },
+
+     destroy() {
+       // 清理资源
+     }
    };
    ```
 5. `url` 字段暂时留空或填入本地占位符，上传脚本会自动填充。
