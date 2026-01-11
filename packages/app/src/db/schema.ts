@@ -101,6 +101,24 @@ export const gameContent = sqliteTable(
   }),
 );
 
+// 游戏标签关联表（加速按标签搜索）
+export const gameTags = sqliteTable(
+  'GameTags',
+  {
+    id: integer('id').primaryKey(),
+    gameId: integer('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    tag: text('tag').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+  },
+  (table) => ({
+    tagIdx: index('idx_game_tags_tag').on(table.tag),
+    gameIdIdx: index('idx_game_tags_game_id').on(table.gameId),
+  }),
+);
+
+
 // AI 用量记录表
 export const aiUsage = sqliteTable(
   'AiUsage',
@@ -151,16 +169,53 @@ export const minigames = sqliteTable(
     status: text('status').default('pending'),
     // 失败时的错误信息
     errorMessage: text('error_message'),
+    // 来源游戏 ID
+    sourceGameId: integer('source_game_id').references(() => games.id, { onDelete: 'set null' }),
     // 创建时间
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp' }),
   },
   (table) => ({
     ownerIdIdx: index('minigames_owner_id_idx').on(table.ownerId),
+    statusIdx: index('idx_minigames_status').on(table.status),
+    sourceGameIdIdx: index('idx_minigames_source_game_id').on(table.sourceGameId),
+  }),
+);
+
+// 异步操作表（视频生成等长时间任务）
+export const pendingOperations = sqliteTable(
+  'PendingOperations',
+  {
+    id: integer('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id),
+    gameId: integer('game_id').references(() => games.id),
+    // 操作类型：video_generation, audio_generation 等
+    type: text('type').notNull(),
+    // 状态：pending, processing, completed, failed
+    status: text('status').notNull().default('pending'),
+    // Google API 返回的 operation name
+    operationName: text('operation_name'),
+    // JSON: 原始请求参数
+    inputData: text('input_data'),
+    // JSON: 完成后的结果
+    outputData: text('output_data'),
+    // 失败时的错误信息
+    errorMessage: text('error_message'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+    completedAt: integer('completed_at', { mode: 'timestamp' }),
+  },
+  (table) => ({
+    userIdIdx: index('idx_pending_ops_user_id').on(table.userId),
+    statusIdx: index('idx_pending_ops_status').on(table.status),
+    gameIdIdx: index('idx_pending_ops_game_id').on(table.gameId),
   }),
 );
 
 // ========== 统计相关表 ==========
+
 
 // 游戏统计汇总表（从 KV 同步）
 export const gameAnalytics = sqliteTable(
