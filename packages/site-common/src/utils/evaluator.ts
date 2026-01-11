@@ -118,7 +118,24 @@ function getValue(token: string, state: RuntimeState): boolean | number | string
 export function interpolateVariables(text: string, state: RuntimeState): string {
   if (!text) return text;
 
-  return text.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+  let processed = text;
+
+  // 1. Handle conditionals: {{ if condition }} ... {{ else }} ... {{ /if }}
+  // RegExp matches:
+  // Group 1: condition string
+  // Group 2: content for TRUE
+  // Group 3: content for FALSE (optional, inside {{ else }} block)
+  const ifRegex = /{{\s*if\s+(.+?)\s*}}([\s\S]*?)(?:{{\s*else\s*}}([\s\S]*?))?{{\s*\/if\s*}}/gi;
+
+  if (processed.match(ifRegex)) {
+    processed = processed.replace(ifRegex, (match, condition, trueBlock, falseBlock) => {
+      const isTrue = evaluateCondition(condition, state);
+      return isTrue ? trueBlock : (falseBlock || '');
+    });
+  }
+
+  // 2. Handle variable interpolation: {{varName}}
+  return processed.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
     if (Object.prototype.hasOwnProperty.call(state, varName)) {
       const value = state[varName];
       return String(value);
