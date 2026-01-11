@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Gamepad2, Settings } from 'lucide-react';
+import { LayoutDashboard, Gamepad2, Settings, TrendingUp } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 
 interface NavItem {
   href: string;
@@ -12,16 +13,26 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: '/admin/dashboard', label: '数据统计', icon: <LayoutDashboard size={20} /> },
+  { href: '/admin/stats', label: '全站统计', icon: <TrendingUp size={20} /> },
   { href: '/admin/games', label: '游戏管理', icon: <Gamepad2 size={20} /> },
   { href: '/admin/config', label: '系统配置', icon: <Settings size={20} /> },
 ];
 
 export default function AdminNav() {
   const pathname = usePathname();
+  const { data: session } = authClient.useSession();
+  const email = session?.user?.email;
+
+  const filteredNavItems = navItems.filter((item) => {
+    if (item.href === '/admin/stats') {
+      return email === 'meathill@gmail.com' || email === '/admin/config';
+    }
+    return true;
+  });
 
   return (
     <nav className="flex flex-col gap-1">
-      {navItems.map((item) => {
+      {filteredNavItems.map((item) => {
         const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link

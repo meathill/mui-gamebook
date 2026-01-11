@@ -130,7 +130,7 @@ export function interpolateVariables(text: string, state: RuntimeState): string 
   if (processed.match(ifRegex)) {
     processed = processed.replace(ifRegex, (match, condition, trueBlock, falseBlock) => {
       const isTrue = evaluateCondition(condition, state);
-      return isTrue ? trueBlock : (falseBlock || '');
+      return isTrue ? trueBlock : falseBlock || '';
     });
   }
 
