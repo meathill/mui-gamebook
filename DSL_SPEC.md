@@ -216,7 +216,48 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 
 ```markdown
 ![森林岔路口](https://picsum.photos/800/400)
+![森林岔路口](https://picsum.photos/800/400)
 ```
+
+### 4.2 动态文本与条件渲染
+
+DSL 支持在文本中插入变量和根据条件显示不同内容。
+
+#### 4.2.1 变量插值
+使用 `{{变量名}}` 语法插入变量值。
+
+**示例：**
+```
+你好，{{player_name}}，现在是 {{time}} 点。
+```
+
+#### 4.2.2 条件文本
+使用 `{{ if condition }} ... {{ else }} ... {{ /if }}` 语法根据变量状态显示不同文本。
+注意：目前不支持嵌套条件块。
+
+**语法：**
+```
+{{ if variable operator value }}
+  条件为真时显示的文本
+{{ else }}
+  条件为假时显示的文本（可选）
+{{ /if }}
+```
+
+**示例：**
+```
+{{ if health < 20 }}
+你受了重伤，呼吸急促。
+{{ else }}
+你感觉充满了力量。
+{{ /if }}
+
+{{ if has_key }}你用钥匙打开了门。{{ else }}门锁着，你需要找到钥匙。{{ /if }}
+
+{{ if partner == "Alice" }}爱丽丝陪在你身边。{{ else }}你独自一人。{{ /if }}
+```
+
+### 4.3 AI 生成的素材
 
 ### 4.2 AI 生成的素材
 
