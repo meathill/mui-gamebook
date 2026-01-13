@@ -22,12 +22,13 @@ title: "Static Image"
     expect(node.url).toBe('https://example.com/forest.jpg');
   });
 
-  it('should parse an ai-image generation block', () => {
+  it('should parse an ai-image from scene metadata', () => {
     const source = `---
 title: "AI Image"
 ---
 # start
-\`\`\`image-gen
+\`\`\`yaml
+image:
   prompt: A castle in the clouds
   character: lrrh
   url: https://some.url/image.png
@@ -37,6 +38,7 @@ title: "AI Image"
     expect(result.success).toBe(true);
     if (!result.success) return;
 
+    // AI 节点应该被插入到场景节点列表的最前面
     const node = result.data.scenes['start']?.nodes[0] as SceneNode;
     expect(node.type).toBe('ai_image');
     if (node.type !== 'ai_image') return;
@@ -46,14 +48,15 @@ title: "AI Image"
     expect(node.url).toBe('https://some.url/image.png');
   });
 
-  it('should parse an ai-image generation block with multiple characters', () => {
+  it('should parse an ai-image with multiple characters from metadata', () => {
     const source = `---
 title: "Multi Char AI Image"
 ---
 # start
-\`\`\`image-gen
-prompt: Little Red Riding Hood meeting the Wolf
-characters: [lrrh, wolf]
+\`\`\`yaml
+image:
+  prompt: Little Red Riding Hood meeting the Wolf
+  characters: [lrrh, wolf]
 \`\`\`
 `;
     const result = parse(source);
@@ -67,12 +70,13 @@ characters: [lrrh, wolf]
     expect(node.characters).toEqual(['lrrh', 'wolf']);
   });
 
-  it('should parse an ai-audio generation block', () => {
-    const source = `--- 
+  it('should parse an ai-audio from metadata', () => {
+    const source = `---
 title: "AI Audio"
 ---
 # start
-\`\`\`audio-gen
+\`\`\`yaml
+audio:
   type: background_music
   prompt: tense battle music
 \`\`\`
@@ -89,12 +93,14 @@ title: "AI Audio"
     expect(node.prompt).toBe('tense battle music');
   });
 
-  it('should parse mixed content in order', () => {
-    const source = `--- 
+  it('should parse mixed content with metadata in correct order', () => {
+    // 即使 metadata 写在最前面，解析出来的节点也应该在最前面
+    const source = `---
 title: "Mixed Content"
 ---
 # start
-\`\`\`image-gen
+\`\`\`yaml
+image:
   prompt: something else
 \`\`\`
 
@@ -115,16 +121,17 @@ Welcome to the scene.
     expect(nodes?.[3].type).toBe('choice');
   });
 
-  it('should parse a minigame-gen block', () => {
+  it('should parse a minigame from metadata', () => {
     const source = `---
 title: "Minigame Test"
 ---
 # start
-\`\`\`minigame-gen
-prompt: 创建一个点击金色飞贼的游戏
-variables:
-  - snitch_caught: 捕获的飞贼数量
-url: https://example.com/minigames/1
+\`\`\`yaml
+minigame:
+  prompt: 创建一个点击金色飞贼的游戏
+  variables:
+    snitch_caught: 捕获的飞贼数量
+  url: https://example.com/minigames/1
 \`\`\`
 `;
     const result = parse(source);
@@ -138,29 +145,5 @@ url: https://example.com/minigames/1
     expect(node.prompt).toBe('创建一个点击金色飞贼的游戏');
     expect(node.variables).toEqual({ snitch_caught: '捕获的飞贼数量' });
     expect(node.url).toBe('https://example.com/minigames/1');
-  });
-
-  it('should parse a minigame-gen block with object-style variables', () => {
-    const source = `---
-title: "Minigame Object Vars"
----
-# start
-\`\`\`minigame-gen
-prompt: 记忆配对游戏
-variables:
-  score: 得分
-  time_left: 剩余时间
-\`\`\`
-`;
-    const result = parse(source);
-    expect(result.success).toBe(true);
-    if (!result.success) return;
-
-    const node = result.data.scenes['start']?.nodes[0] as SceneNode;
-    expect(node.type).toBe('minigame');
-    if (node.type !== 'minigame') return;
-
-    expect(node.prompt).toBe('记忆配对游戏');
-    expect(node.variables).toEqual({ score: '得分', time_left: '剩余时间' });
   });
 });

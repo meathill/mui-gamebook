@@ -199,4 +199,4 @@ export interface PlayableGame {
 /**
  * 解析器的返回结果。
  */
-export type ParseResult = { success: true; data: Game } | { success: false; error: string };
+export type ParseResult = { success: true; data: Game; warnings: string[] } | { success: false; error: string };

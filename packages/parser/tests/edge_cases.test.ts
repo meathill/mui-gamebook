@@ -92,7 +92,7 @@ title: "Bad YAML"
 `;
     const result = parse(source);
     expect(result.success).toBe(false);
-    expect((result as any).error).toContain('YAML parsing failed');
+    expect((result as any).error).toContain('Invalid Global YAML Front Matter');
   });
 
   it('should fail if the start scene is missing', () => {

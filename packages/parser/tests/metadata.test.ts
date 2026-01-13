@@ -78,6 +78,49 @@ backgroundStory: |
     }
   });
 
+  it('should parse ai_image from scene metadata with yaml code block', () => {
+    const source = `---
+title: "Test"
+---
+# start
+\`\`\`yaml
+image:
+  prompt: A test image
+  character: hero
+  url: http://example.com/image.png
+\`\`\`
+Text content.
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    const node = result.data.scenes['start'].nodes.find(n => n.type === 'ai_image') as any;
+    expect(node).toBeDefined();
+    expect(node.prompt).toBe('A test image');
+    expect(node.character).toBe('hero');
+    expect(node.url).toBe('http://example.com/image.png');
+  });
+
+  it('should parse ai_audio from scene metadata with yaml code block', () => {
+    const source = `---
+title: "Test"
+---
+# start
+\`\`\`yaml
+audio:
+  type: bgm
+  prompt: A test song
+  url: http://example.com/song.mp3
+\`\`\`
+Text content.
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    const node = result.data.scenes['start'].nodes.find(n => n.type === 'ai_audio') as any;
+    expect(node).toBeDefined();
+    expect(node.prompt).toBe('A test song');
+    expect(node.url).toBe('http://example.com/song.mp3');
+  });
+
   it('should correctly parse background_story (snake_case for backward compatibility)', () => {
     const source = `---
 title: "旧格式背景故事"
@@ -106,7 +149,7 @@ description: "没有标题"
     const source = `# start`;
     const result = parse(source);
     expect(result.success).toBe(false);
-    expect((result as { success: false; error: string }).error).toContain('YAML front matter is missing or invalid');
+    expect((result as { success: false; error: string }).error).toContain('YAML front matter is missing');
   });
 
   it('should correctly parse cover_prompt and cover_aspect_ratio', () => {

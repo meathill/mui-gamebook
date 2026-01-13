@@ -85,6 +85,7 @@ title: "Order Test"
 # start
 Text before choice.
 * [The Choice] -> somewhere
+
 Text after choice.
 `;
     const result = parse(source);

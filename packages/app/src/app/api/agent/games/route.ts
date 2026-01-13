@@ -145,3 +145,50 @@ published: false
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }
+
+/**
+ * GET /api/agent/games?slug=...
+ * 获取游戏详情和内容
+ */
+export async function GET(req: Request) {
+  const { env } = getCloudflareContext();
+
+  if (!validateAdminAuth(req, env)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(req.url);
+  const slug = searchParams.get('slug');
+
+  if (!slug) {
+    return NextResponse.json({ error: 'Slug is required' }, { status: 400 });
+  }
+
+  const db = drizzle(env.DB);
+  const { eq } = await import('drizzle-orm');
+
+  try {
+    const game = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
+
+    if (!game) {
+      return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+    }
+
+    const contentRecord = await db.select().from(schema.gameContent).where(eq(schema.gameContent.gameId, game.id)).get();
+
+    return NextResponse.json({
+      id: game.id,
+      slug: game.slug,
+      title: game.title,
+      description: game.description,
+      backgroundStory: game.backgroundStory,
+      coverImage: game.coverImage,
+      tags: game.tags ? JSON.parse(game.tags as string) : [],
+      ownerId: game.ownerId,
+      content: contentRecord?.content || '',
+    });
+  } catch (e: unknown) {
+    console.error('Get game error:', e);
+    return NextResponse.json({ error: (e as Error).message }, { status: 500 });
+  }
+}

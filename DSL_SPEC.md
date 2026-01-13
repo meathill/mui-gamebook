@@ -106,7 +106,7 @@ state:
 ---
 ```
 
-### 2.3 AI 设置 (`ai`)
+### 2.3 全局 AI 设置 (`ai`)
 
 该对象包含用于指导 AI 生成素材的配置，以确保游戏在风格和角色表现上的一致性。
 
@@ -173,9 +173,6 @@ ai:
 小红帽在森林里行走
 ```
 
-> [!TIP]
-> 在创建游戏前，建议先配置好 `ai.style` 和 `ai.characters`，这样后续生成的所有素材都会保持一致的风格。
-
 ## 3. 场景 (Scenes)
 A game is composed of multiple scenes. Each scene represents a specific moment or location in the narrative.
 
@@ -206,30 +203,146 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 
 ## 4. 场景内容
 
-在每个场景中，内容可以包括图片（静态或 AI 生成）、音频、视频、描述性文本和玩家选项。
+在每个场景中，内容包括元数据（图片、音频、视频）、小游戏、描述性文本、玩家选项。
 
-### 4.1 静态图片
+### 4.1 场景元数据与 AI 素材
 
-使用标准的 Markdown 图片语法 `![替代文本](图片链接)` 来包含静态图片。
+编辑器使用紧跟在场景标题后的 YAML 元数据块（Scene Front Matter）来指示引擎调用 AI 模型。**在素材生成后，游戏引擎或编辑器会将生成的 `url` 写回到代码块中，用于缓存和预览，确保 Markdown 文件本身始终是唯一的数据源。**
+
+- **`prompt`**: (必须) 用于指导 AI 生成的提示词。
+- **`characters`**: (可选) 引用在 `ai.characters` 中定义的角色 ID 列表，用于多人场景。
+- **`url`**: (可选) 由引擎或编辑器在生成后自动填入的素材链接。
+
+**基本结构：**
+
+````markdown
+# scene_id
+```yaml
+image:
+  prompt: "描述图片内容"
+audio:
+  type: bgm
+  prompt: "描述音乐风格"
+```
+
+场景正文...
+````
+
+所有的 AI 生成指令（图片、音频、视频、小游戏）都定义在这个 YAML 块中。
+
+#### 4.1.1 图像生成 (`image`)
+
+**语法：**
+```yaml
+image:
+  prompt: "详细的画面描述"
+  characters: ["char_id1", "char_id2"] # 可选，多人
+  url: "https://..." # 生成后自动回填
+```
+
+
+**示例：**
+```yaml
+image:
+  prompt: "小红帽在森林里遇到了大灰狼"
+  characters: ["lrrh", "wolf"]
+  url: "https://ai-provider.com/generated/image456.png"
+```
+
+##### 角色引用语法
+
+在 prompt 中可以使用 `@角色ID` 语法引用在 `ai.characters` 中定义的角色，这提供了一种更灵活的内联引用方式。
+
+**语法：** `@角色ID`
+
+**示例：**
+```yaml
+image:
+  prompt: "@lrrh 站在森林的小路上，@wolf 从树后探出头来"
+```
+
+当使用 `@角色ID` 语法时，系统会：
+1. 自动将角色的 `image_prompt` 描述添加到生成提示中
+2. 将 `@角色ID` 替换为角色名称以生成更自然的描述
+3. 如果角色有 `image_url`（头像），将其作为参考图片发送给 AI 以保持角色视觉一致性
+
+#### 4.1.2 音频生成 (`audio`)
+
+**语法：**
+```yaml
+audio:
+  type: background_music | sfx
+  prompt: "音频描述"
+  url: "https://..." # 生成后自动回填
+```
+
+#### 4.1.3 视频生成 (`video`)
+
+**语法：**
+```yaml
+video:
+  prompt: "视屏描述"
+  url: "https://..." # 生成后自动回填
+```
+
+#### 4.1.4 小游戏生成 (`minigame`)
+
+小游戏是一种特殊的互动内容，通过 YAML 定义规则和变量。
+
+**语法：**
+```yaml
+minigame:
+  prompt: "游戏规则描述"
+  variables: # 变量用途说明
+    score: "分数"
+    is_winner: "是否获胜"
+  url: "https://..." # 生成后自动回填
+```
+
+**参数说明：**
+- **`prompt`** (必须): 描述小游戏的详细规则和玩法。**建议使用单引号包裹的单行文本**，避免多行语法中 `-` 开头行被解析为 YAML 列表
+- **`variables`** (可选): 小游戏会使用和修改的变量。**使用对象格式**（`key: value`），不要使用列表格式（`- key: value`）
+- **`url`** (可选): 生成后的小游戏 JS 链接，或 `pending:operationId` 表示正在生成中
 
 **示例：**
 
 ```markdown
-![森林岔路口](https://picsum.photos/800/400)
-![森林岔路口](https://picsum.photos/800/400)
+# magical_lock
+---
+minigame:
+  prompt: '玩家需要按顺序点击发光的符文来解锁'
+  variables:
+    unlocked: 是否解锁成功
+---
+
+你需要解开这个魔法锁才能继续。
 ```
 
-### 4.2 动态文本与条件渲染
+### 4.2 描述性文本
 
-DSL 支持在文本中插入变量和根据条件显示不同内容。
+场景内的描述性文本使用标准 Markdown 编写。
 
 #### 4.2.1 变量插值
-使用 `{{变量名}}` 语法插入变量值。
+
+在场景文本和选项文本中，可以使用 `{{变量名}}` 语法插入变量的当前值。这使得文本能够动态显示游戏状态。
+
+**语法：** `{{变量名}}`
 
 **示例：**
+
+```markdown
+你现在有 {{gold}} 金币，生命值为 {{health}}。
+
+{{player_name}}，你已经走过了很长的路。
+
+* [花费 10 金币购买药水（当前：{{gold}} 金币）] -> buy_potion (if: gold >= 10) (set: gold = gold - 10)
 ```
-你好，{{player_name}}，现在是 {{time}} 点。
-```
+
+**说明：**
+- 变量名必须与 `state` 中定义的变量名完全匹配
+- 如果变量不存在，将保留原始的 `{{变量名}}` 文本
+- 支持数字、字符串和布尔值类型的变量
+- 变量插值会在每次场景渲染时实时计算
 
 #### 4.2.2 条件文本
 使用 `{{ if condition }} ... {{ else }} ... {{ /if }}` 语法根据变量状态显示不同文本。
@@ -257,198 +370,11 @@ DSL 支持在文本中插入变量和根据条件显示不同内容。
 {{ if partner == "Alice" }}爱丽丝陪在你身边。{{ else }}你独自一人。{{ /if }}
 ```
 
-### 4.3 AI 生成的素材
+### 4.3 TTS 语音 (Text-to-Speech)
 
-### 4.2 AI 生成的素材
+场景文本和选项可以附带语音朗读，适合儿童阅读器等场景。
 
-对于动态内容，DSL 使用带有特定语言标签（`image-gen`, `audio-gen`, `video-gen`）的代码块来指示引擎调用 AI 模型。**在素材生成后，游戏引擎或编辑器会将生成的 `url` 写回到代码块中，用于缓存和预览，确保 Markdown 文件本身始终是唯一的数据源。**
-
-- **`prompt`**: (必须) 用于指导 AI 生成的提示词。
-- **`character`**: (可选) 引用在 `ai.characters` 中定义的角色 ID，以使用其特定的 `image_prompt`。
-- **`url`**: (可选) 由引擎或编辑器在生成后自动填入的素材链接。
-
-#### 4.2.1 图像生成 (`image-gen`)
-
-**语法：**
-````
-```image-gen
-prompt: A descriptive prompt for the image.
-character: characterID (可选，单人模式，向后兼容)
-characters: [charID1, charID2] (可选，多人模式，推荐)
-url: https://... (optional, auto-filled after generation)
-```
-````
-
-**示例：**
-````
-```image-gen
-prompt: 小红帽在森林里遇到了大灰狼
-characters: [lrrh, wolf]
-url: https://ai-provider.com/generated/image456.png
-```
-````
-
-##### 角色引用语法
-
-在 prompt 中可以使用 `@角色ID` 语法引用在 `ai.characters` 中定义的角色，这提供了一种更灵活的内联引用方式。
-
-**语法：** `@角色ID`
-
-**示例：**
-````
-```image-gen
-prompt: @lrrh 站在森林的小路上，@wolf 从树后探出头来
-```
-````
-
-当使用 `@角色ID` 语法时，系统会：
-1. 自动将角色的 `image_prompt` 描述添加到生成提示中
-2. 将 `@角色ID` 替换为角色名称以生成更自然的描述
-3. 如果角色有 `image_url`（头像），将其作为参考图片发送给 AI 以保持角色视觉一致性
-
-> [!TIP]
-> 在编辑器中，输入 `@` 会弹出角色选择列表，选择后会显示高亮的角色名称标签，提供类似聊天软件的 @ 提及体验。
-
-
-#### 4.2.2 音频生成 (`audio-gen`)
-
-**语法：**
-````
-```audio-gen
-type: background_music | sfx
-prompt: A descriptive prompt for the audio.
-url: https://... (optional, auto-filled after generation)
-```
-````
-
-**示例：**
-````
-```audio-gen
-type: background_music
-prompt: 一段紧张、悬疑的洞穴探索背景音乐
-```
-````
-
-#### 4.2.3 视频生成 (`video-gen`)
-
-**语法：**
-````
-```video-gen
-prompt: A descriptive prompt for the video.
-url: https://... (optional, auto-filled after generation)
-```
-````
-
-#### 4.2.4 小游戏生成 (`minigame-gen`)
-
-小游戏是一种特殊的互动内容，由 AI 生成简单的 JavaScript 游戏。小游戏可以读取和修改游戏变量，但不直接控制场景跳转——场景跳转仍由选项的条件判断处理。
-
-**语法：**
-````
-```minigame-gen
-prompt: '描述小游戏的玩法和规则（单行，用单引号包裹）'
-variables:
-  variable_name: 变量用途说明
-url: https://... (optional, auto-filled after generation)
-```
-````
-
-**参数说明：**
-- **`prompt`** (必须): 描述小游戏的详细规则和玩法。**建议使用单引号包裹的单行文本**，避免多行语法中 `-` 开头行被解析为 YAML 列表
-- **`variables`** (可选): 小游戏会使用和修改的变量。**使用对象格式**（`key: value`），不要使用列表格式（`- key: value`）
-- **`url`** (可选): 生成后的小游戏 JS 链接，或 `pending:operationId` 表示正在生成中
-
-**示例：**
-````
-```minigame-gen
-prompt: '创建一个点击金色飞贼的游戏。屏幕上会随机出现金色小球，玩家需要0秒内点击10次金色飞贼才算成功。每次点击成功增加 snitch_caught 变量。'
-variables:
-  snitch_caught: 捕获的飞贼数量
-url: https://assets.example.com/minigames/snitch-game.js
-```
-````
-
-**小游戏 JS 接口规范：**
-
-生成的小游戏 JS 文件必须导出以下接口：
-
-```typescript
-interface MiniGameAPI {
-  // 初始化游戏，传入 DOM 容器和当前变量值
-  init(container: HTMLElement, variables: Record<string, number | string | boolean>): void;
-  // 注册游戏完成回调，返回修改后的变量
-  onComplete(callback: (variables: Record<string, number | string | boolean>) => void): void;
-  // 销毁游戏，清理资源
-  destroy(): void;
-}
-```
-
-**使用示例：**
-
-结合变量触发器和条件选项，可以实现根据小游戏结果跳转到不同场景：
-
-```markdown
-# quidditch_match
-
-魁地奇比赛开始了！你需要抓住金色飞贼！
-
-```minigame-gen
-prompt: '创建一个点击金色飞贼的游戏，10秒内点击10次随机出现的金色小球即可获胜'
-variables:
-  snitch_caught: 捕获的飞贼数量
-```
-
-* [比赛结束] -> quidditch_win (if: snitch_caught >= 10)
-* [比赛结束] -> quidditch_lose (if: snitch_caught < 10)
-```
-
-**小游戏开发指南：**
-
-1. **简单原则**：小游戏应该是简单的互动，如点击、拖拽、记忆配对等，不应依赖外部库
-2. **使用 Canvas**：推荐使用 Canvas API 进行绘制，确保跨浏览器兼容性
-3. **变量交互**：通过 `variables` 参数接收初始值，通过 `onComplete` 回调返回修改后的值
-4. **资源清理**：`destroy()` 方法必须清理所有事件监听器、定时器和动画帧
-5. **响应式设计**：游戏应适应容器大小，支持不同屏幕尺寸
-
-**支持的小游戏类型示例：**
-
-- 点击类：点击目标、打地鼠
-- 记忆类：翻牌配对、记忆序列
-- 反应类：快速反应测试
-- 收集类：限时收集物品
-- 简单射击：击中移动目标
-
-### 4.3 描述性文本
-
-场景的描述性文本可以使用标准 Markdown 编写。
-
-### 4.4 变量插值
-
-在场景文本和选项文本中，可以使用 `{{变量名}}` 语法插入变量的当前值。这使得文本能够动态显示游戏状态。
-
-**语法：** `{{变量名}}`
-
-**示例：**
-
-```markdown
-你现在有 {{gold}} 金币，生命值为 {{health}}。
-
-{{player_name}}，你已经走过了很长的路。
-
-* [花费 10 金币购买药水（当前：{{gold}} 金币）] -> buy_potion (if: gold >= 10) (set: gold = gold - 10)
-```
-
-**说明：**
-- 变量名必须与 `state` 中定义的变量名完全匹配
-- 如果变量不存在，将保留原始的 `{{变量名}}` 文本
-- 支持数字、字符串和布尔值类型的变量
-- 变量插值会在每次场景渲染时实时计算
-
-### 4.5 TTS 语音 (Text-to-Speech)
-
-场景文本和选项可以附带语音朗读，适合儿童阅读器等场景。语音使用 Gemini TTS 模型生成，存储在 R2 中。
-
-#### 4.5.1 文本语音
+#### 4.3.1 文本语音
 
 文本节点可以通过 HTML 注释附带语音 URL：
 
@@ -463,7 +389,7 @@ variables:
 - 注释必须紧跟在文本之后
 - 播放器会在场景加载时自动播放语音
 
-#### 4.5.2 选项语音
+#### 4.3.2 选项语音
 
 选项可以通过 `(audio: URL)` 子句附带语音：
 
@@ -479,29 +405,6 @@ variables:
 - `(audio: URL)` 子句可以与 `(if:)` 和 `(set:)` 子句一起使用
 - 播放器会在选项按钮上显示播放图标
 - 点击播放图标播放语音，点击按钮执行选项
-
-#### 4.5.3 语音生成
-
-语音可以通过以下方式生成：
-
-1. **编辑器手动生成**：在编辑器中点击"生成语音"按钮
-2. **批量生成**：使用 `asset-generator` 命令行工具
-
-**命令行生成：**
-```bash
-cd packages/asset-generator
-pnpm generate remote <game-id>  # 生成所有素材（包括 TTS）
-pnpm generate remote <game-id> --force  # 强制重新生成
-```
-
-**声音选项：**
-
-可以通过环境变量 `DEFAULT_TTS_VOICE` 设置默认声音：
-- `Aoede` - 温和女声（默认，推荐儿童故事）
-- `Kore` - 活泼女声
-- `Puck` - 活泼男声
-- `Leda` - 温柔女声
-- `Charon` - 沉稳男声
 
 ## 5. 选项与互动
 
@@ -544,7 +447,3 @@ pnpm generate remote <game-id> --force  # 强制重新生成
 * [尝试用钥匙开门] -> treasure_room (if: has_key == true)
 * [用力推门] -> door_does_not_budge (if: has_key == false, health > 50)
 ```
-
----
-
-本文档将随着 DSL 的演进而更新。

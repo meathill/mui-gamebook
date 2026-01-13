@@ -34,7 +34,7 @@ export class ApiService {
         Authorization: `Bearer ${this.encryptionKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      ...(body && { body: JSON.stringify(body) }),
     });
 
     if (!res.ok) {
@@ -57,6 +57,10 @@ export class ApiService {
 
   async submitGame(data: GameMetadata): Promise<void> {
     await this.request('/api/agent/games', 'POST', data);
+  }
+
+  async getGame(slug: string): Promise<GameMetadata> {
+    return this.request(`/api/agent/games?slug=${slug}`, 'GET', null);
   }
 
   async submitMinigames(minigames: MinigameData[]): Promise<void> {

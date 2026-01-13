@@ -10,11 +10,12 @@ describe('minigame DSL', () => {
 title: "Minigame Test"
 ---
 # start
-\`\`\`minigame-gen
-prompt: 创建一个点击金色飞贼的游戏
-variables:
-  - snitch_caught: 捕获的飞贼数量
-url: https://example.com/minigames/1
+\`\`\`yaml
+minigame:
+  prompt: 创建一个点击金色飞贼的游戏
+  variables:
+    snitch_caught: 捕获的飞贼数量
+  url: https://example.com/minigames/1
 \`\`\`
 `;
       const result = parse(source);
@@ -33,10 +34,11 @@ url: https://example.com/minigames/1
 title: "Pending Minigame"
 ---
 # start
-\`\`\`minigame-gen
-prompt: 创建一个记忆配对游戏
-variables:
-  - score: 得分
+\`\`\`yaml
+minigame:
+  prompt: 创建一个记忆配对游戏
+  variables:
+    score: 得分
 \`\`\`
 `;
       const result = parse(source);
@@ -54,12 +56,13 @@ variables:
 title: "Multi Var Minigame"
 ---
 # start
-\`\`\`minigame-gen
-prompt: 打地鼠游戏
-variables:
-  - hits: 击中次数
-  - misses: 失误次数
-  - score: 最终得分
+\`\`\`yaml
+minigame:
+  prompt: 打地鼠游戏
+  variables:
+    hits: 击中次数
+    misses: 失误次数
+    score: 最终得分
 \`\`\`
 `;
       const result = parse(source);
@@ -79,11 +82,12 @@ variables:
 title: "Object Vars"
 ---
 # start
-\`\`\`minigame-gen
-prompt: 测试游戏
-variables:
-  health: 生命值
-  gold: 金币数量
+\`\`\`yaml
+minigame:
+  prompt: 测试游戏
+  variables:
+    health: 生命值
+    gold: 金币数量
 \`\`\`
 `;
       const result = parse(source);
@@ -102,8 +106,9 @@ variables:
 title: "No Vars"
 ---
 # start
-\`\`\`minigame-gen
-prompt: 简单的点击游戏，不需要变量
+\`\`\`yaml
+minigame:
+  prompt: 简单的点击游戏，不需要变量
 \`\`\`
 `;
       const result = parse(source);
@@ -140,7 +145,8 @@ prompt: 简单的点击游戏，不需要变量
       };
 
       const result = stringify(game);
-      expect(result).toContain('```minigame-gen');
+      expect(result).toContain('```yaml');
+      expect(result).toContain('minigame:');
       expect(result).toContain('prompt: 抓住金色飞贼');
       expect(result).toContain('snitch_caught: 捕获数量');
       expect(result).toContain('url: https://example.com/game.js');
@@ -166,7 +172,8 @@ prompt: 简单的点击游戏，不需要变量
       };
 
       const result = stringify(game);
-      expect(result).toContain('```minigame-gen');
+      expect(result).toContain('```yaml');
+      expect(result).toContain('minigame:');
       expect(result).toContain('prompt: 简单游戏');
       expect(result).not.toContain('url:');
     });
@@ -229,10 +236,12 @@ state:
 # quidditch_match
 魁地奇比赛开始了！
 
-\`\`\`minigame-gen
-prompt: 创建一个点击金色飞贼的游戏，10秒内需要点击10次
-variables:
-  - snitch_caught: 捕获的飞贼数量
+
+\`\`\`yaml
+minigame:
+  prompt: 创建一个点击金色飞贼的游戏，10秒内需要点击10次
+  variables:
+    snitch_caught: 捕获的飞贼数量
 \`\`\`
 
 * [比赛结束] -> quidditch_win (if: snitch_caught >= 10)

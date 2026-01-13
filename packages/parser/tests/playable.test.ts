@@ -38,14 +38,18 @@ ai:
 
   it('应该过滤 AI 图片节点的 prompt', () => {
     const dsl = `---
-title: "测试游戏"
+title: Mock Game
 ---
 # start
-\`\`\`image-gen
-prompt: 一个美丽的城堡，阳光明媚
-url: https://example.com/castle.png
+\`\`\`yaml
+image:
+  prompt: secret prompt
+  url: http://img
+audio:
+  prompt: secret audio
+  url: http://aud
 \`\`\`
-这是开始场景。
+Hello.
 * [继续] -> next
 `;
     const result = parse(dsl);
@@ -63,7 +67,7 @@ url: https://example.com/castle.png
     expect(imageNode!.type).toBe('ai_image');
     // 应该保留 url
     if (imageNode && 'url' in imageNode) {
-      expect(imageNode.url).toBe('https://example.com/castle.png');
+      expect((imageNode as any).url).toBe('http://img');
     }
   });
 
@@ -145,10 +149,11 @@ state:
 title: "测试游戏"
 ---
 # start
-\`\`\`audio-gen
-type: background_music
-prompt: epic battle music with orchestral instruments
-url: https://example.com/music.mp3
+\`\`\`yaml
+audio:
+  type: background_music
+  prompt: epic battle music with orchestral instruments
+  url: https://example.com/music.mp3
 \`\`\`
 开始战斗！
 * [继续] -> next

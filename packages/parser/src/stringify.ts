@@ -1,21 +1,17 @@
-/**
- * 将 Game 对象序列化为 Markdown/DSL 字符串
- */
 import * as yaml from 'js-yaml';
+import { unified } from 'unified';
+import remarkStringify from 'remark-stringify';
+import remarkFrontmatter from 'remark-frontmatter';
+import remarkGfm from 'remark-gfm';
 import { omitBy } from 'lodash-es';
+import type { Root, RootContent, Heading, Paragraph, List, ListItem, Yaml } from 'mdast';
 import type { AICharacter, Game, GameState, VariableMeta } from './types';
 import { isVariableMeta } from './utils';
 
-/**
- * Converts a structured Game object back into a Markdown string.
- * This is the inverse of the parse function.
- * @param game The structured Game object.
- * @returns The Markdown string representation of the game.
- */
 export function stringify(game: Game): string {
-  let markdown = '';
+  const rootChildren: RootContent[] = [];
 
-  // 1. Front Matter
+  // 1. Global Front Matter
   const frontMatter: Partial<Game> = {
     title: game.title,
   };
@@ -27,7 +23,6 @@ export function stringify(game: Game): string {
   if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
   if (game.published) frontMatter.published = true;
   if (Object.keys(game.initialState).length > 0) {
-    // 清理变量元数据中的 undefined 字段
     const cleanedState: GameState = {};
     for (const [key, val] of Object.entries(game.initialState)) {
       if (isVariableMeta(val)) {
@@ -44,99 +39,166 @@ export function stringify(game: Game): string {
     if (Object.keys(game.ai.characters || {}).length > 0) {
       frontMatter.ai.characters = {};
       for (const [id, char] of Object.entries(game.ai.characters || {})) {
-        frontMatter.ai.characters[id] = {
-          name: char.name,
-          description: char.description,
-          image_prompt: char.image_prompt,
-          image_url: char.image_url,
-          voice_name: char.voice_name,
-        };
-        // Clean up undefined fields
-        frontMatter.ai.characters[id] = omitBy(frontMatter.ai.characters[id], (v) => v === undefined) as AICharacter;
+        frontMatter.ai.characters[id] = omitBy(
+          {
+            name: char.name,
+            description: char.description,
+            image_prompt: char.image_prompt,
+            image_url: char.image_url,
+            voice_name: char.voice_name,
+          },
+          (v) => v === undefined,
+        ) as unknown as AICharacter;
       }
     }
   }
 
-  markdown += '---\n' + yaml.dump(frontMatter, { indent: 2, lineWidth: -1 }) + '---\n\n';
+  rootChildren.push({
+    type: 'yaml',
+    value: yaml.dump(frontMatter, { indent: 2, lineWidth: -1 }).trim(),
+  } as Yaml);
 
   // 2. Scenes
   const sceneEntries = Object.values(game.scenes);
+
   for (let i = 0; i < sceneEntries.length; i++) {
     const scene = sceneEntries[i];
-    markdown += `# ${scene.id}\n`;
 
-    for (const node of scene.nodes) {
-      switch (node.type) {
-        case 'text':
-          if (node.audio_url) {
-            markdown += `<!-- audio: ${node.audio_url} -->\n`;
-          }
-          markdown += `${node.content}\n`;
-          break;
-        case 'static_image':
-          markdown += `![${node.alt || ''}](${node.url})\n`;
-          break;
-        case 'static_audio':
-          markdown += `[audio](${node.url})\n`;
-          break;
-        case 'static_video':
-          markdown += `[video](${node.url})\n`;
-          break;
-        case 'choice':
-          let choiceLine = `* [${node.text}] -> ${node.nextSceneId}`;
-          if (node.condition) {
-            choiceLine += ` (if: ${node.condition})`;
-          }
-          if (node.set) {
-            choiceLine += ` (set: ${node.set})`;
-          }
-          if (node.audio_url) {
-            choiceLine += ` (audio: ${node.audio_url})`;
-          }
-          markdown += `${choiceLine}\n`;
-          break;
-        case 'ai_image':
-          markdown += `\`\`\`image-gen\n`;
-          markdown += `prompt: ${node.prompt}\n`;
-          if (node.character) markdown += `character: ${node.character}\n`;
-          if (node.characters && node.characters.length > 0)
-            markdown += `characters: [${node.characters.join(', ')}]\n`;
-          if (node.url) markdown += `url: ${node.url}\n`;
-          markdown += `\`\`\`\n`;
-          break;
-        case 'ai_audio':
-          markdown += `\`\`\`audio-gen\n`;
-          markdown += `type: ${node.audioType}\n`;
-          markdown += `prompt: ${node.prompt}\n`;
-          if (node.url) markdown += `url: ${node.url}\n`;
-          markdown += `\`\`\`\n`;
-          break;
-        case 'ai_video':
-          markdown += `\`\`\`video-gen\n`;
-          markdown += `prompt: ${node.prompt}\n`;
-          if (node.url) markdown += `url: ${node.url}\n`;
-          markdown += `\`\`\`\n`;
-          break;
-        case 'minigame':
-          markdown += `\`\`\`minigame-gen\n`;
-          markdown += `prompt: ${node.prompt}\n`;
-          if (node.variables && Object.keys(node.variables).length > 0) {
-            markdown += `variables:\n`;
-            for (const [key, desc] of Object.entries(node.variables)) {
-              markdown += `  - ${key}: ${desc}\n`;
-            }
-          }
-          if (node.url) markdown += `url: ${node.url}\n`;
-          markdown += `\`\`\`\n`;
-          break;
+    // Scene Heading
+    rootChildren.push({
+      type: 'heading',
+      depth: 1,
+      children: [{ type: 'text', value: scene.id }],
+    } as Heading);
+
+    // Scene Metadata for AI Nodes
+    const imageNode = scene.nodes.find((n) => n.type === 'ai_image') as any;
+    const audioNode = scene.nodes.find((n) => n.type === 'ai_audio') as any;
+    const videoNode = scene.nodes.find((n) => n.type === 'ai_video') as any;
+    const minigameNode = scene.nodes.find((n) => n.type === 'minigame') as any;
+
+    const metadata: any = {};
+    if (imageNode)
+      metadata.image = omitBy(
+        {
+          prompt: imageNode.prompt,
+          character: imageNode.character,
+          characters: imageNode.characters,
+          url: imageNode.url,
+          aspectRatio: imageNode.aspectRatio,
+        },
+        (v) => v === undefined,
+      );
+
+    if (audioNode)
+      metadata.audio = omitBy(
+        {
+          type: audioNode.audioType,
+          prompt: audioNode.prompt,
+          url: audioNode.url,
+        },
+        (v) => v === undefined,
+      );
+
+    if (videoNode)
+      metadata.video = omitBy(
+        {
+          prompt: videoNode.prompt,
+          url: videoNode.url,
+        },
+        (v) => v === undefined,
+      );
+
+    if (minigameNode)
+      metadata.minigame = omitBy(
+        {
+          prompt: minigameNode.prompt,
+          variables: minigameNode.variables, // Expecting object
+          url: minigameNode.url,
+        },
+        (v) => v === undefined,
+      );
+
+    if (Object.keys(metadata).length > 0) {
+      if (Object.keys(metadata).length > 0) {
+        rootChildren.push({
+          type: 'code',
+          lang: 'yaml',
+          value: yaml.dump(metadata, { indent: 2, lineWidth: -1 }).trim(),
+        } as any);
       }
     }
-    markdown += '\n'; // Add a newline after each scene content
+
+    // Content Nodes
+    const listItems: ListItem[] = [];
+
+    for (const node of scene.nodes) {
+      if (['ai_image', 'ai_audio', 'ai_video', 'minigame'].includes(node.type)) continue;
+
+      if (node.type === 'text') {
+        const children: any[] = [];
+        if (node.audio_url) {
+          children.push({ type: 'html', value: `<!-- audio: ${node.audio_url} -->` });
+        }
+        children.push({ type: 'text', value: node.content });
+        rootChildren.push({ type: 'paragraph', children } as Paragraph);
+      } else if (node.type === 'static_image') {
+        rootChildren.push({
+          type: 'paragraph',
+          children: [{ type: 'image', url: node.url, alt: node.alt || '' }],
+        } as Paragraph);
+      } else if (node.type === 'static_audio') {
+        rootChildren.push({
+          type: 'paragraph',
+          children: [{ type: 'link', url: node.url, children: [{ type: 'text', value: 'audio' }] }],
+        } as Paragraph);
+      } else if (node.type === 'static_video') {
+        rootChildren.push({
+          type: 'paragraph',
+          children: [{ type: 'link', url: node.url, children: [{ type: 'text', value: 'video' }] }],
+        } as Paragraph);
+      } else if (node.type === 'choice') {
+        let text = `[${node.text}] -> ${node.nextSceneId}`;
+        const clauses: string[] = [];
+        if (node.condition) clauses.push(`(if: ${node.condition})`);
+        if (node.set) clauses.push(`(set: ${node.set})`);
+        if (node.audio_url) clauses.push(`(audio: ${node.audio_url})`);
+
+        if (clauses.length > 0) {
+          text += ` ${clauses.join(' ')}`;
+        }
+
+        listItems.push({
+          type: 'listItem',
+          children: [
+            {
+              type: 'paragraph',
+              children: [{ type: 'text', value: text }],
+            },
+          ],
+        } as ListItem);
+      }
+    }
+
+    if (listItems.length > 0) {
+      rootChildren.push({
+        type: 'list',
+        ordered: false,
+        children: listItems,
+      } as List);
+    }
 
     if (i < sceneEntries.length - 1) {
-      markdown += '---\n\n'; // Separator between scenes
+      rootChildren.push({ type: 'thematicBreak' });
     }
   }
 
-  return markdown.trim();
+  const processor = unified().use(remarkFrontmatter, ['yaml']).use(remarkGfm).use(remarkStringify, {
+    bullet: '*',
+    fences: true,
+    rule: '-',
+  });
+
+  const root: Root = { type: 'root', children: rootChildren };
+  return processor.stringify(root).trim();
 }

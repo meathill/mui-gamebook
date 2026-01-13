@@ -118,7 +118,6 @@ export const gameTags = sqliteTable(
   }),
 );
 
-
 // AI 用量记录表
 export const aiUsage = sqliteTable(
   'AiUsage',
@@ -215,7 +214,6 @@ export const pendingOperations = sqliteTable(
 );
 
 // ========== 统计相关表 ==========
-
 
 // 游戏统计汇总表（从 KV 同步）
 export const gameAnalytics = sqliteTable(

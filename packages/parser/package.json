@@ -5,8 +5,17 @@
   "type": "module",
   "main": "src/index.ts",
   "dependencies": {
+    "@types/mdast": "^4.0.4",
+    "@types/unist": "^3.0.3",
     "js-yaml": "^4.1.1",
-    "lodash-es": "^4.17.22"
+    "lodash-es": "^4.17.22",
+    "mdast-util-to-string": "^4.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-stringify": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0"
   },
   "scripts": {},
   "devDependencies": {
