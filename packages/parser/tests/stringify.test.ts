@@ -125,9 +125,8 @@ A mysterious door stands before you.
 
 What will you do?
 
-* \\[Open the door] -> inside (if: has\\_key == true)
-
-* \\[Knock on the door] -> knock (set: tries = tries + 1)`;
+* [Open the door] -> inside (if: has_key == true)
+* [Knock on the door] -> knock (set: tries = tries + 1)`;
 
     const result = stringify(game);
     expect(result.trim()).toBe(expected.trim());
@@ -174,7 +173,7 @@ minigame:
 
 魁地奇比赛开始了！
 
-* \\[比赛结束] -> result (if: snitch\\_caught >= 10)`;
+* [比赛结束] -> result (if: snitch_caught >= 10)`;
 
     const result = stringify(game);
     expect(result.trim()).toBe(expected.trim());
@@ -230,8 +229,8 @@ title: Audio Test
 
     const result = stringify(game);
     // expect(result).toContain('* [选项一] -> next (audio: https://example.com/choice.wav)');
-    // Just verify content logic, allowing escaping
-    expect(result).toMatch(/\* \\?\[选项一] -> next \(audio: https\\?:\/\/example.com\/choice.wav\)/);
+    // Verify content logic, ensuring NO escaping
+    expect(result).toContain('* [选项一] -> next (audio: https://example.com/choice.wav)');
   });
 
   it('should correctly stringify cover_prompt and cover_aspect_ratio', () => {

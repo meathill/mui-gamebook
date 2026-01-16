@@ -3,6 +3,7 @@ import path from 'node:path';
 import { findAssets } from '../lib/upload/asset-finder';
 import { processGame } from '../lib/upload/game-processor';
 import { ApiService } from '../lib/upload/api-service';
+import { imageToWebp } from '../lib/converter';
 
 interface UploadOptions {
   file: string;
@@ -46,16 +47,32 @@ export async function uploadGame(options: UploadOptions) {
     assetMap.portraits,
     assetMap.coverPath,
     async (filePath, type) => {
-      console.log(`Uploading ${type}: ${path.basename(filePath)}`);
-      if (dryRun) return `https://mock.url/${path.basename(filePath)}`;
+      let uploadPath = filePath;
+      let uploadContent: Buffer;
+      let mime: string;
 
-      const content = fs.readFileSync(filePath);
-      const mime = filePath.endsWith('.js')
-        ? 'application/javascript'
-        : filePath.endsWith('.png')
-          ? 'image/png'
-          : 'image/webp'; // simplified
-      return apiService.uploadAsset(path.basename(filePath), content, mime, slug);
+      if (filePath.endsWith('.png')) {
+        console.log(`Converting to WebP: ${path.basename(filePath)}`);
+        const pngContent = fs.readFileSync(filePath);
+        uploadContent = imageToWebp(pngContent);
+        mime = 'image/webp';
+        // Change extension for upload filename, and remove existing timestamp prefix if present
+        const cleanBasename = path.basename(filePath, '.png').replace(/^\d+-/, '');
+        const filename = cleanBasename + '.webp';
+        uploadPath = path.join(path.dirname(filePath), filename);
+      } else {
+        uploadContent = fs.readFileSync(filePath);
+        mime = filePath.endsWith('.js')
+          ? 'application/javascript'
+          : filePath.endsWith('.webp')
+            ? 'image/webp'
+            : 'application/octet-stream';
+      }
+
+      console.log(`Uploading ${type}: ${path.basename(uploadPath)} (${mime})`);
+      if (dryRun) return `https://mock.url/${path.basename(uploadPath)}`;
+
+      return apiService.uploadAsset(path.basename(uploadPath), uploadContent, mime, slug);
     },
   );
 

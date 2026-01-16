@@ -93,7 +93,7 @@ Text content.
 `;
     const result = parse(source);
     expect(result.success).toBe(true);
-    const node = result.data.scenes['start'].nodes.find(n => n.type === 'ai_image') as any;
+    const node = result.data.scenes['start'].nodes.find((n) => n.type === 'ai_image') as any;
     expect(node).toBeDefined();
     expect(node.prompt).toBe('A test image');
     expect(node.character).toBe('hero');
@@ -115,7 +115,7 @@ Text content.
 `;
     const result = parse(source);
     expect(result.success).toBe(true);
-    const node = result.data.scenes['start'].nodes.find(n => n.type === 'ai_audio') as any;
+    const node = result.data.scenes['start'].nodes.find((n) => n.type === 'ai_audio') as any;
     expect(node).toBeDefined();
     expect(node.prompt).toBe('A test song');
     expect(node.url).toBe('http://example.com/song.mp3');

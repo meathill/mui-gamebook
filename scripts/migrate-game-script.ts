@@ -194,7 +194,7 @@ async function main() {
     if (fs.existsSync(configPath)) {
       try {
         Object.assign(config, JSON.parse(fs.readFileSync(configPath, 'utf-8')));
-      } catch { }
+      } catch {}
     }
     const API_URL = config.apiUrl || process.env.API_URL;
     const ADMIN_PASSWORD = process.env.MUI_ADMIN_PASSWORD;
@@ -211,7 +211,6 @@ async function main() {
       process.exit(1);
     }
 
-    console.log('xxx', API_URL, ADMIN_PASSWORD);
     const apiService = new ApiService(API_URL, ADMIN_PASSWORD!);
 
     try {

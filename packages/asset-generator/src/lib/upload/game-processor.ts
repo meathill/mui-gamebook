@@ -2,6 +2,7 @@ import type { AssetMap } from './asset-finder';
 import type { Game } from '@mui-gamebook/parser';
 import { parse, stringify } from '@mui-gamebook/parser';
 import fs from 'node:fs';
+import path from 'node:path';
 
 export interface ProcessedGame {
   markdown: string;
@@ -78,8 +79,13 @@ export async function processGame(
   };
 
   // 1. Process Metadata (Cover & Portraits)
-  // Skip if already has a remote URL
-  if (coverPath && (!game.cover_image || !game.cover_image.startsWith('http'))) {
+  // 1. Process Metadata (Cover & Portraits)
+  // Skip if already has a remote URL, UNLESS it's a PNG we want to upgrade to WebP
+  const currentCover = game.cover_image;
+  const isCoverRemote = currentCover && currentCover.startsWith('http');
+  const isCoverPng = currentCover && currentCover.endsWith('.png');
+
+  if (coverPath && (!currentCover || !isCoverRemote || isCoverPng)) {
     const url = await d_upload(coverPath, 'image');
     if (url) game.cover_image = url;
   }
@@ -93,22 +99,45 @@ export async function processGame(
 
       let matchedPath: string | undefined;
 
-      // Try exact charId match
-      if (portraits.has(charId)) {
-        matchedPath = portraits.get(charId);
-      } else {
-        // Try loose matching
-        for (const [pKey, pPath] of portraits.entries()) {
-          if (pKey.includes(charId) || charId.includes(pKey)) {
-            matchedPath = pPath;
-            break;
+      // Priority 1: Use existing local path if available
+      const currentUrl = charDef.image_url;
+      if (currentUrl && !currentUrl.startsWith('http')) {
+        matchedPath = currentUrl;
+        if (matchedPath && !path.isAbsolute(matchedPath)) {
+          const baseDir = path.dirname(markdownPath);
+          matchedPath = path.resolve(baseDir, matchedPath);
+        }
+        if (!fs.existsSync(matchedPath)) {
+          matchedPath = undefined;
+        }
+      }
+
+      // Priority 2: Try to find by key pattern if no local path or file doesn't exist
+      if (!matchedPath) {
+        // Try exact charId match
+        if (portraits.has(charId)) {
+          matchedPath = portraits.get(charId);
+        } else {
+          // Try loose matching
+          for (const [pKey, pPath] of portraits.entries()) {
+            if (pKey.includes(charId) || charId.includes(pKey)) {
+              matchedPath = pPath;
+              break;
+            }
           }
         }
       }
 
       if (matchedPath) {
-        const url = await d_upload(matchedPath, 'image');
-        if (url) charDef.image_url = url;
+        // Skip if already has remote URL, UNLESS it's a PNG we want to upgrade to WebP
+        const currentUrl = charDef.image_url;
+        const isRemote = currentUrl && currentUrl.startsWith('http');
+        const isPng = currentUrl && currentUrl.endsWith('.png');
+
+        if (!currentUrl || !isRemote || isPng) {
+          const url = await d_upload(matchedPath, 'image');
+          if (url) charDef.image_url = url;
+        }
       }
     }
   }
@@ -116,10 +145,44 @@ export async function processGame(
   // 2. Process Scenes
   for (const scene of Object.values(game.scenes)) {
     for (const node of scene.nodes) {
-      // AI Image - skip if already has remote URL
-      if (node.type === 'ai_image' && (!node.url || !node.url.startsWith('http'))) {
-        // Try multiple key patterns: scene_sceneId, sceneId
-        const assetPath = keyMap.get(`scene_${scene.id}`) || keyMap.get(scene.id);
+      // AI Image - skip if already has remote URL, UNLESS it's a PNG we want to upgrade to WebP
+      const isRemote = node.url && node.url.startsWith('http');
+      const isPng = node.url && node.url.endsWith('.png');
+
+      if (node.type === 'ai_image' && (!isRemote || isPng)) {
+        // Priority 1: Use existing local path if available
+        let assetPath = node.url;
+        if (assetPath && !path.isAbsolute(assetPath)) {
+          // Resolve relative to markdown file location
+          const baseDir = path.dirname(markdownPath);
+          assetPath = path.resolve(baseDir, assetPath);
+        }
+
+        // Priority 2: Try to find by key pattern if no local path or file doesn't exist
+        if (!assetPath || !fs.existsSync(assetPath)) {
+          assetPath = keyMap.get(`scene_${scene.id}`) || keyMap.get(scene.id);
+        }
+
+        // Priority 3: Reverse lookup from remote URL filename (handling timestamp prefixes)
+        if ((!assetPath || !fs.existsSync(assetPath)) && isRemote && typeof node.url === 'string') {
+          const remoteBasename = path.basename(node.url);
+          // Try exact match in assets dir (assuming assets dir is 'assets' relative to md)
+          const baseDir = path.dirname(markdownPath);
+          const assetsDir = path.join(baseDir, 'assets');
+
+          let candidate = path.join(assetsDir, remoteBasename);
+          if (fs.existsSync(candidate)) {
+            assetPath = candidate;
+          } else {
+            // Try stripping timestamp prefix (e.g. 1768...-name.png)
+            const cleanName = remoteBasename.replace(/^\d+-/, '');
+            candidate = path.join(assetsDir, cleanName);
+            if (fs.existsSync(candidate)) {
+              assetPath = candidate;
+            }
+          }
+        }
+
         if (assetPath) {
           const url = await d_upload(assetPath, 'image');
           if (url) node.url = url;

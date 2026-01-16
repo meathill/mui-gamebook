@@ -46,7 +46,8 @@ export function findAssets(dir: string): AssetMap {
     const isMinigame = ext === '.js';
 
     // 1. Cover
-    if (basename.includes('cover')) {
+    // Stricter check to avoid 'discover' matching 'cover'
+    if (basename === 'cover' || basename.startsWith('cover_') || basename.endsWith('_cover') || basename.includes('_cover_')) {
       // Simplified: Just take the last one that matches 'cover' if multiple?
       // Existing logic: keep latest by string comparison.
       result.coverPath = filePath;
@@ -57,6 +58,16 @@ export function findAssets(dir: string): AssetMap {
     // Pattern: {charName}_portrait_{timestamp} or just {charName}_portrait
     if (basename.includes('_portrait')) {
       const match = basename.match(/^(.+)_portrait/);
+      if (match) {
+        const charName = match[1].toLowerCase();
+        result.portraits.set(charName, filePath);
+      }
+      continue;
+    }
+
+    // Support hp4_char_{name} convention
+    if (basename.includes('_char_')) {
+      const match = basename.match(/_char_([^_]+)/);
       if (match) {
         const charName = match[1].toLowerCase();
         result.portraits.set(charName, filePath);

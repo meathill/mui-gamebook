@@ -92,7 +92,6 @@ published: false
       backgroundStory,
       coverImage,
       tags: tags ? JSON.stringify(tags) : undefined,
-      ownerId: finalOwnerId,
     };
 
     if (existingGame) {
@@ -126,6 +125,7 @@ published: false
         .values({
           slug,
           ...commonFields,
+          ownerId: finalOwnerId,
           createdAt: now,
           updatedAt: now,
           published: false,
@@ -174,7 +174,11 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Game not found' }, { status: 404 });
     }
 
-    const contentRecord = await db.select().from(schema.gameContent).where(eq(schema.gameContent.gameId, game.id)).get();
+    const contentRecord = await db
+      .select()
+      .from(schema.gameContent)
+      .where(eq(schema.gameContent.gameId, game.id))
+      .get();
 
     return NextResponse.json({
       id: game.id,

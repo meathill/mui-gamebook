@@ -68,7 +68,7 @@ export function stringify(game: Game): string {
     rootChildren.push({
       type: 'heading',
       depth: 1,
-      children: [{ type: 'text', value: scene.id }],
+      children: [{ type: 'html', value: scene.id }],
     } as Heading);
 
     // Scene Metadata for AI Nodes
@@ -170,12 +170,8 @@ export function stringify(game: Game): string {
 
         listItems.push({
           type: 'listItem',
-          children: [
-            {
-              type: 'paragraph',
-              children: [{ type: 'text', value: text }],
-            },
-          ],
+          spread: false,
+          children: [{ type: 'html', value: text }],
         } as ListItem);
       }
     }
@@ -184,6 +180,7 @@ export function stringify(game: Game): string {
       rootChildren.push({
         type: 'list',
         ordered: false,
+        spread: false,
         children: listItems,
       } as List);
     }
