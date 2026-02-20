@@ -91,7 +91,9 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
           // 跳过条件语法的关键字
           if (varName === 'if' || varName === 'else') continue;
           if (!declaredVariables.has(varName)) {
-            issues.push(`Scene "${sceneId}": Variable "${varName}" used in {{}} interpolation but not declared in state`);
+            issues.push(
+              `Scene "${sceneId}": Variable "${varName}" used in {{}} interpolation but not declared in state`,
+            );
           }
         }
 
@@ -224,8 +226,8 @@ function main() {
 }
 
 // 检测是否为直接运行（而非被导入）
-const isDirectRun = process.argv[1]?.endsWith('validate-game-script.ts') ||
-  process.argv[1]?.includes('validate-game-script');
+const isDirectRun =
+  process.argv[1]?.endsWith('validate-game-script.ts') || process.argv[1]?.includes('validate-game-script');
 if (isDirectRun) {
   main();
 }

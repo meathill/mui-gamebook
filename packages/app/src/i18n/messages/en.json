@@ -29,7 +29,66 @@
     "terms": "Terms of Service",
     "contact": "Contact Us"
   },
+  "open": {
+    "hero": {
+      "title": "Embrace Open Source, Control the Future",
+      "subtitle": "MuiStory is fully open source. We believe in the power of openness and invite you to build the future of interactive storytelling together.",
+      "cta": "View Source"
+    },
+    "advantages": {
+      "title": "Why Open Source?",
+      "items": {
+        "control": {
+          "title": "Full Control",
+          "description": "The code is in your hands, the data is in your hands. No black boxes, no lock-in."
+        },
+        "customize": {
+          "title": "Defined by You",
+          "description": "Want special features? Implement them yourself. Or tell us, and we'll build it together."
+        },
+        "community": {
+          "title": "Community Driven",
+          "description": "Join a passionate developer community, share experiences, and grow together."
+        },
+        "cost": {
+          "title": "Transparent Costs",
+          "description": "Connect directly with AI providers, no middleman markups."
+        }
+      }
+    },
+    "successCases": {
+      "title": "Success Cases",
+      "description": "See how others are using MuiStory to create amazing stories.",
+      "items": {
+        "xiaoniao": {
+          "title": "Xiao Niao Shuo",
+          "description": "An interactive story park designed for children, built with MuiStory, allowing kids to learn and grow through fun story adventures."
+        }
+      }
+    },
+    "deployment": {
+      "title": "Easy Deployment",
+      "description": "Built on Next.js and Cloudflare full-stack architecture, deployment is simple and cost-effective.",
+      "steps": {
+        "1": "Fork the repository",
+        "2": "Configure Cloudflare and AI API Keys",
+        "3": "One-click deploy to Cloudflare Pages"
+      },
+      "cta": "View Deployment Guide"
+    },
+    "support": {
+      "title": "We've Got Your Back",
+      "content": "Worried about AI Providers? Don't know how to configure the environment? Don't worry, we promise to help everyone who wants to try self-hosting.",
+      "emailUs": "Email Us",
+      "emailDescription": "Contact developers directly: meathill@gmail.com"
+    }
+  },
   "home": {
+    "openSource": {
+      "title": "Open Source",
+      "description": "MuiStory is open source software. This means you can view every line of code, and even deploy your own version.",
+      "cta": "Learn More"
+    },
     "hero": {
       "badge": "AI-Powered Interactive Story Platform",
       "title": "Create Your Own Interactive Stories",

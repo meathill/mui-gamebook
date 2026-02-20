@@ -47,7 +47,12 @@ export function findAssets(dir: string): AssetMap {
 
     // 1. Cover
     // Stricter check to avoid 'discover' matching 'cover'
-    if (basename === 'cover' || basename.startsWith('cover_') || basename.endsWith('_cover') || basename.includes('_cover_')) {
+    if (
+      basename === 'cover' ||
+      basename.startsWith('cover_') ||
+      basename.endsWith('_cover') ||
+      basename.includes('_cover_')
+    ) {
       // Simplified: Just take the last one that matches 'cover' if multiple?
       // Existing logic: keep latest by string comparison.
       result.coverPath = filePath;

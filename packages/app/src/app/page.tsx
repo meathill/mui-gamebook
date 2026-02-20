@@ -91,6 +91,27 @@ export default async function Home() {
       {/* 产品特色 */}
       <FeaturesSection />
 
+      {/* Open Source */}
+      <section className="py-20 px-4 bg-stone-900 text-white overflow-hidden relative">
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tight">{t('openSource.title')}</h2>
+          <p className="text-xl text-stone-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+            {t('openSource.description')}
+          </p>
+          <Link
+            href="/open"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-stone-900 rounded-full font-bold hover:bg-stone-100 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-stone-900/50">
+            {t('openSource.cta')}
+            <ArrowRightIcon className="w-5 h-5" />
+          </Link>
+        </div>
+        {/* Decorative background elements */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-orange-500 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500 rounded-full blur-3xl"></div>
+        </div>
+      </section>
+
       {/* FAQ */}
       <FaqSection />
 

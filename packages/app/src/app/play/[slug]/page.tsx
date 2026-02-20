@@ -1,6 +1,7 @@
 import { cachedGetGameBySlug } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
 import RelatedGames from '@/components/RelatedGames';
+import Comment from '@/components/Comment';
 import { Metadata } from 'next';
 
 type Props = {
@@ -60,6 +61,11 @@ export default async function PlayPage({ params }: Props) {
             slug={slug}
           />
         </div>
+      </div>
+
+      {/* 评论系统 */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-0">
+        <Comment postId={slug} />
       </div>
 
       {/* 相关游戏推荐 */}

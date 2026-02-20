@@ -29,7 +29,66 @@
     "terms": "服务条款",
     "contact": "联系我们"
   },
+  "open": {
+    "hero": {
+      "title": "拥抱开源，掌控未来",
+      "subtitle": "姆伊游戏书完全开源。我们相信开放的力量，邀请你一起构建互动叙事的未来。",
+      "cta": "查看源码"
+    },
+    "advantages": {
+      "title": "为什么选择开源版本？",
+      "items": {
+        "control": {
+          "title": "完全掌控",
+          "description": "代码在你手中，数据在你手中。没有黑盒，没有锁定。"
+        },
+        "customize": {
+          "title": "由你定义",
+          "description": "想要特殊的功能？自己动手实现。或者告诉我们，我们一起实现。"
+        },
+        "community": {
+          "title": "社区驱动",
+          "description": "加入热情的开发者社区，分享经验，共同进步。"
+        },
+        "cost": {
+          "title": "成本透明",
+          "description": "直接对接 AI 服务商，没有中间商赚差价。"
+        }
+      }
+    },
+    "successCases": {
+      "title": "成功案例",
+      "description": "看看大家是如何使用姆伊游戏书创造精彩故事的。",
+      "items": {
+        "xiaoniao": {
+          "title": "小鸟说",
+          "description": "专为小朋友设计的互动故事乐园，使用姆伊游戏书构建，让孩子在有趣的故事冒险中学习与成长。"
+        }
+      }
+    },
+    "deployment": {
+      "title": "轻松部署",
+      "description": "基于 Next.js 和 Cloudflare 全栈架构，部署简单，成本低廉。",
+      "steps": {
+        "1": "Fork 项目仓库",
+        "2": "配置 Cloudflare 和 AI API Key",
+        "3": "一键部署到 Cloudflare Pages"
+      },
+      "cta": "查看详细部署指南"
+    },
+    "support": {
+      "title": "我们将全力支持你",
+      "content": "担心搞不定 AI Provider？不知道怎么配置环境？别担心，我们承诺为每一位想要尝试私有化部署的同学提供帮助。",
+      "emailUs": "发邮件给我们",
+      "emailDescription": "直接联系开发者：meathill@gmail.com"
+    }
+  },
   "home": {
+    "openSource": {
+      "title": "开源开放",
+      "description": "姆伊游戏书是开源软件。这意味着你可以查看每一行代码，甚至部署属于你自己的版本。",
+      "cta": "了解更多"
+    },
     "hero": {
       "badge": "AI 驱动的互动故事平台",
       "title": "创作属于你的互动故事",

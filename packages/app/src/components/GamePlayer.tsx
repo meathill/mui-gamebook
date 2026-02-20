@@ -29,6 +29,9 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
   const [imageLoading, setImageLoading] = useState(false);
   const [minigameCompleted, setMinigameCompleted] = useState(false);
+  const [textVisible, setTextVisible] = useState(true);
+  const [hasReadAll, setHasReadAll] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const dialog = useDialog();
   const t = useTranslations('game');
   const audioPlayer = useAudioPlayer();
@@ -213,8 +216,24 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     }
     // 切换场景时重置小游戏完成状态和停止音频
     setMinigameCompleted(false);
+    setTextVisible(true);
+    setHasReadAll(false);
     audioPlayer.stop();
   };
+
+  // 处理滚动检测是否读完
+  function handleScroll(e: React.UIEvent<HTMLDivElement>) {
+    const target = e.currentTarget;
+    const isAtBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 10;
+    if (isAtBottom && !hasReadAll) {
+      setHasReadAll(true);
+    }
+  }
+
+  // 处理图片点击切换文本显示
+  function handleImageClick() {
+    setTextVisible((prev) => !prev);
+  }
 
   // 处理小游戏完成后的变量更新
   const handleMiniGameComplete = (updatedVars: Record<string, number | string | boolean>) => {
@@ -282,7 +301,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
       {/* 可见变量状态栏 */}
       {visibleVariables.length > 0 && (
         <div className="bg-gray-50 border-b px-4 py-2">
-          <div className="max-w-2xl mx-auto grid grid-cols-3 sm:flex sm:flex-wrap gap-4">
+          <div className="max-w-2xl mx-auto grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
             {visibleVariables.map(({ key, meta }) => (
               <VariableIndicator
                 key={key}
@@ -295,71 +314,139 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
         </div>
       )}
 
-      {/* Persistent Image Display */}
-      {currentImageUrl && (
-        <div className="w-full relative overflow-hidden bg-gray-100 shadow-inner">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={currentImageUrl}
-            alt="Scene"
-            className={`w-full transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}
-            onLoad={() => setImageLoading(false)}
-          />
-        </div>
-      )}
+      {/* Image and Content Container - 移动端时文本叠加在图片上 */}
+      <div className="relative flex-1 sm:flex-none sm:block overflow-hidden">
+        {/* Persistent Image Display */}
+        {currentImageUrl && (
+          <div className="w-full sm:relative absolute inset-0 overflow-hidden bg-gray-100">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={currentImageUrl}
+              alt="Scene"
+              className={`w-full h-full object-cover sm:h-auto sm:object-contain transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}
+              onLoad={() => setImageLoading(false)}
+              onClick={handleImageClick}
+            />
+            {/* 移动端渐变遮罩，提升文字可读性 */}
+            <div
+              className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent sm:hidden transition-opacity duration-300 ${textVisible ? 'opacity-100' : 'opacity-0'}`}
+            />
+            {/* 移动端文本隐藏时的提示 */}
+            {!textVisible && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm sm:hidden">
+                点击显示文字
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* Scene Content */}
-      <div className="flex-1 p-4 md:p-8 max-w-2xl mx-auto w-full">
-        <div className="space-y-2 sm:space-y-6">
-          {currentScene.nodes.map((node, index) => {
-            switch (node.type) {
-              case 'text': {
-                const hasTextAudio = 'audio_url' in node && !!node.audio_url;
-                return (
-                  <div
-                    key={index}
-                    className="sm:space-y-2">
-                    <div className="prose prose-lg prose-gray max-w-none">
-                      <ReactMarkdown>{interpolateVariables(node.content, runtimeState)}</ReactMarkdown>
+        {/* Scene Content - 移动端文本层 */}
+        <div
+          ref={contentRef}
+          onScroll={handleScroll}
+          className={`relative z-10 p-4 md:p-8 max-w-2xl mx-auto w-full flex flex-col justify-end sm:justify-start overflow-y-auto transition-opacity duration-300 ${currentImageUrl ? 'absolute bottom-0 left-0 right-0 h-[50%] sm:static sm:h-auto sm:inset-auto' : ''} ${textVisible ? 'opacity-100' : 'opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto'}`}>
+          <div className="space-y-2 sm:space-y-6">
+            {currentScene.nodes.map((node, index) => {
+              switch (node.type) {
+                case 'text': {
+                  const hasTextAudio = 'audio_url' in node && !!node.audio_url;
+                  return (
+                    <div
+                      key={index}
+                      className="sm:space-y-2">
+                      <div
+                        className={`prose prose-lg max-w-none ${currentImageUrl ? 'prose-invert sm:prose-gray' : 'prose-gray'}`}>
+                        <ReactMarkdown>{interpolateVariables(node.content, runtimeState)}</ReactMarkdown>
+                      </div>
+                      {hasTextAudio && (
+                        <AudioControls
+                          audioPlayer={audioPlayer}
+                          hasAudio={hasTextAudio}
+                        />
+                      )}
                     </div>
-                    {hasTextAudio && (
-                      <AudioControls
-                        audioPlayer={audioPlayer}
-                        hasAudio={hasTextAudio}
-                      />
-                    )}
-                  </div>
-                );
+                  );
+                }
+
+                case 'static_image':
+                case 'ai_image':
+                  return null;
+
+                case 'minigame':
+                  if (!node.url) return null;
+                  return (
+                    <MiniGamePlayer
+                      key={index}
+                      url={node.url}
+                      variables={node.variables || []}
+                      runtimeState={runtimeState}
+                      onComplete={handleMiniGameComplete}
+                    />
+                  );
+
+                case 'choice':
+                  // 移动端：只有阅读完才显示选项；桌面端：始终显示
+                  if (!hasReadAll && currentImageUrl) {
+                    return null;
+                  }
+                  if (hasMinigame && !minigameCompleted) {
+                    return null;
+                  }
+                  if (!evaluateCondition(node.condition, runtimeState)) {
+                    return null;
+                  }
+                  const hasChoiceAudio = 'audio_url' in node && !!node.audio_url;
+                  return (
+                    <button
+                      key={index}
+                      className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md flex items-center gap-3 ${currentImageUrl ? 'bg-white/80 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100 hover:border-orange-400 hover:bg-orange-50'}`}
+                      onClick={() => handleChoice(node.nextSceneId, node.set, index)}>
+                      {hasChoiceAudio && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            audioPlayer.play((node as { audio_url: string }).audio_url);
+                          }}
+                          className="p-2 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-600 transition-colors flex-shrink-0"
+                          title="播放语音">
+                          <Volume2 size={16} />
+                        </button>
+                      )}
+                      <span className="font-medium text-amber-800 group-hover:text-orange-700 text-lg flex-1">
+                        {interpolateVariables(node.text, runtimeState)}
+                      </span>
+                    </button>
+                  );
+
+                default:
+                  return null;
               }
+            })}
 
-              case 'static_image':
-              case 'ai_image':
-                return null;
+            {/* End Screen */}
+            {showEndScreen && (
+              <EndScreen
+                title={game.title}
+                shareUrl={shareUrl}
+                onRestart={handleRestart}
+              />
+            )}
+          </div>
+        </div>
 
-              case 'minigame':
-                if (!node.url) return null;
-                return (
-                  <MiniGamePlayer
-                    key={index}
-                    url={node.url}
-                    variables={node.variables || []}
-                    runtimeState={runtimeState}
-                    onComplete={handleMiniGameComplete}
-                  />
-                );
-
-              case 'choice':
-                if (hasMinigame && !minigameCompleted) {
-                  return null;
-                }
-                if (!evaluateCondition(node.condition, runtimeState)) {
-                  return null;
-                }
+        {/* 移动端选项覆盖层 - 阅读完后显示 */}
+        {hasReadAll && currentImageUrl && (
+          <div className="absolute inset-0 z-20 flex flex-col justify-end p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent sm:hidden">
+            <div className="space-y-2">
+              {currentScene.nodes.map((node, index) => {
+                if (node.type !== 'choice') return null;
+                if (hasMinigame && !minigameCompleted) return null;
+                if (!evaluateCondition(node.condition, runtimeState)) return null;
                 const hasChoiceAudio = 'audio_url' in node && !!node.audio_url;
                 return (
                   <button
                     key={index}
-                    className="w-full text-left px-4 py-2 sm:py-4 border-2 border-amber-100 rounded-xl hover:border-orange-400 hover:bg-orange-50 transition-all group shadow-sm hover:shadow-md flex items-center gap-3"
+                    className="w-full text-left px-4 py-3 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl transition-all group shadow-md hover:shadow-lg flex items-center gap-3 hover:bg-white hover:border-orange-400"
                     onClick={() => handleChoice(node.nextSceneId, node.set, index)}>
                     {hasChoiceAudio && (
                       <button
@@ -377,21 +464,19 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
                     </span>
                   </button>
                 );
+              })}
 
-              default:
-                return null;
-            }
-          })}
-
-          {/* End Screen */}
-          {showEndScreen && (
-            <EndScreen
-              title={game.title}
-              shareUrl={shareUrl}
-              onRestart={handleRestart}
-            />
-          )}
-        </div>
+              {/* End Screen - mobile overlay */}
+              {showEndScreen && (
+                <EndScreen
+                  title={game.title}
+                  shareUrl={shareUrl}
+                  onRestart={handleRestart}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
