@@ -31,7 +31,9 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   const [minigameCompleted, setMinigameCompleted] = useState(false);
   const [textVisible, setTextVisible] = useState(true);
   const [hasReadAll, setHasReadAll] = useState(false);
+  const [autoScrolling, setAutoScrolling] = useState(true);
   const contentRef = useRef<HTMLDivElement>(null);
+  const autoScrollRef = useRef<number | null>(null);
   const dialog = useDialog();
   const t = useTranslations('game');
   const audioPlayer = useAudioPlayer();
@@ -218,6 +220,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     setMinigameCompleted(false);
     setTextVisible(true);
     setHasReadAll(false);
+    setAutoScrolling(true);
     audioPlayer.stop();
   };
 
@@ -227,6 +230,60 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     const isAtBottom = target.scrollHeight - target.scrollTop <= target.clientHeight + 10;
     if (isAtBottom && !hasReadAll) {
       setHasReadAll(true);
+    }
+  }
+
+  // Auto-detect when content doesn't need scrolling (all text visible without scroll)
+  useEffect(() => {
+    if (hasReadAll || !currentImageUrl) return;
+    const el = contentRef.current;
+    if (!el) return;
+    // If content fits without scrolling, mark as read
+    if (el.scrollHeight <= el.clientHeight + 10) {
+      setHasReadAll(true);
+    }
+  }, [currentSceneId, hasReadAll, currentImageUrl]);
+
+  // 移动端自动滚动文本
+  useEffect(() => {
+    if (!autoScrolling || hasReadAll || !currentImageUrl) return;
+    const el = contentRef.current;
+    if (!el) return;
+
+    let lastTime = 0;
+    const speed = 40; // px per second
+
+    const step = (time: number) => {
+      if (!lastTime) lastTime = time;
+      const delta = time - lastTime;
+      lastTime = time;
+
+      el.scrollTop += (speed * delta) / 1000;
+
+      // Check if reached bottom
+      if (el.scrollHeight - el.scrollTop <= el.clientHeight + 10) {
+        setHasReadAll(true);
+        setAutoScrolling(false);
+        return;
+      }
+      autoScrollRef.current = requestAnimationFrame(step);
+    };
+
+    // Delay start to let user see the beginning
+    const timeout = setTimeout(() => {
+      autoScrollRef.current = requestAnimationFrame(step);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timeout);
+      if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
+    };
+  }, [autoScrolling, hasReadAll, currentImageUrl, currentSceneId]);
+
+  // 用户手动滚动时停止自动滚动
+  function handleUserInteraction() {
+    if (autoScrolling) {
+      setAutoScrolling(false);
     }
   }
 
@@ -340,12 +397,14 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
           </div>
         )}
 
-        {/* Scene Content - 移动端文本层 */}
+        {/* Scene Content - 移动端文本层，mt-auto 让短内容贴底 */}
         <div
           ref={contentRef}
           onScroll={handleScroll}
-          className={`relative z-10 p-4 md:p-8 max-w-2xl mx-auto w-full flex flex-col justify-end sm:justify-start overflow-y-auto transition-opacity duration-300 ${currentImageUrl ? 'absolute bottom-0 left-0 right-0 h-[50%] sm:static sm:h-auto sm:inset-auto' : ''} ${textVisible ? 'opacity-100' : 'opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto'}`}>
-          <div className="space-y-2 sm:space-y-6">
+          onTouchStart={handleUserInteraction}
+          onWheel={handleUserInteraction}
+          className={`relative z-10 p-4 md:p-8 max-w-2xl mx-auto w-full flex flex-col overflow-y-auto transition-opacity duration-300 ${currentImageUrl ? 'absolute bottom-0 left-0 right-0 h-[50dvh] sm:static sm:h-auto sm:inset-auto' : ''} ${textVisible ? 'opacity-100' : 'opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto'}`}>
+          <div className="mt-auto space-y-2 sm:mt-0 sm:space-y-6">
             {currentScene.nodes.map((node, index) => {
               switch (node.type) {
                 case 'text': {
@@ -385,21 +444,21 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
                   );
 
                 case 'choice':
-                  // 移动端：只有阅读完才显示选项；桌面端：始终显示
-                  if (!hasReadAll && currentImageUrl) {
-                    return null;
-                  }
                   if (hasMinigame && !minigameCompleted) {
                     return null;
                   }
                   if (!evaluateCondition(node.condition, runtimeState)) {
                     return null;
                   }
+                  // 移动端：阅读完才显示；桌面端：始终显示
+                  if (!hasReadAll && currentImageUrl) {
+                    return null;
+                  }
                   const hasChoiceAudio = 'audio_url' in node && !!node.audio_url;
                   return (
                     <button
                       key={index}
-                      className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md flex items-center gap-3 ${currentImageUrl ? 'bg-white/80 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100 hover:border-orange-400 hover:bg-orange-50'}`}
+                      className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md flex items-center gap-3 ${currentImageUrl ? 'bg-white/90 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100'} hover:border-orange-400 hover:bg-orange-50`}
                       onClick={() => handleChoice(node.nextSceneId, node.set, index)}>
                       {hasChoiceAudio && (
                         <button
@@ -433,50 +492,6 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
             )}
           </div>
         </div>
-
-        {/* 移动端选项覆盖层 - 阅读完后显示 */}
-        {hasReadAll && currentImageUrl && (
-          <div className="absolute inset-0 z-20 flex flex-col justify-end p-4 bg-gradient-to-t from-black/80 via-black/40 to-transparent sm:hidden">
-            <div className="space-y-2">
-              {currentScene.nodes.map((node, index) => {
-                if (node.type !== 'choice') return null;
-                if (hasMinigame && !minigameCompleted) return null;
-                if (!evaluateCondition(node.condition, runtimeState)) return null;
-                const hasChoiceAudio = 'audio_url' in node && !!node.audio_url;
-                return (
-                  <button
-                    key={index}
-                    className="w-full text-left px-4 py-3 bg-white/90 backdrop-blur-sm border-2 border-white/50 rounded-xl transition-all group shadow-md hover:shadow-lg flex items-center gap-3 hover:bg-white hover:border-orange-400"
-                    onClick={() => handleChoice(node.nextSceneId, node.set, index)}>
-                    {hasChoiceAudio && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          audioPlayer.play((node as { audio_url: string }).audio_url);
-                        }}
-                        className="p-2 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-600 transition-colors flex-shrink-0"
-                        title="播放语音">
-                        <Volume2 size={16} />
-                      </button>
-                    )}
-                    <span className="font-medium text-amber-800 group-hover:text-orange-700 text-lg flex-1">
-                      {interpolateVariables(node.text, runtimeState)}
-                    </span>
-                  </button>
-                );
-              })}
-
-              {/* End Screen - mobile overlay */}
-              {showEndScreen && (
-                <EndScreen
-                  title={game.title}
-                  shareUrl={shareUrl}
-                  onRestart={handleRestart}
-                />
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
