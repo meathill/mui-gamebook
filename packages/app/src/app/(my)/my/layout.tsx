@@ -2,15 +2,10 @@
 
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
-import AdminNav from '@/components/admin/AdminNav';
+import MyNav from '@/components/my/MyNav';
+import CreateGameModal from '@/components/admin/CreateGameModal';
 
-function isRootUserClient(email: string | undefined): boolean {
-  if (!email) return false;
-  const rootEmails = process.env.NEXT_PUBLIC_ROOT_USER_EMAIL?.split(',').map((e) => e.trim().toLowerCase()) || [];
-  return rootEmails.includes(email.toLowerCase());
-}
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function MyLayout({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
 
@@ -27,22 +22,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return null;
   }
 
-  if (!isRootUserClient(session.user.email)) {
-    router.push('/my/dashboard');
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex gap-8">
           <aside className="w-56 flex-shrink-0">
             <div className="sticky top-6">
-              <header className="mb-6">
-                <h2 className="text-lg font-bold text-gray-900">管理后台</h2>
+              <header className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-gray-900">工作台</h2>
+                <CreateGameModal />
               </header>
 
-              <AdminNav />
+              <MyNav />
             </div>
           </aside>
 

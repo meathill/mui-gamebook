@@ -187,7 +187,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2">
                         <div>
                           <Link
-                            href={`/admin/edit/${game.id}`}
+                            href={`/my/edit/${game.id}`}
                             className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
                             {game.title}
                           </Link>

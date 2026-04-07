@@ -3,13 +3,14 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
-import { User, LayoutDashboard, LogOut, ChevronDown } from 'lucide-react';
+import { User, LayoutDashboard, Gamepad2, Plus, Shield, LogOut, ChevronDown } from 'lucide-react';
 
 interface UserDropdownProps {
   email: string;
+  isAdmin?: boolean;
 }
 
-export default function UserDropdown({ email }: UserDropdownProps) {
+export default function UserDropdown({ email, isAdmin }: UserDropdownProps) {
   const router = useRouter();
 
   async function handleSignOut() {
@@ -37,10 +38,37 @@ export default function UserDropdown({ email }: UserDropdownProps) {
           align="end">
           <DropdownMenu.Item
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer outline-none"
-            onSelect={() => router.push('/admin/dashboard')}>
+            onSelect={() => router.push('/my/dashboard')}>
             <LayoutDashboard size={16} />
             数据统计
           </DropdownMenu.Item>
+
+          <DropdownMenu.Item
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer outline-none"
+            onSelect={() => router.push('/my/games')}>
+            <Gamepad2 size={16} />
+            我的游戏
+          </DropdownMenu.Item>
+
+          <DropdownMenu.Item
+            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer outline-none"
+            onSelect={() => router.push('/my/games')}>
+            <Plus size={16} />
+            创建新游戏
+          </DropdownMenu.Item>
+
+          {isAdmin && (
+            <>
+              <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
+
+              <DropdownMenu.Item
+                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer outline-none"
+                onSelect={() => router.push('/admin')}>
+                <Shield size={16} />
+                管理后台
+              </DropdownMenu.Item>
+            </>
+          )}
 
           <DropdownMenu.Separator className="h-px bg-gray-200 my-1" />
 

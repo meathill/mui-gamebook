@@ -50,8 +50,7 @@ export default function GamesPage() {
     onSuccess: (data) => {
       setNewTitle('');
       queryClient.invalidateQueries({ queryKey: ['games'] });
-      // 创建成功后立刻跳转到编辑页面，并带上 showImporter 参数
-      router.push(`/admin/edit/${data.id}?showImporter=true`);
+      router.push(`/my/edit/${data.id}?showImporter=true`);
     },
   });
 
@@ -136,7 +135,7 @@ export default function GamesPage() {
                   <Eye size={18} />
                 </Link>
                 <Link
-                  href={`/admin/edit/${game.id}`}
+                  href={`/my/edit/${game.id}`}
                   className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                   title="编辑">
                   <Edit size={18} />

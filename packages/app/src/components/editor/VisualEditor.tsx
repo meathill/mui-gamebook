@@ -102,7 +102,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   useEffect(() => {
     if (!loading && searchParams.get('showImporter') === 'true') {
       setShowImporter(true);
-      router.replace(`/admin/edit/${id}`);
+      router.replace(`/my/edit/${id}`);
     }
   }, [loading, searchParams, router, id, setShowImporter]);
 

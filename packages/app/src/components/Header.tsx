@@ -5,6 +5,12 @@ import { useTranslations } from 'next-intl';
 import { authClient } from '@/lib/auth-client';
 import UserDropdown from '@/components/admin/UserDropdown';
 
+function isRootUserClient(email: string | undefined): boolean {
+  if (!email) return false;
+  const rootEmails = process.env.NEXT_PUBLIC_ROOT_USER_EMAIL?.split(',').map((e) => e.trim().toLowerCase()) || [];
+  return rootEmails.includes(email.toLowerCase());
+}
+
 interface HeaderProps {
   /** headless 模式下的站点名称 */
   siteName?: string;
@@ -44,7 +50,10 @@ export default function Header({ siteName }: HeaderProps) {
           </div>
           <div className="flex items-center gap-4">
             {session ? (
-              <UserDropdown email={session?.user.email || ''} />
+              <UserDropdown
+                email={session?.user.email || ''}
+                isAdmin={isRootUserClient(session?.user.email)}
+              />
             ) : (
               <Link
                 href="/sign-in"

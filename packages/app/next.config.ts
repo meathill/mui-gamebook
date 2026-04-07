@@ -4,6 +4,13 @@ import createNextIntlPlugin from 'next-intl/plugin';
 import packageJson from './package.json';
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      { source: '/admin/dashboard', destination: '/my/dashboard', permanent: true },
+      { source: '/admin/games', destination: '/my/games', permanent: true },
+      { source: '/admin/edit/:id', destination: '/my/edit/:id', permanent: true },
+    ];
+  },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
   transpilePackages: ['@mui-gamebook/parser'],
   env: {

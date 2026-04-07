@@ -27,7 +27,7 @@ export default function CreateGameModal() {
       setTitle('');
       setOpen(false);
       queryClient.invalidateQueries({ queryKey: ['games'] });
-      router.push(`/admin/edit/${data.id}?showImporter=true`);
+      router.push(`/my/edit/${data.id}?showImporter=true`);
     },
   });
 
