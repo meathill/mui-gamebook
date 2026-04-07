@@ -42,6 +42,11 @@ export default function Header({ siteName }: HeaderProps) {
                 {t('minigames')}
               </Link>
               <Link
+                href="/blog"
+                className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
+                {t('blog')}
+              </Link>
+              <Link
                 href="/about"
                 className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
                 {t('about')}
@@ -57,7 +62,7 @@ export default function Header({ siteName }: HeaderProps) {
             ) : (
               <Link
                 href="/sign-in"
-                className="bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 px-4 py-2 rounded-md text-sm font-medium transition-all shadow-sm hover:shadow-md">
+                className="bg-orange-500 text-white hover:bg-orange-600 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
                 {t('signIn')}
               </Link>
             )}

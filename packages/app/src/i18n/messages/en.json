@@ -19,6 +19,7 @@
     "games": "Stories",
     "minigames": "Mini Games",
     "about": "About",
+    "blog": "Blog",
     "admin": "Dashboard",
     "signIn": "Sign In",
     "signOut": "Sign Out"
@@ -84,82 +85,116 @@
     }
   },
   "home": {
-    "openSource": {
-      "title": "Open Source",
-      "description": "MuiStory is open source software. This means you can view every line of code, and even deploy your own version.",
-      "cta": "Learn More"
-    },
     "hero": {
-      "badge": "AI-Powered Interactive Story Platform",
-      "title": "Create Your Own Interactive Stories",
-      "subtitle": "Use AI-powered tools to easily create engaging text adventure games. Zero coding required, unlimited creativity.",
-      "playNow": "Start Playing",
-      "createStory": "Create Story"
+      "title": "Everyone Can Create Interactive Fiction",
+      "subtitle": "Write stories in Markdown, let AI polish your prose, add branching choices and interactive elements, publish to multiple platforms.",
+      "startCreating": "Start Creating",
+      "browseStories": "Browse Stories"
     },
-    "recentGames": "Recently Updated",
-    "minigamesTitle": "Mini Games",
-    "minigamesSubtitle": "Experience unique interactive gameplay",
+    "recentGames": "Featured Stories",
     "viewAll": "View All",
     "features": {
-      "title": "Why Choose MuiStory",
-      "subtitle": "Powerful AI tools make storytelling simple and fun",
-      "aiAssist": {
-        "title": "AI-Assisted Creation",
-        "description": "Zero coding required. Describe your ideas in natural language, and AI generates complete scripts for you."
+      "title": "Everything You Need to Create",
+      "subtitle": "An all-in-one platform built for interactive fiction authors",
+      "editor": {
+        "title": "An Editor Built for Stories",
+        "description": "Auto-save, smart suggestions, scene management, character definitions — designed for interactive fiction, with a smooth writing experience."
       },
-      "aiChatbot": {
-        "title": "24/7 AI Chatbot Assistant",
-        "description": "Always-available smart assistant to answer questions, optimize plots, and refine details anytime."
+      "aiAssistant": {
+        "title": "AI Deeply Integrated",
+        "description": "Polish prose, improve dialogue, check plot consistency, generate illustrations and sound effects. AI is always ready — you stay in control."
       },
-      "variables": {
-        "title": "Variable System, Infinite Possibilities",
-        "description": "Use variables to change story paths based on player choices, creating truly branching narratives."
+      "interactive": {
+        "title": "Rich Interactive System",
+        "description": "Branching choices, variable system, conditional text, embedded mini games — let readers become part of the story."
       },
-      "minigames": {
-        "title": "Scene Mini Games",
-        "description": "Embed interactive mini games in your story for enhanced gameplay and richer player experiences."
-      },
-      "richInteractive": {
-        "title": "Rich Interactive Elements",
-        "description": "Support images, audio, animations, and more multimedia content for immersive reading experiences."
-      },
-      "crossPlatform": {
-        "title": "Cross-Platform Publishing",
-        "description": "One-click publish to Web, play anywhere anytime, and easily share with friends."
+      "publish": {
+        "title": "Multi-Platform Publishing",
+        "description": "One-click publish to Web. Coming soon: export to Ren'Py scripts or desktop apps for Steam and more."
       }
+    },
+    "highlights": {
+      "title": "Built for Creators",
+      "focus": {
+        "title": "Focus on Your Story, We Handle the Rest",
+        "description": "No need to learn complex programming languages. Just write your story, and AI will turn it into an engaging interactive novel. Markdown syntax is simple and intuitive — you'll get started in minutes."
+      },
+      "aiMedia": {
+        "title": "AI Generates Images, Video & Audio",
+        "description": "Before you find professional artists and sound designers, AI can fill the gaps — generating scene illustrations, background music, and character voices. You don't have to use it, but it's there when you need it."
+      },
+      "templates": {
+        "title": "Multiple Game Templates, Ready to Use",
+        "description": "Support for various interactive fiction templates and gameplay styles, with new templates added based on creator needs. Your creativity shouldn't be limited by tools."
+      },
+      "private": {
+        "title": "Private Publishing, for Those Who Care",
+        "description": "Support password protection and private publishing. Share your work only with those who truly appreciate it, or let friends test before going public."
+      },
+      "export": {
+        "title": "Coming Soon: One-Click Export to Steam",
+        "description": "We're developing one-click conversion to Ren'Py and Godot formats, packaging as desktop apps for Steam, itch.io and more. Iterate quickly here, then export when you're satisfied."
+      },
+      "openDev": {
+        "title": "Actively Developed, We Listen",
+        "description": "This project is under active development, and we truly value every creator's feedback. Share your ideas and suggestions — they might make it into the next release."
+      }
+    },
+    "workflow": {
+      "title": "Start Creating in Three Steps",
+      "subtitle": "From inspiration to publication, it's all simple",
+      "step1": {
+        "title": "Write Your Story",
+        "description": "Write with the Markdown editor. AI assistant helps you polish and improve anytime."
+      },
+      "step2": {
+        "title": "Add Interactive Elements",
+        "description": "Add branching choices, variables, images, sound effects, and mini games to bring your story to life."
+      },
+      "step3": {
+        "title": "Publish with One Click",
+        "description": "Share on the Web with readers, or export to other platforms for distribution."
+      }
+    },
+    "blog": {
+      "title": "Latest Updates",
+      "subtitle": "Product updates, tutorials, and industry insights",
+      "all": "All",
+      "readMore": "Read More",
+      "viewAll": "View All Posts"
     },
     "faq": {
       "title": "FAQ",
       "subtitle": "Everything you want to know about MuiStory",
       "whatIs": {
         "question": "What is MuiStory?",
-        "answer": "MuiStory is an AI-powered interactive story creation platform. You can describe your story ideas in natural language, and AI will generate complete interactive scripts. Players can experience different story paths by making different choices."
+        "answer": "MuiStory is an interactive fiction creation platform. Write interactive stories with a Markdown editor, add branching choices, variables, and multimedia elements, then publish for readers to experience. The AI writing assistant helps improve your prose and check plot consistency."
       },
       "howCreate": {
         "question": "How do I create my own story?",
-        "answer": "After registering, go to the dashboard and click 'Create Game'. You can use the AI Import feature to generate scripts from your outline, or use the visual editor to create manually."
+        "answer": "After registering, go to the dashboard and click 'Create Game'. Use the editor to write scene content, add choices to connect different scenes, and set variables and conditions for branching narratives. The AI assistant can help polish your text and optimize the plot."
       },
       "pricing": {
         "question": "Is it free to use?",
-        "answer": "The platform is currently in early stages, and core features are free to use. We'll continue improving the product and may introduce premium features in the future."
+        "answer": "Core creation features are free. The AI writing assistant provides a free daily quota. If you need more, you can purchase additional usage or use your own AI API keys."
       },
-      "variables": {
-        "question": "What is the variable system?",
-        "answer": "Variables can track player choices and states, such as affection levels or item counts. With variables, you can create true branching narratives where different players get different experiences."
+      "export": {
+        "question": "Can I export to other platforms?",
+        "answer": "Currently you can publish to the Web. We're developing Ren'Py script export and desktop app packaging, so you'll be able to publish to Steam, itch.io, and more."
       },
-      "minigames": {
-        "question": "What are mini games?",
-        "answer": "Mini games are interactive segments embedded in story scenes, like puzzles or battles. AI can automatically generate mini game code based on your descriptions, making stories more engaging."
+      "aiRole": {
+        "question": "What role does AI play in creation?",
+        "answer": "AI is your writing assistant, not your replacement. It can help polish prose, improve dialogue quality, check plot consistency, and generate images and sound effects. The story's creativity and direction are always in your hands."
       }
     },
-    "aboutTitle": "About MuiStory",
-    "aboutContent": "Welcome to MuiStory. One day I realized that AI can lower the barrier to creating interactive fiction/text adventure games, allowing more people to create and share their stories. Meanwhile, with proper development, letting authors control AI rather than be controlled by it can ensure story quality and gameplay. So, with the help of AI development tools, I created this platform.",
-    "aboutContent2": "This platform is still in its early stages with limited features and content, but I will continue to improve it. If you have any suggestions or ideas, feel free to contact me!",
-    "contactLink": "Email me for creator access",
-    "signature": "—— Meathill",
+    "cta": {
+      "title": "Start Your Story",
+      "subtitle": "Join the creator community and connect the world through stories.",
+      "button": "Start Creating for Free"
+    },
     "gameLibrary": "Game Library",
     "noCover": "No Cover",
-    "noGames": "No published games yet, please check back later!"
+    "noGames": "No published stories yet, please check back later!"
   },
   "games": {
     "pageTitle": "All Stories - MuiStory",

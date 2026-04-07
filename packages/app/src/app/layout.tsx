@@ -27,12 +27,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: {
       template: '%s | 姆伊游戏书',
-      default: '姆伊游戏书 - AI 驱动的互动小说平台',
+      default: '姆伊游戏书 - 互动小说创作平台',
     },
-    description: '探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。',
+    description: '用 Markdown 写互动小说，AI 帮你润色，一键发布到多个平台。姆伊游戏书，每个人都能创作好故事。',
     openGraph: {
-      title: '姆伊游戏书 - AI 驱动的互动小说平台',
-      description: '探索由 AI 驱动的无限可能。在姆伊游戏书，体验身临其境的互动故事，或创作属于你自己的冒险。',
+      title: '姆伊游戏书 - 互动小说创作平台',
+      description: '用 Markdown 写互动小说，AI 帮你润色，一键发布到多个平台。姆伊游戏书，每个人都能创作好故事。',
       type: 'website',
       locale: 'zh_CN',
       siteName: '姆伊游戏书',

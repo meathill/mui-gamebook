@@ -6,6 +6,7 @@ backgroundStory: |
   最近，“女基督”的传言在乡间疯传，信徒宣称她能带来财富与永生。
   宗教局特派员刘全奉命前来协助当地的王利发主教处理一起棘手的附身案件。
   但这仅仅是一个巨大阴谋的开始……
+cover_image: https://i.muistory.com/images/zhumadian-exorcist/1768835522450-zhumadian_cover.webp
 cover_prompt: A gritty, neo-noir style poster of a Chinese exorcist standing in a snowy street of Zhumadian at night, dim street lights, holding a cross and a bottle of Nongfu Spring water, dark atmosphere, mystery
 tags:
   - 悬疑
@@ -28,6 +29,13 @@ state:
   knows_mammon: false
   kaifeng_evidence: 0
   has_living_water: false
+  has_victim_diary: false
+  has_factory_photos: false
+  has_sales_ledger: false
+  has_chemical_list: false
+  has_factory_recording: false
+  has_fund_ledger: false
+  has_warrant: false
   disguise_worker: false
   defeated_alchemist: false
   nanyang_evidence: 0
@@ -45,30 +53,37 @@ ai:
       name: 刘全
       description: 宗教局特派员，博士学历，理性冷静，身穿黑色羽绒服，戴眼镜
       image_prompt: Chinese man in his 30s, wearing glasses and a thick black down jacket, serious expression, intellectual look, standing in winter street
+      image_url: https://i.muistory.com/images/zhumadian-exorcist/1768835523203-liu_quan_portrait.webp
     wang_lifa:
       name: 王利发
       description: 三自爱国会驻马店主教，身材魁梧，穿着皮夹克，满口河南土话，看起来像包工头
       image_prompt: Middle-aged Chinese man, burly build, wearing a worn leather jacket, rough appearance like a construction foreman, shouting
+      image_url: https://i.muistory.com/images/zhumadian-exorcist/1768835523907-wang_lifa_portrait.webp
     liu_shufen:
       name: 刘淑芬
       description: 被附身的农村妇女，穿着花棉袄，神情诡异
       image_prompt: Rural Chinese woman, wearing traditional floral pattern cotton jacket, messy hair, possessed expression, eerie smile
+      image_url: https://i.muistory.com/images/zhumadian-exorcist/1768835524759-liu_shufen_portrait.webp
     alchemist:
       name: 周炼金
       description: 邪教炼金术士，穿着白大褂，眼神狂热，手里拿着发光的烧瓶
       image_prompt: Crazy scientist, wearing dirty lab coat, holding glowing green potion, creepy smile, chemical factory background
+      image_url: https://i.muistory.com/images/zhumadian-exorcist/1768835525410-alchemist_portrait.webp
     foreman:
       name: 赵工头
       description: 方舟工地工头，身材极其强壮，手持大锤，满身泥土和肌肉
       image_prompt: Giant muscular man, dirty construction clothes, holding a massive sledgehammer, angry expression, muddy background
+      image_url: https://i.muistory.com/images/zhumadian-exorcist/1768835526048-foreman_portrait.webp
     banker:
       name: 钱行长
       description: 繁荣基金负责人，穿着昂贵的西装，戴着金丝眼镜，眼神阴鸷
       image_prompt: Middle-aged Chinese businessman, expensive suit, holding a cigar, sitting in a luxurious office, cold calculator eyes
+      image_url: https://i.muistory.com/images/zhumadian-exorcist/1768835527251-banker_portrait.webp
     mammon:
       name: 女基督（玛门）
       description: 邪教首领，外表是慈祥的中年妇女，但身后有巨大的金色阴影（玛门真身），充满了贪婪和威压
       image_prompt: A middle-aged Chinese woman sitting on a golden throne, behind her is a giant shadowy demon figure with golden horns and coins falling, surreal and terrifying
+      image_url: https://i.muistory.com/images/zhumadian-exorcist/1768835527831-mammon_portrait.webp
 ---
 
 # start
@@ -78,6 +93,7 @@ image:
   prompt: Night time, Zhumadian long distance bus station, winter, foggy street, street food stalls with steam rising, people walking in heavy clothes
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835528676-scene_start.webp
 audio:
   type: background_music
   prompt: City noise, cold wind, distant traffic, melancholic noir jazz
@@ -99,6 +115,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835529314-scene_meet_wang.webp
 ```
 
 "刘先生是吧，这边。"远处的黑影里有个人在向他打招呼，模模糊糊看不真切。说话的人挥着手往这边来，紧走了几步接过了他手里的包，"北京的刘先生吧，我是王利发，刚才看着你了，没敢叫，等人都走了，我觉得肯定是你。怎么样？一路挺辛苦？"
@@ -124,6 +141,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835529949-scene_ask_exorcism.webp
 ```
 
 刘全想起李牧师的话，憋了半天，终于忍不住开口："王主教，今天晚上就有驱魔吗？"
@@ -142,6 +160,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835530774-scene_car_ride.webp
 ```
 
 王利发在前头走，刘全在后面跟着，两个人走到一辆黑色奇瑞车旁，王利发从兜里掏出钥匙按了一下，把包扔进后备箱，又把车门打开。"咱们先吃个饭，啊，也没啥好吃的。"
@@ -166,6 +185,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835531407-scene_village_drive.webp
 ```
 
 奇瑞车不太新，看起来有点儿年头，门窗似乎关不太严实，总往里漏风，刘全坐在副驾驶上，看着皱着眉头开车的王利发，王利发和他想象中的主教不太一样，或者说太不一样了。王利发看起来更像是个包工头或者哪个建材商店的老板。
@@ -190,6 +210,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835532333-scene_wait_in_car.webp
 ```
 
 王利发下了车，走到房门口，开始敲门，刘全在车里看着屋子里出来个人，和王利发谈了几句话，屋里的人胡乱指了一下，很激烈地就把门给关上了。
@@ -216,6 +237,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835533830-scene_village_entrance.webp
 ```
 
 王利发把车停到路边，先让刘全下车，然后熄火停车。刘全看着院子里屋子的门打开了，一个老太太掀起门里帘子迎出来，屋里的灯光打在雪地上，给人感觉还挺温暖。
@@ -236,6 +258,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835534421-scene_arrive_village.webp
 ```
 
 "这姑娘本来挺好，可信了个啥之后就变了，成天说什么女基督女基督，这基督咋就是个女的了？我也弄不清楚……"老太太絮叨着把他们让到屋里，屋里很黑，空间逼仄，墙上满是烟熏火燎后留下的痕迹，墙角的大锅里好像还炖着什么东西。
@@ -257,6 +280,7 @@ image:
     - liu_quan
     - wang_lifa
     - liu_shufen
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835534973-scene_enter_room.webp
 ```
 
 老太太推开门，这是个很普通的农民的屋子，有炕，有窗户，靠墙有张桌子。墙皮斑驳。在屋子正中，一个女人被绑在一把椅子上，她低着头，散落的发丝完全把脸挡住，刘全看不清她的长相，但她很安静，非常安静。
@@ -282,6 +306,7 @@ image:
     - liu_quan
     - wang_lifa
     - liu_shufen
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835535753-scene_setup_ritual.webp
 ```
 
 刘全迟疑了一下，也走进屋子里，靠墙的地上有个接线板，他拿起来，接线板上的灯是亮的，就是挺脏。他拍拍，递给王利发。
@@ -312,6 +337,7 @@ image:
   characters:
     - liu_quan
     - liu_shufen
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835536425-scene_exorcism_test.webp
 ```
 
 刘全拿起矿泉水瓶装的圣水，试探性地洒了一点在女人身上。
@@ -351,6 +377,7 @@ image:
     - liu_quan
     - wang_lifa
     - liu_shufen
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835537006-scene_dodge_bile.webp
 audio:
   type: sfx
   prompt: Glass shattering, screaming
@@ -374,6 +401,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835537622-scene_persist_chant.webp
 ```
 
 刘全也是拼了，任由胆汁溅在羽绒服上，声音反而提高了一个八度。
@@ -395,6 +423,7 @@ image:
     - liu_quan
     - wang_lifa
     - liu_shufen
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835538231-scene_exorcism_climax.webp
 audio:
   type: sfx
   prompt: Screaming, splashing water, chanting
@@ -424,6 +453,7 @@ image:
   characters:
     - wang_lifa
     - liu_shufen
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835539097-scene_force_name.webp
 ```
 
 "一切宗教机关在我国需接受党的领导，一切宗教信仰自由！邪灵！滚出去！滚出去！不得在非宗教场合传教！不得在非宗教场合传教！不得向非信众传教！一切宗教信仰自由！邪灵！滚出去！滚出去！公民有信教的自由！也有不信教的自由！有信这个教的自由！也有信那个教的自由！邪灵！离开！离开！离开！"
@@ -453,6 +483,7 @@ image:
   prompt: Wang Lifa glowing with holy light, blocking the black smoke with his body
   characters:
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835539947-scene_wang_defends.webp
 ```
 
 轰的一声！
@@ -475,6 +506,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835540569-scene_exorcism_end2.webp
 ```
 
 "那咋办哩。"老太太急得好像马上就要哭出来。"俺就这么一个闺女……"
@@ -499,6 +531,7 @@ image:
   characters:
     - wang_lifa
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835541204-scene_exorcism_end.webp
 ```
 
 回到车上，刘全的心情久久不能平静，他问王利发：“驱魔结束了？”
@@ -510,8 +543,6 @@ image:
 "这书恁先拿着。这是我这些年记的东西，没事多看看，长点心眼。"
 
 刘全翻开笔记本，里面密密麻麻记着各种符号、名字、地点。有些地方还画着奇怪的图案，像是法阵，又像是什么地图。
-
-(获得物品：黑皮书)
 
 "根据之前的线索，这帮人有三个大窝点：开封有个'圣水厂'，南阳有个'方舟工地'，郑州还有个'繁荣基金'。"王利发用下巴点了点笔记本，"都在里面记着呢。"
 
@@ -532,6 +563,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835541818-scene_kaifeng_start.webp
 ```
 
 开封。古城。
@@ -569,6 +601,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835542475-scene_kaifeng_end.webp
 ```
 
 巨大的爆炸掀翻了屋顶。
@@ -584,14 +617,11 @@ image:
 他颤抖着从怀里掏出那把改装过的信号枪，塞到刘全手里。
 "拿着……这玩意儿关键时刻能救命……"
 
-(获得物品：信号枪)
-
 救护车和警车的警笛声由远及近。
 刘全握紧了拳头。那个曾经的书呆子，在这一刻死去了。
 站起来的，是一个真正的驱魔人。
 
 (任务完成：开封)
-(王利发离队)
 
 * [送老王去医院] -> hospital_hub (set: has_signal_gun = true)
 * [前往南阳] -> interlude_nanyang (set: has_signal_gun = true)
@@ -606,6 +636,7 @@ image:
   prompt: Crowded long-distance bus station in winter, peasants with heavy bags, steam from food stalls
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835543067-scene_nanyang_start.webp
 ```
 
 南阳长途车站。
@@ -626,7 +657,7 @@ image:
 “兄弟，去方舟发财啊？”一个猥琐的黄牛凑过来，“正规票早就没了。我这也是内部票，两百一张。”
 明摆着是宰客，但为了赶时间……
 
-* [给钱（花费200）] -> nanyang_bus_ride (set: money = money - 200)
+* [给钱] -> nanyang_bus_ride (set: money = money - 200)
 * [拒绝，去排队] -> nanyang_bus_wait
 
 ---
@@ -638,12 +669,11 @@ image:
   prompt: Liu Quan waiting in a long queue at a crowded bus station
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835543700-scene_nanyang_bus_wait.webp
 ```
 
 排了两个小时队，终于买到了票。
 但这浪费了宝贵的时间。
-
-(理智 -5)
 
 * [上车] -> nanyang_bus_ride (set: sanity = sanity - 5)
 
@@ -656,6 +686,7 @@ image:
   prompt: Inside a crowded, dirty bus, people smoking, chickens in cages
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835544318-scene_nanyang_bus_ride.webp
 ```
 
 车厢里弥漫着烟味、脚臭味和鸡屎味。
@@ -680,6 +711,7 @@ image:
   prompt: Old peasant on bus telling his story, holding a worn sack tightly, tears in his eyes
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835544912-scene_passenger_story.webp
 ```
 
 "唉，俺家去年遭了难，庄稼让水给淹了，颗粒无收。老婆病了，去医院一查，癌。"大叔的声音低了下去，"欠了一屁股债。后来有人跟俺说，只要信了女基督，把剩下的房子卖了，钱捐给方舟，就能换一张'船票'。"
@@ -703,6 +735,7 @@ image:
   prompt: A long distance bus driving through heavy rain on a mountain road
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835545507-scene_nanyang_bus_event.webp
 ```
 
 外面下起了暴雨。山路泥泞不堪。
@@ -732,8 +765,6 @@ image:
 
 刘全冷笑一声，正好拿你们练练手。
 
-(简短战斗)
-
 * [制服歹徒后直接去工地] -> nanyang_boss_encounter
 * [先找地方休整] -> interlude_nanyang_start
 
@@ -746,6 +777,7 @@ image:
   prompt: High speed train station, clean and futuristic compared to the bus station
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835546169-scene_zhengzhou_start.webp
 ```
 
 郑州东站。
@@ -766,6 +798,7 @@ image:
   prompt: Upscale VIP lounge, businessmen in suits bragging, expensive watches
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835546800-scene_zhengzhou_lounge.webp
 ```
 
 郑州东站。高铁候车室。
@@ -793,6 +826,7 @@ image:
   prompt: High speed train business class, young trader with laptop, graphics showing stock curves
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835547408-scene_zhengzhou_train.webp
 ```
 
 商务座。窗外的景色飞速后退，车厢里安静得只有键盘敲击声。
@@ -821,6 +855,7 @@ image:
   prompt: Liu Quan glancing at a laptop screen showing financial data
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835548037-scene_hack_train.webp
 ```
 
 趁着年轻人去厕所的功夫，刘全快速扫视了他的电脑。
@@ -839,6 +874,7 @@ image:
   prompt: A dilapidated industrial park heavily guarded, barbed wire fences, a sign saying 'Living Water Biotechnology'
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835548686-scene_find_factory.webp
 ```
 
 根据王利发笔记上的线索，刘全在城郊找到了这家“活水生物科技公司”。
@@ -847,11 +883,9 @@ image:
 
 围墙很高，上面拉着电网。
 
-* [贿赂保安（花费500）] -> bribe_guard (if: money >= 500)
+* [贿赂保安] -> bribe_guard (if: money >= 500)
 * [绕到后墙] -> check_perimeter
 * [使用“黑皮书”关系] -> use_black_book (if: has_black_book)
-
----
 
 ---
 
@@ -862,6 +896,7 @@ image:
   prompt: Liu Quan talking to an old lady in the queue, she looks excited and fanatical
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835549291-scene_ask_locals.webp
 ```
 
 “大妈，这水真那么神？”
@@ -882,6 +917,7 @@ image:
   prompt: Liu Quan checking a water bottle in a hotel room, using a portable testing kit
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835550171-scene_investigate_water.webp
 ```
 
 刘全忍痛花了200块买了一瓶水。回到临时住处，他打开随身携带的简易试纸。
@@ -904,6 +940,7 @@ image:
   characters:
     - wang_lifa
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835551078-scene_hospital_visit.webp
 ```
 
 驻马店市第一人民医院。重症监护室。
@@ -929,6 +966,7 @@ image:
   prompt: Liu Quan standing at the train station, looking at the departure board, determined expression
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835551893-scene_act1_end.webp
 ```
 
 刘全回到火车站，看着出发的列车时刻表。
@@ -952,6 +990,7 @@ image:
   prompt: A messy apartment room, maps on wall, black notebook on table, instant noodles
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835552540-scene_safehouse_rest.webp
 ```
 
 这是王利发的“安全屋”，其实就是个老旧的单身公寓。
@@ -959,13 +998,11 @@ image:
 
 在这里，刘全可以整理思绪，准备下一步的行动。
 
-(当前状态：生命 {health}，理智 {sanity}，经费 {money})
-
 * [研读黑皮书] -> research_book
 * [整理装备/补给] -> resupply
 * [联系北京总部] -> call_hq
-* [出发前往南阳] -> interlude_nanyang_start (if: not has_ark_ticket)
-* [出发前往郑州] -> interlude_zhengzhou_start (if: not has_vip_card)
+* [出发前往南阳] -> interlude_nanyang_start (if: has_ark_ticket == false)
+* [出发前往郑州] -> interlude_zhengzhou_start (if: has_vip_card == false)
 
 ---
 
@@ -976,6 +1013,7 @@ image:
   prompt: An old worn notebook with handwritten notes, diagrams, and bloodstains
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835553149-scene_read_black_book.webp
 ```
 
 黑皮书。
@@ -985,8 +1023,9 @@ image:
 字迹潦草，但条理清晰。刘全越看越心惊——这个邪教的规模，远超他的想象。
 
 * [阅读第一章：初现] -> flashback_prologue
-* [阅读第二章：迷惘] -> flashback_mid (if: kaifeng_evidence >= 1 or nanyang_evidence >= 1)
-* [阅读第三章：代价] -> flashback_end (if: kaifeng_evidence >= 1 and nanyang_evidence >= 1)
+* [阅读第二章：迷惘] -> flashback_mid (if: kaifeng_evidence >= 1)
+* [阅读第二章：迷惘] -> flashback_mid (if: nanyang_evidence >= 1, kaifeng_evidence < 1)
+* [阅读第三章：代价] -> flashback_end (if: kaifeng_evidence >= 1, nanyang_evidence >= 1)
 * [合上书] -> safehouse_rest
 
 ---
@@ -998,9 +1037,8 @@ image:
   prompt: Sepia tone, Wang Lifa younger in a village, watching a crowd of peasants worshipping a golden statue in rain
   characters:
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835553837-scene_flashback_prologue.webp
 ```
-
-（回忆：三年前）
 
 雨。滂沱大雨。
 
@@ -1025,9 +1063,8 @@ image:
   prompt: Sepia tone, Wang Lifa standing in front of a government desk, official drinking tea dismissively
   characters:
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835554436-scene_flashback_mid.webp
 ```
-
-（回忆：一年前）
 
 市宗教局。一间灰扑扑的办公室。
 
@@ -1056,9 +1093,8 @@ image:
   prompt: Sepia tone, Wang Lifa in a dark alley confronting a shadowed figure, clutching his chest in pain
   characters:
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835555142-scene_flashback_end.webp
 ```
-
-（回忆：一个月前）
 
 深夜。一条无名的小巷。
 
@@ -1089,6 +1125,7 @@ image:
   prompt: Liu Quan on phone in dimly lit room
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835555787-scene_call_hq.webp
 ```
 
 电话接通了。导师的声音传来。
@@ -1096,6 +1133,12 @@ image:
 
 * [汇报工作（隐瞒实情）] -> report_fake
 * [请求支援] -> report_truth
+* [提交原料清单] -> report_evidence (if: has_chemical_list) (set: has_warrant = true)
+* [提交受害者日记] -> report_evidence (if: has_victim_diary) (set: has_warrant = true)
+* [提交工厂照片] -> report_evidence (if: has_factory_photos) (set: has_warrant = true)
+* [提交销售账本] -> report_evidence (if: has_sales_ledger) (set: has_warrant = true)
+* [提交录音证据] -> report_evidence (if: has_factory_recording) (set: has_warrant = true)
+* [提交基金账本] -> report_evidence (if: has_fund_ledger) (set: has_warrant = true)
 
 ---
 
@@ -1106,6 +1149,7 @@ image:
   prompt: Inside a green train carriage, crowded with people, smelling of smoke and instant noodles
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835556421-scene_interlude_kaifeng.webp
 ```
 
 去开封的绿皮火车上人挤人。
@@ -1137,6 +1181,7 @@ image:
   prompt: A long distance bus driving through heavy rain on a mountain road
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835545507-scene_nanyang_bus_event.webp
 ```
 
 去南阳的大巴车在盘山公路上颠簸。
@@ -1157,6 +1202,7 @@ image:
   prompt: High speed train business class, quiet and modern
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835557057-scene_interlude_zhengzhou.webp
 ```
 
 高铁商务座。
@@ -1182,6 +1228,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835557841-scene_check_perimeter.webp
 ```
 
 工厂后方是一片荒地。围墙很高，上面拉着电网，滋滋作响。
@@ -1202,6 +1249,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835558620-scene_climb_tree.webp
 ```
 
 刘全先爬上去，伸手拉王利发。
@@ -1222,6 +1270,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835559278-scene_sewer_entry.webp
 ```
 
 排水口里臭气熏天。
@@ -1240,6 +1289,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835559942-scene_factory_garden.webp
 ```
 
 花园里堆满了生锈的机器设备。
@@ -1263,6 +1313,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835560693-scene_factory_warehouse.webp
 ```
 
 两人从下水道爬出来，身处原料仓库。
@@ -1274,7 +1325,7 @@ image:
 
 (获得情报：原料清单)
 
-* [溜进生产区] -> production_line (set: kaifeng_evidence = kaifeng_evidence + 1)
+* [溜进生产区] -> production_line (set: kaifeng_evidence = kaifeng_evidence + 1, has_chemical_list = true)
 
 ---
 
@@ -1286,6 +1337,7 @@ image:
   characters:
     - wang_lifa
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835561302-scene_bribe_guard.webp
 ```
 
 没等刘全开口，王利发大摇大摆地走上前，掏出一盒中华烟。
@@ -1309,6 +1361,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835561936-scene_factory_front_yard.webp
 ```
 
 前广场上停满了拉货的卡车。
@@ -1329,6 +1382,7 @@ image:
   characters:
     - wang_lifa
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835562574-scene_use_black_book.webp
 ```
 
 后门口，王利发一眼就认出了那个佝偻的身影。
@@ -1353,6 +1407,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835563261-scene_factory_canteen.webp
 ```
 
 食堂里，几百个工人正在默默地吃饭，眼神呆滞。
@@ -1373,6 +1428,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835563864-scene_worker_dorm.webp
 ```
 
 宿舍里没人。床头贴满了那种诡异的符咒。
@@ -1381,9 +1437,7 @@ image:
 
 王利发长叹一声：“可怜之人必有可恨之处，但这帮骗子更该死！”
 
-(获得证据：受害者日记)
-
-* [离开宿舍去车间] -> production_line (set: kaifeng_evidence = kaifeng_evidence + 1)
+* [离开宿舍去车间] -> production_line (set: kaifeng_evidence = kaifeng_evidence + 1, has_victim_diary = true)
 
 ---
 
@@ -1395,6 +1449,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835564483-scene_production_line.webp
 ```
 
 车间里，流水线上灌装的正是那种绿色的液体。
@@ -1417,12 +1472,12 @@ image:
   prompt: Liu Quan taking photos with his phone from behind a crate
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835565073-scene_collect_evidence.webp
 ```
 
 证据确凿。这根本不是什么圣水，是勾兑的化学毒剂。
-(获得证据: 工厂照片)
 
-* [前往实验室] -> lab_entrance (set: kaifeng_evidence = kaifeng_evidence + 1)
+* [前往实验室] -> lab_entrance (set: kaifeng_evidence = kaifeng_evidence + 1, has_factory_photos = true)
 
 ---
 
@@ -1434,6 +1489,7 @@ image:
   characters:
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835565786-scene_office_building.webp
 ```
 
 办公楼里戒备森严。
@@ -1441,13 +1497,11 @@ image:
 
 “乖乖，一个月流水三千万？”王利发看得眼珠子都快掉下来了，“这哪是卖水，这是印钞票啊！”
 
-(获得证据：销售账本)
-
 突然，警报响了！
 
 “不好，被发现了！”
 
-* [杀出去！] -> boss_encounter (set: kaifeng_evidence = kaifeng_evidence + 1)
+* [杀出去！] -> boss_encounter (set: kaifeng_evidence = kaifeng_evidence + 1, has_sales_ledger = true)
 
 ---
 
@@ -1459,7 +1513,7 @@ image:
 
 “有入侵者！抓住他！”
 
-* [快跑！] -> lab_entrance
+* [快跑！] -> lab_entrance (set: has_factory_recording = true)
 
 ---
 
@@ -1470,6 +1524,7 @@ image:
   prompt: A heavy metal door with a biohazard sign, green light leaking from under it
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835566394-scene_lab_entrance.webp
 ```
 
 所有的路都被封锁了，刘全只能冲向最深处的实验室。
@@ -1488,6 +1543,7 @@ image:
   characters:
     - liu_quan
     - alchemist
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835566987-scene_boss_encounter.webp
 audio:
   type: background_music
   prompt: Fast paced industrial techno mixed with maniacal laughter
@@ -1514,6 +1570,7 @@ image:
     - liu_quan
     - wang_lifa
     - alchemist
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835567581-scene_boss_phase_1.webp
 ```
 
 战斗开始！
@@ -1559,6 +1616,7 @@ image:
   prompt: Alchemist drinking the green potion, muscles expanding, clothes tearing
   characters:
     - alchemist
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835568159-scene_boss_phase_2.webp
 ```
 
 周连金被激怒了。
@@ -1602,6 +1660,7 @@ image:
     - alchemist
     - liu_quan
     - wang_lifa
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835568858-scene_boss_cutscene.webp
 ```
 
 周连金被打得节节败退，浑身流淌着绿色的脓血。
@@ -1628,6 +1687,7 @@ image:
   characters:
     - wang_lifa
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835569468-scene_hospital_hub.webp
 ```
 
 还是那家医院。王利发被送进了ICU。
@@ -1649,6 +1709,7 @@ image:
   prompt: Doctor in white coat speaking to Liu Quan in hospital corridor
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835570064-scene_hospital_doctor.webp
 ```
 
 医生摘下口罩：“病人身体各项指标都正常，甚至……比正常人还强壮。但他就是醒不过来，脑波很乱，像是……在做什么噩梦。”
@@ -1666,6 +1727,7 @@ image:
   prompt: Liu Quan sitting alone on a hospital bench, looking at a cigarette
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835571348-scene_hospital_monologue.webp
 ```
 
 刘全坐在长椅上，掏出一根烟，想了想又放了回去。
@@ -1685,6 +1747,7 @@ image:
   prompt: Close up of the black notebook, handwriting and sketches of demons
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835571992-scene_research_book.webp
 ```
 
 黑皮书里记录了王利发毕生的驱魔经验。
@@ -1703,6 +1766,7 @@ image:
   prompt: Page from the black book showing notes about cult psychology
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835572630-scene_read_cult_lore.webp
 ```
 
 “……土生土长的邪教，往往利用人们对贫穷的恐惧。他们不讲救赎，只讲‘现世报’——得病了喝水就好，没钱了信神就富……”
@@ -1722,6 +1786,7 @@ image:
   prompt: Page from the black book showing sketch of Mammon demon
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835573274-scene_read_mammon_lore.webp
 ```
 
 “……玛门，并非实体，而是贪婪概念的具象化。它寄生在金钱、欲望之中。消灭它的唯一方法，不是杀戮，而是‘拒绝’。”
@@ -1741,13 +1806,12 @@ image:
   prompt: Page from the black book showing personal diary entries
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835573978-scene_read_wang_diary.webp
 ```
 
 “x月x日。今天又没能救下那个孩子。她的父母为了买‘神水’，把救命钱都搭进去了。我揍了那个卖水的，但那是违法的。主啊，我该怎么办？有时候，我觉得拳头比祷告管用。”
 
 看着字里行间透出的无力感，刘全似乎更理解老王了。
-
-(共情 +5)
 
 * [继续阅读] -> research_book
 
@@ -1760,12 +1824,13 @@ image:
   prompt: Liu Quan checking supplies in the safehouse
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835574615-scene_resupply.webp
 ```
 
 这里存了一些物资。
 
-* [吃碗泡面（恢复生命）] -> eat_noodles (set: health = health + 20, money = money - 10)
-* [制作圣水] -> craft_holy_water (if: faith >= 10)
+* [吃碗泡面] -> eat_noodles (set: health = health + 20, money = money - 10)
+* [制作圣水] -> craft_holy_water (if: faith >= 10) (set: has_living_water = true)
 * [检修装备] -> repair_equipment (set: rationality = rationality + 2)
 * [休息] -> safehouse_rest
 
@@ -1778,6 +1843,7 @@ image:
   prompt: Bowl of instant noodles steaming on a cluttered desk
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835575232-scene_eat_noodles.webp
 ```
 
 红烧牛肉面。虽然不健康，但在冬天里，这就是最好的慰藉。
@@ -1793,11 +1859,11 @@ image:
   prompt: Liu Quan blessing a bottle of water with a cross
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835575831-scene_craft_holy_water.webp
 ```
 
 按照书上的配方，刘全试着祝圣了一瓶矿泉水。
 虽然不如老王的纯正，但也能凑合用。
-(获得道具：简易圣水)
 
 * [继续] -> safehouse_rest
 
@@ -1810,6 +1876,7 @@ image:
   prompt: Liu Quan fixing a signal flare gun on a workbench
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835576574-scene_repair_equipment.webp
 ```
 
 之前的战斗让装备有些磨损。刘全拿出工具箱，试图修复信号枪和防弹衣。
@@ -1827,11 +1894,11 @@ image:
   prompt: Liu Quan polishing a repaired signal flare gun
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835577377-scene_repair_success.webp
 ```
 
 经过一番敲打，装备焕然一新。
 “看来我还有当技工的潜质。”
-(装备状态已更新)
 
 * [继续] -> safehouse_rest
 
@@ -1844,13 +1911,12 @@ image:
   prompt: Broken equipment parts scattered on the floor
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835578011-scene_repair_fail.webp
 ```
 
 咔嚓一声。
 “糟糕……”刘全看着手里的零件，“这下麻烦了。”
 还得花钱去黑市买配件。
-(金钱 -200)
-
 * [继续] -> safehouse_rest (set: money = money - 200)
 
 ---
@@ -1862,6 +1928,7 @@ image:
   prompt: Liu Quan speaking on the phone, looking out the window
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835579170-scene_report_fake.webp
 ```
 
 “一切顺利，教授。这里的民俗……很独特。我还需要点时间。”
@@ -1878,11 +1945,30 @@ image:
   prompt: Liu Quan looking worried on the phone, static interference
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835579772-scene_report_truth.webp
 ```
 
 “教授，这里的情况很复杂，涉及……非法集资和邪教。”
 “那就报警啊！你是个学生，别逞能！”
 电话信号突然受到了干扰，全是杂音。
+
+* [继续] -> safehouse_rest
+
+---
+
+# report_evidence
+
+```yaml
+image:
+  prompt: Liu Quan packaging documents and photos on a desk, phone beside him
+  characters:
+    - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835579772-scene_report_truth.webp
+```
+
+刘全把能整理的证据全部打包，通过加密渠道发给了总部。
+
+导师沉默了几秒，语气罕见地严肃：“我会立刻把材料转给相关部门。你别冲动，协查函很快就到。”
 
 * [继续] -> safehouse_rest
 
@@ -1895,14 +1981,13 @@ image:
   prompt: Laptop screen showing 'Access Denied', young man looking suspicious
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835580393-scene_hack_failure.webp
 ```
 
 该死，有加密狗。
 年轻人回来了，狐疑地看着刘全：“你动我电脑了？”
 “没有，我看它屏保挺好看的。”
 刘全尴尬地收回手。
-(理智 -5)
-
 * [继续] -> zhengzhou_start (set: sanity = sanity - 5)
 
 ---
@@ -1915,6 +2000,7 @@ image:
   characters:
     - liu_quan
     - foreman
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835581028-scene_nanyang_boss_encounter.webp
 ```
 
 矿坑深处，刘全终于找到了赵工头。
@@ -1937,6 +2023,7 @@ image:
   prompt: Liu Quan running through narrow tunnels, rocks falling behind him
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835581767-scene_nanyang_chase.webp
 ```
 
 刘全转身就跑，赵工头在后面狂追，每一步都震得碎石落下。
@@ -1973,6 +2060,7 @@ image:
   prompt: The tunnel collapsing on the Foreman, Liu Quan running out towards the light
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835582771-scene_nanyang_victory.webp
 ```
 
 随着一声巨响，一段坑道塌了下来，将赵工头埋在了下面。
@@ -1993,6 +2081,7 @@ image:
   prompt: The giant hammer crushing the ground near Liu Quan, Liu Quan falling into darkness
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835583331-scene_nanyang_defeat.webp
 ```
 
 赵工头的一锤子砸在刘全脚边，震得他站立不稳。
@@ -2011,6 +2100,7 @@ image:
   prompt: Liu Quan and workers standing in the rain outside the collapsed mine, police cars arriving
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835583934-scene_nanyang_end.webp
 ```
 
 警车呼啸而至。非法金矿被查封，受骗的群众被解救。
@@ -2031,6 +2121,7 @@ image:
   prompt: Zhengzhou CBD, skyscrapers, sunny day, people in suits walking fast
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835546169-scene_zhengzhou_start.webp
 ```
 
 郑州东区，CBD。
@@ -2041,7 +2132,27 @@ image:
 “先生，没有预约是不能进嘞（le）。”
 
 * [在前台碰运气] -> front_desk
+* [出示协查函] -> warrant_entry (if: has_warrant)
 * [黑进系统预约] -> hack_appointment (set: sanity = sanity - 5)
+
+---
+
+# warrant_entry
+
+```yaml
+image:
+  prompt: Liu Quan presenting official documents at a corporate front desk, staff looking tense
+  characters:
+    - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835584735-scene_front_desk.webp
+```
+
+刘全把协查函放在前台。前台小姐的笑容僵了一瞬，立刻低声拨通了内线。
+几分钟后，一个穿西装的中年人快步赶来，脸色阴晴不定。
+
+“刘先生，请随我来。”
+
+* [进入里间] -> banker_meet
 
 ---
 
@@ -2052,6 +2163,7 @@ image:
   prompt: A modern, minimalist reception area, beautiful receptionist looking suspicious
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835584735-scene_front_desk.webp
 ```
 
 前台小姐非常有礼貌，但眼神冰冷。
@@ -2076,6 +2188,7 @@ image:
   prompt: Liu Quan sitting in a cafe with a laptop, typing code furiously
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835585334-scene_hack_appointment.webp
 ```
 
 刘全找了个附近的咖啡馆，打开笔记本电脑。
@@ -2094,6 +2207,7 @@ image:
   prompt: A luxurious lounge with panoramic view of the city, rich people drinking champagne
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835585918-scene_vip_lounge.webp
 ```
 
 这里与其说是基金会，不如说是赌场。
@@ -2149,6 +2263,7 @@ image:
   characters:
     - liu_quan
     - banker
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835586751-scene_banker_meet.webp
 ```
 
 钱行长正坐在最大的赌桌前，抽着雪茄。
@@ -2185,6 +2300,7 @@ image:
   characters:
     - liu_quan
     - banker
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835587314-scene_gamble_win.webp
 ```
 
 刘全亮出了底牌。
@@ -2203,6 +2319,7 @@ image:
   prompt: Liu Quan staring at losing cards, security guards approaching
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835587987-scene_gamble_lose.webp
 ```
 
 刘全输了。
@@ -2220,6 +2337,7 @@ image:
   characters:
     - liu_quan
     - banker
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835588629-scene_confront_banker.webp
 ```
 
 “我不是来赌博的。我是宗教局的。”
@@ -2239,6 +2357,7 @@ image:
   prompt: Liu Quan fighting casino security guards in a fancy gambling hall, cards and chips flying
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835589348-scene_casino_fight.webp
 ```
 
 保安们蜂拥而上。
@@ -2261,6 +2380,7 @@ image:
   prompt: Liu Quan in intense melee combat with multiple guards
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835590035-scene_casino_brawl.webp
 ```
 
 刘全选择了硬刚。
@@ -2280,13 +2400,14 @@ image:
   prompt: Liu Quan grabbing the ledger and running through the casino, guards chasing
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835590732-scene_grab_ledger.webp
 ```
 
 刘全一把抓起账本，向出口狂奔。
 
 保安们蜂拥而上。
 
-* [冲向电梯] -> elevator_fight
+* [冲向电梯] -> elevator_fight (set: has_fund_ledger = true)
 
 ---
 
@@ -2297,6 +2418,7 @@ image:
   prompt: Liu Quan fighting security guards in a narrow elevator
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835591543-scene_elevator_fight.webp
 ```
 
 电梯里，刘全和两个保镖扭打在一起。
@@ -2316,6 +2438,7 @@ image:
   prompt: Liu Quan driving away in a stolen car, looking at the ledger in passenger seat
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835592115-scene_zhengzhou_end.webp
 ```
 
 刘全启动了路边的一辆车，冲出了地下车库。
@@ -2343,6 +2466,7 @@ image:
   prompt: A hidden fortress in the snowy mountains, searchlights scanning, armed guards patrolling
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835592715-scene_act3_base.webp
 ```
 
 “新耶路撒冷”位于太行山脉深处。
@@ -2364,6 +2488,7 @@ image:
   prompt: A tactical map of the mountain, showing three layers of defense
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835593318-scene_check_map.webp
 ```
 
 根据王利发笔记里的草图，上山有三道关卡：
@@ -2389,6 +2514,7 @@ image:
   prompt: Liu Quan walking in heavy snowstrom, visibility low
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835594043-scene_mountain_ascent.webp
 ```
 
 暴风雪越来越大。每走一步都像是在与大自然搏斗。
@@ -2405,6 +2531,7 @@ image:
   prompt: Cultists on snowmobiles attacking Liu Quan
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835594688-scene_main_road_ambush.webp
 ```
 
 突然，几辆雪地摩托冲了出来！
@@ -2424,6 +2551,7 @@ image:
   prompt: Liu Quan climbing a frozen cliff face at night
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835595568-scene_cliff_climb.webp
 ```
 
 刘全扣紧了登山镐。身下是万丈深渊。
@@ -2440,6 +2568,7 @@ image:
   prompt: Liu Quan firing a signal flare at a snowmobile fuel tank, red explosion
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835596243-scene_combat_snow.webp
 ```
 
 刘全举起王利发留给他的信号枪，瞄准了领头摩托的油箱。
@@ -2466,6 +2595,7 @@ image:
   prompt: A concrete watchtower guarding the bridge, snipers visible
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835596921-scene_outpost_infiltration.webp
 ```
 
 第二道关卡是守望塔。这里扼守着通往主殿的唯一桥梁。
@@ -2482,6 +2612,7 @@ image:
   prompt: Fire and explosion on one side of bridge, Liu Quan sneaking across on the other side
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835597682-scene_distraction_bridge.webp
 ```
 
 刘全在左边的汽油桶那儿点了一把火。
@@ -2512,6 +2643,7 @@ image:
   prompt: A massive golden gate with a mouth-shaped opening, inscription says 'Give all to enter'
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835598459-scene_greed_gate.webp
 ```
 
 终于到了最后一道门。
@@ -2519,7 +2651,7 @@ image:
 旁边写着：“舍弃身外之物，方得极乐。”
 
 * [放入所有金钱] -> gate_open (set: money = 0)
-* [用炸药炸开（消耗腐化值？）] -> gate_blast
+* [用炸药炸开] -> gate_blast
 * [寻找机关] -> gate_puzzle
 
 ---
@@ -2540,6 +2672,7 @@ image:
   prompt: Explosion at the golden gate, debris flying, Liu Quan shielding his face
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835599381-scene_gate_blast.webp
 ```
 
 "老子就是不信邪！"
@@ -2548,8 +2681,6 @@ image:
 他把炸药贴在吞金兽的眼睛上，拉长引线，躲到拐角。
 
 轰隆一声巨响，大门连同吞金兽一起被炸得粉碎。
-
-(腐化值 +10)
 
 * [冲进去！] -> atrium_of_greed (set: corruption = corruption + 10)
 
@@ -2573,6 +2704,7 @@ image:
   prompt: A grand atrium filled with mountains of gold coins and jewels, but they look sinister
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835599993-scene_atrium_of_greed.webp
 ```
 
 大门后并不是主殿，而是一个巨大的前厅“贪婪回廊”。
@@ -2593,6 +2725,7 @@ image:
   prompt: Liu Quan grabbing gold coins, black mark appearing on palm
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835600673-scene_take_small_gold.webp
 ```
 
 "就拿一点……为了正义的经费。"刘全抓了一把金币。
@@ -2609,6 +2742,7 @@ image:
   prompt: A hall of mirrors, Liu Quan seeing distorted reflections of himself as a failure
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835601357-scene_corridor_of_envy.webp
 ```
 
 穿过金币堆，是一条“嫉妒长廊”。
@@ -2632,6 +2766,7 @@ image:
   prompt: Liu Quan smashing a mirror with his fist, shards flying
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835601926-scene_break_mirror.webp
 audio:
   type: sfx
   prompt: Glass shattering
@@ -2652,6 +2787,7 @@ image:
   prompt: Liu Quan facing his mirror reflection calmly, reflection fading
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835602520-scene_face_envy.webp
 ```
 
 "是啊，我是很失败。"刘全看着镜子里的自己，"但我至少还在为了正确的事情战斗。"
@@ -2668,6 +2804,7 @@ image:
   prompt: A luxurious bedroom, illusion of beautiful figures beckoning
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835603152-scene_hall_of_lust.webp
 ```
 
 "色欲之厅"。
@@ -2688,6 +2825,7 @@ image:
   prompt: Liu Quan pinching himself awake, illusion fading into morgue
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835603849-scene_wake_up.webp
 ```
 
 剧痛让刘全清醒过来。
@@ -2706,6 +2844,7 @@ image:
   characters:
     - liu_quan
     - executioner
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835604658-scene_chamber_of_wrath.webp
 ```
 
 "暴怒竞技场"。
@@ -2727,8 +2866,6 @@ minigame:
     enemy_health: 50
 ```
 
-(简单的QTE战斗)
-
 * [胜利] -> sanctuary_entrance
 
 ---
@@ -2740,6 +2877,7 @@ image:
   prompt: Liu Quan pouring holy water into the executioner's armor joints
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835605314-scene_trap_executioner.webp
 ```
 
 刘全注意到处刑者的盔甲虽厚，但关节处有缝隙。
@@ -2757,6 +2895,7 @@ image:
   prompt: A quiet prayer room before the main hall, a statue of Virgin Mary crying blood
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835605906-scene_sanctuary_entrance.webp
 ```
 
 终于通过了试炼。
@@ -2766,8 +2905,6 @@ image:
 
 王利发的黑皮书在怀里发热。
 他整理了一下装备。
-
-(生命值恢复)
 
 * [推开主殿大门] -> main_temple (set: health = 100)
 
@@ -2781,6 +2918,7 @@ image:
   characters:
     - liu_quan
     - mammon
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835606859-scene_main_temple.webp
 audio:
   type: background_music
   prompt: Epic orchestral music, dark choir, menacing atmosphere
@@ -2794,7 +2932,7 @@ audio:
 
 “你来了，固执的凡人。”女基督开口了，声音重叠着恶魔的咆哮。
 
-* [宣读罪状（削弱它）] -> present_evidence (if: kaifeng_evidence + nanyang_evidence + zhengzhou_evidence >= 6)
+* [宣读罪状] -> present_evidence (if: has_fund_ledger, nanyang_evidence >= 2, kaifeng_evidence >= 1)
 * [直接驱魔] -> final_exorcism
 
 ---
@@ -2807,17 +2945,38 @@ image:
   characters:
     - liu_quan
     - mammon
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835607518-scene_present_evidence.webp
 ```
 
-刘全把所有的证据扔在地上。
+刘全把所有的证据扔在地上，纸页像雪一样散开。
 
-“你的谎言已经被拆穿了！你的工厂被毁，金矿被封，资金链断裂！你承诺的财富和永生，都是假的！”
+{{ if has_chemical_list }}
+“这是你们用来勾兑神水的原料清单——苯、汞、铅。”
+{{ /if }}
+{{ if has_factory_photos }}
+“这是车间照片，所谓圣水不过是化学毒剂。”
+{{ /if }}
+{{ if has_sales_ledger }}
+“这是销售账本，你们靠谎言赚走了多少人的命钱？”
+{{ /if }}
+{{ if has_factory_recording }}
+“这是录音，工人被洗脑、被控制的声音，一句不漏。”
+{{ /if }}
+{{ if has_victim_diary }}
+“这是受害者的日记，穷人被逼得卖牛卖地。”
+{{ /if }}
+{{ if nanyang_evidence >= 2 }}
+“南阳的金矿已经塌了，所谓方舟就是骗局。”
+{{ /if }}
+{{ if has_fund_ledger }}
+“至于郑州的账本……每一笔资金都流向你。”
+{{ /if }}
+
+“你的谎言已经被拆穿了！你承诺的财富和永生，都是假的！”
 
 随着刘全的话语，玛门身上的金光开始黯淡。那些被贪婪蒙蔽的信徒们似乎也开始动摇。
 
 “这……怎么可能？”女基督的表情开始扭曲。
-
-(玛门被削弱了)
 
 * [终极驱魔] -> final_exorcism (set: mammon_weakened = true)
 
@@ -2831,6 +2990,7 @@ image:
   characters:
     - liu_quan
     - mammon
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835608154-scene_final_exorcism.webp
 ```
 
 刘全举起十字架，用尽全身力气念诵驱魔经文。
@@ -2839,9 +2999,9 @@ image:
 
 玛门发出震耳欲聋的咆哮，无数的金币化作利刃飞向刘全。
 
-* [最后的抉择：信念之跃] -> true_ending (if: faith >= 15 and mammon_weakened)
-* [最后的抉择：同归于尽] -> sacrifice_ending (if: faith >= 15 and not mammon_weakened)
-* [最后的抉择：法律制裁] -> law_ending (if: mammon_weakened and faith < 15)
+* [最后的抉择：信念之跃] -> true_ending (if: faith >= 15, mammon_weakened == true)
+* [最后的抉择：同归于尽] -> sacrifice_ending (if: faith >= 15, mammon_weakened == false)
+* [最后的抉择：法律制裁] -> law_ending (if: mammon_weakened == true, faith < 15)
 * [失败] -> bad_ending
 
 ---
@@ -2854,6 +3014,7 @@ image:
   characters:
     - liu_quan
     - mammon
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835608777-scene_true_ending.webp
 ```
 
 刘全的信念化作一道耀眼的白光，直接穿透了玛门的黑雾。
@@ -2877,6 +3038,7 @@ image:
   prompt: Liu Quan hugging the demon, both falling into a chasm of light
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835609419-scene_sacrifice_ending.webp
 ```
 
 玛门的力量太强了。刘全知道，仅凭经文无法击败它。
@@ -2898,6 +3060,7 @@ image:
   prompt: Police arresting the cult leader, Liu Quan watching from a distance smoking a cigarette
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835610059-scene_law_ending.webp
 ```
 
 玛门虽然逃走了，但女基督作为邪教头目被警方抓获。
@@ -2917,6 +3080,7 @@ image:
   prompt: Liu Quan sitting on the throne, eyes glowing yellow, holding gold coins
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835610690-scene_bad_ending.webp
 ```
 
 “为什么要反抗呢？加入我们吧……”玛门的声音充满了诱惑。
@@ -2938,6 +3102,7 @@ image:
   prompt: Liu Quan dissolving in green acid, horrific scene
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835611330-scene_bad_end_acid.webp
 ```
 
 你躲闪不及，被周连金的酸液泼了个正着。
@@ -2955,6 +3120,7 @@ image:
   prompt: Liu Quan in rags, mining gold in a dark tunnel, looking hopeless
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835611953-scene_bad_end_slave.webp
 ```
 
 你被当场抓住，扔进了矿坑深处。
@@ -2972,6 +3138,7 @@ image:
   prompt: Liu Quan's soul being sucked into a tarot card held by the Banker
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835612722-scene_bad_end_soul_contract.webp
 ```
 
 “愿赌服输。”钱行长冷笑着收起了牌。
@@ -2989,6 +3156,7 @@ image:
   prompt: Liu Quan frozen to death on a snowy mountain cliff
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835613406-scene_bad_end_frozen.webp
 ```
 
 暴风雪无情地吞噬了你。
@@ -3005,6 +3173,7 @@ image:
   prompt: Liu Quan sitting on Mammon's throne, eyes glowing red, holding gold
   characters:
     - liu_quan
+  url: https://i.muistory.com/images/zhumadian-exorcist/1768835614054-scene_bad_end_corruption.webp
 ```
 
 “为什么还要反抗呢？”那个声音在你脑海里回响，“这都是你的。”
