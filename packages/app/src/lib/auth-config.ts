@@ -7,7 +7,7 @@ import { sendEmail } from './email';
 export function createAuth(env: CloudflareEnv) {
   const db = drizzle(env.DB);
   const domain = env.COOKIE_DOMAIN || undefined;
-  const siteUrl = env.NEXT_PUBLIC_SITE_URL;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   // 允许的认证来源
   const trustedOrigins: string[] = [siteUrl];
   const extraOrigins = env.TRUSTED_ORIGINS;
