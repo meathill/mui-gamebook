@@ -12,6 +12,9 @@ const AUDIO_CLAUSE_RE = /\(audio:\s*(.*?)\)/g;
 // 变量语法正则
 const VARIABLE_RE = /\{\{(\w+)\}\}/g;
 
+// 素材 URL 正则
+const YAML_URL_RE = /url:\s*(https?:\/\/\S+)/;
+
 export interface ChoiceMatch {
   from: number;
   to: number;
@@ -22,6 +25,12 @@ export interface VariableMatch {
   from: number;
   to: number;
   name: string;
+}
+
+export interface AssetUrlMatch {
+  url: string;
+  /** 素材类型，根据 YAML 块内容判断 */
+  assetType: 'image' | 'audio' | 'video' | 'unknown';
 }
 
 /**
@@ -83,4 +92,31 @@ export function findVariableMatches(text: string): VariableMatch[] {
     });
   }
   return matches;
+}
+
+/**
+ * 从 YAML 代码块文本中提取素材 URL 和类型
+ */
+export function extractAssetUrl(yamlText: string): AssetUrlMatch | null {
+  const urlMatch = YAML_URL_RE.exec(yamlText);
+  if (!urlMatch) return null;
+
+  const url = urlMatch[1];
+  let assetType: AssetUrlMatch['assetType'] = 'unknown';
+
+  if (yamlText.includes('image:')) {
+    assetType = 'image';
+  } else if (yamlText.includes('audio:')) {
+    assetType = 'audio';
+  } else if (yamlText.includes('video:')) {
+    assetType = 'video';
+  } else if (/\.(webp|png|jpe?g|gif|svg)(\?|$)/i.test(url)) {
+    assetType = 'image';
+  } else if (/\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url)) {
+    assetType = 'audio';
+  } else if (/\.(mp4|webm)(\?|$)/i.test(url)) {
+    assetType = 'video';
+  }
+
+  return { url, assetType };
 }
