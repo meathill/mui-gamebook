@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -13,7 +13,6 @@ import { Autocomplete } from '@/lib/editor/extensions/autocomplete';
 import { SlashCommands } from '@/lib/editor/extensions/slash-commands';
 import { extractSceneIds } from '@/lib/editor/extensions/matchers';
 import { slashCommandRender } from '@/lib/editor/extensions/slash-command-render';
-import GameMetaCard from './GameMetaCard';
 import {
   BoldIcon,
   ItalicIcon,
@@ -72,17 +71,6 @@ export default function RichEditor({
 
   const { frontmatter, body } = splitFrontmatter(content);
   frontmatterRef.current = frontmatter;
-
-  // 更新 frontmatter 时保持 body 不变
-  const handleFrontmatterChange = useCallback(
-    (newFrontmatter: string) => {
-      frontmatterRef.current = newFrontmatter;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const currentMd = editor ? ((editor.storage as any).markdown.getMarkdown() as string) : body;
-      onChange(newFrontmatter + currentMd);
-    },
-    [onChange, body],
-  );
 
   const editor = useEditor({
     extensions: [
@@ -266,18 +254,10 @@ export default function RichEditor({
       </div>
 
       {/* 编辑区 */}
-      <div className="flex-1 overflow-y-auto">
-        {/* 游戏元信息卡片 */}
-        {frontmatter && (
-          <div className="px-4 pt-4">
-            <GameMetaCard
-              frontmatter={frontmatter}
-              onFrontmatterChange={handleFrontmatterChange}
-            />
-          </div>
-        )}
-        <EditorContent editor={editor} />
-      </div>
+      <EditorContent
+        editor={editor}
+        className="flex-1 overflow-y-auto"
+      />
     </div>
   );
 }
