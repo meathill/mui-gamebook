@@ -43,9 +43,7 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Article header */}
         <header className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 leading-tight">{post.title}</h1>
-          {post.description && (
-            <p className="mt-3 text-lg text-gray-600">{post.description}</p>
-          )}
+          {post.description && <p className="mt-3 text-lg text-gray-600">{post.description}</p>}
           <div className="flex items-center gap-4 mt-4 text-sm text-gray-400">
             {post.publishedAt && (
               <span className="flex items-center gap-1">
@@ -117,7 +115,10 @@ function RichTextContent({ content }: { content: unknown }) {
   return (
     <>
       {root.root.children.map((node: any, i: number) => (
-        <RichTextNode key={i} node={node} />
+        <RichTextNode
+          key={i}
+          node={node}
+        />
       ))}
     </>
   );
@@ -163,11 +164,20 @@ function renderChildren(children: any[]): React.ReactNode {
     }
     if (child.type === 'link') {
       return (
-        <a key={i} href={child.fields?.url} target="_blank" rel="noopener noreferrer">
+        <a
+          key={i}
+          href={child.fields?.url}
+          target="_blank"
+          rel="noopener noreferrer">
           {renderChildren(child.children)}
         </a>
       );
     }
-    return <RichTextNode key={i} node={child} />;
+    return (
+      <RichTextNode
+        key={i}
+        node={child}
+      />
+    );
   });
 }

@@ -78,9 +78,7 @@ export default async function BlogPage({
                   )}
                   <div className="flex-1 min-w-0">
                     <h2 className="text-lg font-semibold text-gray-900 mb-1">{post.title}</h2>
-                    {post.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">{post.description}</p>
-                    )}
+                    {post.description && <p className="text-sm text-gray-600 line-clamp-2 mb-3">{post.description}</p>}
                     <div className="flex items-center gap-4 text-xs text-gray-400">
                       {post.publishedAt && (
                         <span className="flex items-center gap-1">

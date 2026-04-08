@@ -4,7 +4,16 @@ import { redirect } from 'next/navigation';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { ArrowRightIcon } from 'lucide-react';
 import { getPublishedGames } from '@/lib/games';
-import { HeroSection, FeaturesSection, HighlightsSection, FaqSection, GameCard, WorkflowSection, CtaSection, BlogPreviewSection } from '@/components/home';
+import {
+  HeroSection,
+  FeaturesSection,
+  HighlightsSection,
+  FaqSection,
+  GameCard,
+  WorkflowSection,
+  CtaSection,
+  BlogPreviewSection,
+} from '@/components/home';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,10 +28,7 @@ export default async function Home() {
     redirect('/admin');
   }
 
-  const [games, t] = await Promise.all([
-    getPublishedGames({ limit: 6 }),
-    getTranslations('home'),
-  ]);
+  const [games, t] = await Promise.all([getPublishedGames({ limit: 6 }), getTranslations('home')]);
 
   return (
     <div className="min-h-screen bg-white">

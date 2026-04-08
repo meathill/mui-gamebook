@@ -15,9 +15,7 @@ export default async function HeroSection() {
               {t('hero.title')}
             </h1>
 
-            <p className="mt-6 text-lg text-gray-600 leading-relaxed max-w-lg">
-              {t('hero.subtitle')}
-            </p>
+            <p className="mt-6 text-lg text-gray-600 leading-relaxed max-w-lg">{t('hero.subtitle')}</p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Link

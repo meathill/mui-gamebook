@@ -1,6 +1,104 @@
 开发笔记
 ====
 
+## 架构演进与技术决策
+
+### 整体架构
+
+**Monorepo + pnpm workspace**
+- 决策原因：项目包含 DSL 解析器、Web 应用、素材生成器、独立站点等多个子系统，共享类型定义和核心逻辑
+- 结构：`packages/` 存放可复用包（parser、core、app、asset-generator、site-common），`sites/` 存放独立部署站点
+
+**Next.js + Cloudflare Workers（OpenNext）**
+- 最初使用标准 Next.js，后迁移到 OpenNext 以部署到 Cloudflare Workers
+- 决策原因：Cloudflare 的边缘计算成本低、冷启动快，适合全球分发
+- 踩坑：Next.js 版本升级可能破坏 Cloudflare Workers 兼容性，曾降级 Next.js 解决（详见提交 #32）
+
+**D1 数据库（SQLite）+ Drizzle ORM**
+- 决策原因：与 Cloudflare Workers 原生集成，零配置、免运维
+- 配合 Drizzle ORM 做 schema 管理和迁移
+- 限制：无法直接做复杂的关联查询，需要应用层处理
+
+**better-auth 认证**
+- 决策原因：轻量、支持邀请制注册，与 Next.js App Router 集成良好
+- 当前为邀请制（非开放注册）
+- Cookie 跨域通过 `COOKIE_DOMAIN` 环境变量控制
+
+### DSL 设计决策
+
+**Markdown-like 语法**
+- 决策原因：降低创作者门槛，Markdown 语法广泛认知
+- 基于 Remark/Unified 生态构建解析器，可复用社区插件
+- YAML frontmatter 存储元数据
+
+**DSL 演进关键节点**：
+1. 初始版本：基本场景、选项、变量
+2. 新增 cover prompt 支持（封面图 AI 生成提示词）
+3. 简化 parser/stringifier（减少自定义语法，更贴近标准 Markdown）
+4. 支持小游戏代码块嵌入
+
+**数据隔离（toPlayableGame）**
+- AI 相关字段（prompt、description、style 配置）仅编辑器可见
+- 玩家端只看到最终生成的资源 URL 和内容
+- 保护创作者的 prompt 不被泄露
+
+### AI 架构决策
+
+**多 Provider 统一抽象**
+- 统一 `AiProvider` 接口，支持 Google Gemini 和 OpenAI
+- 决策原因：避免供应商锁定，不同任务可选用最优模型
+- 工厂函数 `createAiProvider()` 按配置自动选择
+
+**AI Chatbot 操作排序策略**
+- 使用 Function Calling 让 AI 精确操作 DSL，而非直接生成文本
+- 多操作按优先级排序：添加 → 删除 → 更新
+- 操作完成后自动清理无效连线（cleanupInvalidEdges）
+- 细粒度操作（如 updateSceneText）优于粗粒度（updateScene），防止 AI 幻觉导致数据丢失
+
+**异步操作系统**
+- 视频生成等耗时操作使用 `pending://` 占位符
+- 前端每 10 秒轮询检查状态
+- 决策原因：Cloudflare Workers 有执行时间限制，长任务必须异步
+
+**每日 AI 用量限制**
+- 基于用户维度的每日配额
+- 不同操作类型（文本、图片、音频、视频）分别计量
+
+### 状态管理演进
+
+**SWR → TanStack Query**
+- 迁移原因：TanStack Query 的缓存策略更灵活，mutation 支持更好
+- 编辑器场景需要频繁的乐观更新，TanStack Query 的 mutation + invalidation 模式更适合
+
+**Zustand + Zundo**
+- 引入原因：编辑器需要全局状态管理（当前选中场景、编辑状态等）
+- Zundo 提供撤销/重做能力，对编辑器是核心需求
+
+### 部署与运维经验
+
+**Next.js + Cloudflare Workers 兼容性**
+- OpenNext 桥接 Next.js 到 Cloudflare Workers 运行时
+- 部分 Next.js 功能在 Workers 中不可用，需要关注 OpenNext 文档
+- 依赖升级后务必测试 Workers 部署
+
+**SEO 实践**
+- robots.txt 和 sitemap 需要特殊处理（预渲染）
+- IndexNow 主动推送给搜索引擎
+- 域名验证文件放在 public 目录
+
+### UI 框架演进
+
+**Radix UI 引入**
+- 时机：编辑器功能复杂化后，需要更可靠的无障碍组件
+- 使用 Radix Themes 作为基础 UI 库
+- 图标统一使用 lucide-react
+
+**MediaAssetItem 统一组件**
+- 将封面编辑器和素材编辑器合并
+- 决策原因：两者逻辑高度重复（预览、生成、上传），统一后减少维护成本
+
+---
+
 ## 独立站点认证架构
 
 独立站点（如 `sites/jianjian`）不直接处理用户认证，而是通过 API 代理将认证请求转发到 CMS（`packages/app`）：

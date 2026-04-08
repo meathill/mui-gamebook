@@ -40,9 +40,7 @@ export default async function BlogPreviewSection() {
                 />
               )}
               <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{post.title}</h3>
-              {post.description && (
-                <p className="text-sm text-gray-600 line-clamp-2 mb-3">{post.description}</p>
-              )}
+              {post.description && <p className="text-sm text-gray-600 line-clamp-2 mb-3">{post.description}</p>}
               <div className="flex items-center gap-3 text-xs text-gray-400">
                 {post.publishedAt && (
                   <span className="flex items-center gap-1">

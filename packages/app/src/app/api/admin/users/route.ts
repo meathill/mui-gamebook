@@ -43,9 +43,7 @@ export async function GET(request: Request) {
     let query;
     if (search) {
       const pattern = `%${search}%`;
-      query = baseQuery.where(
-        or(like(schema.user.name, pattern), like(schema.user.email, pattern)),
-      );
+      query = baseQuery.where(or(like(schema.user.name, pattern), like(schema.user.email, pattern)));
     } else {
       query = baseQuery;
     }
@@ -115,7 +113,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '创建用户失败' }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, user: { id: result.user.id, name: result.user.name, email: result.user.email } });
+    return NextResponse.json({
+      success: true,
+      user: { id: result.user.id, name: result.user.name, email: result.user.email },
+    });
   } catch (error) {
     console.error('Admin create user error:', error);
     const message = error instanceof Error ? error.message : 'Internal server error';

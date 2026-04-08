@@ -194,7 +194,8 @@ export default function UsersPage() {
     passwordMutation.mutate({ id: editingUser.id, newPassword: formPassword });
   }
 
-  const activeMutation = modalType === 'create' ? createMutation : modalType === 'edit' ? updateMutation : passwordMutation;
+  const activeMutation =
+    modalType === 'create' ? createMutation : modalType === 'edit' ? updateMutation : passwordMutation;
 
   return (
     <div>
@@ -213,9 +214,14 @@ export default function UsersPage() {
 
       {/* Search */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
-        <form onSubmit={handleSearch} className="flex gap-3">
+        <form
+          onSubmit={handleSearch}
+          className="flex gap-3">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="text"
               value={searchInput}
@@ -224,13 +230,19 @@ export default function UsersPage() {
               className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
             />
           </div>
-          <button type="submit" className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700">
             搜索
           </button>
           {search && (
             <button
               type="button"
-              onClick={() => { setSearch(''); setSearchInput(''); setPage(1); }}
+              onClick={() => {
+                setSearch('');
+                setSearchInput('');
+                setPage(1);
+              }}
               className="px-3 py-2 text-gray-500 hover:text-gray-700">
               清除
             </button>
@@ -258,7 +270,9 @@ export default function UsersPage() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {data.users.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
+                  <tr
+                    key={user.id}
+                    className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.name}</td>
                     <td className="px-6 py-4 text-sm text-gray-500">{user.email}</td>
                     <td className="px-6 py-4 text-sm text-gray-900 text-right">{user.gameCount}</td>
@@ -319,7 +333,11 @@ export default function UsersPage() {
       </div>
 
       {/* Modal */}
-      <Dialog.Root open={modalType !== null} onOpenChange={(open) => { if (!open) closeModal(); }}>
+      <Dialog.Root
+        open={modalType !== null}
+        onOpenChange={(open) => {
+          if (!open) closeModal();
+        }}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
           <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl p-6 w-full max-w-md shadow-xl z-50">
@@ -377,7 +395,10 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end mt-6">
-                  <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800">
                     取消
                   </button>
                   <button
@@ -416,7 +437,10 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end mt-6">
-                  <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800">
                     取消
                   </button>
                   <button
@@ -432,9 +456,7 @@ export default function UsersPage() {
             {/* Password Form */}
             {modalType === 'password' && (
               <form onSubmit={handlePasswordSubmit}>
-                <p className="text-sm text-gray-500 mb-4">
-                  正在为用户「{editingUser?.name}」修改密码
-                </p>
+                <p className="text-sm text-gray-500 mb-4">正在为用户「{editingUser?.name}」修改密码</p>
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">新密码</label>
@@ -460,7 +482,10 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div className="flex gap-3 justify-end mt-6">
-                  <button type="button" onClick={closeModal} className="px-4 py-2 text-gray-600 hover:text-gray-800">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800">
                     取消
                   </button>
                   <button
@@ -474,9 +499,7 @@ export default function UsersPage() {
             )}
 
             {/* Error display */}
-            {activeMutation.isError && (
-              <p className="mt-3 text-sm text-red-600">{activeMutation.error.message}</p>
-            )}
+            {activeMutation.isError && <p className="mt-3 text-sm text-red-600">{activeMutation.error.message}</p>}
 
             <button
               onClick={closeModal}

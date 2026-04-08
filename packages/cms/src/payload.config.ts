@@ -28,9 +28,7 @@ const isCLI = process.argv.some((value) => {
 const isProduction = process.env.NODE_ENV === 'production';
 
 const cloudflare =
-  isCLI || !isProduction
-    ? await getCloudflareContextFromWrangler()
-    : await getCloudflareContext({ async: true });
+  isCLI || !isProduction ? await getCloudflareContextFromWrangler() : await getCloudflareContext({ async: true });
 
 export default buildConfig({
   admin: {
@@ -52,12 +50,11 @@ export default buildConfig({
 });
 
 function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
-  return import(/* webpackIgnore: true */ `${'__wrangler'.replaceAll('_', '')}`).then(
-    ({ getPlatformProxy }) =>
-      getPlatformProxy({
-        environment: process.env.CLOUDFLARE_ENV,
-        configPath: '../../packages/app/wrangler.jsonc',
-        remoteBindings: isProduction,
-      } satisfies GetPlatformProxyOptions),
+  return import(/* webpackIgnore: true */ `${'__wrangler'.replaceAll('_', '')}`).then(({ getPlatformProxy }) =>
+    getPlatformProxy({
+      environment: process.env.CLOUDFLARE_ENV,
+      configPath: '../../packages/app/wrangler.jsonc',
+      remoteBindings: isProduction,
+    } satisfies GetPlatformProxyOptions),
   );
 }
