@@ -5,6 +5,8 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from 'tiptap-markdown';
+import { ChoiceHighlight } from '@/lib/editor/extensions/choice-highlight';
+import { VariableHighlight } from '@/lib/editor/extensions/variable-highlight';
 import {
   BoldIcon,
   ItalicIcon,
@@ -55,6 +57,8 @@ export default function RichEditor({ content, onChange, placeholder }: RichEdito
         transformCopiedText: true,
         transformPastedText: true,
       }),
+      ChoiceHighlight,
+      VariableHighlight,
     ],
     content: body,
     onUpdate({ editor }) {
