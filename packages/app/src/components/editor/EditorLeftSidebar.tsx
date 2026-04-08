@@ -43,7 +43,7 @@ export default function EditorLeftSidebar({
   const [tab, setTab] = useState<SidebarTab>('outline');
 
   return (
-    <div className="w-72 border-r border-gray-200 bg-white flex flex-col shrink-0 overflow-hidden">
+    <div className="w-72 h-full border-r border-gray-200 bg-white flex flex-col shrink-0 overflow-hidden">
       {/* Tab 切换 */}
       <div className="flex border-b border-gray-200 shrink-0">
         <button
