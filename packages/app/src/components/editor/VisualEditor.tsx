@@ -32,6 +32,7 @@ import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
 import EditorToolbar from '@/components/editor/EditorToolbar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import ChatPanel from '@/components/editor/ChatPanel';
+import RichEditor from '@/components/editor/RichEditor';
 import { useDialog } from '@/components/Dialog';
 import { useUnsavedChangesWarning, useUndoRedoShortcuts } from '@/hooks/useUndoRedo';
 import type { GameState, AICharacter } from '@mui-gamebook/parser/src/types';
@@ -372,11 +373,9 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
             </>
           ) : (
             <div className="flex-1 p-6 overflow-hidden">
-              <textarea
-                value={textContent}
-                onChange={(e) => setTextContent(e.target.value)}
-                className="w-full h-full p-4 font-mono text-sm bg-white border border-gray-200 rounded-lg shadow-inner focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none outline-none"
-                spellCheck={false}
+              <RichEditor
+                content={textContent}
+                onChange={setTextContent}
                 placeholder="Markdown content..."
               />
             </div>

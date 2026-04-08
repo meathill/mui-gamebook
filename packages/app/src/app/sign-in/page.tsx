@@ -3,97 +3,166 @@
 import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+
+type Mode = 'signIn' | 'signUp';
 
 export default function SignInPage() {
+  const [mode, setMode] = useState<Mode>('signIn');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations('auth');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      const { error: signInError } = await authClient.signIn.email({
-        email,
-        password,
-      });
-
-      if (signInError) {
-        setError(signInError.message || '登录失败，请检查邮箱和密码');
+      if (mode === 'signIn') {
+        const { error: signInError } = await authClient.signIn.email({
+          email,
+          password,
+        });
+        if (signInError) {
+          setError(signInError.message || t('signInError'));
+        } else {
+          router.push('/');
+          router.refresh();
+        }
       } else {
-        router.push('/');
-        router.refresh();
+        const { error: signUpError } = await authClient.signUp.email({
+          email,
+          password,
+          name: name || email.split('@')[0],
+        });
+        if (signUpError) {
+          setError(signUpError.message || t('signUpError'));
+        } else {
+          router.push('/');
+          router.refresh();
+        }
       }
     } catch (err) {
-      setError('发生未知错误. ' + (err as Error).message);
+      setError(t('unknownError') + ' ' + (err as Error).message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-xl shadow-lg">
+      <div className="w-full max-w-md space-y-8 bg-white p-8 rounded-lg border border-gray-200">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">登录姆伊游戏书</h2>
-          <p className="mt-2 text-center text-sm text-gray-600">仅限受邀用户访问</p>
+          <h2 className="text-center text-2xl font-bold text-gray-900">
+            {mode === 'signIn' ? t('signInTitle') : t('signUpTitle')}
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            {mode === 'signIn' ? t('signInSubtitle') : t('signUpSubtitle')}
+          </p>
         </div>
         <form
-          className="mt-8 space-y-6"
+          className="space-y-4"
           onSubmit={handleSubmit}>
-          <div className="-space-y-px rounded-md shadow-sm">
+          {mode === 'signUp' && (
             <div>
               <label
-                htmlFor="email-address"
-                className="sr-only">
-                邮箱地址
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 mb-1">
+                {t('name')}
               </label>
               <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="relative block w-full rounded-t-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 px-3"
-                placeholder="邮箱地址"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="name"
+                name="name"
+                type="text"
+                autoComplete="name"
+                className="block w-full rounded-lg border border-gray-300 py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                placeholder={t('namePlaceholder')}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
             </div>
-            <div>
-              <label
-                htmlFor="password"
-                className="sr-only">
-                密码
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="relative block w-full rounded-b-md border-0 py-1.5 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-orange-500 sm:text-sm sm:leading-6 px-3"
-                placeholder="密码"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {error && <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded">{error}</div>}
-
+          )}
           <div>
-            <button
-              disabled={loading}
-              className="group relative flex w-full justify-center rounded-md bg-gradient-to-r from-orange-500 to-amber-500 px-3 py-2 text-sm font-semibold text-white hover:from-orange-600 hover:to-amber-600 focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-orange-500 disabled:opacity-50 disabled:cursor-not-allowed">
-              {loading ? '登录中...' : '登录'}
-            </button>
+            <label
+              htmlFor="email-address"
+              className="block text-sm font-medium text-gray-700 mb-1">
+              {t('email')}
+            </label>
+            <input
+              id="email-address"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="block w-full rounded-lg border border-gray-300 py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+              placeholder={t('emailPlaceholder')}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1">
+              {t('password')}
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
+              required
+              minLength={8}
+              className="block w-full rounded-lg border border-gray-300 py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+              placeholder={t('passwordPlaceholder')}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+
+          {error && <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded-lg">{error}</div>}
+
+          <button
+            disabled={loading}
+            className="w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            {loading ? t('loading') : mode === 'signIn' ? t('signInButton') : t('signUpButton')}
+          </button>
         </form>
+
+        <div className="text-center text-sm text-gray-600">
+          {mode === 'signIn' ? (
+            <p>
+              {t('noAccount')}{' '}
+              <button
+                type="button"
+                className="text-orange-600 hover:text-orange-700 font-medium"
+                onClick={() => {
+                  setMode('signUp');
+                  setError('');
+                }}>
+                {t('goSignUp')}
+              </button>
+            </p>
+          ) : (
+            <p>
+              {t('hasAccount')}{' '}
+              <button
+                type="button"
+                className="text-orange-600 hover:text-orange-700 font-medium"
+                onClick={() => {
+                  setMode('signIn');
+                  setError('');
+                }}>
+                {t('goSignIn')}
+              </button>
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

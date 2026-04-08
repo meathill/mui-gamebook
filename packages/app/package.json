@@ -17,6 +17,8 @@
     "deploy": "cp ../../DSL_SPEC.md ./public && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "db:migrate:local": "wrangler d1 migrations apply mui-gamebook --local",
+    "db:migrate:remote": "wrangler d1 migrations apply mui-gamebook --remote",
     "test": "vitest",
     "index-now": "node --experimental-strip-types scripts/index-now.ts"
   },
@@ -36,6 +38,9 @@
     "@radix-ui/themes": "^3.2.1",
     "@story-protocol/core-sdk": "^1.4.2",
     "@tanstack/react-query": "^5.90.12",
+    "@tiptap/extension-placeholder": "^3.22.2",
+    "@tiptap/react": "^3.22.2",
+    "@tiptap/starter-kit": "^3.22.2",
     "@types/dagre": "^0.7.53",
     "@uiw/react-md-editor": "^4.0.11",
     "@xyflow/react": "^12.10.0",
@@ -51,6 +56,7 @@
     "react-dom": "^19.2.3",
     "react-markdown": "^10.1.0",
     "tailwind-merge": "^3.4.0",
+    "tiptap-markdown": "^0.9.0",
     "viem": "^2.43.3",
     "zundo": "^2.3.0",
     "zustand": "^5.0.9"

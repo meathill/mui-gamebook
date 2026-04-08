@@ -180,7 +180,7 @@ export async function checkAndCompleteVideoGeneration(
   // 根据 provider 类型设置不同的下载认证
   const headers: Record<string, string> = {};
   if (providerType === 'google' || !providerType) {
-    const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+    const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
     headers['x-goog-api-key'] = apiKey || '';
   } else if (providerType === 'openai') {
     const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;

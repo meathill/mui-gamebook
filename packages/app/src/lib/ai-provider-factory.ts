@@ -33,9 +33,9 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
   }
 
   // 默认使用 Google AI
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY_NEW not configured');
+    throw new Error('GOOGLE_API_KEY not configured');
   }
 
   const genAI = new GoogleGenAI({ apiKey });
@@ -53,9 +53,9 @@ export async function createGoogleAiProvider(): Promise<GoogleAiProvider> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
 
-  const apiKey = env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY_NEW;
+  const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY_NEW not configured');
+    throw new Error('GOOGLE_API_KEY not configured');
   }
 
   const genAI = new GoogleGenAI({ apiKey });
