@@ -39,6 +39,7 @@
     "@story-protocol/core-sdk": "^1.4.2",
     "@tanstack/react-query": "^5.90.12",
     "@tiptap/core": "^3.22.2",
+    "@tiptap/extension-code-block": "^3.22.3",
     "@tiptap/extension-placeholder": "^3.22.2",
     "@tiptap/pm": "^3.22.2",
     "@tiptap/react": "^3.22.2",

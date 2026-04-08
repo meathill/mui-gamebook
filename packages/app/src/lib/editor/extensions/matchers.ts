@@ -121,6 +121,131 @@ export function extractAssetUrl(yamlText: string): AssetUrlMatch | null {
   return { url, assetType };
 }
 
+/* ========== 场景元数据解析 ========== */
+
+export interface SceneMetadata {
+  image?: {
+    prompt?: string;
+    url?: string;
+    aspectRatio?: string;
+  };
+  audio?: {
+    type?: string;
+    prompt?: string;
+    url?: string;
+  };
+  video?: {
+    prompt?: string;
+    url?: string;
+  };
+  minigame?: {
+    prompt?: string;
+    url?: string;
+  };
+  characters?: string[];
+}
+
+/**
+ * 从 YAML 文本中解析场景元数据（image / audio / video / minigame / characters）
+ * 采用简单的行级解析，不依赖 js-yaml 库
+ */
+export function parseSceneMetadata(yamlText: string): SceneMetadata {
+  const result: SceneMetadata = {};
+  const lines = yamlText.split('\n');
+  let currentSection: string | null = null;
+
+  for (const line of lines) {
+    const trimmed = line.trimEnd();
+
+    // 顶级字段检测（无缩进）
+    if (/^image:\s*$/.test(trimmed)) {
+      currentSection = 'image';
+      result.image = result.image || {};
+      continue;
+    }
+    if (/^audio:\s*$/.test(trimmed)) {
+      currentSection = 'audio';
+      result.audio = result.audio || {};
+      continue;
+    }
+    if (/^video:\s*$/.test(trimmed)) {
+      currentSection = 'video';
+      result.video = result.video || {};
+      continue;
+    }
+    if (/^minigame:\s*$/.test(trimmed)) {
+      currentSection = 'minigame';
+      result.minigame = result.minigame || {};
+      continue;
+    }
+    if (/^characters:\s*$/.test(trimmed)) {
+      currentSection = 'characters';
+      result.characters = result.characters || [];
+      continue;
+    }
+
+    // 顶级 url（常用于 image 的 url 放在顶级）
+    const topUrl = trimmed.match(/^url:\s*(https?:\/\/\S+)/);
+    if (topUrl) {
+      result.image = result.image || {};
+      result.image.url = topUrl[1];
+      currentSection = null;
+      continue;
+    }
+
+    // 子字段（有缩进）
+    const subField = trimmed.match(/^\s+([\w-]+):\s*(.+)?/);
+    if (subField && currentSection) {
+      const [, key, rawValue] = subField;
+      const value = rawValue?.trim() || '';
+
+      if (currentSection === 'image' && result.image) {
+        if (key === 'prompt') result.image.prompt = value;
+        else if (key === 'url') result.image.url = value;
+        else if (key === 'aspectRatio') result.image.aspectRatio = value;
+      } else if (currentSection === 'audio' && result.audio) {
+        if (key === 'type') result.audio.type = value;
+        else if (key === 'prompt') result.audio.prompt = value;
+        else if (key === 'url') result.audio.url = value;
+      } else if (currentSection === 'video' && result.video) {
+        if (key === 'prompt') result.video.prompt = value;
+        else if (key === 'url') result.video.url = value;
+      } else if (currentSection === 'minigame' && result.minigame) {
+        if (key === 'prompt') result.minigame.prompt = value;
+        else if (key === 'url') result.minigame.url = value;
+      }
+      continue;
+    }
+
+    // characters 列表项
+    const charItem = trimmed.match(/^\s+-\s+(\S+)/);
+    if (charItem && currentSection === 'characters') {
+      result.characters = result.characters || [];
+      result.characters.push(charItem[1]);
+      continue;
+    }
+
+    // 空行或无法识别的行不改变 currentSection
+    if (trimmed === '') {
+      continue;
+    }
+
+    // 非缩进且非已知顶级字段 → 重置 section
+    if (!trimmed.startsWith(' ') && !trimmed.startsWith('\t')) {
+      currentSection = null;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * 判断场景元数据是否有实质内容
+ */
+export function hasMetadataContent(meta: SceneMetadata): boolean {
+  return !!(meta.image || meta.audio || meta.video || meta.minigame || (meta.characters && meta.characters.length > 0));
+}
+
 /**
  * 从 ProseMirror 文档中提取所有场景 ID（H1 标题文本）
  */

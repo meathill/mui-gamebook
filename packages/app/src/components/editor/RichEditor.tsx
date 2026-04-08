@@ -7,8 +7,8 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from 'tiptap-markdown';
 import { ChoiceHighlight } from '@/lib/editor/extensions/choice-highlight';
 import { VariableHighlight } from '@/lib/editor/extensions/variable-highlight';
-import { AssetPreview } from '@/lib/editor/extensions/asset-preview';
 import { BrokenRefs } from '@/lib/editor/extensions/broken-refs';
+import { SceneMetadata } from '@/lib/editor/extensions/scene-metadata';
 import { Autocomplete } from '@/lib/editor/extensions/autocomplete';
 import { SlashCommands } from '@/lib/editor/extensions/slash-commands';
 import { extractSceneIds } from '@/lib/editor/extensions/matchers';
@@ -71,7 +71,10 @@ export default function RichEditor({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false, // 由 SceneMetadata 扩展接管
+      }),
+      SceneMetadata,
       Placeholder.configure({
         placeholder: placeholder || '',
       }),
@@ -82,7 +85,6 @@ export default function RichEditor({
       }),
       ChoiceHighlight,
       VariableHighlight,
-      AssetPreview,
       BrokenRefs.configure({
         variableNames: variableNames || [],
       }),
