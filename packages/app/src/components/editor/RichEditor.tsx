@@ -5,6 +5,21 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from 'tiptap-markdown';
+import {
+  BoldIcon,
+  ItalicIcon,
+  StrikethroughIcon,
+  Heading1Icon,
+  Heading2Icon,
+  Heading3Icon,
+  ListIcon,
+  ListOrderedIcon,
+  QuoteIcon,
+  CodeIcon,
+  MinusIcon,
+  Undo2Icon,
+  Redo2Icon,
+} from 'lucide-react';
 
 interface RichEditorProps {
   content: string;
@@ -47,14 +62,13 @@ export default function RichEditor({ content, onChange, placeholder }: RichEdito
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const md = (editor.storage as any).markdown.getMarkdown() as string;
       onChange(frontmatterRef.current + md);
-      // 在下一个微任务中重置标志，确保 useEffect 能正确判断
       queueMicrotask(() => {
         isInternalUpdateRef.current = false;
       });
     },
   });
 
-  // 外部内容变化时同步到编辑器（AI 聊天更新等场景）
+  // 外部内容变化时同步到编辑器
   useEffect(() => {
     if (!editor || isInternalUpdateRef.current) return;
 
@@ -67,12 +81,136 @@ export default function RichEditor({ content, onChange, placeholder }: RichEdito
     }
   }, [content, editor]);
 
+  if (!editor) return null;
+
   return (
-    <div className="rich-editor w-full h-full overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-inner focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+    <div className="rich-editor w-full h-full flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden">
+      {/* 格式工具栏 */}
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 bg-gray-50 shrink-0 flex-wrap">
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          active={editor.isActive('bold')}
+          title="加粗 (Ctrl+B)">
+          <BoldIcon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          active={editor.isActive('italic')}
+          title="斜体 (Ctrl+I)">
+          <ItalicIcon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          active={editor.isActive('strike')}
+          title="删除线">
+          <StrikethroughIcon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleCode().run()}
+          active={editor.isActive('code')}
+          title="行内代码">
+          <CodeIcon size={14} />
+        </ToolbarButton>
+
+        <div className="w-px h-4 bg-gray-300 mx-1" />
+
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          active={editor.isActive('heading', { level: 1 })}
+          title="标题 1">
+          <Heading1Icon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          active={editor.isActive('heading', { level: 2 })}
+          title="标题 2">
+          <Heading2Icon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          active={editor.isActive('heading', { level: 3 })}
+          title="标题 3">
+          <Heading3Icon size={14} />
+        </ToolbarButton>
+
+        <div className="w-px h-4 bg-gray-300 mx-1" />
+
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          active={editor.isActive('bulletList')}
+          title="无序列表">
+          <ListIcon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          active={editor.isActive('orderedList')}
+          title="有序列表">
+          <ListOrderedIcon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          active={editor.isActive('blockquote')}
+          title="引用">
+          <QuoteIcon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          title="分隔线">
+          <MinusIcon size={14} />
+        </ToolbarButton>
+
+        <div className="w-px h-4 bg-gray-300 mx-1" />
+
+        <ToolbarButton
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+          title="撤销 (Ctrl+Z)">
+          <Undo2Icon size={14} />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+          title="重做 (Ctrl+Shift+Z)">
+          <Redo2Icon size={14} />
+        </ToolbarButton>
+      </div>
+
+      {/* 编辑区 */}
       <EditorContent
         editor={editor}
-        className="h-full"
+        className="flex-1 overflow-y-auto"
       />
     </div>
+  );
+}
+
+function ToolbarButton({
+  onClick,
+  active,
+  disabled,
+  title,
+  children,
+}: {
+  onClick: () => void;
+  active?: boolean;
+  disabled?: boolean;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`p-1.5 rounded transition-colors ${
+        active
+          ? 'bg-gray-200 text-gray-900'
+          : disabled
+            ? 'text-gray-300 cursor-not-allowed'
+            : 'text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+      }`}
+      title={title}>
+      {children}
+    </button>
   );
 }
