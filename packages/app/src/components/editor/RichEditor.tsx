@@ -8,7 +8,10 @@ import { Markdown } from 'tiptap-markdown';
 import { ChoiceHighlight } from '@/lib/editor/extensions/choice-highlight';
 import { VariableHighlight } from '@/lib/editor/extensions/variable-highlight';
 import { AssetPreview } from '@/lib/editor/extensions/asset-preview';
+import { BrokenRefs } from '@/lib/editor/extensions/broken-refs';
+import { Autocomplete } from '@/lib/editor/extensions/autocomplete';
 import { SlashCommands } from '@/lib/editor/extensions/slash-commands';
+import { extractSceneIds } from '@/lib/editor/extensions/matchers';
 import { slashCommandRender } from '@/lib/editor/extensions/slash-command-render';
 import {
   BoldIcon,
@@ -26,10 +29,20 @@ import {
   Redo2Icon,
 } from 'lucide-react';
 
+export interface RichEditorHandle {
+  scrollToScene: (sceneId: string) => void;
+}
+
 interface RichEditorProps {
   content: string;
   onChange: (markdown: string) => void;
   placeholder?: string;
+  /** 已定义的变量名，用于断链检测 */
+  variableNames?: string[];
+  /** 场景 ID 列表变化时回调 */
+  onScenesChange?: (sceneIds: string[]) => void;
+  /** 编辑器就绪时回调，暴露控制方法 */
+  onEditorReady?: (handle: RichEditorHandle) => void;
 }
 
 const FRONTMATTER_RE = /^---\n[\s\S]*?\n---\n/;
@@ -42,7 +55,14 @@ function splitFrontmatter(markdown: string): { frontmatter: string; body: string
   return { frontmatter: '', body: markdown };
 }
 
-export default function RichEditor({ content, onChange, placeholder }: RichEditorProps) {
+export default function RichEditor({
+  content,
+  onChange,
+  placeholder,
+  variableNames,
+  onScenesChange,
+  onEditorReady,
+}: RichEditorProps) {
   const frontmatterRef = useRef('');
   const isInternalUpdateRef = useRef(false);
 
@@ -63,6 +83,13 @@ export default function RichEditor({ content, onChange, placeholder }: RichEdito
       ChoiceHighlight,
       VariableHighlight,
       AssetPreview,
+      BrokenRefs.configure({
+        variableNames: variableNames || [],
+      }),
+      Autocomplete.configure({
+        sceneIds: [], // 初始为空，后续通过 onScenesChange 更新
+        variableNames: variableNames || [],
+      }),
       SlashCommands.configure({
         suggestion: {
           render: slashCommandRender,
@@ -70,11 +97,42 @@ export default function RichEditor({ content, onChange, placeholder }: RichEdito
       }),
     ],
     content: body,
+    onCreate({ editor }) {
+      // 初始化时提取场景列表
+      onScenesChange?.(extractSceneIds(editor.state.doc));
+      // 暴露控制方法
+      onEditorReady?.({
+        scrollToScene(sceneId: string) {
+          const { doc } = editor.state;
+          let targetPos = -1;
+          doc.descendants((node, pos) => {
+            if (targetPos >= 0) return false;
+            if (node.type.name === 'heading' && node.attrs.level === 1 && node.textContent.trim() === sceneId) {
+              targetPos = pos;
+              return false;
+            }
+            return true;
+          });
+          if (targetPos >= 0) {
+            editor.commands.focus(targetPos + 1);
+            // 滚动编辑器 DOM
+            const coords = editor.view.coordsAtPos(targetPos);
+            const editorDOM = editor.view.dom.closest('.rich-editor');
+            if (editorDOM) {
+              const rect = editorDOM.getBoundingClientRect();
+              editorDOM.scrollTop += coords.top - rect.top - 60;
+            }
+          }
+        },
+      });
+    },
     onUpdate({ editor }) {
       isInternalUpdateRef.current = true;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const md = (editor.storage as any).markdown.getMarkdown() as string;
       onChange(frontmatterRef.current + md);
+      // 更新场景列表
+      onScenesChange?.(extractSceneIds(editor.state.doc));
       queueMicrotask(() => {
         isInternalUpdateRef.current = false;
       });
