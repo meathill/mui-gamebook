@@ -31,7 +31,7 @@ import EditorToolbar from '@/components/editor/EditorToolbar';
 import EditorLeftSidebar from '@/components/editor/EditorLeftSidebar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import ChatPanel from '@/components/editor/ChatPanel';
-import RichEditor from '@/components/editor/RichEditor';
+import RichEditor, { type RichEditorHandle } from '@/components/editor/RichEditor';
 import { useDialog } from '@/components/Dialog';
 import { useUnsavedChangesWarning, useUndoRedoShortcuts } from '@/hooks/useUndoRedo';
 
@@ -64,6 +64,10 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   // React Flow 状态
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  // 编辑器状态
+  const [sceneIds, setSceneIds] = useState<string[]>([]);
+  const [editorHandle, setEditorHandle] = useState<RichEditorHandle | null>(null);
 
   const {
     originalGame,
@@ -299,6 +303,8 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
               game={originalGame}
               gameId={id}
               onGameChange={(updater) => setOriginalGame((prev) => (prev ? updater(prev) : prev))}
+              sceneIds={sceneIds}
+              onScrollToScene={(sceneId) => editorHandle?.scrollToScene(sceneId)}
             />
           )}
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -308,6 +314,9 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
                 content={textContent}
                 onChange={setTextContent}
                 placeholder="开始写你的故事..."
+                variableNames={originalGame ? Object.keys(originalGame.initialState) : []}
+                onScenesChange={setSceneIds}
+                onEditorReady={setEditorHandle}
               />
             </div>
           </div>

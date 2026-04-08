@@ -181,3 +181,44 @@ body {
   max-height: 200px;
   border-radius: 0.25rem;
 }
+
+/* DSL 断链检测 */
+.rich-editor .dsl-broken-ref {
+  text-decoration: wavy underline #ef4444;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
+/* DSL 自动补全菜单 */
+.dsl-autocomplete-menu {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+  min-width: 160px;
+  padding: 0.25rem 0;
+}
+.dsl-autocomplete-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.8125rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  color: #374151;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+.dsl-autocomplete-item:hover,
+.dsl-autocomplete-selected {
+  background: #fff7ed;
+  color: #9a3412;
+}
+.dsl-autocomplete-empty {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}

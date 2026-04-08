@@ -120,3 +120,37 @@ export function extractAssetUrl(yamlText: string): AssetUrlMatch | null {
 
   return { url, assetType };
 }
+
+/**
+ * 从 ProseMirror 文档中提取所有场景 ID（H1 标题文本）
+ */
+export function extractSceneIds(doc: {
+  descendants: (cb: (node: any, pos: number) => boolean | void) => void;
+}): string[] {
+  const ids: string[] = [];
+  doc.descendants((node) => {
+    if (node.type?.name === 'heading' && node.attrs?.level === 1) {
+      const text = node.textContent?.trim();
+      if (text) ids.push(text);
+    }
+  });
+  return ids;
+}
+
+/**
+ * 从 ProseMirror 文档中提取所有被引用的变量名
+ */
+export function extractReferencedVariables(doc: {
+  descendants: (cb: (node: any) => boolean | void) => void;
+}): string[] {
+  const vars = new Set<string>();
+  doc.descendants((node) => {
+    if (node.isText && node.text) {
+      const matches = findVariableMatches(node.text);
+      for (const m of matches) {
+        vars.add(m.name);
+      }
+    }
+  });
+  return Array.from(vars);
+}

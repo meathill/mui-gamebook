@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { VariableIcon, UsersIcon, Plus, Search, ChevronLeftIcon } from 'lucide-react';
+import { VariableIcon, UsersIcon, Plus, Search, ChevronLeftIcon, ListIcon } from 'lucide-react';
 import {
   VariableForm,
   VariableList,
@@ -21,21 +21,39 @@ import {
 import { useDialog } from '@/components/Dialog';
 import type { Game, GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
-type SidebarTab = 'variables' | 'characters';
+type SidebarTab = 'outline' | 'variables' | 'characters';
 
 interface EditorLeftSidebarProps {
   game: Game;
   gameId: string;
   onGameChange: (updater: (prev: Game) => Game) => void;
+  /** 场景 ID 列表（从编辑器文本中提取） */
+  sceneIds?: string[];
+  /** 点击大纲中的场景时回调 */
+  onScrollToScene?: (sceneId: string) => void;
 }
 
-export default function EditorLeftSidebar({ game, gameId, onGameChange }: EditorLeftSidebarProps) {
-  const [tab, setTab] = useState<SidebarTab>('variables');
+export default function EditorLeftSidebar({
+  game,
+  gameId,
+  onGameChange,
+  sceneIds,
+  onScrollToScene,
+}: EditorLeftSidebarProps) {
+  const [tab, setTab] = useState<SidebarTab>('outline');
 
   return (
     <div className="w-72 border-r border-gray-200 bg-white flex flex-col shrink-0 overflow-hidden">
       {/* Tab 切换 */}
       <div className="flex border-b border-gray-200 shrink-0">
+        <button
+          onClick={() => setTab('outline')}
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
+            tab === 'outline' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 hover:text-gray-700'
+          }`}>
+          <ListIcon size={14} />
+          大纲
+        </button>
         <button
           onClick={() => setTab('variables')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
@@ -56,6 +74,12 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
 
       {/* 内容区 */}
       <div className="flex-1 overflow-y-auto">
+        {tab === 'outline' && (
+          <SidebarOutline
+            sceneIds={sceneIds || []}
+            onScrollToScene={onScrollToScene}
+          />
+        )}
         {tab === 'variables' && (
           <SidebarVariables
             state={game.initialState}
@@ -71,6 +95,41 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
           />
         )}
       </div>
+    </div>
+  );
+}
+
+/* ========== 大纲面板 ========== */
+
+function SidebarOutline({
+  sceneIds,
+  onScrollToScene,
+}: {
+  sceneIds: string[];
+  onScrollToScene?: (sceneId: string) => void;
+}) {
+  if (sceneIds.length === 0) {
+    return (
+      <div className="p-4 text-center text-xs text-gray-400">
+        <p>暂无场景</p>
+        <p className="mt-1">输入 # 场景名 创建场景</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-1">
+      {sceneIds.map((id, index) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => onScrollToScene?.(id)}
+          className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 transition-colors group">
+          <span className="text-xs text-gray-400 tabular-nums w-5 text-right shrink-0">{index + 1}</span>
+          <span className="text-sm text-gray-700 group-hover:text-gray-900 truncate font-mono">{id}</span>
+        </button>
+      ))}
+      <div className="px-3 py-2 text-xs text-gray-400 border-t border-gray-100 mt-1">共 {sceneIds.length} 个场景</div>
     </div>
   );
 }
