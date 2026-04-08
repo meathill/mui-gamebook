@@ -10,12 +10,10 @@ import {
   SettingsIcon,
   BookOpenIcon,
   BotIcon,
-  Undo2Icon,
-  Redo2Icon,
   GitBranchIcon,
   PanelLeftIcon,
 } from 'lucide-react';
-import { useEditorStore, useTemporalStore } from '@/lib/editor/store';
+import { useEditorStore } from '@/lib/editor/store';
 
 export type Tab = 'settings' | 'story' | 'flowchart';
 
@@ -46,14 +44,6 @@ export default function EditorToolbar({
   const setActiveTab = useEditorStore((s) => s.setActiveTab);
   const chatOpen = useEditorStore((s) => s.chatOpen);
   const toggleChatOpen = useEditorStore((s) => s.toggleChatOpen);
-
-  // Undo/Redo
-  const undo = useTemporalStore((state) => state.undo);
-  const redo = useTemporalStore((state) => state.redo);
-  const pastStates = useTemporalStore((state) => state.pastStates);
-  const futureStates = useTemporalStore((state) => state.futureStates);
-  const canUndo = pastStates.length > 0;
-  const canRedo = futureStates.length > 0;
 
   return (
     <header className="bg-white border-b px-3 sm:px-4 py-2 flex justify-between items-center z-10 sticky top-16">
@@ -107,24 +97,6 @@ export default function EditorToolbar({
             <div className="w-px h-5 bg-gray-200 mx-1" />
           </>
         )}
-
-        {/* Undo/Redo */}
-        <button
-          onClick={() => undo()}
-          disabled={!canUndo}
-          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="撤销 (Ctrl+Z)">
-          <Undo2Icon size={16} />
-        </button>
-        <button
-          onClick={() => redo()}
-          disabled={!canRedo}
-          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
-          title="重做 (Ctrl+Shift+Z)">
-          <Redo2Icon size={16} />
-        </button>
-
-        <div className="w-px h-5 bg-gray-200 mx-1" />
 
         {/* 左侧栏切换 */}
         {activeTab !== 'settings' && (
