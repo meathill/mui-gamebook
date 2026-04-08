@@ -5,60 +5,49 @@ import {
   SaveIcon,
   ArrowLeftIcon,
   ExternalLinkIcon,
-  FileTextIcon,
-  NetworkIcon,
   PlusCircleIcon,
   LayoutIcon,
-  SparklesIcon,
-  ImagePlusIcon,
   SettingsIcon,
   BookOpenIcon,
-  VariableIcon,
-  UsersIcon,
   BotIcon,
   Undo2Icon,
   Redo2Icon,
+  GitBranchIcon,
+  PanelLeftIcon,
 } from 'lucide-react';
 import { useEditorStore, useTemporalStore } from '@/lib/editor/store';
 
-export type Tab = 'settings' | 'variables' | 'characters' | 'story';
+export type Tab = 'settings' | 'story' | 'flowchart';
 
 interface EditorToolbarProps {
   title?: string;
   slug: string;
   saving: boolean;
-  assetGenerating: boolean;
-  /** 预览目标 URL，headless 模式下为主站地址，否则为空（使用相对路径） */
   previewUrl?: string;
-  onToggleViewMode: () => void;
   onAddScene: () => void;
   onLayout: () => void;
-  onGenerateAssets: () => void;
-  onShowImporter: () => void;
   onSave: () => void;
+  leftSidebarOpen: boolean;
+  onToggleLeftSidebar: () => void;
 }
 
 export default function EditorToolbar({
   title,
   slug,
   saving,
-  assetGenerating,
   previewUrl,
-  onToggleViewMode,
   onAddScene,
   onLayout,
-  onGenerateAssets,
-  onShowImporter,
   onSave,
+  leftSidebarOpen,
+  onToggleLeftSidebar,
 }: EditorToolbarProps) {
-  // 从 store 读取状态
   const activeTab = useEditorStore((s) => s.activeTab);
   const setActiveTab = useEditorStore((s) => s.setActiveTab);
-  const viewMode = useEditorStore((s) => s.viewMode);
   const chatOpen = useEditorStore((s) => s.chatOpen);
   const toggleChatOpen = useEditorStore((s) => s.toggleChatOpen);
 
-  // Undo/Redo 状态
+  // Undo/Redo
   const undo = useTemporalStore((state) => state.undo);
   const redo = useTemporalStore((state) => state.redo);
   const pastStates = useTemporalStore((state) => state.pastStates);
@@ -67,127 +56,122 @@ export default function EditorToolbar({
   const canRedo = futureStates.length > 0;
 
   return (
-    <header className="bg-white border-b px-3 sm:px-6 py-3 sm:flex justify-between items-center z-10 shadow-sm sticky top-16">
-      <div className="flex items-center gap-4 mb-2 sm:mb-0">
+    <header className="bg-white border-b px-3 sm:px-4 py-2 flex justify-between items-center z-10 sticky top-16">
+      <div className="flex items-center gap-3">
         <Link
-          href="/admin"
+          href="/my/games"
           className="text-gray-500 hover:text-gray-700">
-          <ArrowLeftIcon size={20} />
+          <ArrowLeftIcon size={18} />
         </Link>
-        <h1 className="font-semibold text-gray-900 hidden md:block">{title}</h1>
+        <h1 className="font-semibold text-gray-900 text-sm hidden md:block truncate max-w-40">{title}</h1>
 
-        {/* Tabs */}
-        <div className="flex bg-gray-100 p-1 rounded-lg ml-4">
+        {/* Tabs: 设置 | 故事 | 流程图 */}
+        <div className="flex bg-gray-100 p-0.5 rounded-lg ml-2">
           <button
             onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'settings' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-            <SettingsIcon size={16} /> <span className="hidden sm:inline">设置</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('variables')}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'variables' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-            <VariableIcon size={16} /> <span className="hidden sm:inline">变量</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('characters')}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'characters' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-            <UsersIcon size={16} /> <span className="hidden sm:inline">角色</span>
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'settings' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            <SettingsIcon size={14} />
+            <span className="hidden sm:inline">设置</span>
           </button>
           <button
             onClick={() => setActiveTab('story')}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-all ${activeTab === 'story' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-            <BookOpenIcon size={16} /> <span className="hidden sm:inline">故事</span>
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'story' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            <BookOpenIcon size={14} />
+            <span className="hidden sm:inline">故事</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('flowchart')}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'flowchart' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+            <GitBranchIcon size={14} />
+            <span className="hidden sm:inline">流程图</span>
           </button>
         </div>
       </div>
 
-      <div className="flex gap-2">
-        {activeTab === 'story' && viewMode === 'visual' && (
+      <div className="flex items-center gap-1.5">
+        {/* 流程图模式的工具按钮 */}
+        {activeTab === 'flowchart' && (
           <>
             <button
               onClick={onAddScene}
-              className="p-2 text-green-700 hover:bg-green-50 rounded border border-green-200"
+              className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-gray-200"
               title="添加场景">
-              <PlusCircleIcon size={18} />
+              <PlusCircleIcon size={16} />
             </button>
             <button
               onClick={onLayout}
-              className="p-2 text-gray-700 hover:bg-gray-100 rounded border border-gray-200"
+              className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-gray-200"
               title="自动布局">
-              <LayoutIcon size={18} />
+              <LayoutIcon size={16} />
             </button>
+            <div className="w-px h-5 bg-gray-200 mx-1" />
           </>
         )}
 
-        {activeTab === 'story' && (
-          <>
-            <button
-              onClick={onShowImporter}
-              className="flex items-center gap-2 px-3 py-2 text-purple-700 hover:bg-purple-50 rounded text-sm border border-purple-200">
-              <SparklesIcon size={16} /> <span className="hidden sm:inline">AI 故事</span>
-            </button>
-            <button
-              onClick={onGenerateAssets}
-              disabled={assetGenerating}
-              className="hidden items-center gap-2 px-3 py-2 text-orange-700 hover:bg-orange-50 rounded text-sm border border-orange-200">
-              <ImagePlusIcon size={16} /> <span className="hidden sm:inline">{assetGenerating ? '...' : '素材'}</span>
-            </button>
-            <button
-              onClick={onToggleViewMode}
-              className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded text-sm border border-gray-200">
-              {viewMode === 'visual' ? <FileTextIcon size={16} /> : <NetworkIcon size={16} />}
-              <span className="hidden sm:inline">{viewMode === 'visual' ? '文本' : '可视化'}</span>
-            </button>
-          </>
-        )}
-
-        {/* Undo/Redo 按钮 */}
+        {/* Undo/Redo */}
         <button
           onClick={() => undo()}
           disabled={!canUndo}
-          className="p-2 text-gray-700 hover:bg-gray-100 rounded border border-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
           title="撤销 (Ctrl+Z)">
-          <Undo2Icon size={18} />
+          <Undo2Icon size={16} />
         </button>
         <button
           onClick={() => redo()}
           disabled={!canRedo}
-          className="p-2 text-gray-700 hover:bg-gray-100 rounded border border-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded border border-gray-200 disabled:opacity-30 disabled:cursor-not-allowed"
           title="重做 (Ctrl+Shift+Z)">
-          <Redo2Icon size={18} />
+          <Redo2Icon size={16} />
         </button>
-      </div>
 
-      <div className="flex sm:gap-2 absolute top-3 right-3 sm:static">
+        <div className="w-px h-5 bg-gray-200 mx-1" />
+
+        {/* 左侧栏切换 */}
+        {activeTab !== 'settings' && (
+          <button
+            onClick={onToggleLeftSidebar}
+            className={`p-1.5 rounded border transition-colors ${
+              leftSidebarOpen
+                ? 'text-gray-900 bg-gray-100 border-gray-300'
+                : 'text-gray-500 hover:bg-gray-100 border-gray-200'
+            }`}
+            title="变量/角色面板">
+            <PanelLeftIcon size={16} />
+          </button>
+        )}
+
+        {/* 预览 */}
         <a
           href={`${previewUrl || ''}/play/${slug}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="p-2 text-gray-600 hover:bg-gray-100 rounded border border-gray-200"
+          className="p-1.5 text-gray-500 hover:bg-gray-100 rounded border border-gray-200"
           title="预览">
-          <ExternalLinkIcon size={18} />
+          <ExternalLinkIcon size={16} />
         </a>
 
-        {/* AI 助手按钮 - 非 settings tab 显示 */}
+        {/* AI 助手 */}
         {activeTab !== 'settings' && (
           <button
             onClick={toggleChatOpen}
-            className={`flex items-center gap-2 px-3 py-2 rounded text-sm border transition-colors ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs border transition-colors ${
               chatOpen
-                ? 'bg-purple-600 text-white border-purple-600'
-                : 'text-purple-700 hover:bg-purple-50 border-purple-200'
+                ? 'bg-orange-500 text-white border-orange-500'
+                : 'text-gray-600 hover:bg-gray-100 border-gray-200'
             }`}
             title="AI 助手">
-            <BotIcon size={16} />
+            <BotIcon size={14} />
             <span className="hidden sm:inline">AI 助手</span>
           </button>
         )}
 
+        {/* 保存 */}
         <button
           onClick={onSave}
           disabled={saving}
-          className="flex items-center gap-2 bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700 disabled:opacity-50 text-sm font-medium">
-          <SaveIcon size={16} /> <span className="hidden sm:inline">{saving ? '保存中...' : '保存'}</span>
+          className="flex items-center gap-1.5 bg-orange-500 text-white px-3 py-1.5 rounded hover:bg-orange-600 disabled:opacity-50 text-xs font-medium">
+          <SaveIcon size={14} />
+          <span className="hidden sm:inline">{saving ? '保存中...' : '保存'}</span>
         </button>
       </div>
     </header>

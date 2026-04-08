@@ -23,8 +23,9 @@ interface EditorState {
 
   // UI 状态
   activeTab: Tab;
-  viewMode: 'visual' | 'text';
+  viewMode: 'visual' | 'text'; // 保留用于内部兼容
   chatOpen: boolean;
+  leftSidebarOpen: boolean;
   showImporter: boolean;
 
   // 选中元素
@@ -53,6 +54,8 @@ interface EditorActions {
   setViewMode: (mode: 'visual' | 'text') => void;
   setChatOpen: (open: boolean) => void;
   toggleChatOpen: () => void;
+  setLeftSidebarOpen: (open: boolean) => void;
+  toggleLeftSidebar: () => void;
   setShowImporter: (show: boolean) => void;
 
   // 选中元素操作
@@ -78,9 +81,10 @@ const initialState: EditorState = {
   textContent: '',
   nodes: [],
   edges: [],
-  activeTab: 'settings',
-  viewMode: 'visual',
+  activeTab: 'story',
+  viewMode: 'text',
   chatOpen: false,
+  leftSidebarOpen: false,
   showImporter: false,
   selectedNode: null,
   selectedEdge: null,
@@ -129,6 +133,8 @@ export const useEditorStore = create<EditorState & EditorActions>()(
       setViewMode: (viewMode) => set({ viewMode }),
       setChatOpen: (chatOpen) => set({ chatOpen }),
       toggleChatOpen: () => set((state) => ({ chatOpen: !state.chatOpen })),
+      setLeftSidebarOpen: (leftSidebarOpen) => set({ leftSidebarOpen }),
+      toggleLeftSidebar: () => set((state) => ({ leftSidebarOpen: !state.leftSidebarOpen })),
       setShowImporter: (showImporter) => set({ showImporter }),
 
       // 选中元素操作
