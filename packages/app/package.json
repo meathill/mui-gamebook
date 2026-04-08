@@ -43,6 +43,7 @@
     "@tiptap/pm": "^3.22.2",
     "@tiptap/react": "^3.22.2",
     "@tiptap/starter-kit": "^3.22.2",
+    "@tiptap/suggestion": "^3.22.2",
     "@types/dagre": "^0.7.53",
     "@uiw/react-md-editor": "^4.0.11",
     "@xyflow/react": "^12.10.0",
