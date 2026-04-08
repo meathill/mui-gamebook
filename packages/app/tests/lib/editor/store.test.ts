@@ -111,17 +111,17 @@ describe('useEditorStore', () => {
     it('toggleChatOpen 应该切换 chatOpen 状态', () => {
       const { result } = renderHook(() => useEditorStore());
 
-      expect(result.current.chatOpen).toBe(false);
+      const initial = result.current.chatOpen;
 
       act(() => {
         result.current.toggleChatOpen();
       });
-      expect(result.current.chatOpen).toBe(true);
+      expect(result.current.chatOpen).toBe(!initial);
 
       act(() => {
         result.current.toggleChatOpen();
       });
-      expect(result.current.chatOpen).toBe(false);
+      expect(result.current.chatOpen).toBe(initial);
     });
   });
 

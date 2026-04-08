@@ -9,8 +9,20 @@ import CodeBlock from '@tiptap/extension-code-block';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import SceneMetadataBlock from '@/components/editor/SceneMetadataBlock';
 
-export const SceneMetadata = CodeBlock.extend({
+export interface SceneMetadataOptions {
+  /** 游戏 ID，用于资源上传和 AI 生成 */
+  gameId: string;
+}
+
+export const SceneMetadata = CodeBlock.extend<SceneMetadataOptions>({
   name: 'codeBlock',
+
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      gameId: '',
+    };
+  },
 
   addNodeView() {
     return ReactNodeViewRenderer(SceneMetadataBlock);

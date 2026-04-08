@@ -37,6 +37,8 @@ interface RichEditorProps {
   content: string;
   onChange: (markdown: string) => void;
   placeholder?: string;
+  /** 游戏 ID，用于资源上传 */
+  gameId?: string;
   /** 已定义的变量名，用于断链检测 */
   variableNames?: string[];
   /** 场景 ID 列表变化时回调 */
@@ -59,6 +61,7 @@ export default function RichEditor({
   content,
   onChange,
   placeholder,
+  gameId,
   variableNames,
   onScenesChange,
   onEditorReady,
@@ -74,7 +77,9 @@ export default function RichEditor({
       StarterKit.configure({
         codeBlock: false, // 由 SceneMetadata 扩展接管
       }),
-      SceneMetadata,
+      SceneMetadata.configure({
+        gameId: gameId || '',
+      }),
       Placeholder.configure({
         placeholder: placeholder || '',
       }),

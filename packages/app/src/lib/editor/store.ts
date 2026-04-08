@@ -75,6 +75,37 @@ interface EditorActions {
   reset: () => void;
 }
 
+// UI 面板状态持久化
+const UI_STORAGE_KEY = 'editor-ui-prefs';
+
+interface UiPrefs {
+  chatOpen: boolean;
+  leftSidebarOpen: boolean;
+}
+
+function loadUiPrefs(): UiPrefs {
+  if (typeof window === 'undefined') return { chatOpen: true, leftSidebarOpen: true };
+  try {
+    const raw = localStorage.getItem(UI_STORAGE_KEY);
+    if (raw) return JSON.parse(raw) as UiPrefs;
+  } catch {
+    // ignore
+  }
+  return { chatOpen: true, leftSidebarOpen: true };
+}
+
+function saveUiPrefs(prefs: Partial<UiPrefs>) {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = loadUiPrefs();
+    localStorage.setItem(UI_STORAGE_KEY, JSON.stringify({ ...current, ...prefs }));
+  } catch {
+    // ignore
+  }
+}
+
+const uiPrefs = loadUiPrefs();
+
 const initialState: EditorState = {
   game: null,
   slug: '',
@@ -83,8 +114,8 @@ const initialState: EditorState = {
   edges: [],
   activeTab: 'story',
   viewMode: 'text',
-  chatOpen: false,
-  leftSidebarOpen: false,
+  chatOpen: uiPrefs.chatOpen,
+  leftSidebarOpen: uiPrefs.leftSidebarOpen,
   showImporter: false,
   selectedNode: null,
   selectedEdge: null,
@@ -131,10 +162,26 @@ export const useEditorStore = create<EditorState & EditorActions>()(
       // UI 状态操作
       setActiveTab: (activeTab) => set({ activeTab }),
       setViewMode: (viewMode) => set({ viewMode }),
-      setChatOpen: (chatOpen) => set({ chatOpen }),
-      toggleChatOpen: () => set((state) => ({ chatOpen: !state.chatOpen })),
-      setLeftSidebarOpen: (leftSidebarOpen) => set({ leftSidebarOpen }),
-      toggleLeftSidebar: () => set((state) => ({ leftSidebarOpen: !state.leftSidebarOpen })),
+      setChatOpen: (chatOpen) => {
+        set({ chatOpen });
+        saveUiPrefs({ chatOpen });
+      },
+      toggleChatOpen: () =>
+        set((state) => {
+          const chatOpen = !state.chatOpen;
+          saveUiPrefs({ chatOpen });
+          return { chatOpen };
+        }),
+      setLeftSidebarOpen: (leftSidebarOpen) => {
+        set({ leftSidebarOpen });
+        saveUiPrefs({ leftSidebarOpen });
+      },
+      toggleLeftSidebar: () =>
+        set((state) => {
+          const leftSidebarOpen = !state.leftSidebarOpen;
+          saveUiPrefs({ leftSidebarOpen });
+          return { leftSidebarOpen };
+        }),
       setShowImporter: (showImporter) => set({ showImporter }),
 
       // 选中元素操作
