@@ -7,6 +7,8 @@ import Placeholder from '@tiptap/extension-placeholder';
 import { Markdown } from 'tiptap-markdown';
 import { ChoiceHighlight } from '@/lib/editor/extensions/choice-highlight';
 import { VariableHighlight } from '@/lib/editor/extensions/variable-highlight';
+import { SlashCommands } from '@/lib/editor/extensions/slash-commands';
+import { slashCommandRender } from '@/lib/editor/extensions/slash-command-render';
 import {
   BoldIcon,
   ItalicIcon,
@@ -59,6 +61,11 @@ export default function RichEditor({ content, onChange, placeholder }: RichEdito
       }),
       ChoiceHighlight,
       VariableHighlight,
+      SlashCommands.configure({
+        suggestion: {
+          render: slashCommandRender,
+        },
+      }),
     ],
     content: body,
     onUpdate({ editor }) {
