@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
@@ -14,9 +14,9 @@ import {
   EyeIcon,
   ZoomInIcon,
   PencilIcon,
-  CheckIcon,
-  XIcon,
   PlusIcon,
+  SparklesIcon,
+  Loader2Icon,
 } from 'lucide-react';
 import {
   parseSceneMetadata,
@@ -24,6 +24,9 @@ import {
   serializeSceneMetadata,
   type SceneMetadata,
 } from '@/lib/editor/extensions/matchers';
+import type { SceneMetadataOptions } from '@/lib/editor/extensions/scene-metadata';
+import { FormField, SelectField, FormActions } from './SceneMetadataForm';
+import FileDropZone from './FileDropZone';
 import ImageLightbox from './ImageLightbox';
 
 type SectionKey = 'image' | 'audio' | 'video' | 'minigame' | 'characters';
@@ -33,110 +36,16 @@ const AUDIO_TYPE_LABELS: Record<string, string> = {
   sfx: '音效',
 };
 
-/**
- * 通用表单域组件
- */
-function FormField({
-  label,
-  value,
-  onChange,
-  multiline,
-  autoFocus,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  multiline?: boolean;
-  autoFocus?: boolean;
-}) {
-  const ref = useRef<HTMLTextAreaElement | HTMLInputElement>(null);
-  useEffect(() => {
-    if (autoFocus) ref.current?.focus();
-  }, [autoFocus]);
-
-  return (
-    <div className="smc-field">
-      <label className="smc-field-label">{label}</label>
-      {multiline ? (
-        <textarea
-          ref={ref as React.RefObject<HTMLTextAreaElement>}
-          className="smc-field-input smc-field-textarea"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          rows={2}
-        />
-      ) : (
-        <input
-          ref={ref as React.RefObject<HTMLInputElement>}
-          className="smc-field-input"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-        />
-      )}
-    </div>
-  );
-}
-
-function SelectField({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <div className="smc-field">
-      <label className="smc-field-label">{label}</label>
-      <select
-        className="smc-field-input"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}>
-        {options.map((o) => (
-          <option
-            key={o.value}
-            value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
-/**
- * 保存/取消按钮组
- */
-function FormActions({ onSave, onCancel }: { onSave: () => void; onCancel: () => void }) {
-  return (
-    <div className="smc-form-actions">
-      <button
-        type="button"
-        className="smc-btn smc-btn-primary"
-        onClick={onSave}>
-        <CheckIcon size={12} />
-        保存
-      </button>
-      <button
-        type="button"
-        className="smc-btn smc-btn-ghost"
-        onClick={onCancel}>
-        <XIcon size={12} />
-        取消
-      </button>
-    </div>
-  );
-}
-
-export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewProps) {
+export default function SceneMetadataBlock({ node, editor, getPos, extension }: NodeViewProps) {
   const isYaml = node.attrs.language === 'yaml';
+  const gameId = (extension.options as SceneMetadataOptions).gameId;
+  const uploadUrl = gameId ? `/api/cms/games/${gameId}/upload` : '';
+
   const [sourceMode, setSourceMode] = useState(false);
   const [editingSection, setEditingSection] = useState<SectionKey | null>(null);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const [generating, setGenerating] = useState(false);
 
   // 非 YAML 代码块：保持原样
   if (!isYaml) {
@@ -152,7 +61,6 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
   const metadata = parseSceneMetadata(node.textContent);
   const hasContent = hasMetadataContent(metadata);
 
-  // 更新节点内容
   function updateContent(newMeta: SceneMetadata) {
     const pos = getPos();
     if (pos == null) return;
@@ -162,15 +70,14 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
     editor.view.dispatch(tr);
   }
 
-  // 开始编辑某个区域
   function startEdit(section: SectionKey) {
     if (section === 'characters') {
       setEditForm({ characters: (metadata.characters || []).join(', ') });
     } else {
-      const sectionData = metadata[section];
+      const data = metadata[section];
       const form: Record<string, string> = {};
-      if (sectionData && typeof sectionData === 'object') {
-        for (const [k, v] of Object.entries(sectionData)) {
+      if (data && typeof data === 'object') {
+        for (const [k, v] of Object.entries(data)) {
           if (v != null) form[k] = String(v);
         }
       }
@@ -179,11 +86,9 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
     setEditingSection(section);
   }
 
-  // 保存编辑
   function saveEdit() {
     if (!editingSection) return;
     const updated = structuredClone(metadata);
-
     if (editingSection === 'characters') {
       updated.characters = editForm.characters
         ? editForm.characters
@@ -204,28 +109,19 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
         url: editForm.url || undefined,
       };
     } else if (editingSection === 'video') {
-      updated.video = {
-        prompt: editForm.prompt || undefined,
-        url: editForm.url || undefined,
-      };
+      updated.video = { prompt: editForm.prompt || undefined, url: editForm.url || undefined };
     } else if (editingSection === 'minigame') {
-      updated.minigame = {
-        prompt: editForm.prompt || undefined,
-        url: editForm.url || undefined,
-      };
+      updated.minigame = { prompt: editForm.prompt || undefined, url: editForm.url || undefined };
     }
-
     updateContent(updated);
     setEditingSection(null);
   }
 
-  // 添加新的 section
   function addSection(type: 'video' | 'minigame') {
     const updated = structuredClone(metadata);
     if (type === 'video') updated.video = { prompt: '' };
     else updated.minigame = { prompt: '' };
     updateContent(updated);
-    // 延迟进入编辑，等 node 内容更新
     setTimeout(() => startEdit(type), 0);
   }
 
@@ -233,7 +129,42 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
     setEditForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  // 无可识别元数据 或 源码模式
+  // 上传成功后更新 url 字段
+  const handleUploaded = useCallback((url: string) => {
+    setEditForm((prev) => ({ ...prev, url }));
+  }, []);
+
+  // AI 生成图片
+  async function handleGenerate() {
+    const prompt = editForm.prompt;
+    if (!prompt || !gameId) return;
+    setGenerating(true);
+    try {
+      const res = await fetch('/api/cms/assets/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          gameId,
+          type: 'ai_image',
+          aspectRatio: editForm.aspectRatio || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || `生成失败 (${res.status})`);
+      }
+      const result = (await res.json()) as { url: string };
+      const { url } = result;
+      setEditForm((prev) => ({ ...prev, url }));
+    } catch (e) {
+      console.error('AI 生成失败:', e);
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  // 源码模式 / 无内容
   if (!hasContent || sourceMode) {
     return (
       <NodeViewWrapper>
@@ -257,7 +188,6 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
     );
   }
 
-  // 区域编辑按钮
   function EditBtn({ section }: { section: SectionKey }) {
     return (
       <button
@@ -267,6 +197,165 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
         title="编辑">
         <PencilIcon size={12} />
       </button>
+    );
+  }
+
+  // 图片编辑表单（含预览 + 上传 + AI 生成）
+  function ImageEditForm() {
+    return (
+      <div className="smc-form">
+        {/* 编辑时也显示已有图片 */}
+        {editForm.url && (
+          <div className="scene-metadata-image-wrap">
+            <img
+              src={editForm.url}
+              alt="当前图片"
+              className="scene-metadata-thumb"
+              onClick={() => setLightboxUrl(editForm.url)}
+            />
+          </div>
+        )}
+        <FormField
+          label="图片描述"
+          value={editForm.prompt || ''}
+          onChange={(v) => setField('prompt', v)}
+          multiline
+          autoFocus
+        />
+        <FormField
+          label="图片地址"
+          value={editForm.url || ''}
+          onChange={(v) => setField('url', v)}
+        />
+        <FormField
+          label="宽高比"
+          value={editForm.aspectRatio || ''}
+          onChange={(v) => setField('aspectRatio', v)}
+        />
+        {uploadUrl && (
+          <FileDropZone
+            uploadUrl={uploadUrl}
+            assetType="scene"
+            accept="image/*"
+            onUploaded={handleUploaded}
+            hint="点击或拖拽图片上传"
+          />
+        )}
+        <div className="smc-form-actions">
+          {gameId && (
+            <button
+              type="button"
+              className="smc-btn smc-btn-ai"
+              onClick={handleGenerate}
+              disabled={generating || !editForm.prompt}>
+              {generating ? (
+                <Loader2Icon
+                  size={12}
+                  className="animate-spin"
+                />
+              ) : (
+                <SparklesIcon size={12} />
+              )}
+              {generating ? '生成中...' : editForm.url ? '重新生成' : '生成图片'}
+            </button>
+          )}
+          <FormActions
+            onSave={saveEdit}
+            onCancel={() => setEditingSection(null)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // 音频编辑表单
+  function AudioEditForm() {
+    return (
+      <div className="smc-form">
+        {editForm.url && (
+          <audio
+            src={editForm.url}
+            controls
+            preload="none"
+            className="scene-metadata-audio"
+          />
+        )}
+        <SelectField
+          label="音频类型"
+          value={editForm.type || 'background_music'}
+          onChange={(v) => setField('type', v)}
+          options={[
+            { value: 'background_music', label: '背景音乐' },
+            { value: 'sfx', label: '音效' },
+          ]}
+        />
+        <FormField
+          label="音频描述"
+          value={editForm.prompt || ''}
+          onChange={(v) => setField('prompt', v)}
+          multiline
+          autoFocus
+        />
+        <FormField
+          label="音频地址"
+          value={editForm.url || ''}
+          onChange={(v) => setField('url', v)}
+        />
+        {uploadUrl && (
+          <FileDropZone
+            uploadUrl={uploadUrl}
+            assetType="audio"
+            accept="audio/*"
+            onUploaded={handleUploaded}
+            hint="点击或拖拽音频上传"
+          />
+        )}
+        <FormActions
+          onSave={saveEdit}
+          onCancel={() => setEditingSection(null)}
+        />
+      </div>
+    );
+  }
+
+  // 视频编辑表单
+  function VideoEditForm() {
+    return (
+      <div className="smc-form">
+        {editForm.url && (
+          <video
+            src={editForm.url}
+            controls
+            preload="none"
+            className="scene-metadata-video"
+          />
+        )}
+        <FormField
+          label="视频描述"
+          value={editForm.prompt || ''}
+          onChange={(v) => setField('prompt', v)}
+          multiline
+          autoFocus
+        />
+        <FormField
+          label="视频地址"
+          value={editForm.url || ''}
+          onChange={(v) => setField('url', v)}
+        />
+        {uploadUrl && (
+          <FileDropZone
+            uploadUrl={uploadUrl}
+            assetType="video"
+            accept="video/*"
+            onUploaded={handleUploaded}
+            hint="点击或拖拽视频上传"
+          />
+        )}
+        <FormActions
+          onSave={saveEdit}
+          onCancel={() => setEditingSection(null)}
+        />
+      </div>
     );
   }
 
@@ -318,29 +407,7 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
               {editingSection !== 'image' && <EditBtn section="image" />}
             </div>
             {editingSection === 'image' ? (
-              <div className="smc-form">
-                <FormField
-                  label="图片描述"
-                  value={editForm.prompt || ''}
-                  onChange={(v) => setField('prompt', v)}
-                  multiline
-                  autoFocus
-                />
-                <FormField
-                  label="图片地址"
-                  value={editForm.url || ''}
-                  onChange={(v) => setField('url', v)}
-                />
-                <FormField
-                  label="宽高比"
-                  value={editForm.aspectRatio || ''}
-                  onChange={(v) => setField('aspectRatio', v)}
-                />
-                <FormActions
-                  onSave={saveEdit}
-                  onCancel={() => setEditingSection(null)}
-                />
-              </div>
+              <ImageEditForm />
             ) : (
               <>
                 {metadata.image.url && (
@@ -375,33 +442,7 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
               {editingSection !== 'audio' && <EditBtn section="audio" />}
             </div>
             {editingSection === 'audio' ? (
-              <div className="smc-form">
-                <SelectField
-                  label="音频类型"
-                  value={editForm.type || 'background_music'}
-                  onChange={(v) => setField('type', v)}
-                  options={[
-                    { value: 'background_music', label: '背景音乐' },
-                    { value: 'sfx', label: '音效' },
-                  ]}
-                />
-                <FormField
-                  label="音频描述"
-                  value={editForm.prompt || ''}
-                  onChange={(v) => setField('prompt', v)}
-                  multiline
-                  autoFocus
-                />
-                <FormField
-                  label="音频地址"
-                  value={editForm.url || ''}
-                  onChange={(v) => setField('url', v)}
-                />
-                <FormActions
-                  onSave={saveEdit}
-                  onCancel={() => setEditingSection(null)}
-                />
-              </div>
+              <AudioEditForm />
             ) : (
               <>
                 {metadata.audio.url && (
@@ -427,24 +468,7 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
               {editingSection !== 'video' && <EditBtn section="video" />}
             </div>
             {editingSection === 'video' ? (
-              <div className="smc-form">
-                <FormField
-                  label="视频描述"
-                  value={editForm.prompt || ''}
-                  onChange={(v) => setField('prompt', v)}
-                  multiline
-                  autoFocus
-                />
-                <FormField
-                  label="视频地址"
-                  value={editForm.url || ''}
-                  onChange={(v) => setField('url', v)}
-                />
-                <FormActions
-                  onSave={saveEdit}
-                  onCancel={() => setEditingSection(null)}
-                />
-              </div>
+              <VideoEditForm />
             ) : (
               <>
                 {metadata.video.url && (
@@ -530,7 +554,7 @@ export default function SceneMetadataBlock({ node, editor, getPos }: NodeViewPro
         )}
       </div>
 
-      {/* 隐藏的可编辑内容 — ProseMirror 需要 contentDOM 存在 */}
+      {/* 隐藏的可编辑内容 */}
       <div className="scene-metadata-hidden-content">
         <pre>
           <NodeViewContent as={'code' as 'div'} />

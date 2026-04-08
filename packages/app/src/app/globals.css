@@ -418,6 +418,51 @@ body {
   color: #334155;
 }
 
+/* AI 生成按钮 */
+.rich-editor .smc-btn-ai {
+  color: #7c3aed;
+  background: #f5f3ff;
+  border-color: #e9d5ff;
+}
+.rich-editor .smc-btn-ai:hover:not(:disabled) {
+  background: #ede9fe;
+  border-color: #c4b5fd;
+}
+.rich-editor .smc-btn-ai:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+/* 文件上传拖拽区 */
+.rich-editor .smc-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border: 2px dashed #e2e8f0;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #fafafa;
+}
+.rich-editor .smc-dropzone:hover,
+.rich-editor .smc-dropzone-active {
+  border-color: #f97316;
+  background: #fff7ed;
+}
+.rich-editor .smc-dropzone-status {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+.rich-editor .smc-dropzone-error {
+  font-size: 0.6875rem;
+  color: #ef4444;
+  margin: 0.25rem 0 0;
+}
+
 /* 普通代码块（非 YAML）保持原有样式 */
 .rich-editor .scene-code-block {
   background: #1f2937;

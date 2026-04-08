@@ -314,6 +314,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
                 content={textContent}
                 onChange={setTextContent}
                 placeholder="开始写你的故事..."
+                gameId={id}
                 variableNames={originalGame ? Object.keys(originalGame.initialState) : []}
                 onScenesChange={setSceneIds}
                 onEditorReady={setEditorHandle}
