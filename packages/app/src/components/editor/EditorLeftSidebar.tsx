@@ -39,9 +39,7 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
         <button
           onClick={() => setTab('variables')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
-            tab === 'variables'
-              ? 'text-gray-900 border-b-2 border-gray-900'
-              : 'text-gray-500 hover:text-gray-700'
+            tab === 'variables' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 hover:text-gray-700'
           }`}>
           <VariableIcon size={14} />
           变量
@@ -49,9 +47,7 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
         <button
           onClick={() => setTab('characters')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
-            tab === 'characters'
-              ? 'text-gray-900 border-b-2 border-gray-900'
-              : 'text-gray-500 hover:text-gray-700'
+            tab === 'characters' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 hover:text-gray-700'
           }`}>
           <UsersIcon size={14} />
           角色
@@ -64,17 +60,13 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
           <SidebarVariables
             state={game.initialState}
             scenes={game.scenes}
-            onChange={(newState) =>
-              onGameChange((prev) => ({ ...prev, initialState: newState }))
-            }
+            onChange={(newState) => onGameChange((prev) => ({ ...prev, initialState: newState }))}
           />
         )}
         {tab === 'characters' && (
           <SidebarCharacters
             characters={game.ai.characters || {}}
-            onChange={(chars) =>
-              onGameChange((prev) => ({ ...prev, ai: { ...prev.ai, characters: chars } }))
-            }
+            onChange={(chars) => onGameChange((prev) => ({ ...prev, ai: { ...prev.ai, characters: chars } }))}
             gameId={gameId}
           />
         )}
@@ -181,7 +173,10 @@ function SidebarVariables({
     return (
       <div className="flex flex-col">
         <button
-          onClick={() => { setSelectedVar(null); setIsCreating(false); }}
+          onClick={() => {
+            setSelectedVar(null);
+            setIsCreating(false);
+          }}
           className="flex items-center gap-1 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border-b border-gray-100">
           <ChevronLeftIcon size={14} />
           返回列表
@@ -320,7 +315,10 @@ function SidebarCharacters({
     return (
       <div className="flex flex-col">
         <button
-          onClick={() => { setSelectedId(null); setIsCreating(false); }}
+          onClick={() => {
+            setSelectedId(null);
+            setIsCreating(false);
+          }}
           className="flex items-center gap-1 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border-b border-gray-100">
           <ChevronLeftIcon size={14} />
           返回列表
@@ -369,7 +367,10 @@ function SidebarSearchBar({
     <div className="p-3 border-b border-gray-100">
       <div className="flex gap-2">
         <div className="flex-1 relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search
+            size={14}
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="text"
             value={searchQuery}
