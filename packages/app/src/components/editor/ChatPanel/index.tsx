@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, SendIcon, Loader2Icon, Trash2Icon, BotIcon, SquareIcon } from 'lucide-react';
+import { SendIcon, Loader2Icon, Trash2Icon, BotIcon, SquareIcon } from 'lucide-react';
 import { useChatbot, Message, FunctionCall } from './useChatbot';
 import { Button } from '@radix-ui/themes';
 
@@ -72,32 +72,8 @@ export default function ChatPanel({
 
   return (
     <div className="w-80 shrink-0 flex flex-col bg-white border-l border-gray-200">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white">
-        <div className="flex items-center gap-2">
-          <BotIcon className="size-5" />
-          <span className="font-semibold">AI 编辑助手</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={clearMessages}
-            className="p-1.5 hover:bg-white/20 rounded-md transition-colors"
-            title="清空对话">
-            <Trash2Icon className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 hover:bg-white/20 rounded-md transition-colors"
-            title="关闭">
-            <X className="size-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Messages - 使用 min-h-0 确保 flex 子元素可滚动 */}
-      <div className="flex-1 min-h-0 max-h-[calc(100vh-23rem)] overflow-y-auto p-4 space-y-4">
+      {/* Messages */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
             <BotIcon className="size-12 mx-auto mb-3 opacity-50" />
@@ -128,8 +104,8 @@ export default function ChatPanel({
       {/* Input */}
       <form
         onSubmit={handleSubmit}
-        className="border-t border-gray-200 p-4">
-        <div className="mb-1">
+        className="border-t border-gray-200 p-3">
+        <div className="relative">
           <textarea
             ref={inputRef}
             value={input}
@@ -137,11 +113,20 @@ export default function ChatPanel({
             onKeyDown={handleKeyDown}
             placeholder="输入你的请求..."
             rows={2}
-            className="w-full block resize-none rounded-lg border border-gray-300 px-2 py-1 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none"
+            className="w-full block resize-none rounded-lg border border-gray-300 px-3 py-2 pr-9 text-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none"
           />
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={clearMessages}
+              className="absolute top-1.5 right-1.5 p-1 text-gray-300 hover:text-red-400 rounded transition-colors"
+              title="清空对话">
+              <Trash2Icon className="size-3.5" />
+            </button>
+          )}
         </div>
-        <footer className="flex items-start justify-between">
-          <p className="text-xs text-gray-400 mt-2">按 Enter 发送，Shift + Enter 换行</p>
+        <footer className="flex items-center justify-between mt-1.5">
+          <p className="text-xs text-gray-400">Enter 发送，Shift+Enter 换行</p>
           {loading ? (
             <Button
               type="button"
@@ -155,7 +140,8 @@ export default function ChatPanel({
             <Button
               disabled={!input.trim()}
               size="1"
-              variant="solid">
+              variant="solid"
+              color="orange">
               <SendIcon className="size-3" />
             </Button>
           )}
