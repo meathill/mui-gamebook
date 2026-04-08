@@ -5,8 +5,7 @@
 declare namespace Cloudflare {
   interface Env {
     ADMIN_PASSWORD?: string;
-    GOOGLE_AI_KEY?: string;
-    GOOGLE_API_KEY_NEW?: string;
+    GOOGLE_API_KEY?: string;
     OPENAI_API_KEY?: string;
     NEXT_PUBLIC_ROOT_USER_EMAIL?: string;
     STORY_PRIVATE_KEY?: string;

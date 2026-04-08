@@ -39,7 +39,7 @@ MUI Gamebook 素材生成器
 
 环境变量:
   AI_PROVIDER             默认 AI 提供者（google 或 openai）
-  GOOGLE_API_KEY_NEW      Google AI API Key
+  GOOGLE_API_KEY          Google AI API Key
   OPENAI_API_KEY          OpenAI API Key
 
 示例:

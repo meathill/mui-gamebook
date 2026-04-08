@@ -68,7 +68,7 @@ export function createAiProviderFromEnv(type?: AiProviderType): AiProvider {
 
   return createAiProvider({
     type: providerType,
-    googleApiKey: process.env.GOOGLE_API_KEY_NEW || process.env.GOOGLE_API_KEY,
+    googleApiKey: process.env.GOOGLE_API_KEY,
     openaiApiKey: process.env.OPENAI_API_KEY,
     models: {
       text: process.env.AI_TEXT_MODEL,

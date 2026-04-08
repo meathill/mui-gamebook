@@ -176,7 +176,7 @@ describe('useEditorStore', () => {
 
       expect(result.current.game).toBeNull();
       expect(result.current.nodes).toHaveLength(0);
-      expect(result.current.activeTab).toBe('settings');
+      expect(result.current.activeTab).toBe('story');
     });
   });
 
