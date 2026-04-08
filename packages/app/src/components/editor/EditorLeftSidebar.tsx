@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { VariableIcon, UsersIcon, Plus, Search, Trash2Icon, ChevronLeftIcon } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { VariableIcon, UsersIcon, Plus, Search, ChevronLeftIcon } from 'lucide-react';
 import {
   VariableForm,
   VariableList,
@@ -10,7 +10,14 @@ import {
   variableToFormData,
   formDataToVariable,
 } from '@/components/editor/variables';
-import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
+import {
+  CharacterForm,
+  CharacterList,
+  CharacterFormData,
+  defaultCharacterFormData,
+  characterToFormData,
+  formDataToCharacter,
+} from '@/components/editor/characters';
 import { useDialog } from '@/components/Dialog';
 import type { Game, GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
@@ -63,25 +70,21 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
           />
         )}
         {tab === 'characters' && (
-          <div className="p-3">
-            <EditorCharactersTab
-              characters={game.ai.characters || {}}
-              onChange={(chars: Record<string, AICharacter>) =>
-                onGameChange((prev) => ({ ...prev, ai: { ...prev.ai, characters: chars } }))
-              }
-              gameId={gameId}
-            />
-          </div>
+          <SidebarCharacters
+            characters={game.ai.characters || {}}
+            onChange={(chars) =>
+              onGameChange((prev) => ({ ...prev, ai: { ...prev.ai, characters: chars } }))
+            }
+            gameId={gameId}
+          />
         )}
       </div>
     </div>
   );
 }
 
-/**
- * 变量管理 - 侧栏专用单栏布局
- * 列表和编辑表单上下堆叠，点击变量后在下方展开编辑表单
- */
+/* ========== 变量面板 ========== */
+
 function SidebarVariables({
   state,
   scenes,
@@ -126,7 +129,6 @@ function SidebarVariables({
       await dialog.alert('变量名不能为空');
       return;
     }
-
     const newState = { ...state };
     if (selectedVar && formData.name !== selectedVar) {
       if (state[formData.name] !== undefined) {
@@ -139,7 +141,6 @@ function SidebarVariables({
       await dialog.alert('变量名已存在');
       return;
     }
-
     newState[formData.name] = formDataToVariable(formData);
     onChange(newState);
     setSelectedVar(formData.name);
@@ -161,7 +162,6 @@ function SidebarVariables({
   async function updateFormData(updates: Partial<VariableFormData>) {
     const newFormData = { ...formData, ...updates };
     setFormData(newFormData);
-
     if (selectedVar && !isCreating) {
       const newState = { ...state };
       if (updates.name && updates.name !== selectedVar) {
@@ -177,7 +177,6 @@ function SidebarVariables({
     }
   }
 
-  // 编辑模式：显示表单
   if (selectedVar || isCreating) {
     return (
       <div className="flex flex-col">
@@ -198,29 +197,13 @@ function SidebarVariables({
     );
   }
 
-  // 列表模式
   return (
     <div className="flex flex-col">
-      <div className="p-3 border-b border-gray-100">
-        <div className="flex gap-2">
-          <div className="flex-1 relative">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜索..."
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-            />
-          </div>
-          <button
-            onClick={handleCreateNew}
-            className="p-1.5 bg-orange-500 text-white rounded-md hover:bg-orange-600"
-            title="新建变量">
-            <Plus size={14} />
-          </button>
-        </div>
-      </div>
+      <SidebarSearchBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onCreateNew={handleCreateNew}
+      />
       <VariableList
         variables={filteredVariables}
         selectedVar={selectedVar}
@@ -228,6 +211,180 @@ function SidebarVariables({
         onDelete={handleDeleteVariable}
         searchQuery={searchQuery}
       />
+    </div>
+  );
+}
+
+/* ========== 角色面板 ========== */
+
+function SidebarCharacters({
+  characters,
+  onChange,
+  gameId,
+}: {
+  characters: Record<string, AICharacter>;
+  onChange: (characters: Record<string, AICharacter>) => void;
+  gameId: string;
+}) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState<CharacterFormData>(defaultCharacterFormData);
+  const dialog = useDialog();
+
+  const characterList = Object.entries(characters);
+
+  const filteredCharacters = useMemo(() => {
+    if (!searchQuery) return characterList;
+    const query = searchQuery.toLowerCase();
+    return characterList.filter(
+      ([id, char]) => id.toLowerCase().includes(query) || char.name.toLowerCase().includes(query),
+    );
+  }, [characterList, searchQuery]);
+
+  function handleSelectCharacter(id: string) {
+    if (selectedId === id) {
+      setSelectedId(null);
+      return;
+    }
+    setSelectedId(id);
+    setIsCreating(false);
+    setFormData(characterToFormData(id, characters[id]));
+  }
+
+  function handleCreateNew() {
+    setSelectedId(null);
+    setIsCreating(true);
+    const newId = `char_${Date.now().toString().slice(-4)}`;
+    setFormData({ ...defaultCharacterFormData, id: newId });
+  }
+
+  async function handleSaveCharacter() {
+    if (!formData.id.trim()) {
+      await dialog.alert('角色 ID 不能为空');
+      return;
+    }
+    if (!formData.name.trim()) {
+      await dialog.alert('角色名称不能为空');
+      return;
+    }
+    const newCharacters = { ...characters };
+    if (isCreating && characters[formData.id]) {
+      await dialog.alert('角色 ID 已存在');
+      return;
+    }
+    if (selectedId && formData.id !== selectedId) {
+      if (characters[formData.id]) {
+        await dialog.alert('角色 ID 已存在');
+        return;
+      }
+      delete newCharacters[selectedId];
+    }
+    newCharacters[formData.id] = formDataToCharacter(formData);
+    onChange(newCharacters);
+    setSelectedId(formData.id);
+    setIsCreating(false);
+  }
+
+  async function handleDeleteCharacter(id: string) {
+    const confirmed = await dialog.confirm(`确定删除角色 "${characters[id].name}" 吗？`);
+    if (!confirmed) return;
+    const newCharacters = { ...characters };
+    delete newCharacters[id];
+    onChange(newCharacters);
+    if (selectedId === id) {
+      setSelectedId(null);
+      setFormData(defaultCharacterFormData);
+    }
+  }
+
+  async function updateFormData(updates: Partial<CharacterFormData>) {
+    const newFormData = { ...formData, ...updates };
+    setFormData(newFormData);
+    if (selectedId && !isCreating) {
+      const newCharacters = { ...characters };
+      if (updates.id && updates.id !== selectedId) {
+        if (characters[updates.id]) {
+          await dialog.alert('角色 ID 已存在');
+          return;
+        }
+        delete newCharacters[selectedId];
+        setSelectedId(updates.id);
+      }
+      newCharacters[newFormData.id] = formDataToCharacter(newFormData);
+      onChange(newCharacters);
+    }
+  }
+
+  if (selectedId || isCreating) {
+    return (
+      <div className="flex flex-col">
+        <button
+          onClick={() => { setSelectedId(null); setIsCreating(false); }}
+          className="flex items-center gap-1 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border-b border-gray-100">
+          <ChevronLeftIcon size={14} />
+          返回列表
+        </button>
+        <CharacterForm
+          formData={formData}
+          isCreating={isCreating}
+          gameId={gameId}
+          onUpdate={updateFormData}
+          onSave={handleSaveCharacter}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col">
+      <SidebarSearchBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onCreateNew={handleCreateNew}
+      />
+      <CharacterList
+        characters={filteredCharacters}
+        selectedId={selectedId}
+        onSelect={handleSelectCharacter}
+        onDelete={handleDeleteCharacter}
+        searchQuery={searchQuery}
+      />
+    </div>
+  );
+}
+
+/* ========== 共用搜索栏 ========== */
+
+function SidebarSearchBar({
+  searchQuery,
+  onSearchChange,
+  onCreateNew,
+}: {
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+  onCreateNew: () => void;
+}) {
+  return (
+    <div className="p-3 border-b border-gray-100">
+      <div className="flex gap-2">
+        <div className="flex-1 relative">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="搜索..."
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          />
+        </div>
+        <button
+          onClick={onCreateNew}
+          className="p-1.5 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+          title="新建">
+          <Plus size={14} />
+        </button>
+      </div>
     </div>
   );
 }
