@@ -247,6 +247,46 @@ export function hasMetadataContent(meta: SceneMetadata): boolean {
 }
 
 /**
+ * 将 SceneMetadata 序列化为 YAML 文本
+ */
+export function serializeSceneMetadata(meta: SceneMetadata): string {
+  const lines: string[] = [];
+
+  if (meta.image) {
+    lines.push('image:');
+    if (meta.image.prompt) lines.push(`  prompt: ${meta.image.prompt}`);
+    if (meta.image.url) lines.push(`  url: ${meta.image.url}`);
+    if (meta.image.aspectRatio) lines.push(`  aspectRatio: ${meta.image.aspectRatio}`);
+  }
+
+  if (meta.characters?.length) {
+    lines.push('characters:');
+    for (const c of meta.characters) lines.push(`  - ${c}`);
+  }
+
+  if (meta.audio) {
+    lines.push('audio:');
+    if (meta.audio.type) lines.push(`  type: ${meta.audio.type}`);
+    if (meta.audio.prompt) lines.push(`  prompt: ${meta.audio.prompt}`);
+    if (meta.audio.url) lines.push(`  url: ${meta.audio.url}`);
+  }
+
+  if (meta.video) {
+    lines.push('video:');
+    if (meta.video.prompt) lines.push(`  prompt: ${meta.video.prompt}`);
+    if (meta.video.url) lines.push(`  url: ${meta.video.url}`);
+  }
+
+  if (meta.minigame) {
+    lines.push('minigame:');
+    if (meta.minigame.prompt) lines.push(`  prompt: ${meta.minigame.prompt}`);
+    if (meta.minigame.url) lines.push(`  url: ${meta.minigame.url}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * 从 ProseMirror 文档中提取所有场景 ID（H1 标题文本）
  */
 export function extractSceneIds(doc: {

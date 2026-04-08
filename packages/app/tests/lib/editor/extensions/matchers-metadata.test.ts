@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseSceneMetadata, hasMetadataContent } from '@/lib/editor/extensions/matchers';
+import { parseSceneMetadata, hasMetadataContent, serializeSceneMetadata } from '@/lib/editor/extensions/matchers';
 
 describe('parseSceneMetadata', () => {
   it('解析完整的场景元数据', () => {
@@ -134,5 +134,50 @@ describe('hasMetadataContent', () => {
 
   it('完全空返回 false', () => {
     expect(hasMetadataContent({})).toBe(false);
+  });
+});
+
+describe('serializeSceneMetadata', () => {
+  it('序列化完整元数据', () => {
+    const yaml = serializeSceneMetadata({
+      image: { prompt: 'A castle', url: 'https://example.com/castle.webp' },
+      audio: { type: 'background_music', prompt: 'Epic music' },
+      characters: ['hero', 'villain'],
+    });
+    expect(yaml).toContain('image:');
+    expect(yaml).toContain('  prompt: A castle');
+    expect(yaml).toContain('  url: https://example.com/castle.webp');
+    expect(yaml).toContain('audio:');
+    expect(yaml).toContain('  type: background_music');
+    expect(yaml).toContain('characters:');
+    expect(yaml).toContain('  - hero');
+    expect(yaml).toContain('  - villain');
+  });
+
+  it('序列化后可以被解析回来', () => {
+    const original = {
+      image: { prompt: 'Night time scene', url: 'https://example.com/img.webp', aspectRatio: '16:9' },
+      audio: { type: 'sfx', prompt: 'Thunder' },
+      video: { prompt: 'Door opening', url: 'https://example.com/v.mp4' },
+      minigame: { prompt: 'Tap game' },
+      characters: ['npc_a', 'npc_b'],
+    };
+    const yaml = serializeSceneMetadata(original);
+    const parsed = parseSceneMetadata(yaml);
+    expect(parsed.image).toEqual(original.image);
+    expect(parsed.audio).toEqual(original.audio);
+    expect(parsed.video).toEqual(original.video);
+    expect(parsed.minigame).toEqual(original.minigame);
+    expect(parsed.characters).toEqual(original.characters);
+  });
+
+  it('空元数据生成空字符串', () => {
+    expect(serializeSceneMetadata({})).toBe('');
+  });
+
+  it('跳过 undefined 字段', () => {
+    const yaml = serializeSceneMetadata({ image: { prompt: 'Test' } });
+    expect(yaml).toBe('image:\n  prompt: Test');
+    expect(yaml).not.toContain('url');
   });
 });

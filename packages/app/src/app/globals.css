@@ -306,6 +306,118 @@ body {
   border-radius: 0 0 0.5rem 0.5rem;
   margin: 0;
 }
+/* 标题栏操作按钮组 */
+.rich-editor .smc-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.rich-editor .smc-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6875rem;
+  color: #64748b;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.rich-editor .smc-add-btn:hover {
+  color: #334155;
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+/* 区域内编辑按钮 */
+.rich-editor .smc-edit-btn {
+  margin-left: auto;
+  padding: 0.125rem 0.375rem;
+  color: #94a3b8;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.rich-editor .smc-edit-btn:hover {
+  color: #475569;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+/* 表单容器 */
+.rich-editor .smc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.rich-editor .smc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+.rich-editor .smc-field-label {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+.rich-editor .smc-field-input {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.8125rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.25rem;
+  background: white;
+  color: #334155;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.rich-editor .smc-field-input:focus {
+  border-color: #f97316;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+}
+.rich-editor .smc-field-textarea {
+  resize: vertical;
+  min-height: 2.5rem;
+  line-height: 1.5;
+}
+/* 表单操作按钮 */
+.rich-editor .smc-form-actions {
+  display: flex;
+  gap: 0.375rem;
+  margin-top: 0.25rem;
+}
+.rich-editor .smc-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+.rich-editor .smc-btn-primary {
+  color: white;
+  background: #f97316;
+  border-color: #f97316;
+}
+.rich-editor .smc-btn-primary:hover {
+  background: #ea580c;
+}
+.rich-editor .smc-btn-ghost {
+  color: #64748b;
+  background: transparent;
+  border-color: #e2e8f0;
+}
+.rich-editor .smc-btn-ghost:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
 /* 普通代码块（非 YAML）保持原有样式 */
 .rich-editor .scene-code-block {
   background: #1f2937;
