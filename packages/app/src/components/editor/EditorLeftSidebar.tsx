@@ -1,9 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { VariableIcon, UsersIcon } from 'lucide-react';
-import EditorVariablesTab from '@/components/editor/EditorVariablesTab';
+import { VariableIcon, UsersIcon, Plus, Search, Trash2Icon, ChevronLeftIcon } from 'lucide-react';
+import {
+  VariableForm,
+  VariableList,
+  VariableFormData,
+  defaultFormData,
+  variableToFormData,
+  formDataToVariable,
+} from '@/components/editor/variables';
 import EditorCharactersTab from '@/components/editor/EditorCharactersTab';
+import { useDialog } from '@/components/Dialog';
 import type { Game, GameState, AICharacter } from '@mui-gamebook/parser/src/types';
 
 type SidebarTab = 'variables' | 'characters';
@@ -18,13 +26,15 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
   const [tab, setTab] = useState<SidebarTab>('variables');
 
   return (
-    <div className="w-64 border-r border-gray-200 bg-white flex flex-col shrink-0 overflow-hidden">
+    <div className="w-72 border-r border-gray-200 bg-white flex flex-col shrink-0 overflow-hidden">
       {/* Tab 切换 */}
       <div className="flex border-b border-gray-200 shrink-0">
         <button
           onClick={() => setTab('variables')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
-            tab === 'variables' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 hover:text-gray-700'
+            tab === 'variables'
+              ? 'text-gray-900 border-b-2 border-gray-900'
+              : 'text-gray-500 hover:text-gray-700'
           }`}>
           <VariableIcon size={14} />
           变量
@@ -32,7 +42,9 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
         <button
           onClick={() => setTab('characters')}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
-            tab === 'characters' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 hover:text-gray-700'
+            tab === 'characters'
+              ? 'text-gray-900 border-b-2 border-gray-900'
+              : 'text-gray-500 hover:text-gray-700'
           }`}>
           <UsersIcon size={14} />
           角色
@@ -40,24 +52,182 @@ export default function EditorLeftSidebar({ game, gameId, onGameChange }: Editor
       </div>
 
       {/* 内容区 */}
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto">
         {tab === 'variables' && (
-          <EditorVariablesTab
+          <SidebarVariables
             state={game.initialState}
-            onChange={(newState: GameState) => onGameChange((prev) => ({ ...prev, initialState: newState }))}
             scenes={game.scenes}
+            onChange={(newState) =>
+              onGameChange((prev) => ({ ...prev, initialState: newState }))
+            }
           />
         )}
         {tab === 'characters' && (
-          <EditorCharactersTab
-            characters={game.ai.characters || {}}
-            onChange={(chars: Record<string, AICharacter>) =>
-              onGameChange((prev) => ({ ...prev, ai: { ...prev.ai, characters: chars } }))
-            }
-            gameId={gameId}
-          />
+          <div className="p-3">
+            <EditorCharactersTab
+              characters={game.ai.characters || {}}
+              onChange={(chars: Record<string, AICharacter>) =>
+                onGameChange((prev) => ({ ...prev, ai: { ...prev.ai, characters: chars } }))
+              }
+              gameId={gameId}
+            />
+          </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * 变量管理 - 侧栏专用单栏布局
+ * 列表和编辑表单上下堆叠，点击变量后在下方展开编辑表单
+ */
+function SidebarVariables({
+  state,
+  scenes,
+  onChange,
+}: {
+  state: GameState;
+  scenes: Record<string, { id: string }>;
+  onChange: (newState: GameState) => void;
+}) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedVar, setSelectedVar] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState<VariableFormData>(defaultFormData);
+  const dialog = useDialog();
+
+  const variables = Object.entries(state);
+  const sceneList = Object.keys(scenes);
+
+  const filteredVariables = searchQuery
+    ? variables.filter(([name]) => name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : variables;
+
+  function handleSelectVariable(name: string) {
+    if (selectedVar === name) {
+      setSelectedVar(null);
+      return;
+    }
+    setSelectedVar(name);
+    setIsCreating(false);
+    setFormData(variableToFormData(name, state[name]));
+  }
+
+  function handleCreateNew() {
+    setSelectedVar(null);
+    setIsCreating(true);
+    const newName = `var_${Date.now().toString().slice(-4)}`;
+    setFormData({ ...defaultFormData, name: newName });
+  }
+
+  async function handleSaveVariable() {
+    if (!formData.name.trim()) {
+      await dialog.alert('变量名不能为空');
+      return;
+    }
+
+    const newState = { ...state };
+    if (selectedVar && formData.name !== selectedVar) {
+      if (state[formData.name] !== undefined) {
+        await dialog.alert('变量名已存在');
+        return;
+      }
+      delete newState[selectedVar];
+    }
+    if (isCreating && state[formData.name] !== undefined) {
+      await dialog.alert('变量名已存在');
+      return;
+    }
+
+    newState[formData.name] = formDataToVariable(formData);
+    onChange(newState);
+    setSelectedVar(formData.name);
+    setIsCreating(false);
+  }
+
+  async function handleDeleteVariable(name: string) {
+    const confirmed = await dialog.confirm(`确定删除变量 "${name}" 吗？`);
+    if (!confirmed) return;
+    const newState = { ...state };
+    delete newState[name];
+    onChange(newState);
+    if (selectedVar === name) {
+      setSelectedVar(null);
+      setFormData(defaultFormData);
+    }
+  }
+
+  async function updateFormData(updates: Partial<VariableFormData>) {
+    const newFormData = { ...formData, ...updates };
+    setFormData(newFormData);
+
+    if (selectedVar && !isCreating) {
+      const newState = { ...state };
+      if (updates.name && updates.name !== selectedVar) {
+        if (state[updates.name] !== undefined) {
+          await dialog.alert('变量名已存在');
+          return;
+        }
+        delete newState[selectedVar];
+        setSelectedVar(updates.name);
+      }
+      newState[newFormData.name] = formDataToVariable(newFormData);
+      onChange(newState);
+    }
+  }
+
+  // 编辑模式：显示表单
+  if (selectedVar || isCreating) {
+    return (
+      <div className="flex flex-col">
+        <button
+          onClick={() => { setSelectedVar(null); setIsCreating(false); }}
+          className="flex items-center gap-1 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border-b border-gray-100">
+          <ChevronLeftIcon size={14} />
+          返回列表
+        </button>
+        <VariableForm
+          formData={formData}
+          isCreating={isCreating}
+          sceneList={sceneList}
+          onUpdate={updateFormData}
+          onSave={handleSaveVariable}
+        />
+      </div>
+    );
+  }
+
+  // 列表模式
+  return (
+    <div className="flex flex-col">
+      <div className="p-3 border-b border-gray-100">
+        <div className="flex gap-2">
+          <div className="flex-1 relative">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜索..."
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+          </div>
+          <button
+            onClick={handleCreateNew}
+            className="p-1.5 bg-orange-500 text-white rounded-md hover:bg-orange-600"
+            title="新建变量">
+            <Plus size={14} />
+          </button>
+        </div>
+      </div>
+      <VariableList
+        variables={filteredVariables}
+        selectedVar={selectedVar}
+        onSelect={handleSelectVariable}
+        onDelete={handleDeleteVariable}
+        searchQuery={searchQuery}
+      />
     </div>
   );
 }
