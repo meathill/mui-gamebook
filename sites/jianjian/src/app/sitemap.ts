@@ -1,10 +1,8 @@
 import type { MetadataRoute } from 'next';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getGames } from '@/lib/api';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const { env } = await getCloudflareContext({ async: true });
-  const BASE_URL = env.NEXT_PUBLIC_SITE_URL!;
+  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL!;
 
   // 静态页面
   const staticPages: MetadataRoute.Sitemap = [

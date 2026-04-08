@@ -10,7 +10,6 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
 import { ReactNode } from 'react';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { cn } from '@/lib';
 
 const interSans = Inter({
@@ -23,7 +22,6 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { env } = await getCloudflareContext({ async: true });
   return {
     title: {
       template: '%s | 姆伊游戏书',
@@ -37,7 +35,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: 'zh_CN',
       siteName: '姆伊游戏书',
     },
-    robots: env.HEADLESS_MODE === 'true' ? { index: false, follow: false } : undefined,
+    robots: process.env.NEXT_PUBLIC_HEADLESS_MODE ? { index: false, follow: false } : undefined,
   };
 }
 
@@ -46,7 +44,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const { env } = await getCloudflareContext({ async: true });
   const locale = await getLocale();
   const messages = await getMessages();
 
@@ -64,7 +61,7 @@ export default async function RootLayout({
           type="image/png"
         />
       </head>
-      <GoogleAnalytics gaId={env.NEXT_PUBLIC_GA_ID} />
+      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
       <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
         <NextIntlClientProvider messages={messages}>
           <Theme
@@ -73,7 +70,7 @@ export default async function RootLayout({
             radius="medium"
             scaling="100%">
             <Providers>
-              <Header siteName={env.NEXT_PUBLIC_SITE_NAME} />
+              <Header siteName={process.env.NEXT_PUBLIC_SITE_NAME} />
               <main className="grow flex flex-col">{children}</main>
               <Footer />
             </Providers>

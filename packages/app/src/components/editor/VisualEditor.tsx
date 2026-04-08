@@ -256,20 +256,22 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
 
   // ChatPanel 渲染（所有非 settings tab 共用）
   const chatPanel = chatOpen && originalGame && (
-    <ChatPanel
-      gameId={id}
-      isOpen={chatOpen}
-      onClose={() => setChatOpen(false)}
-      dsl={textContent}
-      story={originalGame.backgroundStory}
-      characters={originalGame.ai?.characters}
-      variables={originalGame.initialState as Record<string, unknown>}
-      onFunctionCall={handleFunctionCall}
-    />
+    <div>
+      <ChatPanel
+        gameId={id}
+        isOpen={chatOpen}
+        onClose={() => setChatOpen(false)}
+        dsl={textContent}
+        story={originalGame.backgroundStory}
+        characters={originalGame.ai?.characters}
+        variables={originalGame.initialState as Record<string, unknown>}
+        onFunctionCall={handleFunctionCall}
+      />
+    </div>
   );
 
   return (
-    <div className="grow flex flex-col bg-gray-50 game-editor">
+    <div className="grow bg-gray-50 game-editor">
       <EditorToolbar
         title={originalGame?.title || originalGame?.slug}
         slug={slug}
@@ -297,16 +299,18 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
 
       {/* 故事 tab: 左侧栏 + TipTap 编辑器 + AI 助手 */}
       {activeTab === 'story' && (
-        <div className="flex grow overflow-hidden">
-          {leftSidebarOpen && originalGame && (
-            <EditorLeftSidebar
-              game={originalGame}
-              gameId={id}
-              onGameChange={(updater) => setOriginalGame((prev) => (prev ? updater(prev) : prev))}
-              sceneIds={sceneIds}
-              onScrollToScene={(sceneId) => editorHandle?.scrollToScene(sceneId)}
-            />
-          )}
+        <div className="flex grow">
+          <div>
+            {leftSidebarOpen && originalGame && (
+              <EditorLeftSidebar
+                game={originalGame}
+                gameId={id}
+                onGameChange={(updater) => setOriginalGame((prev) => (prev ? updater(prev) : prev))}
+                sceneIds={sceneIds}
+                onScrollToScene={(sceneId) => editorHandle?.scrollToScene(sceneId)}
+              />
+            )}
+          </div>
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* TipTap 编辑器 */}
             <div className="flex-1 p-4 overflow-hidden">

@@ -71,7 +71,7 @@ export default function ChatPanel({
   if (!isOpen) return null;
 
   return (
-    <div className="w-80 shrink-0 flex flex-col bg-white border-l border-gray-200">
+    <div className="w-80 h-[calc(100dvh-7rem-2px)] max-h-[calc(100dvh-7rem-2px)] sticky top-28 shrink-0 flex flex-col bg-white border-l border-gray-200">
       {/* Messages */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (

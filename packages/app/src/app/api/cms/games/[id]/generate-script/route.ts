@@ -32,10 +32,8 @@ export async function POST(req: Request, { params }: Props) {
   };
   if (!story) return NextResponse.json({ error: 'Story is required' }, { status: 400 });
 
-  const { env } = getCloudflareContext();
-
   // fetch DSL
-  const f = await fetch(`${env.NEXT_PUBLIC_SITE_URL}/DSL_SPEC.md`);
+  const f = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/DSL_SPEC.md`);
   const dslSpec = await f.text();
 
   try {
