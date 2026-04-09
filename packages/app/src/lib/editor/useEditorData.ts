@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
 import { pendingOperationsManager, isPlaceholderUrl, extractOperationId } from '@/lib/pending-operations-manager';
+import { loadDraft, clearDraft } from '@/hooks/useAutoSave';
 import { useDialog } from '@/components/Dialog';
 import type { Game } from '@mui-gamebook/parser/src/types';
 import type { SceneNode } from '@mui-gamebook/parser';
@@ -30,6 +31,8 @@ interface UseEditorDataReturn {
   saving: boolean;
   error: string;
   handleSave: (nodes: Node[], edges: Edge[], viewMode: 'visual' | 'text', activeTab: string) => Promise<void>;
+  /** 静默云端保存（自动保存用），不弹 dialog */
+  cloudSave: (content: string, slug: string) => Promise<boolean>;
   handleGenerateAssets: () => Promise<void>;
   handleScriptImport: (
     script: string,
@@ -94,19 +97,48 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
     [setNodes, dialog],
   );
 
-  // 加载游戏数据
+  // 加载游戏数据 + 草稿恢复检测
   useEffect(() => {
     if (!id) return;
 
     fetch(`/api/cms/games/${id}`)
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to load game');
-        const data = (await res.json()) as { content: string; slug: string; storyPrompt?: string } & Game;
-        const result = parse(data.content);
+        const data = (await res.json()) as {
+          content: string;
+          slug: string;
+          storyPrompt?: string;
+          updatedAt: string | number;
+        } & Game;
+
+        // 检测本地草稿
+        const draft = loadDraft(id);
+        const cloudUpdatedAt =
+          typeof data.updatedAt === 'string' ? new Date(data.updatedAt).getTime() : (data.updatedAt as number) * 1000; // 整数时间戳为秒级
+
+        let contentToUse = data.content;
+
+        if (draft && draft.content !== data.content && draft.savedAt > cloudUpdatedAt) {
+          // 本地草稿比云端更新，提示用户
+          const useLocal = await dialog.confirm(
+            '检测到本地有未保存的草稿（比云端版本更新），是否恢复？选择"取消"将使用云端版本。',
+            '恢复本地草稿？',
+          );
+          if (useLocal) {
+            contentToUse = draft.content;
+          } else {
+            clearDraft(id);
+          }
+        } else if (draft) {
+          // 草稿不比云端新，清理掉
+          clearDraft(id);
+        }
+
+        const result = parse(contentToUse);
         if (result.success) {
           setOriginalGame({ ...result.data, ...data });
           setSlug(data.slug);
-          setTextContent(data.content);
+          setTextContent(contentToUse);
           const flow = gameToFlow(result.data);
           setInitialFlow(flow);
         } else {
@@ -198,6 +230,25 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
     }
   }
 
+  /** 静默云端保存（自动保存用），不弹 dialog，返回是否成功 */
+  async function cloudSave(contentToSave: string, slugToSave: string): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/cms/games/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: contentToSave, slug: slugToSave }),
+      });
+      if (!res.ok) return false;
+      const result = (await res.json()) as { slug?: string };
+      if (result.slug) {
+        setSlug(result.slug);
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async function handleGenerateAssets(): Promise<void> {
     const confirmed = await dialog.confirm('这将扫描所有节点并生成缺失的 AI 素材。可能需要一些时间，确定继续吗？');
     if (!confirmed) return;
@@ -249,6 +300,7 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
     saving,
     error,
     handleSave,
+    cloudSave,
     handleGenerateAssets,
     handleScriptImport,
     initialFlow,

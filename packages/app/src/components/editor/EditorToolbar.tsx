@@ -14,6 +14,7 @@ import {
   PanelLeftIcon,
 } from 'lucide-react';
 import { useEditorStore } from '@/lib/editor/store';
+import type { SaveStatus } from '@/hooks/useAutoSave';
 
 export type Tab = 'settings' | 'story' | 'flowchart';
 
@@ -21,6 +22,7 @@ interface EditorToolbarProps {
   title?: string;
   slug: string;
   saving: boolean;
+  saveStatus?: SaveStatus;
   previewUrl?: string;
   onAddScene: () => void;
   onLayout: () => void;
@@ -29,10 +31,17 @@ interface EditorToolbarProps {
   onToggleLeftSidebar: () => void;
 }
 
+const SAVE_STATUS_MAP: Record<SaveStatus, { label: string; className: string }> = {
+  saved: { label: '已保存', className: 'text-green-600' },
+  saving: { label: '保存中...', className: 'text-gray-400' },
+  unsaved: { label: '未保存', className: 'text-orange-500' },
+};
+
 export default function EditorToolbar({
   title,
   slug,
   saving,
+  saveStatus = 'saved',
   previewUrl,
   onAddScene,
   onLayout,
@@ -135,6 +144,13 @@ export default function EditorToolbar({
             <BotIcon size={14} />
             <span className="hidden sm:inline">AI 助手</span>
           </button>
+        )}
+
+        {/* 自动保存状态 */}
+        {!saving && (
+          <span className={`text-xs hidden sm:inline ${SAVE_STATUS_MAP[saveStatus].className}`}>
+            {SAVE_STATUS_MAP[saveStatus].label}
+          </span>
         )}
 
         {/* 保存 */}
