@@ -34,6 +34,7 @@ import ChatPanel from '@/components/editor/ChatPanel';
 import RichEditor, { type RichEditorHandle } from '@/components/editor/RichEditor';
 import { useDialog } from '@/components/Dialog';
 import { useUnsavedChangesWarning, useUndoRedoShortcuts } from '@/hooks/useUndoRedo';
+import { useAutoSave, type SaveStatus } from '@/hooks/useAutoSave';
 
 const nodeTypes = { scene: SceneNode };
 
@@ -68,6 +69,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   // 编辑器状态
   const [sceneIds, setSceneIds] = useState<string[]>([]);
   const [editorHandle, setEditorHandle] = useState<RichEditorHandle | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
 
   const {
     originalGame,
@@ -80,12 +82,23 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
     saving,
     error,
     handleSave: saveGame,
+    cloudSave,
     handleScriptImport,
     initialFlow,
     scanAndRegisterPendingOperations,
   } = useEditorData({ id, setNodes }) as ReturnType<typeof useEditorData> & {
     scanAndRegisterPendingOperations: (nodes: Node[]) => void;
   };
+
+  // 自动保存
+  useAutoSave({
+    gameId: id,
+    content: textContent,
+    slug,
+    ready: !loading && !!originalGame,
+    onCloudSave: cloudSave,
+    onStatusChange: setSaveStatus,
+  });
 
   // 初始化节点和边
   useEffect(() => {
@@ -142,6 +155,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
     // 流程图模式下，viewMode 是 visual；故事模式下是 text
     const viewMode = activeTab === 'flowchart' ? 'visual' : 'text';
     await saveGame(nodes, edges, viewMode, activeTab);
+    setSaveStatus('saved');
   }
 
   async function handleImport(script: string) {
@@ -276,6 +290,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
         title={originalGame?.title || originalGame?.slug}
         slug={slug}
         saving={saving}
+        saveStatus={saveStatus}
         previewUrl={previewUrl}
         onAddScene={handleAddScene}
         onLayout={handleLayout}
