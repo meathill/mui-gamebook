@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { authClient } from '@/lib/auth-client';
@@ -18,7 +19,12 @@ interface HeaderProps {
 
 export default function Header({ siteName }: HeaderProps) {
   const { data: session } = authClient.useSession();
+  const [mounted, setMounted] = useState(false);
   const t = useTranslations('header');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -54,7 +60,9 @@ export default function Header({ siteName }: HeaderProps) {
             </nav>
           </div>
           <div className="flex items-center gap-4">
-            {session ? (
+            {!mounted ? (
+              <div className="w-20 h-9" />
+            ) : session ? (
               <UserDropdown
                 email={session?.user.email || ''}
                 isAdmin={isRootUserClient(session?.user.email)}

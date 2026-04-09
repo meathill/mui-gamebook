@@ -73,6 +73,7 @@ export default function RichEditor({
   frontmatterRef.current = frontmatter;
 
   const editor = useEditor({
+    immediatelyRender: false,
     extensions: [
       StarterKit.configure({
         codeBlock: false, // 由 SceneMetadata 扩展接管
