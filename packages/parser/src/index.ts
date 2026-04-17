@@ -294,6 +294,9 @@ export function parse(source: string): ParseResult {
     published,
     backgroundStory,
     background_story,
+    display_mode,
+    text_box_position,
+    typewriter_speed,
     state = {},
     ai = {},
   } = globalConfig;
@@ -312,6 +315,9 @@ export function parse(source: string): ParseResult {
     cover_aspect_ratio,
     tags: tags || [],
     published: !!published,
+    display_mode,
+    text_box_position,
+    typewriter_speed,
     initialState: state,
     ai: {
       style: ai.style || {},

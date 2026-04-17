@@ -1,5 +1,6 @@
 import { cachedGetGameBySlug } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
+import { GamePlayerImmersive } from '@/components/game-player';
 import RelatedGames from '@/components/RelatedGames';
 import Comment from '@/components/Comment';
 import { Metadata } from 'next';
@@ -49,6 +50,15 @@ export default async function PlayPage({ params }: Props) {
           <p className="mt-2 text-gray-600">找不到故事：{slug}</p>
         </div>
       </div>
+    );
+  }
+
+  if (game.display_mode === 'immersive') {
+    return (
+      <GamePlayerImmersive
+        game={game}
+        slug={slug}
+      />
     );
   }
 
