@@ -178,7 +178,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                           key={opt.value}
                           type="button"
                           onClick={() => handleChange('text_box_position', opt.value)}
-                          className={`flex-1 px-2 py-1.5 text-xs rounded border transition ${
+                          className={`flex-1 px-2 py-2 text-sm rounded border transition ${
                             current === opt.value
                               ? 'bg-amber-600 text-white border-amber-600'
                               : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
