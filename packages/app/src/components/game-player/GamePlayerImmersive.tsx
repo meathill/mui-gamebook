@@ -5,10 +5,12 @@ import { useTranslations } from 'next-intl';
 import type { PlayableGame, PlayableScene, RuntimeState, TextBoxPosition } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
 import { evaluateCondition, executeSet, interpolateVariables } from '@mui-gamebook/site-common/utils';
+import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
+import Comment from '@/components/Comment';
 import { Button } from '@radix-ui/themes';
-import { Menu, X } from 'lucide-react';
+import { ChevronDown, MessageSquare, X } from 'lucide-react';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import TitleScreen from './TitleScreen';
 import EndScreen from './EndScreen';
@@ -51,6 +53,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
   const [textIndex, setTextIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [commentOpen, setCommentOpen] = useState(false);
 
   const [textPosition, setTextPosition] = useState<TextBoxPosition>(game.text_box_position || 'bottom');
 
@@ -254,16 +257,30 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     <div className="fixed inset-0 bg-black text-white overflow-hidden">
       <ImmersiveBackground url={activeBgUrl} />
 
-      {/* 极简 header：右上角菜单 */}
-      <div className="absolute top-4 right-4 z-40">
-        <button
-          onClick={() => setMenuOpen((v) => !v)}
-          className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md text-white flex items-center justify-center ring-1 ring-white/10 hover:bg-black/70"
-          aria-label="菜单">
-          {menuOpen ? <X size={18} /> : <Menu size={18} />}
-        </button>
+      {/* 左上角面包屑：MuiStory › [Title ▾] */}
+      <div className="absolute top-4 left-4 z-40">
+        <div className="inline-flex items-center gap-1 bg-black/50 backdrop-blur-md ring-1 ring-white/10 rounded-full pl-3 pr-1 py-1 text-sm text-white">
+          <Link
+            href="/"
+            className="text-white/70 hover:text-white transition">
+            MuiStory
+          </Link>
+          <span className="text-white/30">›</span>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-full hover:bg-white/10 transition font-medium"
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}>
+            <span className="max-w-[200px] truncate">{game.title}</span>
+            <ChevronDown
+              size={14}
+              className={`transition-transform ${menuOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+        </div>
         {menuOpen && (
-          <div className="absolute right-0 mt-2 w-56 bg-black/70 backdrop-blur-md rounded-xl ring-1 ring-white/10 p-3 shadow-2xl text-sm">
+          <div className="absolute left-0 mt-2 w-64 bg-black/75 backdrop-blur-md rounded-xl ring-1 ring-white/10 p-3 shadow-2xl text-sm">
             <div className="text-xs uppercase tracking-wider text-white/50 mb-2">文字框位置</div>
             <div className="flex gap-1 mb-3">
               {POSITIONS.map((p) => (
@@ -277,22 +294,59 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
                 </button>
               ))}
             </div>
-            <div className="border-t border-white/10 pt-2 flex items-center justify-between gap-2">
-              <ShareButton
-                title={game.title}
-                url={shareUrl}
-              />
-              <Button
-                variant="ghost"
-                color="red"
-                size="1"
-                onClick={() => handleRestart()}>
-                {t('exit')}
-              </Button>
+            <div className="border-t border-white/10 pt-2 space-y-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setCommentOpen(true);
+                }}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-white/80 hover:text-white hover:bg-white/10 transition">
+                <MessageSquare size={14} />
+                评论
+              </button>
+              <div className="flex items-center justify-between gap-2 px-1">
+                <ShareButton
+                  title={game.title}
+                  url={shareUrl}
+                />
+                <Button
+                  variant="ghost"
+                  color="red"
+                  size="1"
+                  onClick={() => handleRestart()}>
+                  {t('exit')}
+                </Button>
+              </div>
             </div>
           </div>
         )}
       </div>
+
+      {/* 评论抽屉 */}
+      {commentOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60"
+          onClick={() => setCommentOpen(false)}>
+          <div
+            className="absolute top-0 right-0 bottom-0 w-full sm:w-[480px] bg-white text-gray-900 shadow-2xl overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b px-5 py-3 flex items-center justify-between">
+              <h3 className="font-semibold">评论</h3>
+              <button
+                type="button"
+                onClick={() => setCommentOpen(false)}
+                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                aria-label="关闭">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5">
+              <Comment postId={slug} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <FloatingVariablePanel
         variables={visibleVariables}
