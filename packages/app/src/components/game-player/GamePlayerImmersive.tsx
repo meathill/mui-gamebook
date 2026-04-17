@@ -52,6 +52,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
   const [textIndex, setTextIndex] = useState(0);
+  const [choicesRevealed, setChoicesRevealed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentOpen, setCommentOpen] = useState(false);
 
@@ -149,10 +150,11 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     return lastImg || currentImageUrl;
   }, [currentScene, textIndex, currentImageUrl]);
 
-  // 场景切换后：重置 textIndex，更新背景图基线
+  // 场景切换后：重置 textIndex / choicesRevealed，更新背景图基线
   useEffect(() => {
     if (!isGameStarted || !currentScene) return;
     setTextIndex(0);
+    setChoicesRevealed(false);
     const firstImg = currentScene.nodes.find(isImageNode);
     if (firstImg && 'url' in firstImg && firstImg.url) {
       setCurrentImageUrl(firstImg.url);
@@ -198,6 +200,10 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   function handleAdvance() {
     if (textIndex < textNodes.length - 1) {
       setTextIndex(textIndex + 1);
+      return;
+    }
+    if (!choicesRevealed) {
+      setChoicesRevealed(true);
     }
   }
 
@@ -370,9 +376,9 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
           paragraphs={textNodes.slice(0, textIndex + 1).map((n) => interpolateVariables(n.content, runtimeState))}
           position={textPosition}
           speed={game.typewriter_speed}
-          showContinueHint={!isLastText}
+          showContinueHint={!isLastText || (choices.length > 0 && !choicesRevealed)}
           onAdvance={handleAdvance}>
-          {isLastText && choices.length > 0 && (
+          {isLastText && choicesRevealed && choices.length > 0 && (
             <div className="mt-5 space-y-2">
               {choices.map(({ node, index }, choiceOrderIndex) => {
                 if (node.type !== 'choice') return null;
