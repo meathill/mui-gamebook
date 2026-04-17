@@ -367,7 +367,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
 
       {!showEndScreen && currentText && (
         <ImmersiveTextBox
-          text={interpolateVariables(currentText.content, runtimeState)}
+          paragraphs={textNodes.slice(0, textIndex + 1).map((n) => interpolateVariables(n.content, runtimeState))}
           position={textPosition}
           speed={game.typewriter_speed}
           showContinueHint={!isLastText}
