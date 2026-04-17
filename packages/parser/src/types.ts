@@ -115,6 +115,16 @@ export interface Scene {
 }
 
 /**
+ * 游戏展示模式
+ */
+export type DisplayMode = 'classic' | 'immersive';
+
+/**
+ * 沉浸模式下文字框位置
+ */
+export type TextBoxPosition = 'bottom' | 'center' | 'top';
+
+/**
  * 代表整个游戏的数据结构。
  */
 export interface Game {
@@ -130,6 +140,11 @@ export interface Game {
   published?: boolean;
   created_at?: string;
   updated_at?: string;
+
+  // 播放模式
+  display_mode?: DisplayMode;
+  text_box_position?: TextBoxPosition;
+  typewriter_speed?: number; // 毫秒/字，默认 40
 
   // 初始状态（带元数据）
   initialState: GameState;
@@ -189,6 +204,9 @@ export interface PlayableGame {
   backgroundStory?: string;
   cover_image?: string;
   tags?: string[];
+  display_mode?: DisplayMode;
+  text_box_position?: TextBoxPosition;
+  typewriter_speed?: number;
 
   initialState: GameState;
   characters?: Record<string, PlayableCharacter>;

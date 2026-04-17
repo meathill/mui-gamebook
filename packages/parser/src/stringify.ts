@@ -22,6 +22,9 @@ export function stringify(game: Game): string {
   if (game.cover_aspect_ratio) frontMatter.cover_aspect_ratio = game.cover_aspect_ratio;
   if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
   if (game.published) frontMatter.published = true;
+  if (game.display_mode) frontMatter.display_mode = game.display_mode;
+  if (game.text_box_position) frontMatter.text_box_position = game.text_box_position;
+  if (game.typewriter_speed) frontMatter.typewriter_speed = game.typewriter_speed;
   if (Object.keys(game.initialState).length > 0) {
     const cleanedState: GameState = {};
     for (const [key, val] of Object.entries(game.initialState)) {

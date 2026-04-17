@@ -19,6 +19,34 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* 沉浸式（视觉小说）播放模式 —— 隐藏全站 header/footer */
+html[data-immersive="true"] header,
+html[data-immersive="true"] footer {
+  display: none !important;
+}
+html[data-immersive="true"] body {
+  background: #000;
+  overflow: hidden;
+}
+html[data-immersive="true"] main {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+@keyframes mui-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: mui-fade-in 0.4s ease-out;
+}
+
 .radix-themes {
   display: flex;
   flex-direction: column;
