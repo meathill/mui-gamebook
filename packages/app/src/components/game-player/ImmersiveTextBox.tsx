@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { TextBoxPosition } from '@mui-gamebook/parser/src/types';
 import { useTypewriter } from './hooks/useTypewriter';
 
 interface ImmersiveTextBoxProps {
-  text: string;
+  /** 当前场景已显示到的所有段落，最后一段走逐字效果，前面几段静态显示 */
+  paragraphs: string[];
   position: TextBoxPosition;
   speed?: number;
   showContinueHint: boolean;
   /** 点击任意处/按键：未打完则立刻打完，已打完则触发 onAdvance */
   onAdvance: () => void;
-  /** 只在段落完成且还有后续时显示 "继续" 提示 */
   children?: React.ReactNode;
 }
 
@@ -23,14 +23,17 @@ const positionClasses: Record<TextBoxPosition, string> = {
 };
 
 export default function ImmersiveTextBox({
-  text,
+  paragraphs,
   position,
   speed,
   showContinueHint,
   onAdvance,
   children,
 }: ImmersiveTextBoxProps) {
-  const { displayed, isComplete, complete } = useTypewriter(text, speed);
+  const currentText = paragraphs[paragraphs.length - 1] || '';
+  const previousParagraphs = paragraphs.slice(0, -1);
+  const { displayed, isComplete, complete } = useTypewriter(currentText, speed);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   function handleAdvance() {
     if (!isComplete) {
@@ -39,6 +42,13 @@ export default function ImmersiveTextBox({
     }
     onAdvance();
   }
+
+  // 新段落追加或逐字推进时，自动滚到底部
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [displayed, paragraphs.length]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -62,9 +72,19 @@ export default function ImmersiveTextBox({
       onClick={handleAdvance}
       className="fixed inset-0 z-20 cursor-pointer select-none">
       <div
+        ref={scrollRef}
         className={`absolute ${positionClasses[position]} w-[min(90vw,720px)] max-h-[70vh] overflow-y-auto px-6 py-5 rounded-2xl bg-black/60 backdrop-blur-md text-white shadow-2xl ring-1 ring-white/10`}>
         <div className="prose prose-invert max-w-none prose-p:my-2 text-lg leading-relaxed">
-          <ReactMarkdown>{displayed || '\u200b'}</ReactMarkdown>
+          {previousParagraphs.map((p, i) => (
+            <div
+              key={i}
+              className="opacity-70">
+              <ReactMarkdown>{p}</ReactMarkdown>
+            </div>
+          ))}
+          <div>
+            <ReactMarkdown>{displayed || '\u200b'}</ReactMarkdown>
+          </div>
         </div>
         {!isComplete && (
           <span
