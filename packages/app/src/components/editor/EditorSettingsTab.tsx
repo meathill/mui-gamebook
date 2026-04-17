@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { DisplayMode, Game, TextBoxPosition } from '@mui-gamebook/parser/src/types';
 import MDEditor from '@uiw/react-md-editor';
 import { X, Loader2, Shield, ExternalLink } from 'lucide-react';
 import { useDialog } from '@/components/Dialog';
@@ -73,7 +73,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
     }
   }
 
-  function handleChange(field: string, value: string | boolean | Record<string, unknown>) {
+  function handleChange(field: string, value: string | number | boolean | Record<string, unknown>) {
     onChange({ ...game, [field]: value });
   }
 
@@ -130,6 +130,84 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
               rows={3}
               className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 resize-none"
             />
+          </div>
+
+          <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 space-y-3">
+            <h3 className="text-sm font-medium text-amber-900">播放模式</h3>
+            <div>
+              <label className="block text-xs text-amber-800 mb-1">展示方式</label>
+              <div className="flex gap-2">
+                {(
+                  [
+                    { value: 'classic', label: '经典（图+文+选项）' },
+                    { value: 'immersive', label: '沉浸（视觉小说）' },
+                  ] as { value: DisplayMode; label: string }[]
+                ).map((opt) => {
+                  const current = game.display_mode || 'classic';
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => handleChange('display_mode', opt.value)}
+                      className={`flex-1 px-3 py-2 text-sm rounded border transition ${
+                        current === opt.value
+                          ? 'bg-amber-600 text-white border-amber-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
+                      }`}>
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            {(game.display_mode || 'classic') === 'immersive' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-amber-800 mb-1">文字框默认位置</label>
+                  <div className="flex gap-1">
+                    {(
+                      [
+                        { value: 'bottom', label: '底部' },
+                        { value: 'center', label: '居中' },
+                        { value: 'top', label: '顶部' },
+                      ] as { value: TextBoxPosition; label: string }[]
+                    ).map((opt) => {
+                      const current = game.text_box_position || 'bottom';
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => handleChange('text_box_position', opt.value)}
+                          className={`flex-1 px-2 py-1.5 text-xs rounded border transition ${
+                            current === opt.value
+                              ? 'bg-amber-600 text-white border-amber-600'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
+                          }`}>
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-1 text-[11px] text-amber-700/80">读者可在游戏内菜单临时覆盖。</p>
+                </div>
+                <div>
+                  <label className="block text-xs text-amber-800 mb-1">逐字速度（毫秒/字）</label>
+                  <input
+                    type="number"
+                    min={10}
+                    max={200}
+                    step={5}
+                    value={game.typewriter_speed ?? 40}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      handleChange('typewriter_speed', Number.isFinite(v) && v > 0 ? v : 40);
+                    }}
+                    className="block w-full rounded-md border-gray-300 border shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 text-sm"
+                  />
+                  <p className="mt-1 text-[11px] text-amber-700/80">默认 40，数值越小越快。</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
