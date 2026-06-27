@@ -1,19 +1,19 @@
-import Image from 'next/image';
+import ImageIcon from 'next/image';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
 import {
-  SparklesIcon,
-  MessageCircleIcon,
-  VariableIcon,
-  Gamepad2Icon,
-  LayersIcon,
+  SparkleIcon,
+  ChatCircleIcon,
+  BracketsCurlyIcon,
+  GameControllerIcon,
+  StackIcon,
   GlobeIcon,
   CodeIcon,
   DatabaseIcon,
   CloudIcon,
   ArrowRightIcon,
-} from 'lucide-react';
+} from '@phosphor-icons/react/dist/ssr';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('about');
@@ -27,11 +27,11 @@ export default async function AboutPage() {
   const t = await getTranslations('about');
 
   const features = [
-    { key: 'aiAssist', icon: SparklesIcon, color: 'from-yellow-400 to-orange-400' },
-    { key: 'aiChatbot', icon: MessageCircleIcon, color: 'from-orange-500 to-amber-500' },
-    { key: 'variables', icon: VariableIcon, color: 'from-amber-400 to-yellow-300' },
-    { key: 'minigames', icon: Gamepad2Icon, color: 'from-red-500 to-orange-400' },
-    { key: 'richInteractive', icon: LayersIcon, color: 'from-rose-500 to-pink-400' },
+    { key: 'aiAssist', icon: SparkleIcon, color: 'from-yellow-400 to-orange-400' },
+    { key: 'aiChatbot', icon: ChatCircleIcon, color: 'from-orange-500 to-amber-500' },
+    { key: 'variables', icon: BracketsCurlyIcon, color: 'from-amber-400 to-yellow-300' },
+    { key: 'minigames', icon: GameControllerIcon, color: 'from-red-500 to-orange-400' },
+    { key: 'richInteractive', icon: StackIcon, color: 'from-rose-500 to-pink-400' },
     { key: 'crossPlatform', icon: GlobeIcon, color: 'from-orange-600 to-red-500' },
   ];
 
@@ -98,7 +98,7 @@ export default async function AboutPage() {
               <p className="text-gray-600">{t('aiSectionContent2')}</p>
             </div>
             <div className="relative rounded-2xl overflow-hidden shadow-xl">
-              <Image
+              <ImageIcon
                 src="/about-ai.png"
                 alt="AI Assistant"
                 width={600}
@@ -115,7 +115,7 @@ export default async function AboutPage() {
         <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="order-2 md:order-1 relative rounded-2xl overflow-hidden shadow-xl">
-              <Image
+              <ImageIcon
                 src="/about-editor.png"
                 alt="Visual Editor"
                 width={600}
@@ -166,7 +166,7 @@ export default async function AboutPage() {
               <p className="text-gray-600">{t('platformSectionContent2')}</p>
             </div>
             <div className="relative rounded-2xl overflow-hidden shadow-xl">
-              <Image
+              <ImageIcon
                 src="/about-platform.png"
                 alt="Cross Platform"
                 width={600}

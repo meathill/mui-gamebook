@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeftIcon, BookOpenIcon } from 'lucide-react';
+import { ArrowLeftIcon, BookOpenIcon } from '@phosphor-icons/react/dist/ssr';
 import { getMinigameById } from '@/lib/minigames';
 import StandaloneMiniGamePlayer from '@/components/game-player/StandaloneMiniGamePlayer';
 

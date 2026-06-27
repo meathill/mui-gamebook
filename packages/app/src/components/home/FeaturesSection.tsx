@@ -1,11 +1,11 @@
 import { getTranslations } from 'next-intl/server';
-import { BookOpenIcon, WandSparklesIcon, GitBranchIcon, Share2Icon } from 'lucide-react';
+import { BookOpenIcon, SparkleIcon, GitBranchIcon, ShareNetworkIcon } from '@phosphor-icons/react/dist/ssr';
 
 const features = [
   { key: 'editor', Icon: BookOpenIcon },
-  { key: 'aiAssistant', Icon: WandSparklesIcon },
+  { key: 'aiAssistant', Icon: SparkleIcon },
   { key: 'interactive', Icon: GitBranchIcon },
-  { key: 'publish', Icon: Share2Icon },
+  { key: 'publish', Icon: ShareNetworkIcon },
 ];
 
 export default async function FeaturesSection() {

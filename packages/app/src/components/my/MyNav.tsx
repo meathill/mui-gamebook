@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Gamepad2 } from 'lucide-react';
+import { SquaresFourIcon, GameControllerIcon } from '@phosphor-icons/react';
 
 interface NavItem {
   href: string;
@@ -11,8 +11,8 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/my/dashboard', label: '数据统计', icon: <LayoutDashboard size={20} /> },
-  { href: '/my/games', label: '游戏管理', icon: <Gamepad2 size={20} /> },
+  { href: '/my/dashboard', label: '数据统计', icon: <SquaresFourIcon size={20} /> },
+  { href: '/my/games', label: '游戏管理', icon: <GameControllerIcon size={20} /> },
 ];
 
 export default function MyNav() {

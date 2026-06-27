@@ -14,20 +14,20 @@ import { SlashCommands } from '@/lib/editor/extensions/slash-commands';
 import { extractSceneIds } from '@/lib/editor/extensions/matchers';
 import { slashCommandRender } from '@/lib/editor/extensions/slash-command-render';
 import {
-  BoldIcon,
-  ItalicIcon,
-  StrikethroughIcon,
-  Heading1Icon,
-  Heading2Icon,
-  Heading3Icon,
+  TextBIcon,
+  TextItalicIcon,
+  TextStrikethroughIcon,
+  TextHOneIcon,
+  TextHTwoIcon,
+  TextHThreeIcon,
   ListIcon,
-  ListOrderedIcon,
-  QuoteIcon,
+  ListNumbersIcon,
+  QuotesIcon,
   CodeIcon,
   MinusIcon,
-  Undo2Icon,
-  Redo2Icon,
-} from 'lucide-react';
+  ArrowCounterClockwiseIcon,
+  ArrowClockwiseIcon,
+} from '@phosphor-icons/react';
 
 export interface RichEditorHandle {
   scrollToScene: (sceneId: string) => void;
@@ -170,19 +170,19 @@ export default function RichEditor({
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive('bold')}
           title="加粗 (Ctrl+B)">
-          <BoldIcon size={14} />
+          <TextBIcon size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
           active={editor.isActive('italic')}
           title="斜体 (Ctrl+I)">
-          <ItalicIcon size={14} />
+          <TextItalicIcon size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleStrike().run()}
           active={editor.isActive('strike')}
           title="删除线">
-          <StrikethroughIcon size={14} />
+          <TextStrikethroughIcon size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleCode().run()}
@@ -197,19 +197,19 @@ export default function RichEditor({
           onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
           active={editor.isActive('heading', { level: 1 })}
           title="标题 1">
-          <Heading1Icon size={14} />
+          <TextHOneIcon size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
           active={editor.isActive('heading', { level: 2 })}
           title="标题 2">
-          <Heading2Icon size={14} />
+          <TextHTwoIcon size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
           active={editor.isActive('heading', { level: 3 })}
           title="标题 3">
-          <Heading3Icon size={14} />
+          <TextHThreeIcon size={14} />
         </ToolbarButton>
 
         <div className="w-px h-4 bg-gray-300 mx-1" />
@@ -224,13 +224,13 @@ export default function RichEditor({
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           active={editor.isActive('orderedList')}
           title="有序列表">
-          <ListOrderedIcon size={14} />
+          <ListNumbersIcon size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           active={editor.isActive('blockquote')}
           title="引用">
-          <QuoteIcon size={14} />
+          <QuotesIcon size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
@@ -244,13 +244,13 @@ export default function RichEditor({
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
           title="撤销 (Ctrl+Z)">
-          <Undo2Icon size={14} />
+          <ArrowCounterClockwiseIcon size={14} />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
           title="重做 (Ctrl+Shift+Z)">
-          <Redo2Icon size={14} />
+          <ArrowClockwiseIcon size={14} />
         </ToolbarButton>
       </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Loader2, Gamepad2 } from 'lucide-react';
+import { MagnifyingGlassIcon, PlusIcon, SpinnerIcon, GameControllerIcon } from '@phosphor-icons/react/dist/ssr';
 
 interface MiniGame {
   id: number;
@@ -70,7 +70,7 @@ export default function MiniGameSelector({ onSelect, onGenerate, isGenerating }:
             placeholder="搜索小游戏..."
             className="w-full pl-7 pr-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 outline-none"
           />
-          <Search
+          <MagnifyingGlassIcon
             size={12}
             className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
           />
@@ -85,12 +85,12 @@ export default function MiniGameSelector({ onSelect, onGenerate, isGenerating }:
           disabled={isGenerating}
           className="px-2 py-1 text-xs bg-purple-600 text-white hover:bg-purple-500 rounded flex items-center gap-1 disabled:bg-purple-300">
           {isGenerating ? (
-            <Loader2
+            <SpinnerIcon
               size={12}
               className="animate-spin"
             />
           ) : (
-            <Plus size={12} />
+            <PlusIcon size={12} />
           )}
           新建
         </button>
@@ -100,7 +100,7 @@ export default function MiniGameSelector({ onSelect, onGenerate, isGenerating }:
       <div className="max-h-32 overflow-y-auto border border-gray-200 rounded">
         {loading ? (
           <div className="flex items-center justify-center py-4">
-            <Loader2
+            <SpinnerIcon
               size={16}
               className="animate-spin text-gray-400"
             />
@@ -116,7 +116,7 @@ export default function MiniGameSelector({ onSelect, onGenerate, isGenerating }:
                 key={mg.id}
                 onClick={() => onSelect(mg)}
                 className="w-full p-2 text-left hover:bg-purple-50 flex items-start gap-2">
-                <Gamepad2
+                <GameControllerIcon
                   size={14}
                   className="text-purple-500 mt-0.5 flex-shrink-0"
                 />

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback } from 'react';
-import { XIcon } from 'lucide-react';
+import { XIcon } from '@phosphor-icons/react';
 
 interface ImageLightboxProps {
   src: string;

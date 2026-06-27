@@ -72,7 +72,7 @@ published: false
     if (requestOwnerId) {
       const userExists = await db.select().from(schema.user).where(eq(schema.user.id, requestOwnerId)).get();
       if (!userExists) {
-        return NextResponse.json({ error: `User ID ${requestOwnerId} not found` }, { status: 400 });
+        return NextResponse.json({ error: `UserIcon ID ${requestOwnerId} not found` }, { status: 400 });
       }
       finalOwnerId = requestOwnerId;
     } else {
@@ -81,7 +81,7 @@ published: false
       finalOwnerId = users[0]?.id || null;
     }
 
-    // 2. Check slug
+    // 2. CheckIcon slug
     const existingGame = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
 
     let id: number;

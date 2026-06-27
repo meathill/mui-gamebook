@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Plus, Pencil, Key, Trash2, Search, X } from 'lucide-react';
+import { PlusIcon, PencilIcon, KeyIcon, TrashIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
 import { useDialog } from '@/components/Dialog';
 
 interface UserItem {
@@ -207,18 +207,18 @@ export default function UsersPage() {
         <button
           onClick={openCreate}
           className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 text-sm">
-          <Plus size={16} />
+          <PlusIcon size={16} />
           创建用户
         </button>
       </header>
 
-      {/* Search */}
+      {/* MagnifyingGlassIcon */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <form
           onSubmit={handleSearch}
           className="flex gap-3">
           <div className="relative flex-1">
-            <Search
+            <MagnifyingGlassIcon
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
@@ -250,7 +250,7 @@ export default function UsersPage() {
         </form>
       </div>
 
-      {/* Users Table */}
+      {/* UsersIcon Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-gray-500">加载中...</div>
@@ -285,19 +285,19 @@ export default function UsersPage() {
                           onClick={() => openEdit(user)}
                           className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
                           title="编辑">
-                          <Pencil size={16} />
+                          <PencilIcon size={16} />
                         </button>
                         <button
                           onClick={() => openPassword(user)}
                           className="p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded"
                           title="修改密码">
-                          <Key size={16} />
+                          <KeyIcon size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(user)}
                           className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
                           title="删除">
-                          <Trash2 size={16} />
+                          <TrashIcon size={16} />
                         </button>
                       </div>
                     </td>
@@ -411,7 +411,7 @@ export default function UsersPage() {
               </form>
             )}
 
-            {/* Edit Form */}
+            {/* PencilSimpleIcon Form */}
             {modalType === 'edit' && (
               <form onSubmit={handleEditSubmit}>
                 <div className="space-y-4">
@@ -505,7 +505,7 @@ export default function UsersPage() {
               onClick={closeModal}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               aria-label="关闭">
-              <X size={20} />
+              <XIcon size={20} />
             </button>
           </Dialog.Content>
         </Dialog.Portal>

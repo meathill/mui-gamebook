@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { ArrowRightIcon, CheckIcon, BotIcon } from 'lucide-react';
-import { Github } from '@/components/icons/Github';
+import { ArrowRightIcon, CheckIcon, RobotIcon, GithubLogoIcon } from '@phosphor-icons/react/dist/ssr';
 
 export default async function OpenPage() {
   const t = await getTranslations('open');
@@ -17,7 +16,10 @@ export default async function OpenPage() {
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 text-white rounded-full font-bold hover:bg-stone-800 transition-colors">
-            <Github className="w-5 h-5" />
+            <GithubLogoIcon
+              weight="fill"
+              className="w-5 h-5"
+            />
             {t('hero.cta')}
           </a>
         </div>
@@ -95,7 +97,7 @@ export default async function OpenPage() {
             <div className="bg-stone-800 p-8 rounded-3xl border border-stone-700">
               <div className="flex items-center gap-4 mb-6">
                 <div className="p-3 bg-blue-500/10 rounded-xl text-blue-400">
-                  <BotIcon className="w-8 h-8" />
+                  <RobotIcon className="w-8 h-8" />
                 </div>
                 <h3 className="text-2xl font-bold">{t('support.title')}</h3>
               </div>

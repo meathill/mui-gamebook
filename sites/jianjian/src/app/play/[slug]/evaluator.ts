@@ -84,7 +84,7 @@ export function executeSet(instruction: string | undefined, state: RuntimeState)
     const key = parts[0];
     const expression = parts[1];
 
-    // Check for simple arithmetic: "key +/- value" or "val1 +/- val2"
+    // CheckIcon for simple arithmetic: "key +/- value" or "val1 +/- val2"
     // This regex captures: (operand1) (operator) (operand2)
     const mathMatch = expression.match(/^(.+?)\s*([\+\-])\s*(.+)$/);
 

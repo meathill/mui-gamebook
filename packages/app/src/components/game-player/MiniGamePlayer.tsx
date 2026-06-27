@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { SpinnerIcon } from '@phosphor-icons/react';
 import type { RuntimeState } from '@mui-gamebook/parser/src/types';
 
 interface MiniGameAPI {
@@ -158,7 +158,7 @@ export default function MiniGamePlayer({ url, variables, runtimeState, onComplet
       {loading && (
         <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center z-10">
           <div className="text-center">
-            <Loader2
+            <SpinnerIcon
               size={32}
               className="mx-auto text-purple-600 animate-spin"
             />

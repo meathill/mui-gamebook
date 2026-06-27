@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Share2, Copy, Check } from 'lucide-react';
+import { ShareNetworkIcon, CopyIcon, CheckIcon } from '@phosphor-icons/react';
 import { Button, DropdownMenu } from '@radix-ui/themes';
 
 interface ShareButtonProps {
@@ -61,7 +61,7 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
         <Button
           variant="ghost"
           onClick={handleShare}>
-          <Share2 className="w-4 h-4" />
+          <ShareNetworkIcon className="w-4 h-4" />
           {t('share')}
         </Button>
       </div>
@@ -74,13 +74,13 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
           <Button variant="ghost">
-            <Share2 className="w-4 h-4" />
+            <ShareNetworkIcon className="w-4 h-4" />
             {t('share')}
           </Button>
         </DropdownMenu.Trigger>
         <DropdownMenu.Content>
           <DropdownMenu.Item onClick={copyToClipboard}>
-            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+            {copied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
             {copied ? t('copied') : t('copyLink')}
           </DropdownMenu.Item>
           <DropdownMenu.Item onClick={shareToWeibo}>
@@ -89,7 +89,7 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
           </DropdownMenu.Item>
           <DropdownMenu.Item onClick={shareToTwitter}>
             <span className="w-4 h-4 flex items-center justify-center">𝕏</span>
-            Twitter
+            TwitterLogoIcon
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Root>

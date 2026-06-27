@@ -1,4 +1,4 @@
-import { Loader2, Sparkles, CheckIcon } from 'lucide-react';
+import { SpinnerIcon, SparkleIcon, CheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { Button, IconButton } from '@radix-ui/themes';
 import type { MediaGeneratorProps } from './types';
 import MentionInput from '../MentionInput';
@@ -59,12 +59,12 @@ export default function MediaGenerator({
           onClick={onGenerate}
           disabled={isGenerating || !prompt}>
           {isGenerating ? (
-            <Loader2
+            <SpinnerIcon
               size={12}
               className="animate-spin"
             />
           ) : (
-            <Sparkles size={12} />
+            <SparkleIcon size={12} />
           )}
           生成
         </Button>
@@ -114,7 +114,7 @@ export default function MediaGenerator({
           onClick={onGenerate}
           title="生成素材">
           {isGenerating ? (
-            <Loader2
+            <SpinnerIcon
               size={16}
               className="animate-spin"
             />

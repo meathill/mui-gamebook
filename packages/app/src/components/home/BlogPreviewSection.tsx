@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { ArrowRightIcon, CalendarIcon } from 'lucide-react';
+import { ArrowRightIcon, CalendarIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublishedPosts, getCategoryLabel } from '@/lib/blog';
 
 export default async function BlogPreviewSection() {

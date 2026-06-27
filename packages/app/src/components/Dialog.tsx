@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Button } from '@radix-ui/themes';
-import { X, AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { XIcon, WarningCircleIcon, CheckCircleIcon, WarningIcon, InfoIcon } from '@phosphor-icons/react';
 
 type DialogType = 'alert' | 'confirm' | 'success' | 'error';
 
@@ -106,13 +106,13 @@ export function DialogProvider({ children }: { children: ReactNode }) {
   const getIcon = () => {
     switch (dialog?.type) {
       case 'success':
-        return <CheckCircle className="w-10 h-10 text-green-500" />;
+        return <CheckCircleIcon className="w-10 h-10 text-green-500" />;
       case 'error':
-        return <AlertCircle className="w-10 h-10 text-red-500" />;
+        return <WarningCircleIcon className="w-10 h-10 text-red-500" />;
       case 'confirm':
-        return <AlertTriangle className="w-10 h-10 text-amber-500" />;
+        return <WarningIcon className="w-10 h-10 text-amber-500" />;
       default:
-        return <Info className="w-10 h-10 text-blue-500" />;
+        return <InfoIcon className="w-10 h-10 text-blue-500" />;
     }
   };
 
@@ -153,7 +153,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
             {/* Close button for non-confirm dialogs */}
             {dialog?.type !== 'confirm' && (
               <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-white transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 disabled:pointer-events-none">
-                <X className="h-5 w-5 text-gray-500" />
+                <XIcon className="h-5 w-5 text-gray-500" />
                 <span className="sr-only">关闭</span>
               </DialogPrimitive.Close>
             )}

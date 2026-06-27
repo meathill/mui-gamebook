@@ -7,10 +7,10 @@ export interface AnalyticsEnv {
   KV: KVNamespace;
 }
 
-// KV Key 前缀
+// KV KeyIcon 前缀
 const PREFIX = 'analytics:game:';
 
-// 生成 KV Key
+// 生成 KV KeyIcon
 export function getKey(gameId: number, type: string, ...extra: (string | number)[]): string {
   const parts = [PREFIX + gameId, type, ...extra];
   return parts.join(':');

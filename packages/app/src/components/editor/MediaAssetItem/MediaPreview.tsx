@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Clock, Gamepad2, X } from 'lucide-react';
+import { ClockIcon, GameControllerIcon, XIcon } from '@phosphor-icons/react';
 import type { MediaPreviewProps } from './types';
 
 export default function MediaPreview({
@@ -23,7 +23,7 @@ export default function MediaPreview({
       <div
         className={`relative w-full ${imageHeight} bg-gray-100 rounded overflow-hidden flex items-center justify-center`}>
         <div className="text-center">
-          <Clock
+          <ClockIcon
             size={isFeatured ? 40 : 24}
             className="mx-auto text-gray-400 animate-pulse"
           />
@@ -54,7 +54,7 @@ export default function MediaPreview({
             <Dialog.Overlay className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
             <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 focus:outline-none">
               <Dialog.Close className="absolute -top-10 right-0 rounded-full p-2 text-white/80 hover:text-white transition-colors">
-                <X size={24} />
+                <XIcon size={24} />
                 <span className="sr-only">关闭</span>
               </Dialog.Close>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -98,7 +98,7 @@ export default function MediaPreview({
     return (
       <div className="relative w-full h-16 bg-purple-50 rounded overflow-hidden flex items-center justify-center border border-purple-200">
         <div className="text-center">
-          <Gamepad2
+          <GameControllerIcon
             size={20}
             className="mx-auto text-purple-500"
           />

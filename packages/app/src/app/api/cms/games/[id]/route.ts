@@ -65,7 +65,7 @@ export async function PUT(req: Request, { params }: Props) {
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  // Check ownership first
+  // CheckIcon ownership first
   const currentGame = await db
     .select()
     .from(schema.games)
@@ -78,7 +78,7 @@ export async function PUT(req: Request, { params }: Props) {
 
   let finalSlug = currentGame.slug;
 
-  // Check for slug collision if changing
+  // CheckIcon for slug collision if changing
   if (newSlug && newSlug !== currentGame.slug) {
     const existing = await db
       .select()

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { ArrowRightIcon } from 'lucide-react';
+import { ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublishedGames } from '@/lib/games';
 import {
   HeroSection,

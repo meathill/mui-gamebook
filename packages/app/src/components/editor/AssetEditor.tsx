@@ -1,6 +1,6 @@
 'use client';
 
-import { ImageIcon, Music, Video, Gamepad2 } from 'lucide-react';
+import { ImageIcon, MusicNoteIcon, VideoCameraIcon, GameControllerIcon } from '@phosphor-icons/react';
 import type { SceneNode } from '@mui-gamebook/parser';
 import MediaAssetItem from './MediaAssetItem';
 import { buildImagePrompt, buildAudioPrompt, extractCharacterIds, type AiConfig } from '@/lib/ai-prompt-builder';
@@ -76,21 +76,21 @@ export default function AssetEditor({ gameId, assets, aiConfig, onAssetsChange }
             onClick={() => handleAddAsset('audio')}
             className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-0.5"
             title="添加音频">
-            <Music size={14} />
+            <MusicNoteIcon size={14} />
             <span className="text-xs">音频</span>
           </button>
           <button
             onClick={() => handleAddAsset('video')}
             className="p-1 text-blue-600 hover:bg-blue-50 rounded flex items-center gap-0.5"
             title="添加视频">
-            <Video size={14} />
+            <VideoCameraIcon size={14} />
             <span className="text-xs">视频</span>
           </button>
           <button
             onClick={() => handleAddAsset('minigame')}
             className="p-1 text-purple-600 hover:bg-purple-50 rounded flex items-center gap-0.5"
             title="添加小游戏">
-            <Gamepad2 size={14} />
+            <GameControllerIcon size={14} />
             <span className="text-xs">小游戏</span>
           </button>
         </div>

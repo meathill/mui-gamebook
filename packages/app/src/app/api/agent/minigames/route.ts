@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     if (requestOwnerId) {
       const userExists = await db.select().from(schema.user).where(eq(schema.user.id, requestOwnerId)).get();
       if (!userExists) {
-        return NextResponse.json({ error: `User ID ${requestOwnerId} not found` }, { status: 400 });
+        return NextResponse.json({ error: `UserIcon ID ${requestOwnerId} not found` }, { status: 400 });
       }
       finalOwnerId = requestOwnerId;
     } else {

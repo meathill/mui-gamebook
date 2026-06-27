@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { UploadCloudIcon, Loader2Icon } from 'lucide-react';
+import { UploadSimpleIcon, SpinnerIcon } from '@phosphor-icons/react';
 
 interface FileDropZoneProps {
   /** 上传 API 地址 */
@@ -79,7 +79,7 @@ export default function FileDropZone({ uploadUrl, assetType, accept, onUploaded,
       />
       {uploading ? (
         <div className="smc-dropzone-status">
-          <Loader2Icon
+          <SpinnerIcon
             size={16}
             className="animate-spin"
           />
@@ -87,7 +87,7 @@ export default function FileDropZone({ uploadUrl, assetType, accept, onUploaded,
         </div>
       ) : (
         <div className="smc-dropzone-status">
-          <UploadCloudIcon size={16} />
+          <UploadSimpleIcon size={16} />
           <span>{hint || '点击或拖拽文件上传'}</span>
         </div>
       )}

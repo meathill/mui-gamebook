@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeftIcon, CalendarIcon, TagIcon } from 'lucide-react';
+import { ArrowLeftIcon, CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
 import type { Metadata } from 'next';
 
@@ -131,8 +131,8 @@ function RichTextNode({ node }: { node: any }) {
     case 'paragraph':
       return <p>{renderChildren(node.children)}</p>;
     case 'heading':
-      const Tag = `h${node.tag || 2}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-      return <Tag>{renderChildren(node.children)}</Tag>;
+      const TagIcon = `h${node.tag || 2}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+      return <TagIcon>{renderChildren(node.children)}</TagIcon>;
     case 'list':
       if (node.listType === 'number') {
         return <ol>{renderChildren(node.children)}</ol>;

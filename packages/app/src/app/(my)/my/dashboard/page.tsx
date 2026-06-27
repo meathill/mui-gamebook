@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
-import { TrendingUp, Users, Star, GamepadIcon } from 'lucide-react';
+import { TrendUpIcon, UsersIcon, StarIcon, GameControllerIcon } from '@phosphor-icons/react';
 
 interface GameAnalytics {
   id: number;
@@ -103,7 +103,7 @@ export default function DashboardPage() {
           title="总打开数"
           value={summary.totalOpens.toLocaleString()}
           icon={
-            <TrendingUp
+            <TrendUpIcon
               size={24}
               className="text-blue-600"
             />
@@ -114,7 +114,7 @@ export default function DashboardPage() {
           title="总完成数"
           value={summary.totalCompletions.toLocaleString()}
           icon={
-            <Users
+            <UsersIcon
               size={24}
               className="text-green-600"
             />
@@ -125,7 +125,7 @@ export default function DashboardPage() {
           title="完成率"
           value={`${summary.overallCompletionRate}%`}
           icon={
-            <GamepadIcon
+            <GameControllerIcon
               size={24}
               className="text-purple-600"
             />
@@ -136,7 +136,7 @@ export default function DashboardPage() {
           title="平均评分"
           value={summary.totalRatings > 0 ? `${summary.avgRating} ⭐` : '暂无'}
           icon={
-            <Star
+            <StarIcon
               size={24}
               className="text-yellow-600"
             />
@@ -232,7 +232,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Pagination Info */}
+        {/* Pagination InfoIcon */}
         {pagination.total > 0 && (
           <div className="px-6 py-4 border-t border-gray-200 text-sm text-gray-500">共 {pagination.total} 个游戏</div>
         )}

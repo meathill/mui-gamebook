@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTranslations, useLocale as useCurrentLocale } from 'next-intl';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Globe, Check, ChevronUpIcon } from 'lucide-react';
+import { GlobeIcon, CheckIcon, CaretUpIcon } from '@phosphor-icons/react';
 import { useLocale } from '@/i18n/client';
 import type { Locale } from '@/i18n/config';
 
@@ -28,9 +28,9 @@ export default function Footer() {
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               <button className="flex items-center gap-1.5 px-2 py-1 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors">
-                <Globe size={14} />
+                <GlobeIcon size={14} />
                 <span>{languages.find((l) => l.code === currentLocale)?.label || '🌐'}</span>
-                <ChevronUpIcon size={14} />
+                <CaretUpIcon size={14} />
               </button>
             </DropdownMenu.Trigger>
 
@@ -46,7 +46,7 @@ export default function Footer() {
                     onSelect={() => setLocale(lang.code)}>
                     {lang.label}
                     {currentLocale === lang.code && (
-                      <Check
+                      <CheckIcon
                         size={14}
                         className="text-blue-600"
                       />

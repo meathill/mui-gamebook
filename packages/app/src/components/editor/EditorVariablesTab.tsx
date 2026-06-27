@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { PlusIcon, MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr';
 import type { GameState } from '@mui-gamebook/parser/src/types';
 import { useDialog } from '@/components/Dialog';
 import {
@@ -116,7 +116,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
           {/* 搜索和新建 */}
           <div className="flex gap-2">
             <div className="flex-1 relative">
-              <Search
+              <MagnifyingGlassIcon
                 size={14}
                 className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
               />
@@ -132,7 +132,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
               onClick={handleCreateNew}
               className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               title="新建变量">
-              <Plus size={16} />
+              <PlusIcon size={16} />
             </button>
           </div>
         </div>

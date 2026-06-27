@@ -52,7 +52,7 @@
     "clsx": "^2.1.1",
     "dagre": "^0.8.5",
     "drizzle-orm": "^0.45.2",
-    "lucide-react": "^1.21.0",
+    "@phosphor-icons/react": "^2.1.7",
     "marked": "^18.0.5",
     "next": "~16.2.9",
     "next-intl": "^4.13.0",

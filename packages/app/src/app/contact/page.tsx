@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
-import { MailIcon, MessageCircleIcon } from 'lucide-react';
-import { Github } from '@/components/icons/Github';
-import { Twitter } from '@/components/icons/Twitter';
+import { EnvelopeIcon, ChatCircleIcon, GithubLogoIcon, TwitterLogoIcon } from '@phosphor-icons/react/dist/ssr';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('contact');
@@ -19,19 +17,19 @@ export default async function ContactPage() {
   const contactMethods = [
     {
       key: 'email',
-      icon: MailIcon,
+      icon: EnvelopeIcon,
       href: 'mailto:meathill@gmail.com',
       value: 'meathill@gmail.com',
     },
     {
       key: 'github',
-      icon: Github,
+      icon: GithubLogoIcon,
       href: 'https://github.com/meathill',
       value: 'github.com/meathill',
     },
     {
       key: 'twitter',
-      icon: Twitter,
+      icon: TwitterLogoIcon,
       href: 'https://x.com/meathill1',
       value: '@meathill1',
     },
@@ -81,7 +79,10 @@ export default async function ContactPage() {
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-8 border border-orange-100">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
-                <Github className="w-6 h-6 text-white" />
+                <GithubLogoIcon
+                  weight="fill"
+                  className="w-6 h-6 text-white"
+                />
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">meathill/mui-gamebook</h3>
@@ -105,7 +106,10 @@ export default async function ContactPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors font-medium">
-                  <Github className="w-5 h-5" />
+                  <GithubLogoIcon
+                    weight="fill"
+                    className="w-5 h-5"
+                  />
                   {t('viewOnGithub')}
                 </a>
               </div>
@@ -120,7 +124,7 @@ export default async function ContactPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">{t('contributingTitle')}</h2>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="bg-white rounded-2xl p-6 shadow-md">
-              <MessageCircleIcon className="w-8 h-8 text-orange-500 mb-4" />
+              <ChatCircleIcon className="w-8 h-8 text-orange-500 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('contributing.issues.title')}</h3>
               <p className="text-gray-600 text-sm mb-4">{t('contributing.issues.description')}</p>
               <a
@@ -132,7 +136,10 @@ export default async function ContactPage() {
               </a>
             </div>
             <div className="bg-white rounded-2xl p-6 shadow-md">
-              <Github className="w-8 h-8 text-orange-500 mb-4" />
+              <GithubLogoIcon
+                weight="fill"
+                className="w-8 h-8 text-orange-500 mb-4"
+              />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('contributing.pullRequests.title')}</h3>
               <p className="text-gray-600 text-sm mb-4">{t('contributing.pullRequests.description')}</p>
               <a

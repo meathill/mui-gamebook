@@ -80,7 +80,7 @@ class PendingOperationsManager {
           const data = (await res.json()) as { status: string; url?: string; error?: string };
           results.set(pendingUrl, data);
         } catch (e) {
-          console.error('Check pending operation error:', e);
+          console.error('CheckIcon pending operation error:', e);
         }
       }),
     );
@@ -138,7 +138,7 @@ class PendingOperationsManager {
         this.scheduleNextCheck(operationId);
       }
     } catch (e) {
-      console.error('Check operation error:', e);
+      console.error('CheckIcon operation error:', e);
       // 请求失败也记录耗时并继续轮询
       operation.lastRequestDuration = Date.now() - startTime;
       this.scheduleNextCheck(operationId);

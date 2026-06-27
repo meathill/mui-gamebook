@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Button } from '@radix-ui/themes';
-import { Plus, X } from 'lucide-react';
+import { PlusIcon, XIcon } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function CreateGameModal() {
@@ -44,7 +44,7 @@ export default function CreateGameModal() {
       onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
         <Button size="1">
-          <Plus size={12} />
+          <PlusIcon size={12} />
           创建新游戏
         </Button>
       </Dialog.Trigger>
@@ -94,7 +94,7 @@ export default function CreateGameModal() {
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               aria-label="关闭">
-              <X size={20} />
+              <XIcon size={20} />
             </button>
           </Dialog.Close>
         </Dialog.Content>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Save, ArrowLeft } from 'lucide-react';
+import { FloppyDiskIcon, ArrowLeftIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 
 interface AppConfig {
@@ -86,7 +86,7 @@ export default function AdminConfigPage() {
           <Link
             href="/admin"
             className="mt-4 inline-flex items-center gap-2 text-blue-600 hover:text-blue-800">
-            <ArrowLeft size={18} /> 返回
+            <ArrowLeftIcon size={18} /> 返回
           </Link>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function AdminConfigPage() {
           <Link
             href="/admin"
             className="text-gray-500 hover:text-gray-700">
-            <ArrowLeft size={24} />
+            <ArrowLeftIcon size={24} />
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">系统配置</h1>
@@ -329,7 +329,7 @@ export default function AdminConfigPage() {
               type="submit"
               disabled={saveMutation.isPending}
               className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
-              <Save size={18} />
+              <FloppyDiskIcon size={18} />
               {saveMutation.isPending ? '保存中...' : '保存配置'}
             </button>
           </div>

@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { TrashIcon } from '@phosphor-icons/react/dist/ssr';
 import type { AICharacter } from '@mui-gamebook/parser/src/types';
 
 interface Props {
@@ -54,7 +54,7 @@ export default function CharacterList({ characters, selectedId, onSelect, onDele
             }}
             className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded opacity-0 group-hover:opacity-100 transition-opacity"
             title="删除角色">
-            <Trash2 size={14} />
+            <TrashIcon size={14} />
           </button>
         </div>
       ))}

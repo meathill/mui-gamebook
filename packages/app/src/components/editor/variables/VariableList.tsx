@@ -1,4 +1,4 @@
-import { Eye, Trash2 } from 'lucide-react';
+import { EyeIcon, TrashIcon } from '@phosphor-icons/react/dist/ssr';
 import type { GameState } from '@mui-gamebook/parser/src/types';
 import { getDisplayValue, isVisible } from './utils';
 
@@ -29,7 +29,7 @@ export default function VariableList({ variables, selectedVar, onSelect, onDelet
             <div className="text-xs text-gray-500 truncate">= {getDisplayValue(val)}</div>
           </div>
           {isVisible(val) && (
-            <Eye
+            <EyeIcon
               size={12}
               className="text-green-600 flex-shrink-0"
             />
@@ -40,7 +40,7 @@ export default function VariableList({ variables, selectedVar, onSelect, onDelet
               onDelete(name);
             }}
             className="p-1 text-gray-400 hover:text-red-600 rounded flex-shrink-0">
-            <Trash2 size={12} />
+            <TrashIcon size={12} />
           </button>
         </div>
       ))}

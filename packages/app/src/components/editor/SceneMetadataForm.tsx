@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { CheckIcon, XIcon } from 'lucide-react';
+import { CheckIcon, XIcon } from '@phosphor-icons/react';
 
 /**
  * 场景元数据卡片的通用表单组件

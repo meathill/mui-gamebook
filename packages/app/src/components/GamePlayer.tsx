@@ -18,7 +18,7 @@ import {
   usePreload,
   useAudioPlayer,
 } from '@/components/game-player';
-import { Volume2 } from 'lucide-react';
+import { SpeakerHighIcon } from '@phosphor-icons/react';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 
 export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?: number }; slug: string }) {
@@ -159,7 +159,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, isGameStarted]);
 
-  // Save progress whenever state changes
+  // FloppyDiskIcon progress whenever state changes
   useEffect(() => {
     if (isLoaded && isGameStarted) {
       localStorage.setItem(
@@ -260,7 +260,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
 
       el.scrollTop += (speed * delta) / 1000;
 
-      // Check if reached bottom
+      // CheckIcon if reached bottom
       if (el.scrollHeight - el.scrollTop <= el.clientHeight + 10) {
         setHasReadAll(true);
         setAutoScrolling(false);
@@ -371,9 +371,9 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
         </div>
       )}
 
-      {/* Image and Content Container - 移动端时文本叠加在图片上 */}
+      {/* ImageIcon and Content Container - 移动端时文本叠加在图片上 */}
       <div className="relative flex-1 sm:flex-none sm:block overflow-hidden">
-        {/* Persistent Image Display */}
+        {/* Persistent ImageIcon Display */}
         {currentImageUrl && (
           <div className="w-full sm:relative absolute inset-0 overflow-hidden bg-gray-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -468,7 +468,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
                           }}
                           className="p-2 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-600 transition-colors flex-shrink-0"
                           title="播放语音">
-                          <Volume2 size={16} />
+                          <SpeakerHighIcon size={16} />
                         </button>
                       )}
                       <span className="font-medium text-amber-800 group-hover:text-orange-700 text-lg flex-1">

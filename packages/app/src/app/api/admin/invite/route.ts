@@ -10,7 +10,7 @@ export async function POST(req: Request) {
     const { env } = getCloudflareContext();
     const secret = env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
 
-    // Security Check
+    // Security CheckIcon
     const authHeader = req.headers.get('Authorization');
     if (!secret || authHeader !== `Bearer ${secret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

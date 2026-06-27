@@ -1,6 +1,6 @@
 'use client';
 
-import { Pause, Play, RotateCcw, Volume2 } from 'lucide-react';
+import { PauseIcon, PlayIcon, ArrowCounterClockwiseIcon, SpeakerHighIcon } from '@phosphor-icons/react';
 import type { UseAudioPlayerReturn } from './useAudioPlayer';
 
 interface AudioControlsProps {
@@ -21,7 +21,7 @@ export default function AudioControls({ audioPlayer, hasAudio }: AudioControlsPr
 
   return (
     <div className="flex items-center gap-2 py-2">
-      <Volume2
+      <SpeakerHighIcon
         size={16}
         className="text-gray-400"
       />
@@ -31,7 +31,7 @@ export default function AudioControls({ audioPlayer, hasAudio }: AudioControlsPr
         onClick={toggle}
         className="p-2 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors"
         title={isPlaying ? '暂停' : isPaused ? '继续' : '播放'}>
-        {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+        {isPlaying ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
       </button>
 
       {/* 重播按钮 */}
@@ -39,7 +39,7 @@ export default function AudioControls({ audioPlayer, hasAudio }: AudioControlsPr
         onClick={replay}
         className="p-2 rounded-full bg-gray-50 hover:bg-gray-100 text-gray-600 transition-colors"
         title="重播">
-        <RotateCcw size={16} />
+        <ArrowCounterClockwiseIcon size={16} />
       </button>
 
       {/* 状态文字 */}

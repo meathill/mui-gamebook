@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { RuntimeState, VariableMeta } from '@mui-gamebook/parser/src/types';
-import { ChevronLeft, ChevronRight, Gauge } from 'lucide-react';
+import { CaretLeftIcon, CaretRightIcon, GaugeIcon } from '@phosphor-icons/react';
 
 interface FloatingVariablePanelProps {
   variables: { key: string; meta: VariableMeta }[];
@@ -81,20 +81,20 @@ export default function FloatingVariablePanel({ variables, runtimeState }: Float
             onClick={() => setCollapsed(false)}
             className="w-10 h-10 rounded-full bg-black/50 backdrop-blur-md text-white/90 flex items-center justify-center ring-1 ring-white/10 hover:bg-black/70 transition"
             aria-label="展开变量面板">
-            <ChevronRight size={18} />
+            <CaretRightIcon size={18} />
           </button>
         ) : (
           <div className="w-56 bg-black/50 backdrop-blur-md ring-1 ring-white/10 rounded-xl p-4 text-white shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-white/60">
-                <Gauge size={14} />
+                <GaugeIcon size={14} />
                 变量
               </div>
               <button
                 onClick={() => setCollapsed(true)}
                 className="text-white/60 hover:text-white/90"
                 aria-label="折叠">
-                <ChevronLeft size={16} />
+                <CaretLeftIcon size={16} />
               </button>
             </div>
             {body}
@@ -107,7 +107,7 @@ export default function FloatingVariablePanel({ variables, runtimeState }: Float
         onClick={() => setMobileOpen(true)}
         className="md:hidden fixed left-2 top-1/2 -translate-y-1/2 z-30 w-9 h-9 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center ring-1 ring-white/10"
         aria-label="查看变量">
-        <Gauge size={16} />
+        <GaugeIcon size={16} />
       </button>
 
       {/* 移动端抽屉 */}
@@ -120,7 +120,7 @@ export default function FloatingVariablePanel({ variables, runtimeState }: Float
             onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <div className="text-sm uppercase tracking-wider text-white/70 flex items-center gap-2">
-                <Gauge size={14} /> 变量
+                <GaugeIcon size={14} /> 变量
               </div>
               <button
                 onClick={() => setMobileOpen(false)}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Upload, Loader2, PlayIcon, StopCircleIcon } from 'lucide-react';
+import { SparkleIcon, UploadSimpleIcon, SpinnerIcon, PlayIcon, StopCircleIcon } from '@phosphor-icons/react/dist/ssr';
 import type { CharacterFormData } from './index';
 import { getAvailableVoices, DEFAULT_VOICE } from '@/lib/voice-config';
 
@@ -226,24 +226,24 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
                 disabled={!formData.image_prompt || generatingImage}
                 className="flex items-center gap-2 px-3 py-2 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50">
                 {generatingImage ? (
-                  <Loader2
+                  <SpinnerIcon
                     size={16}
                     className="animate-spin"
                   />
                 ) : (
-                  <Sparkles size={16} />
+                  <SparkleIcon size={16} />
                 )}
                 {generatingImage ? '生成中...' : 'AI 生成'}
               </button>
 
               <label className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 cursor-pointer">
                 {uploadingImage ? (
-                  <Loader2
+                  <SpinnerIcon
                     size={16}
                     className="animate-spin"
                   />
                 ) : (
-                  <Upload size={16} />
+                  <UploadSimpleIcon size={16} />
                 )}
                 {uploadingImage ? '上传中...' : '上传图片'}
                 <input
@@ -278,7 +278,7 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
               disabled={generatingPreview}
               className="flex items-center gap-1 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
               {generatingPreview ? (
-                <Loader2
+                <SpinnerIcon
                   size={16}
                   className="animate-spin"
                 />

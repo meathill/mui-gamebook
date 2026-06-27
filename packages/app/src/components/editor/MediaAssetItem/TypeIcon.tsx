@@ -1,4 +1,4 @@
-import { ImageIcon, Music, Video, Gamepad2 } from 'lucide-react';
+import { ImageIcon, MusicNoteIcon, VideoCameraIcon, GameControllerIcon } from '@phosphor-icons/react/dist/ssr';
 import type { TypeIconProps } from './types';
 
 export default function TypeIcon({ isImage, isAudio, isVideo, isMinigame, size }: TypeIconProps) {
@@ -11,21 +11,21 @@ export default function TypeIcon({ isImage, isAudio, isVideo, isMinigame, size }
     );
   if (isAudio)
     return (
-      <Music
+      <MusicNoteIcon
         size={size}
         className="text-gray-400"
       />
     );
   if (isVideo)
     return (
-      <Video
+      <VideoCameraIcon
         size={size}
         className="text-gray-400"
       />
     );
   if (isMinigame)
     return (
-      <Gamepad2
+      <GameControllerIcon
         size={size}
         className="text-purple-500"
       />
