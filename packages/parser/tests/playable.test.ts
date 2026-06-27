@@ -32,8 +32,8 @@ ai:
       image_url: 'https://example.com/hero.png',
     });
     // 不应该有 description 和 image_prompt
-    expect((playable.characters!['hero'] as Record<string, unknown>)['description']).toBeUndefined();
-    expect((playable.characters!['hero'] as Record<string, unknown>)['image_prompt']).toBeUndefined();
+    expect((playable.characters!['hero'] as any)['description']).toBeUndefined();
+    expect((playable.characters!['hero'] as any)['image_prompt']).toBeUndefined();
   });
 
   it('应该过滤 AI 图片节点的 prompt', () => {

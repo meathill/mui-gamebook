@@ -1,3 +1,11 @@
 packages:
   - packages/*
   - sites/*
+allowBuilds:
+  '@google/genai': true
+  '@parcel/watcher': false
+  '@swc/core': false
+  esbuild: false
+  protobufjs: true
+  sharp: false
+  workerd: false

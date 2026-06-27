@@ -1,7 +1,9 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
-import { MailIcon, GithubIcon, TwitterIcon, MessageCircleIcon } from 'lucide-react';
+import { MailIcon, MessageCircleIcon } from 'lucide-react';
+import { Github } from '@/components/icons/Github';
+import { Twitter } from '@/components/icons/Twitter';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('contact');
@@ -23,13 +25,13 @@ export default async function ContactPage() {
     },
     {
       key: 'github',
-      icon: GithubIcon,
-      href: 'https://github.com/meathill/mui-gamebook',
-      value: 'meathill/mui-gamebook',
+      icon: Github,
+      href: 'https://github.com/meathill',
+      value: 'github.com/meathill',
     },
     {
       key: 'twitter',
-      icon: TwitterIcon,
+      icon: Twitter,
       href: 'https://x.com/meathill1',
       value: '@meathill1',
     },
@@ -79,7 +81,7 @@ export default async function ContactPage() {
           <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-8 border border-orange-100">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl bg-gray-900 flex items-center justify-center flex-shrink-0">
-                <GithubIcon className="w-6 h-6 text-white" />
+                <Github className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">meathill/mui-gamebook</h3>
@@ -103,7 +105,7 @@ export default async function ContactPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-6 py-3 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors font-medium">
-                  <GithubIcon className="w-5 h-5" />
+                  <Github className="w-5 h-5" />
                   {t('viewOnGithub')}
                 </a>
               </div>
@@ -130,7 +132,7 @@ export default async function ContactPage() {
               </a>
             </div>
             <div className="bg-white rounded-2xl p-6 shadow-md">
-              <GithubIcon className="w-8 h-8 text-orange-500 mb-4" />
+              <Github className="w-8 h-8 text-orange-500 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('contributing.pullRequests.title')}</h3>
               <p className="text-gray-600 text-sm mb-4">{t('contributing.pullRequests.description')}</p>
               <a

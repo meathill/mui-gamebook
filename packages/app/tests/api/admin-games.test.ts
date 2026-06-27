@@ -44,7 +44,7 @@ describe('Admin Games API', () => {
       const res = await GET(req, { params: Promise.resolve({ slug: 'test-game' }) });
 
       expect(res.status).toBe(401);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.error).toBe('Unauthorized');
     });
 
@@ -89,7 +89,7 @@ describe('Admin Games API', () => {
       const res = await GET(req, { params: Promise.resolve({ slug: 'test-game' }) });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.slug).toBe('test-game');
       expect(data.content).toBe('# start\n\nHello World');
     });
@@ -115,7 +115,7 @@ describe('Admin Games API', () => {
       const res = await PUT(req, { params: Promise.resolve({ slug: 'test-game' }) });
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.error).toBe('Content is required');
     });
 
@@ -128,7 +128,7 @@ describe('Admin Games API', () => {
       const res = await PUT(req, { params: Promise.resolve({ slug: 'test-game' }) });
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.error).toContain('Invalid content');
     });
   });

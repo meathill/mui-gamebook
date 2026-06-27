@@ -18,7 +18,7 @@ Second start scene.
     expect(result.success).toBe(true);
     if (result.success) {
       const scene = result.data.scenes['start'];
-      expect(scene?.nodes[0].content).toBe('Second start scene.');
+      expect(scene?.nodes[0]).toEqual({ type: 'text', content: 'Second start scene.' });
     }
   });
 

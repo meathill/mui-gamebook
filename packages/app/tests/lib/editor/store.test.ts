@@ -92,10 +92,10 @@ describe('useEditorStore', () => {
       const { result } = renderHook(() => useEditorStore());
 
       act(() => {
-        result.current.setActiveTab('characters');
+        result.current.setActiveTab('flowchart');
       });
 
-      expect(result.current.activeTab).toBe('characters');
+      expect(result.current.activeTab).toBe('flowchart');
     });
 
     it('setViewMode 应该更新 viewMode', () => {
@@ -170,7 +170,7 @@ describe('useEditorStore', () => {
         result.current.setNodes([
           { id: 'test', position: { x: 0, y: 0 }, data: { label: 'test', content: '', assets: [] } },
         ]);
-        result.current.setActiveTab('characters');
+        result.current.setActiveTab('flowchart');
         result.current.reset();
       });
 
@@ -258,7 +258,7 @@ describe('useEditorStore', () => {
       const { result } = renderHook(() => useEditorStore());
 
       act(() => {
-        result.current.setActiveTab('characters');
+        result.current.setActiveTab('flowchart');
         result.current.setChatOpen(true);
       });
 
@@ -272,7 +272,7 @@ describe('useEditorStore', () => {
       });
 
       // UI 状态应该保持不变
-      expect(result.current.activeTab).toBe('characters');
+      expect(result.current.activeTab).toBe('flowchart');
       expect(result.current.chatOpen).toBe(true);
     });
   });

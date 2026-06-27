@@ -73,7 +73,7 @@ describe('Editor Transformers', () => {
     // Note: transformer logic puts assets/text/choices in a specific order
     // In this case: text ('Hello') -> choice ('Go')
     expect(startScene?.nodes).toHaveLength(2);
-    expect(startScene?.nodes[0].content).toBe('Hello');
+    expect((startScene?.nodes[0] as any).content).toBe('Hello');
     expect((startScene?.nodes[1] as { nextSceneId: string }).nextSceneId).toBe('end');
   });
 

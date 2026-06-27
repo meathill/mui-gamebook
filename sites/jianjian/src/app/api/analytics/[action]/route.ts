@@ -6,7 +6,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ act
     const { action } = await params;
     const { env } = getCloudflareContext();
 
-    // @ts-expect-error MAIN_APP might not be in the generated types yet
     const mainApp = env.MAIN_APP as Fetcher;
 
     if (!mainApp) {

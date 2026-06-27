@@ -171,7 +171,7 @@ function main() {
     console.log('✅ Syntax is Valid!');
     console.log('='.repeat(60));
 
-    const game = result.data as Game;
+    const game = (result as any).data as Game;
     // Assuming we might extend ParseResult to include warnings later, or we rely on parser logic.
     // Ideally duplicate warnings come from parser. For now we use what we have.
     const warnings = (result as any).warnings || [];

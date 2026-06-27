@@ -8,7 +8,7 @@
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "devDependencies": {
-    "typescript": "^5.9.3",
-    "wrangler": "^4.54.0"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.105.0"
   }
 }
