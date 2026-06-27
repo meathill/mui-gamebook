@@ -6,3 +6,11 @@ packages/asset-generator/.env
 tmp
 package-lock.json
 demo
+.agent
+.claude
+.gemini
+.next
+.open-next
+dist
+.wrangler
+*.tsbuildinfo

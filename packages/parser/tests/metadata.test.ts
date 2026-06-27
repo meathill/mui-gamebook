@@ -93,11 +93,13 @@ Text content.
 `;
     const result = parse(source);
     expect(result.success).toBe(true);
-    const node = result.data.scenes['start'].nodes.find((n) => n.type === 'ai_image') as any;
-    expect(node).toBeDefined();
-    expect(node.prompt).toBe('A test image');
-    expect(node.character).toBe('hero');
-    expect(node.url).toBe('http://example.com/image.png');
+    if (result.success) {
+      const node = result.data.scenes['start'].nodes.find((n) => n.type === 'ai_image') as any;
+      expect(node).toBeDefined();
+      expect(node.prompt).toBe('A test image');
+      expect(node.character).toBe('hero');
+      expect(node.url).toBe('http://example.com/image.png');
+    }
   });
 
   it('should parse ai_audio from scene metadata with yaml code block', () => {
@@ -115,10 +117,12 @@ Text content.
 `;
     const result = parse(source);
     expect(result.success).toBe(true);
-    const node = result.data.scenes['start'].nodes.find((n) => n.type === 'ai_audio') as any;
-    expect(node).toBeDefined();
-    expect(node.prompt).toBe('A test song');
-    expect(node.url).toBe('http://example.com/song.mp3');
+    if (result.success) {
+      const node = result.data.scenes['start'].nodes.find((n) => n.type === 'ai_audio') as any;
+      expect(node).toBeDefined();
+      expect(node.prompt).toBe('A test song');
+      expect(node.url).toBe('http://example.com/song.mp3');
+    }
   });
 
   it('should correctly parse background_story (snake_case for backward compatibility)', () => {

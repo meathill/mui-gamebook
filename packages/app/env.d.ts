@@ -12,3 +12,9 @@ declare namespace Cloudflare {
     PINATA_JWT?: string;
   }
 }
+
+declare module '*.mdx' {
+  import type { ComponentType } from 'react';
+  const Component: ComponentType;
+  export default Component;
+}

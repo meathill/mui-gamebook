@@ -88,7 +88,7 @@ describe('Admin Users API', () => {
       const res = await GET(req);
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.users).toEqual(mockUsers);
       expect(data.pagination.total).toBe(1);
     });
@@ -128,7 +128,7 @@ describe('Admin Users API', () => {
       const res = await POST(req);
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.error).toContain('6');
     });
 
@@ -148,7 +148,7 @@ describe('Admin Users API', () => {
       const res = await POST(req);
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.success).toBe(true);
       expect(data.user.email).toBe('new@test.com');
     });
@@ -195,7 +195,7 @@ describe('Admin Users API', () => {
       const res = await PUT_USER(req, { params: Promise.resolve({ id: 'u1' }) });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.success).toBe(true);
     });
   });
@@ -215,7 +215,7 @@ describe('Admin Users API', () => {
       const res = await DELETE_USER(req, { params: Promise.resolve({ id: 'admin-1' }) });
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.error).toContain('自己');
     });
 
@@ -232,7 +232,7 @@ describe('Admin Users API', () => {
       const res = await DELETE_USER(req, { params: Promise.resolve({ id: 'u1' }) });
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.error).toContain('5');
     });
 
@@ -250,7 +250,7 @@ describe('Admin Users API', () => {
       const res = await DELETE_USER(req, { params: Promise.resolve({ id: 'u1' }) });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.success).toBe(true);
     });
   });
@@ -298,7 +298,7 @@ describe('Admin Users API', () => {
       const res = await PUT_PASSWORD(req, { params: Promise.resolve({ id: 'u1' }) });
 
       expect(res.status).toBe(400);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.error).toContain('密码登录');
     });
 
@@ -326,7 +326,7 @@ describe('Admin Users API', () => {
       const res = await PUT_PASSWORD(req, { params: Promise.resolve({ id: 'u1' }) });
 
       expect(res.status).toBe(200);
-      const data = await res.json();
+      const data = (await res.json()) as any;
       expect(data.success).toBe(true);
     });
   });
