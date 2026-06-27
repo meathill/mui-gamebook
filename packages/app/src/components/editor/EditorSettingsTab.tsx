@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { DisplayMode, Game, TextBoxPosition } from '@mui-gamebook/parser/src/types';
 import MDEditor from '@uiw/react-md-editor';
-import { X, Loader2, Shield, ExternalLink } from 'lucide-react';
+import { XIcon, SpinnerIcon, ShieldIcon, ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr';
 import { useDialog } from '@/components/Dialog';
 import MediaAssetItem from './MediaAssetItem';
 
@@ -221,7 +221,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                   <button
                     onClick={() => removeTag(tag)}
                     className="ml-1 text-blue-600 hover:text-blue-900">
-                    <X size={12} />
+                    <XIcon size={12} />
                   </button>
                 </span>
               ))}
@@ -313,12 +313,12 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
           {/* IP 注册 - Story Protocol */}
           <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
             <h3 className="text-sm font-medium text-purple-900 mb-2 flex items-center gap-2">
-              <Shield size={16} />
+              <ShieldIcon size={16} />
               IP 版权保护
             </h3>
             {loadingIpStatus ? (
               <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Loader2
+                <SpinnerIcon
                   size={14}
                   className="animate-spin"
                 />
@@ -337,7 +337,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800">
-                  在区块链浏览器查看 <ExternalLink size={12} />
+                  在区块链浏览器查看 <ArrowSquareOutIcon size={12} />
                 </a>
               </div>
             ) : (
@@ -351,7 +351,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                   className="w-full py-2 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2">
                   {registeringIp ? (
                     <>
-                      <Loader2
+                      <SpinnerIcon
                         size={14}
                         className="animate-spin"
                       />
@@ -359,7 +359,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                     </>
                   ) : (
                     <>
-                      <Shield size={14} />
+                      <ShieldIcon size={14} />
                       注册 IP 版权
                     </>
                   )}

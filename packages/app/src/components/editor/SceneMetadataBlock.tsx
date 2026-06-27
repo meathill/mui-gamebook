@@ -6,18 +6,18 @@ import { NodeViewWrapper, NodeViewContent } from '@tiptap/react';
 import type { NodeViewProps } from '@tiptap/react';
 import {
   ImageIcon,
-  Music2Icon,
+  MusicNoteIcon,
   VideoIcon,
-  GamepadIcon,
+  GameControllerIcon,
   UsersIcon,
   CodeIcon,
   EyeIcon,
-  ZoomInIcon,
+  MagnifyingGlassPlusIcon,
   PencilIcon,
   PlusIcon,
-  SparklesIcon,
-  Loader2Icon,
-} from 'lucide-react';
+  SparkleIcon,
+  SpinnerIcon,
+} from '@phosphor-icons/react';
 import {
   parseSceneMetadata,
   hasMetadataContent,
@@ -249,12 +249,12 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
               onClick={handleGenerate}
               disabled={generating || !editForm.prompt}>
               {generating ? (
-                <Loader2Icon
+                <SpinnerIcon
                   size={12}
                   className="animate-spin"
                 />
               ) : (
-                <SparklesIcon size={12} />
+                <SparkleIcon size={12} />
               )}
               {generating ? '生成中...' : editForm.url ? '重新生成' : '生成图片'}
             </button>
@@ -384,7 +384,7 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
                 className="smc-add-btn"
                 onClick={() => addSection('minigame')}>
                 <PlusIcon size={12} />
-                <GamepadIcon size={12} />
+                <GameControllerIcon size={12} />
                 小游戏
               </button>
             )}
@@ -423,7 +423,7 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
                       type="button"
                       className="scene-metadata-zoom"
                       onClick={() => setLightboxUrl(metadata.image!.url!)}>
-                      <ZoomInIcon size={14} />
+                      <MagnifyingGlassPlusIcon size={14} />
                     </button>
                   </div>
                 )}
@@ -437,7 +437,7 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
         {metadata.audio && (
           <div className="scene-metadata-section">
             <div className="scene-metadata-label">
-              <Music2Icon size={13} />
+              <MusicNoteIcon size={13} />
               {AUDIO_TYPE_LABELS[metadata.audio.type || ''] || '音频'}
               {editingSection !== 'audio' && <EditBtn section="audio" />}
             </div>
@@ -489,7 +489,7 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
         {metadata.minigame && (
           <div className="scene-metadata-section">
             <div className="scene-metadata-label">
-              <GamepadIcon size={13} />
+              <GameControllerIcon size={13} />
               小游戏
               {editingSection !== 'minigame' && <EditBtn section="minigame" />}
             </div>

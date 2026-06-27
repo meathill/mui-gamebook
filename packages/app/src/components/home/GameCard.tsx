@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import ImageIcon from 'next/image';
 import { useTranslations } from 'next-intl';
 import type { ParsedGameRow } from '@/types';
 
@@ -18,7 +18,7 @@ export default function GameCard({ game }: GameCardProps) {
           className="block">
           <div className="relative h-40 w-full bg-gradient-to-br from-gray-100 to-gray-200">
             {game.cover_image ? (
-              <Image
+              <ImageIcon
                 src={game.cover_image}
                 alt={game.title}
                 fill

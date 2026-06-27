@@ -75,7 +75,7 @@ export function useAsyncOperation(placeholderUrl: string | undefined, options: U
 
       return false;
     } catch (e) {
-      console.error('Check operation status error:', e);
+      console.error('CheckIcon operation status error:', e);
       lastDurationRef.current = Date.now() - startTime;
       return false;
     }
@@ -139,7 +139,7 @@ export async function batchCheckPlaceholders(urls: string[]): Promise<Map<string
           results.set(url, data.url);
         }
       } catch (e) {
-        console.error('Check placeholder error:', e);
+        console.error('CheckIcon placeholder error:', e);
       }
     }),
   );

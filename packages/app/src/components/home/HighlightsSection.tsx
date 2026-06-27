@@ -1,20 +1,13 @@
 import { getTranslations } from 'next-intl/server';
-import {
-  PenLineIcon,
-  ImageIcon,
-  LayoutTemplateIcon,
-  LockIcon,
-  PackageIcon,
-  MessageCircleHeartIcon,
-} from 'lucide-react';
+import { PenIcon, ImageIcon, LayoutIcon, LockIcon, PackageIcon, HandHeartIcon } from '@phosphor-icons/react/dist/ssr';
 
 const highlights = [
-  { key: 'focus', Icon: PenLineIcon },
+  { key: 'focus', Icon: PenIcon },
   { key: 'aiMedia', Icon: ImageIcon },
-  { key: 'templates', Icon: LayoutTemplateIcon },
+  { key: 'templates', Icon: LayoutIcon },
   { key: 'private', Icon: LockIcon },
   { key: 'export', Icon: PackageIcon },
-  { key: 'openDev', Icon: MessageCircleHeartIcon },
+  { key: 'openDev', Icon: HandHeartIcon },
 ];
 
 export default async function HighlightsSection() {

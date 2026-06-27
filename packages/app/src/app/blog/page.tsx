@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { CalendarIcon, TagIcon } from 'lucide-react';
+import { CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublishedPosts, getCategoryLabel } from '@/lib/blog';
 import type { Metadata } from 'next';
 

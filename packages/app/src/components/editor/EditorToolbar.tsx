@@ -2,17 +2,17 @@
 
 import Link from 'next/link';
 import {
-  SaveIcon,
+  FloppyDiskIcon,
   ArrowLeftIcon,
-  ExternalLinkIcon,
+  ArrowSquareOutIcon,
   PlusCircleIcon,
   LayoutIcon,
-  SettingsIcon,
+  GearIcon,
   BookOpenIcon,
-  BotIcon,
+  RobotIcon,
   GitBranchIcon,
-  PanelLeftIcon,
-} from 'lucide-react';
+  SidebarIcon,
+} from '@phosphor-icons/react';
 import { useEditorStore } from '@/lib/editor/store';
 import type { SaveStatus } from '@/hooks/useAutoSave';
 
@@ -69,7 +69,7 @@ export default function EditorToolbar({
           <button
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'settings' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-            <SettingsIcon size={14} />
+            <GearIcon size={14} />
             <span className="hidden sm:inline">设置</span>
           </button>
           <button
@@ -117,7 +117,7 @@ export default function EditorToolbar({
                 : 'text-gray-500 hover:bg-gray-100 border-gray-200'
             }`}
             title="变量/角色面板">
-            <PanelLeftIcon size={16} />
+            <SidebarIcon size={16} />
           </button>
         )}
 
@@ -128,7 +128,7 @@ export default function EditorToolbar({
           rel="noopener noreferrer"
           className="p-1.5 text-gray-500 hover:bg-gray-100 rounded border border-gray-200"
           title="预览">
-          <ExternalLinkIcon size={16} />
+          <ArrowSquareOutIcon size={16} />
         </a>
 
         {/* AI 助手 */}
@@ -141,7 +141,7 @@ export default function EditorToolbar({
                 : 'text-gray-600 hover:bg-gray-100 border-gray-200'
             }`}
             title="AI 助手">
-            <BotIcon size={14} />
+            <RobotIcon size={14} />
             <span className="hidden sm:inline">AI 助手</span>
           </button>
         )}
@@ -158,7 +158,7 @@ export default function EditorToolbar({
           onClick={onSave}
           disabled={saving}
           className="flex items-center gap-1.5 bg-orange-500 text-white px-3 py-1.5 rounded hover:bg-orange-600 disabled:opacity-50 text-xs font-medium">
-          <SaveIcon size={14} />
+          <FloppyDiskIcon size={14} />
           <span className="hidden sm:inline">{saving ? '保存中...' : '保存'}</span>
         </button>
       </div>

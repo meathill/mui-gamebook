@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import type { MinigameRow } from '@/lib/minigames';
-import { Gamepad2Icon } from 'lucide-react';
+import { GameControllerIcon } from '@phosphor-icons/react/dist/ssr';
 
 interface MiniGameCardProps {
   minigame: MinigameRow;
@@ -16,7 +16,7 @@ export default function MiniGameCard({ minigame }: MiniGameCardProps) {
       className="group">
       <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg h-full flex flex-row sm:flex-col border border-gray-100">
         <div className="relative h-20 w-20 sm:h-24 sm:w-full bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center flex-shrink-0">
-          <Gamepad2Icon
+          <GameControllerIcon
             className="text-white/90 group-hover:scale-110 transition-transform"
             size={28}
           />

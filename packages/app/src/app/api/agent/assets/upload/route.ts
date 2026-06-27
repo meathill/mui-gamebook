@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ url });
   } catch (e: unknown) {
-    console.error('Upload error:', e);
+    console.error('UploadSimpleIcon error:', e);
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

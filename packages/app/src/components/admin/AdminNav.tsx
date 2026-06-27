@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { TrendingUp, Users, Settings } from 'lucide-react';
+import { TrendUpIcon, UsersIcon, GearIcon } from '@phosphor-icons/react';
 
 interface NavItem {
   href: string;
@@ -11,9 +11,9 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/admin/stats', label: '全站统计', icon: <TrendingUp size={20} /> },
-  { href: '/admin/users', label: '用户管理', icon: <Users size={20} /> },
-  { href: '/admin/config', label: '系统配置', icon: <Settings size={20} /> },
+  { href: '/admin/stats', label: '全站统计', icon: <TrendUpIcon size={20} /> },
+  { href: '/admin/users', label: '用户管理', icon: <UsersIcon size={20} /> },
+  { href: '/admin/config', label: '系统配置', icon: <GearIcon size={20} /> },
 ];
 
 export default function AdminNav() {

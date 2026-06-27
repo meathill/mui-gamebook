@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { ArrowRightIcon } from 'lucide-react';
+import { ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
 
 export default async function CtaSection() {
   const t = await getTranslations('home');

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, ChangeEvent } from 'react';
-import { Trash2, Loader2, Upload, Sparkles, List } from 'lucide-react';
+import { TrashIcon, SpinnerIcon, UploadSimpleIcon, SparkleIcon, ListIcon } from '@phosphor-icons/react';
 import type { SceneNode } from '@mui-gamebook/parser';
 import { IconButton, Button } from '@radix-ui/themes';
 import { useDialog } from '@/components/Dialog';
@@ -167,12 +167,12 @@ export default function MediaAssetItem({
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}>
                   {isUploading ? (
-                    <Loader2
+                    <SpinnerIcon
                       size={16}
                       className="animate-spin"
                     />
                   ) : (
-                    <Upload size={16} />
+                    <UploadSimpleIcon size={16} />
                   )}
                 </IconButton>
                 <IconButton
@@ -182,12 +182,12 @@ export default function MediaAssetItem({
                   onClick={() => setShowGenerator(true)}
                   disabled={isGenerating}>
                   {isGenerating ? (
-                    <Loader2
+                    <SpinnerIcon
                       size={16}
                       className="animate-spin"
                     />
                   ) : (
-                    <Sparkles size={16} />
+                    <SparkleIcon size={16} />
                   )}
                 </IconButton>
               </div>
@@ -277,7 +277,7 @@ export default function MediaAssetItem({
               size="1"
               onClick={() => setShowMinigameSelector(!showMinigameSelector)}
               title="选择已有小游戏">
-              <List size={14} />
+              <ListIcon size={14} />
             </IconButton>
           )}
           {!isMinigame && (
@@ -288,12 +288,12 @@ export default function MediaAssetItem({
               disabled={isUploading}
               title="上传素材">
               {isUploading ? (
-                <Loader2
+                <SpinnerIcon
                   size={14}
                   className="animate-spin"
                 />
               ) : (
-                <Upload size={14} />
+                <UploadSimpleIcon size={14} />
               )}
             </IconButton>
           )}
@@ -304,7 +304,7 @@ export default function MediaAssetItem({
             disabled={isGenerating}
             onClick={() => setShowGenerator(!showGenerator)}
             title="AI 生成素材">
-            <Sparkles size={14} />
+            <SparkleIcon size={14} />
           </IconButton>
           {showDelete && onAssetDelete && (
             <IconButton
@@ -313,7 +313,7 @@ export default function MediaAssetItem({
               size="1"
               onClick={onAssetDelete}
               title="删除素材">
-              <Trash2 size={14} />
+              <TrashIcon size={14} />
             </IconButton>
           )}
         </div>

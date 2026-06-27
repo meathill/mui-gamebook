@@ -3,7 +3,14 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { TrendingUp, Users, Star, GamepadIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  TrendUpIcon,
+  UsersIcon,
+  StarIcon,
+  GameControllerIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+} from '@phosphor-icons/react';
 
 interface GameAnalytics {
   id: number;
@@ -126,7 +133,7 @@ export default function GlobalStatsPage() {
           title="总打开数"
           value={summary.totalOpens.toLocaleString()}
           icon={
-            <TrendingUp
+            <TrendUpIcon
               size={24}
               className="text-blue-600"
             />
@@ -137,7 +144,7 @@ export default function GlobalStatsPage() {
           title="总完成数"
           value={summary.totalCompletions.toLocaleString()}
           icon={
-            <Users
+            <UsersIcon
               size={24}
               className="text-green-600"
             />
@@ -148,7 +155,7 @@ export default function GlobalStatsPage() {
           title="整体完成率"
           value={`${summary.overallCompletionRate}%`}
           icon={
-            <GamepadIcon
+            <GameControllerIcon
               size={24}
               className="text-purple-600"
             />
@@ -159,7 +166,7 @@ export default function GlobalStatsPage() {
           title="平均评分"
           value={summary.totalRatings > 0 ? `${summary.avgRating} ⭐` : '暂无'}
           icon={
-            <Star
+            <StarIcon
               size={24}
               className="text-yellow-600"
             />
@@ -261,7 +268,7 @@ export default function GlobalStatsPage() {
               onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
               disabled={pagination.page === 1}
               className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              <ChevronLeft size={16} />
+              <CaretLeftIcon size={16} />
               上一页
             </button>
             <div className="text-sm text-gray-500">
@@ -272,7 +279,7 @@ export default function GlobalStatsPage() {
               disabled={pagination.page === pagination.totalPages}
               className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
               下一页
-              <ChevronRight size={16} />
+              <CaretRightIcon size={16} />
             </button>
           </div>
         )}

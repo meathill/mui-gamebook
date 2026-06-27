@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // Check if user is root
+    // CheckIcon if user is root
     if (session.user.email !== env.ROOT_USER_EMAIL) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }

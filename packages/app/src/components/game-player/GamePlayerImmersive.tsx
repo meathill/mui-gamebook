@@ -10,7 +10,7 @@ import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
 import Comment from '@/components/Comment';
 import { Button } from '@radix-ui/themes';
-import { ChevronDown, MessageSquare, X } from 'lucide-react';
+import { CaretDownIcon, ChatIcon, XIcon } from '@phosphor-icons/react';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import TitleScreen from './TitleScreen';
 import EndScreen from './EndScreen';
@@ -279,7 +279,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
             aria-haspopup="menu"
             aria-expanded={menuOpen}>
             <span className="max-w-[200px] truncate">{game.title}</span>
-            <ChevronDown
+            <CaretDownIcon
               size={14}
               className={`transition-transform ${menuOpen ? 'rotate-180' : ''}`}
             />
@@ -308,7 +308,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
                   setCommentOpen(true);
                 }}
                 className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-white/80 hover:text-white hover:bg-white/10 transition">
-                <MessageSquare size={14} />
+                <ChatIcon size={14} />
                 评论
               </button>
               <div className="flex items-center justify-between gap-2 px-1">
@@ -344,7 +344,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
                 onClick={() => setCommentOpen(false)}
                 className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
                 aria-label="关闭">
-                <X size={18} />
+                <XIcon size={18} />
               </button>
             </div>
             <div className="p-5">

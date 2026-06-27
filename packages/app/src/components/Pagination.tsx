@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react/dist/ssr';
 
 interface PaginationProps {
   currentPage: number;
@@ -58,11 +58,11 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
           href={`${basePath}?page=${currentPage - 1}`}
           className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
           aria-label="Previous page">
-          <ChevronLeftIcon className="w-5 h-5" />
+          <CaretLeftIcon className="w-5 h-5" />
         </Link>
       ) : (
         <span className="p-2 rounded-lg text-gray-300 cursor-not-allowed">
-          <ChevronLeftIcon className="w-5 h-5" />
+          <CaretLeftIcon className="w-5 h-5" />
         </span>
       )}
 
@@ -93,11 +93,11 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
           href={`${basePath}?page=${currentPage + 1}`}
           className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
           aria-label="Next page">
-          <ChevronRightIcon className="w-5 h-5" />
+          <CaretRightIcon className="w-5 h-5" />
         </Link>
       ) : (
         <span className="p-2 rounded-lg text-gray-300 cursor-not-allowed">
-          <ChevronRightIcon className="w-5 h-5" />
+          <CaretRightIcon className="w-5 h-5" />
         </span>
       )}
     </nav>

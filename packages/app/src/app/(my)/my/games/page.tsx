@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Edit, Eye, Lock, Globe } from 'lucide-react';
-import Image from 'next/image';
+import { PlusIcon, TrashIcon, PencilSimpleIcon, EyeIcon, LockIcon, GlobeIcon } from '@phosphor-icons/react';
+import ImageIcon from 'next/image';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
 
@@ -101,12 +101,12 @@ export default function GamesPage() {
             type="submit"
             disabled={createMutation.isPending}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
-            <Plus size={18} /> {createMutation.isPending ? '创建中...' : '创建'}
+            <PlusIcon size={18} /> {createMutation.isPending ? '创建中...' : '创建'}
           </button>
         </form>
       </div>
 
-      {/* Games List */}
+      {/* Games ListIcon */}
       {error && <div className="text-red-500">加载游戏失败</div>}
       {isLoading && <div className="text-gray-500">加载游戏中...</div>}
 
@@ -124,7 +124,7 @@ export default function GamesPage() {
                 className={`p-2 rounded-full ${
                   game.published ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'
                 }`}>
-                {game.published ? <Globe size={20} /> : <Lock size={20} />}
+                {game.published ? <GlobeIcon size={20} /> : <LockIcon size={20} />}
               </div>
               <div className="flex items-center gap-2 transition-opacity">
                 <Link
@@ -132,25 +132,25 @@ export default function GamesPage() {
                   target="_blank"
                   className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded"
                   title="预览">
-                  <Eye size={18} />
+                  <EyeIcon size={18} />
                 </Link>
                 <Link
                   href={`/my/edit/${game.id}`}
                   className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                   title="编辑">
-                  <Edit size={18} />
+                  <PencilSimpleIcon size={18} />
                 </Link>
                 <button
                   onClick={() => handleDelete(game.id)}
                   className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"
                   title="删除">
-                  <Trash2 size={18} />
+                  <TrashIcon size={18} />
                 </button>
               </div>
             </div>
             <div>
               {game.coverImage && (
-                <Image
+                <ImageIcon
                   alt={game.title}
                   className="w-full object-cover rounded mb-4"
                   height={200}

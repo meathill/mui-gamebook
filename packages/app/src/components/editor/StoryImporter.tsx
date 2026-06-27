@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { X, Sparkles, Loader2Icon, Lightbulb } from 'lucide-react';
+import { XIcon, SparkleIcon, SpinnerIcon, LightbulbIcon } from '@phosphor-icons/react/dist/ssr';
 import { useDialog } from '@/components/Dialog';
 
 // AI 故事创作引导提示
@@ -103,20 +103,20 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold flex items-center gap-2">
-            <Sparkles className="text-purple-500" />
+            <SparkleIcon className="text-purple-500" />
             AI 故事导入器
           </h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700">
-            <X size={24} />
+            <XIcon size={24} />
           </button>
         </div>
 
         {/* 创作引导 */}
         <div className="bg-linear-to-r from-purple-50 to-blue-50 rounded-lg p-4 mb-4 border border-purple-100">
           <div className="flex items-start gap-3">
-            <Lightbulb
+            <LightbulbIcon
               className="text-purple-500 shrink-0 mt-0.5"
               size={20}
             />
@@ -149,7 +149,7 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
             disabled={loading || !story.trim()}
             className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
             type="button">
-            {loading && <Loader2Icon className="animate-spin size-4" />}
+            {loading && <SpinnerIcon className="animate-spin size-4" />}
             {loading ? '生成中...' : '生成游戏脚本'}
           </button>
         </div>

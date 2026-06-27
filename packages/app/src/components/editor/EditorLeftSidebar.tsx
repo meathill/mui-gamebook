@@ -1,7 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { VariableIcon, UsersIcon, Plus, Search, ChevronLeftIcon, ListIcon } from 'lucide-react';
+import {
+  BracketsCurlyIcon,
+  UsersIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  CaretLeftIcon,
+  ListIcon,
+} from '@phosphor-icons/react';
 import {
   VariableForm,
   VariableList,
@@ -59,7 +66,7 @@ export default function EditorLeftSidebar({
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
             tab === 'variables' ? 'text-gray-900 border-b-2 border-gray-900' : 'text-gray-500 hover:text-gray-700'
           }`}>
-          <VariableIcon size={14} />
+          <BracketsCurlyIcon size={14} />
           变量
         </button>
         <button
@@ -237,7 +244,7 @@ function SidebarVariables({
             setIsCreating(false);
           }}
           className="flex items-center gap-1 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border-b border-gray-100">
-          <ChevronLeftIcon size={14} />
+          <CaretLeftIcon size={14} />
           返回列表
         </button>
         <VariableForm
@@ -379,7 +386,7 @@ function SidebarCharacters({
             setIsCreating(false);
           }}
           className="flex items-center gap-1 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border-b border-gray-100">
-          <ChevronLeftIcon size={14} />
+          <CaretLeftIcon size={14} />
           返回列表
         </button>
         <CharacterForm
@@ -426,7 +433,7 @@ function SidebarSearchBar({
     <div className="p-3 border-b border-gray-100">
       <div className="flex gap-2">
         <div className="flex-1 relative">
-          <Search
+          <MagnifyingGlassIcon
             size={14}
             className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
           />
@@ -442,7 +449,7 @@ function SidebarSearchBar({
           onClick={onCreateNew}
           className="p-1.5 bg-orange-500 text-white rounded-md hover:bg-orange-600"
           title="新建">
-          <Plus size={14} />
+          <PlusIcon size={14} />
         </button>
       </div>
     </div>

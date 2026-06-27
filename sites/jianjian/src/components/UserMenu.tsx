@@ -3,17 +3,17 @@
 import { useEffect, useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Avatar from '@radix-ui/react-avatar';
-import { LogOutIcon, UserIcon } from 'lucide-react';
+import { SignOutIcon, UserIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { authClient } from '@/lib/auth-client';
 
-interface User {
+interface UserIcon {
   name?: string | null;
   email?: string | null;
 }
 
 export default function UserMenu() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserIcon | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function UserMenu() {
           <DropdownMenu.Item
             className="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl text-foreground hover:bg-accent-pink/10 hover:text-accent-pink cursor-pointer outline-none transition-colors"
             onSelect={handleSignOut}>
-            <LogOutIcon size={20} />
+            <SignOutIcon size={20} />
             <span className="font-semibold">退出登录</span>
           </DropdownMenu.Item>
         </DropdownMenu.Content>

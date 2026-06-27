@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { SendIcon, Loader2Icon, Trash2Icon, BotIcon, SquareIcon } from 'lucide-react';
+import { PaperPlaneRightIcon, SpinnerIcon, TrashIcon, RobotIcon, SquareIcon } from '@phosphor-icons/react';
 import { useChatbot, Message, FunctionCall } from './useChatbot';
 import { Button } from '@radix-ui/themes';
 
@@ -76,7 +76,7 @@ export default function ChatPanel({
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
-            <BotIcon className="size-12 mx-auto mb-3 opacity-50" />
+            <RobotIcon className="size-12 mx-auto mb-3 opacity-50" />
             <p className="text-sm">你好！我可以帮助你编辑剧本。</p>
             <p className="text-xs mt-1">试着告诉我："把第一个场景的描述改一下"</p>
           </div>
@@ -91,7 +91,7 @@ export default function ChatPanel({
 
         {loading && (
           <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <Loader2Icon className="size-4 animate-spin" />
+            <SpinnerIcon className="size-4 animate-spin" />
             <span>AI 正在思考...</span>
           </div>
         )}
@@ -121,7 +121,7 @@ export default function ChatPanel({
               onClick={clearMessages}
               className="absolute top-1.5 right-1.5 p-1 text-gray-300 hover:text-red-400 rounded transition-colors"
               title="清空对话">
-              <Trash2Icon className="size-3.5" />
+              <TrashIcon className="size-3.5" />
             </button>
           )}
         </div>
@@ -142,7 +142,7 @@ export default function ChatPanel({
               size="1"
               variant="solid"
               color="orange">
-              <SendIcon className="size-3" />
+              <PaperPlaneRightIcon className="size-3" />
             </Button>
           )}
         </footer>

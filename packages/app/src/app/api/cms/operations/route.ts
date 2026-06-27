@@ -102,7 +102,7 @@ export async function GET(req: Request) {
       operationId,
     });
   } catch (e: unknown) {
-    console.error('Check operation status error:', e);
+    console.error('CheckIcon operation status error:', e);
     return NextResponse.json({ error: (e as Error).message || String(e) }, { status: 500 });
   }
 }

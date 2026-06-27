@@ -44,7 +44,7 @@ export async function POST(req: Request, { params }: Props) {
 
 ${dslSpec}
 
-## User Story:
+## UserIcon Story:
 
 """${story}"""`,
       { thinking: true },

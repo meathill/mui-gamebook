@@ -55,7 +55,7 @@ export async function GET(req: Request) {
       })),
     });
   } catch (e: unknown) {
-    console.error('List minigames error:', e);
+    console.error('ListIcon minigames error:', e);
     return NextResponse.json({ error: (e as Error).message || String(e) }, { status: 500 });
   }
 }

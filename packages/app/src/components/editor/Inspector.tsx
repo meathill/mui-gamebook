@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { SceneNodeData } from '@/lib/editor/transformers';
-import { Loader2, Volume2 } from 'lucide-react';
+import { SpinnerIcon, SpeakerHighIcon } from '@phosphor-icons/react/dist/ssr';
 import { useParams } from 'next/navigation';
 import type { SceneNode } from '@mui-gamebook/parser';
 import type { GameState } from '@mui-gamebook/parser/src/types';
@@ -141,12 +141,12 @@ export default function Inspector({
                     className="flex items-center gap-1 px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded hover:bg-purple-100 disabled:opacity-50"
                     title="为内容生成语音">
                     {generatingTTS ? (
-                      <Loader2
+                      <SpinnerIcon
                         size={14}
                         className="animate-spin"
                       />
                     ) : (
-                      <Volume2 size={14} />
+                      <SpeakerHighIcon size={14} />
                     )}
                     <span>生成语音</span>
                   </button>
@@ -188,12 +188,12 @@ export default function Inspector({
                     className="flex items-center gap-1 px-3 py-1.5 text-xs bg-purple-50 text-purple-600 rounded hover:bg-purple-100 disabled:opacity-50"
                     title="为选项生成语音">
                     {generatingEdgeTTS ? (
-                      <Loader2
+                      <SpinnerIcon
                         size={14}
                         className="animate-spin"
                       />
                     ) : (
-                      <Volume2 size={14} />
+                      <SpeakerHighIcon size={14} />
                     )}
                     <span>生成语音</span>
                   </button>

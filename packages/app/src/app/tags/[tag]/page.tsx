@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { TagIcon, ArrowLeftIcon } from 'lucide-react';
+import { TagIcon, ArrowLeftIcon } from '@phosphor-icons/react/dist/ssr';
 import { getGamesByTag } from '@/lib/games';
 import GameCard from '@/components/home/GameCard';
 import Pagination from '@/components/Pagination';

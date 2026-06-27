@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import * as Accordion from '@radix-ui/react-accordion';
-import { ChevronDownIcon } from 'lucide-react';
+import { CaretDownIcon } from '@phosphor-icons/react';
 
 export default function FaqSection() {
   const t = useTranslations('home');
@@ -29,7 +29,7 @@ export default function FaqSection() {
               <Accordion.Header>
                 <Accordion.Trigger className="w-full flex items-center justify-between px-5 py-4 text-left font-medium text-gray-900 hover:bg-gray-50 rounded-lg transition-colors group">
                   <span className="text-sm">{t(`faq.${key}.question`)}</span>
-                  <ChevronDownIcon className="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                  <CaretDownIcon className="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
                 </Accordion.Trigger>
               </Accordion.Header>
               <Accordion.Content className="px-5 pb-4 text-sm text-gray-600 leading-relaxed data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">

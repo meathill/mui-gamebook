@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { ArrowRightIcon, PenLineIcon } from 'lucide-react';
+import { ArrowRightIcon, PenIcon } from '@phosphor-icons/react/dist/ssr';
 
 export default async function HeroSection() {
   const t = await getTranslations('home');
@@ -21,7 +21,7 @@ export default async function HeroSection() {
               <Link
                 href="/my/dashboard"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-orange-500 text-white font-medium rounded-lg hover:bg-orange-600 transition-colors">
-                <PenLineIcon className="w-4 h-4" />
+                <PenIcon className="w-4 h-4" />
                 {t('hero.startCreating')}
               </Link>
               <Link

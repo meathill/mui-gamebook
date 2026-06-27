@@ -1,4 +1,4 @@
-import { Eye, EyeOff } from 'lucide-react';
+import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react/dist/ssr';
 import type { VariableDisplay } from '@mui-gamebook/parser/src/types';
 import { VariableFormData, ICON_OPTIONS } from './utils';
 
@@ -98,12 +98,12 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
           />
           <span className="text-sm text-gray-700">在游戏中显示</span>
           {formData.visible ? (
-            <Eye
+            <EyeIcon
               size={14}
               className="text-green-600"
             />
           ) : (
-            <EyeOff
+            <EyeSlashIcon
               size={14}
               className="text-gray-400"
             />

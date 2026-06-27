@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { Loader2, RefreshCwIcon, CheckCircleIcon } from 'lucide-react';
+import { SpinnerIcon, ArrowsClockwiseIcon, CheckCircleIcon } from '@phosphor-icons/react';
 
 interface MiniGameAPI {
   init(container: HTMLElement, variables: Record<string, number | string | boolean>): void;
@@ -133,7 +133,7 @@ export default function StandaloneMiniGamePlayer({ code }: StandaloneMiniGamePla
         <button
           onClick={handleRetry}
           className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 text-sm font-medium">
-          <RefreshCwIcon className="w-4 h-4" />
+          <ArrowsClockwiseIcon className="w-4 h-4" />
           重试
         </button>
       </div>
@@ -170,7 +170,7 @@ export default function StandaloneMiniGamePlayer({ code }: StandaloneMiniGamePla
         <button
           onClick={handleReplay}
           className="inline-flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-500 font-medium">
-          <RefreshCwIcon className="w-4 h-4" />
+          <ArrowsClockwiseIcon className="w-4 h-4" />
           再玩一次
         </button>
       </div>
@@ -182,7 +182,7 @@ export default function StandaloneMiniGamePlayer({ code }: StandaloneMiniGamePla
       {loading && (
         <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center z-10">
           <div className="text-center">
-            <Loader2
+            <SpinnerIcon
               size={32}
               className="mx-auto text-orange-500 animate-spin"
             />

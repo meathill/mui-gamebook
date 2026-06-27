@@ -6,7 +6,7 @@ import { getKey, incrementCounter, incrementJsonKey, parseDeviceType, parseRefer
  * POST /api/analytics/open
  * 记录游戏打开事件
  * Body: { gameId: number }
- * Headers: Referer, User-Agent
+ * Headers: Referer, UserIcon-Agent
  */
 export async function POST(request: Request) {
   try {

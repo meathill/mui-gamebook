@@ -38,7 +38,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false, // 防止儿童误操作缩放
-  viewportFit: 'cover', // 支持 iPhone X 等刘海屏
+  viewportFit: 'cover', // 支持 iPhone XIcon 等刘海屏
 };
 
 export default function RootLayout({
