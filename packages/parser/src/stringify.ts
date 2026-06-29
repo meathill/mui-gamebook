@@ -25,6 +25,8 @@ export function stringify(game: Game): string {
   if (game.display_mode) frontMatter.display_mode = game.display_mode;
   if (game.text_box_position) frontMatter.text_box_position = game.text_box_position;
   if (game.typewriter_speed) frontMatter.typewriter_speed = game.typewriter_speed;
+  if (game.site_template) frontMatter.site_template = game.site_template;
+  if (game.subdomain) frontMatter.subdomain = game.subdomain;
   if (Object.keys(game.initialState).length > 0) {
     const cleanedState: GameState = {};
     for (const [key, val] of Object.entries(game.initialState)) {

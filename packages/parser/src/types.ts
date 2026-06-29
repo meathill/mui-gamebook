@@ -125,6 +125,13 @@ export type DisplayMode = 'classic' | 'immersive';
 export type TextBoxPosition = 'bottom' | 'center' | 'top';
 
 /**
+ * 站点模版类型
+ * - default: 默认模版（当前 jianjian 样式）
+ * - visual-novel: 视觉小说模版（带路线图、多存档、设置等）
+ */
+export type SiteTemplate = 'default' | 'visual-novel';
+
+/**
  * 代表整个游戏的数据结构。
  */
 export interface Game {
@@ -145,6 +152,10 @@ export interface Game {
   display_mode?: DisplayMode;
   text_box_position?: TextBoxPosition;
   typewriter_speed?: number; // 毫秒/字，默认 40
+
+  // 站点模版
+  site_template?: SiteTemplate;
+  subdomain?: string; // 绑定的二级域名前缀，如 '55'
 
   // 初始状态（带元数据）
   initialState: GameState;
@@ -190,6 +201,8 @@ export type PlayableSceneNode =
  */
 export interface PlayableScene {
   id: string;
+  label?: string;
+  description?: string;
   nodes: PlayableSceneNode[];
 }
 
@@ -207,6 +220,8 @@ export interface PlayableGame {
   display_mode?: DisplayMode;
   text_box_position?: TextBoxPosition;
   typewriter_speed?: number;
+  site_template?: SiteTemplate;
+  subdomain?: string;
 
   initialState: GameState;
   characters?: Record<string, PlayableCharacter>;

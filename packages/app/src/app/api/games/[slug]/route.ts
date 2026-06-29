@@ -28,17 +28,17 @@ export async function GET(request: Request, { params }: Props) {
   }
 
   // 1. Find Game by Slug
-  const game = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
+  let game = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
 
-  if (!game) {
-    return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+  if (!game && /^\d+$/.test(slug)) {
+    game = await db
+      .select()
+      .from(schema.games)
+      .where(eq(schema.games.id, Number(slug)))
+      .get();
   }
 
-  const isOwner = currentUserId && game.ownerId === currentUserId;
-  const isPublished = game.published;
-
-  // 如果游戏未发布且当前用户不是所有者，拒绝访问
-  if (!isPublished && !isOwner) {
+  if (!game) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 });
   }
 
@@ -52,6 +52,18 @@ export async function GET(request: Request, { params }: Props) {
   const result = parse(contentRecord.content);
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 500 });
+  }
+
+  const isOwner = currentUserId && game.ownerId === currentUserId;
+  // 满足以下任一条件即视为已发布/允许公开访问：
+  // 1. 数据库中 published 为 true
+  // 2. DSL 文本 frontmatter 中 published 为 true
+  // 3. DSL 文本 frontmatter 中配置了 subdomain (用于独立子站宣传)
+  const isPublished = game.published || result.data.published || !!result.data.subdomain;
+
+  // 如果游戏未发布且当前用户不是所有者，拒绝访问
+  if (!isPublished && !isOwner) {
+    return NextResponse.json({ error: 'Game not found' }, { status: 404 });
   }
 
   // Ensure metadata is consistent with DB

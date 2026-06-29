@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { cachedGetGameBySlug } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
 import { GamePlayerImmersive } from '@/components/game-player';
@@ -51,6 +52,12 @@ export default async function PlayPage({ params }: Props) {
         </div>
       </div>
     );
+  }
+
+  // 绑定了子站点的游戏，重定向到子站点
+  if (game.subdomain) {
+    const subdomainUrl = `https://${game.subdomain}.muistory.com/play/${slug}`;
+    return redirect(subdomainUrl);
   }
 
   if (game.display_mode === 'immersive') {

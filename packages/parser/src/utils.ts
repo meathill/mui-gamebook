@@ -117,6 +117,8 @@ export function toPlayableGame(game: Game): PlayableGame {
     display_mode: game.display_mode,
     text_box_position: game.text_box_position,
     typewriter_speed: game.typewriter_speed,
+    site_template: game.site_template,
+    subdomain: game.subdomain,
     initialState: game.initialState,
     characters,
     scenes,

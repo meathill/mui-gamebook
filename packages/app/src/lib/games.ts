@@ -114,7 +114,7 @@ export async function getGameBySlug(slug: string): Promise<(PlayableGame & { id?
     }
 
     // 获取游戏信息，包括 ownerId 和 published 状态
-    const gameRecord = await DB.prepare(
+    let gameRecord = await DB.prepare(
       `SELECT g.id, g.owner_id, g.published, c.content
 FROM Games g
 LEFT JOIN GameContent c ON c.game_id = g.id
@@ -123,28 +123,39 @@ WHERE g.slug = ?`,
       .bind(slug)
       .first<{ id: number; owner_id: string | null; published: number; content: string }>();
 
+    if (!gameRecord && /^\d+$/.test(slug)) {
+      gameRecord = await DB.prepare(
+        `SELECT g.id, g.owner_id, g.published, c.content
+FROM Games g
+LEFT JOIN GameContent c ON c.game_id = g.id
+WHERE g.id = ?`,
+      )
+        .bind(Number(slug))
+        .first<{ id: number; owner_id: string | null; published: number; content: string }>();
+    }
+
     if (!gameRecord || !gameRecord.content) {
       return null;
     }
 
+    const result = parse(gameRecord.content);
+    if (!result.success) {
+      return null;
+    }
+
     const isOwner = currentUserId && gameRecord.owner_id === currentUserId;
-    const isPublished = gameRecord.published === 1;
+    const isPublished = gameRecord.published === 1 || result.data.published || !!result.data.subdomain;
 
     // 如果游戏未发布且当前用户不是所有者，拒绝访问
     if (!isPublished && !isOwner) {
       return null;
     }
 
-    const result = parse(gameRecord.content);
-    if (result.success) {
-      // 返回可玩游戏数据（包含 id 用于分析追踪）
-      return {
-        ...toPlayableGame(result.data),
-        id: gameRecord.id,
-      };
-    }
-
-    return null;
+    // 返回可玩游戏数据（包含 id 用于分析追踪）
+    return {
+      ...toPlayableGame(result.data),
+      id: gameRecord.id,
+    };
   } catch (e) {
     console.error('Failed to fetch game from D1:', e);
     return null;
