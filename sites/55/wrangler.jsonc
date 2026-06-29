@@ -1,0 +1,44 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "muistory-55",
+  "compatibility_date": "2026-06-27",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
+  "placement": {
+    "mode": "smart"
+  },
+  "r2_buckets": [
+    {
+      "binding": "NEXT_INC_CACHE_R2_BUCKET",
+      "bucket_name": "site-cache"
+    }
+  ],
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "muistory-55"
+    }
+  ],
+  // 在 Cloudflare Dashboard 中绑定自定义域名 55.muistory.com 到此 Worker
+  "vars": {
+    "NEXT_PUBLIC_API_URL": "https://muistory.com",
+    "NEXT_PUBLIC_SITE_URL": "https://55.muistory.com",
+    "NEXT_PUBLIC_SITE_NAME": "55",
+    // 绑定的游戏（一个站点只有一个游戏）
+    "NEXT_PUBLIC_GAME_ID": "36",
+    "NEXT_PUBLIC_GAME_SLUG": "game-slug-here",
+    "NEXT_PUBLIC_GA_ID": "G-244NXPS1H0"
+  }
+}

@@ -297,6 +297,8 @@ export function parse(source: string): ParseResult {
     display_mode,
     text_box_position,
     typewriter_speed,
+    site_template,
+    subdomain,
     state = {},
     ai = {},
   } = globalConfig;
@@ -318,6 +320,8 @@ export function parse(source: string): ParseResult {
     display_mode,
     text_box_position,
     typewriter_speed,
+    site_template,
+    subdomain,
     initialState: state,
     ai: {
       style: ai.style || {},
