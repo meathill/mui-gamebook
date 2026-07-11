@@ -1,5 +1,5 @@
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 // 默认配置
 const DEFAULT_CONFIG = {
@@ -14,21 +14,27 @@ const DEFAULT_CONFIG = {
   // 默认 TTS 音色
   defaultTtsVoice: 'Aoede',
   // Google AI 文本模型
-  googleTextModel: 'gemini-3-pro-preview',
+  googleTextModel: 'gemini-3.1-pro-preview',
   // Google AI 图片模型
-  googleImageModel: 'gemini-2.5-flash-image',
+  googleImageModel: 'gemini-3.1-flash-image',
   // Google AI TTS 模型
-  googleTtsModel: 'gemini-2.5-flash-preview-tts',
+  googleTtsModel: 'gemini-3.1-flash-tts-preview',
   // Google AI 视频模型
-  googleVideoModel: 'veo-3.1-fast-generate-preview',
+  googleVideoModel: 'veo-3.1-generate-preview',
   // OpenAI 文本模型
-  openaiTextModel: 'gpt-5',
+  openaiTextModel: 'gpt-5.5',
   // OpenAI 图片模型
   openaiImageModel: 'gpt-image-1.5',
   // OpenAI TTS 模型
   openaiTtsModel: 'gpt-4o-mini-tts',
   // OpenAI 视频模型
   openaiVideoModel: 'sora-2',
+  // 小米 MiMo 文本模型
+  mimoTextModel: 'mimo-v2.5-pro',
+  // 小米 MiMo base URL（默认 Token Plan 订阅地址，按量付费为 https://api.xiaomimimo.com/v1）
+  mimoBaseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
+  // Anthropic Claude 文本模型
+  anthropicTextModel: 'claude-sonnet-5',
 };
 
 export type AppConfig = typeof DEFAULT_CONFIG;

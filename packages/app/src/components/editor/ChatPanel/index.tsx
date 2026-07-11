@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { PaperPlaneRightIcon, SpinnerIcon, TrashIcon, RobotIcon, SquareIcon } from '@phosphor-icons/react';
-import { useChatbot, Message, FunctionCall } from './useChatbot';
+import { PaperPlaneRightIcon, RobotIcon, SpinnerIcon, SquareIcon, TrashIcon } from '@phosphor-icons/react';
 import { Button } from '@radix-ui/themes';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
 import { isImeComposing } from '@/lib/keyboard';
+import { FunctionCall, Message, useChatbot } from './useChatbot';
 
 interface ChatPanelProps {
   gameId: string;
@@ -31,6 +32,11 @@ export default function ChatPanel({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // 用户被授权多个 AI 时可切换，默认第一项（用户默认提供者）
+  const { providers } = useAiPermissions();
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const activeProvider = selectedProvider || providers[0];
+
   const { messages, loading, error, sendMessage, clearMessages, cancelRequest } = useChatbot({
     gameId,
     onFunctionCall,
@@ -53,10 +59,10 @@ export default function ChatPanel({
       e?.preventDefault();
       if (!input.trim() || loading) return;
 
-      sendMessage(input.trim(), { dsl, story, characters, variables });
+      sendMessage(input.trim(), { dsl, story, characters, variables }, activeProvider);
       setInput('');
     },
-    [input, loading, sendMessage, dsl, story, characters, variables],
+    [input, loading, sendMessage, dsl, story, characters, variables, activeProvider],
   );
 
   const handleKeyDown = useCallback(
@@ -128,8 +134,24 @@ export default function ChatPanel({
             </button>
           )}
         </div>
-        <footer className="flex items-center justify-between mt-1.5">
-          <p className="text-xs text-gray-400">Enter 发送，Shift+Enter 换行</p>
+        <footer className="flex items-center justify-between mt-1.5 gap-2">
+          {providers.length > 1 ? (
+            <select
+              value={activeProvider}
+              onChange={(e) => setSelectedProvider(e.target.value)}
+              className="text-xs text-gray-500 border border-gray-200 rounded px-1 py-0.5 outline-none focus:border-orange-400"
+              title="选择 AI 提供者">
+              {providers.map((provider) => (
+                <option
+                  key={provider}
+                  value={provider}>
+                  {AI_PROVIDER_LABELS[provider]}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <p className="text-xs text-gray-400">Enter 发送，Shift+Enter 换行</p>
+          )}
           {loading ? (
             <Button
               type="button"

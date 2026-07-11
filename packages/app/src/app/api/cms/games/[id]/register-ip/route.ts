@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
-import { drizzle } from 'drizzle-orm/d1';
-import { games, user } from '@/db/schema';
-import { eq } from 'drizzle-orm';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { createStoryClient, uploadMetadataToIpfs, registerGameAsIp, type IpMetadataInput } from '@/lib/story-protocol';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextRequest, NextResponse } from 'next/server';
+import { games, user } from '@/db/schema';
+import { getSession } from '@/lib/auth-server';
+import { createStoryClient, type IpMetadataInput, registerGameAsIp, uploadMetadataToIpfs } from '@/lib/story-protocol';
 
 interface RouteParams {
   params: Promise<{ id: string }>;

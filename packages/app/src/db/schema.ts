@@ -8,6 +8,8 @@ export const user = sqliteTable('user', {
   image: text('image'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  // 用户 AI 权限（JSON: { providers: string[], canGenerateImage: boolean, canGenerateVideo: boolean }），null = 默认权限
+  aiPermissions: text('ai_permissions'),
 });
 
 export const session = sqliteTable(

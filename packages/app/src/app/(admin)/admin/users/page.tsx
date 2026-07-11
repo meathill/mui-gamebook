@@ -1,10 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { KeyIcon, MagnifyingGlassIcon, PencilIcon, PlusIcon, TrashIcon, XIcon } from '@phosphor-icons/react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { PlusIcon, PencilIcon, KeyIcon, TrashIcon, MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { parseUserAiPermissions, UserAiPermissionsFields } from '@/components/admin/UserAiPermissionsFields';
 import { useDialog } from '@/components/Dialog';
+import type { AiPermissions } from '@/lib/ai-permissions';
 
 interface UserItem {
   id: string;
@@ -13,6 +15,7 @@ interface UserItem {
   emailVerified: boolean;
   createdAt: string | number;
   gameCount: number;
+  aiPermissions: string | null;
 }
 
 interface UsersResponse {
@@ -43,6 +46,8 @@ export default function UsersPage() {
   const [formEmail, setFormEmail] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formPasswordConfirm, setFormPasswordConfirm] = useState('');
+  // null = 默认权限（仅 MiMo，无生图/生视频）
+  const [formAiPermissions, setFormAiPermissions] = useState<AiPermissions | null>(null);
 
   const { data, isLoading } = useQuery<UsersResponse>({
     queryKey: ['admin', 'users', page, search],
@@ -75,7 +80,15 @@ export default function UsersPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...body }: { id: string; name: string; email: string }) => {
+    mutationFn: async ({
+      id,
+      ...body
+    }: {
+      id: string;
+      name: string;
+      email: string;
+      aiPermissions: AiPermissions | null;
+    }) => {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -133,6 +146,7 @@ export default function UsersPage() {
     setFormEmail('');
     setFormPassword('');
     setFormPasswordConfirm('');
+    setFormAiPermissions(null);
   }
 
   function openCreate() {
@@ -147,6 +161,7 @@ export default function UsersPage() {
     setEditingUser(user);
     setFormName(user.name);
     setFormEmail(user.email);
+    setFormAiPermissions(parseUserAiPermissions(user.aiPermissions));
     setModalType('edit');
   }
 
@@ -181,7 +196,7 @@ export default function UsersPage() {
   function handleEditSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingUser) return;
-    updateMutation.mutate({ id: editingUser.id, name: formName, email: formEmail });
+    updateMutation.mutate({ id: editingUser.id, name: formName, email: formEmail, aiPermissions: formAiPermissions });
   }
 
   function handlePasswordSubmit(e: React.FormEvent) {
@@ -435,6 +450,10 @@ export default function UsersPage() {
                       required
                     />
                   </div>
+                  <UserAiPermissionsFields
+                    value={formAiPermissions}
+                    onChange={setFormAiPermissions}
+                  />
                 </div>
                 <div className="flex gap-3 justify-end mt-6">
                   <button

@@ -1,6 +1,6 @@
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export async function POST(req: Request) {
   const session = await getSession();

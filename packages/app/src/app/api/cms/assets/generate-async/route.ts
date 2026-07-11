@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
+import { checkVideoPermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { startAsyncVideoGeneration } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
-import { checkUserUsageLimit } from '@/lib/usage-limit';
-import { checkVideoGenerationPermission } from '@/lib/config';
+import { getSession } from '@/lib/auth-server';
 import { createPendingOperation, generatePlaceholderUrl } from '@/lib/pending-operations';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 /**
  * 启动异步素材生成
@@ -20,8 +20,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: usageCheck.message }, { status: 429 });
   }
 
-  // 检查视频生成权限（白名单）
-  const videoPermission = await checkVideoGenerationPermission(session.user.email);
+  // 检查视频生成权限（按用户 flag，旧白名单作为过渡期 fallback）
+  const permissions = await getUserAiPermissions(session.user);
+  const videoPermission = await checkVideoPermission(session.user, permissions);
   if (!videoPermission.allowed) {
     return NextResponse.json({ error: videoPermission.message }, { status: 403 });
   }

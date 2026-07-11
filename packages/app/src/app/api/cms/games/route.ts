@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { desc, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, desc } from 'drizzle-orm';
-import * as schema from '@/db/schema';
+import { NextResponse } from 'next/server';
 import slugify from 'slugify';
+import * as schema from '@/db/schema';
+import { getSession } from '@/lib/auth-server';
 
 export async function GET() {
   const session = await getSession();

@@ -1,8 +1,10 @@
-import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
-import { generateAndUploadTTS, type TTSVoiceName } from '@/lib/ai-service';
-import { checkUserUsageLimit } from '@/lib/usage-limit';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
+import { generateAndUploadTTS, type TTSVoiceName } from '@/lib/ai-service';
+import { getSession } from '@/lib/auth-server';
+import { getManagedGame } from '@/lib/game-access';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -13,6 +15,11 @@ export async function POST(req: Request, { params }: Params) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const { id: gameId } = await params;
+
+  // 校验游戏归属（所有者或 root）
+  const { env: cfEnv } = getCloudflareContext();
+  const ownedGame = await getManagedGame(drizzle(cfEnv.DB), Number(gameId), session);
+  if (!ownedGame) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
 
   try {
     const { characterId, voiceName, text } = (await req.json()) satisfies {

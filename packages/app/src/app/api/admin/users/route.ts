@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { like, or, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
-import { sql, like, or } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
+import { createAuth } from '@/lib/auth-config';
 import { getSession } from '@/lib/auth-server';
 import { isRootUser } from '@/lib/config';
-import { createAuth } from '@/lib/auth-config';
 
 /**
  * GET /api/admin/users
@@ -36,6 +36,7 @@ export async function GET(request: Request) {
         email: schema.user.email,
         emailVerified: schema.user.emailVerified,
         createdAt: schema.user.createdAt,
+        aiPermissions: schema.user.aiPermissions,
         gameCount: sql<number>`(SELECT COUNT(*) FROM Games WHERE owner_id = ${schema.user.id})`,
       })
       .from(schema.user);

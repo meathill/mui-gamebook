@@ -1,14 +1,16 @@
-import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
+import { parse } from '@mui-gamebook/parser';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import slugify from 'slugify';
 import * as schema from '@/db/schema';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
+import { getSession } from '@/lib/auth-server';
+import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
-import { parse } from '@mui-gamebook/parser';
-import slugify from 'slugify';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -34,16 +36,17 @@ export async function POST(req: Request, { params }: Props) {
     return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
   }
 
+  // 图片生成默认关闭，管理员按用户开通
+  const permissions = await getUserAiPermissions(session.user);
+  if (!permissions.canGenerateImage) {
+    return NextResponse.json({ error: '您没有权限使用图片生成功能，请联系管理员开通' }, { status: 403 });
+  }
+
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  // 验证游戏所有权
-  const game = await db
-    .select()
-    .from(schema.games)
-    .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
-    .get();
-
+  // 验证游戏管理权限（所有者或 root）
+  const game = await getManagedGame(db, id, session);
   if (!game) {
     return NextResponse.json({ error: '游戏不存在' }, { status: 404 });
   }

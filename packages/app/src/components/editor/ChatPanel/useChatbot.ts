@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 export interface Message {
   id: string;
@@ -42,7 +42,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
   messagesRef.current = messages;
 
   const sendMessage = useCallback(
-    async (content: string, context: ChatContext) => {
+    async (content: string, context: ChatContext, provider?: string) => {
       if (!content.trim() || loading) return;
 
       // 取消之前的请求
@@ -72,7 +72,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
         const response = await fetch(`/api/cms/games/${gameId}/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: content, context, history }),
+          body: JSON.stringify({ message: content, context, history, provider }),
           signal: abortControllerRef.current.signal,
         });
 

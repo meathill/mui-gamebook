@@ -1,6 +1,6 @@
+import type { AiProviderType, AiUsageInfo } from '@mui-gamebook/core/lib/ai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import type { AiUsageInfo } from '@mui-gamebook/core/lib/ai-provider';
-import { createAiProvider, createGoogleAiProvider } from './ai-provider-factory';
+import { createAiProvider, createGoogleAiProvider, resolveMediaProviderType } from './ai-provider-factory';
 import { wrapWav } from './audio';
 
 export type { AiUsageInfo };
@@ -87,8 +87,8 @@ export async function generateAndUploadImage(
 ): Promise<GenerateImageResult> {
   const { env } = getCloudflareContext();
 
-  // 使用 AI 提供者工厂创建提供者
-  const provider = await createAiProvider();
+  // 图片生成只支持 Google/OpenAI，全局默认为 MiMo/Claude 时回退
+  const provider = await createAiProvider(await resolveMediaProviderType());
   const { buffer, type, usage } = await provider.generateImage(prompt, {
     aspectRatio: options?.aspectRatio,
     referenceImages: options?.referenceImages,
@@ -123,8 +123,8 @@ export async function startAsyncVideoGeneration(
   prompt: string,
   config?: { durationSeconds?: number; aspectRatio?: string },
 ): Promise<StartVideoGenerationResult> {
-  // 使用配置的 AI provider
-  const provider = await createAiProvider();
+  // 视频生成只支持 Google/OpenAI，全局默认为 MiMo/Claude 时回退
+  const provider = await createAiProvider(await resolveMediaProviderType());
 
   if (!provider.startVideoGeneration) {
     throw new Error('当前 AI 提供者不支持视频生成');
@@ -212,11 +212,12 @@ export async function generateAndStoreMiniGame(
   ownerId: string,
   name: string,
   variables?: Record<string, string>,
+  providerType?: AiProviderType,
 ): Promise<GenerateMiniGameResult> {
   const { env } = getCloudflareContext();
 
-  // 使用 AI 提供者工厂
-  const provider = await createAiProvider();
+  // 使用 AI 提供者工厂（可按用户权限指定提供者）
+  const provider = await createAiProvider(providerType);
   const { code, usage } = await provider.generateMiniGame(prompt, variables);
 
   // 存储到数据库
@@ -263,8 +264,8 @@ export async function generateAndUploadTTS(
 ): Promise<GenerateTTSResult> {
   const { env } = getCloudflareContext();
 
-  // 使用 AI Provider 工厂创建提供者
-  const provider = await createAiProvider();
+  // TTS 只支持 Google/OpenAI，全局默认为 MiMo/Claude 时回退
+  const provider = await createAiProvider(await resolveMediaProviderType());
 
   // 检查 provider 是否支持 TTS
   if (!provider.generateTTS) {

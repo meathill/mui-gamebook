@@ -7,6 +7,8 @@ declare namespace Cloudflare {
     ADMIN_PASSWORD?: string;
     GOOGLE_API_KEY?: string;
     OPENAI_API_KEY?: string;
+    MIMO_API_KEY?: string;
+    ANTHROPIC_API_KEY?: string;
     NEXT_PUBLIC_ROOT_USER_EMAIL?: string;
     STORY_PRIVATE_KEY?: string;
     PINATA_JWT?: string;
@@ -15,6 +17,7 @@ declare namespace Cloudflare {
 
 declare module '*.mdx' {
   import type { ComponentType } from 'react';
+
   const Component: ComponentType;
   export default Component;
 }

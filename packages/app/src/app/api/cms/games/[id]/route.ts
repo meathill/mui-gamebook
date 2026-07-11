@@ -1,10 +1,11 @@
-import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { drizzle } from 'drizzle-orm/d1';
-import { eq, and, ne } from 'drizzle-orm';
-import * as schema from '@/db/schema';
 import { parse } from '@mui-gamebook/parser';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { and, eq, ne } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
+import * as schema from '@/db/schema';
+import { getSession } from '@/lib/auth-server';
+import { getManagedGame } from '@/lib/game-access';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -17,13 +18,8 @@ export async function GET(req: Request, { params }: Props) {
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  // Verify ownership
-  const game = await db
-    .select()
-    .from(schema.games)
-    .where(and(eq(schema.games.id, Number(id)), eq(schema.games.ownerId, session.user.id)))
-    .get();
-
+  // 校验游戏管理权限（所有者或 root）
+  const game = await getManagedGame(db, id, session);
   if (!game) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
 
   const content = await db.select().from(schema.gameContent).where(eq(schema.gameContent.gameId, id)).get();
@@ -65,13 +61,8 @@ export async function PUT(req: Request, { params }: Props) {
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  // CheckIcon ownership first
-  const currentGame = await db
-    .select()
-    .from(schema.games)
-    .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
-    .get();
-
+  // 校验游戏管理权限（所有者或 root）
+  const currentGame = await getManagedGame(db, id, session);
   if (!currentGame) {
     return NextResponse.json({ error: 'Game not found or unauthorized' }, { status: 404 });
   }
@@ -121,13 +112,11 @@ export async function DELETE(req: Request, { params }: Props) {
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  const result = await db
-    .delete(schema.games)
-    .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
-    .returning({ deletedId: schema.games.id })
-    .get();
+  // 校验游戏管理权限（所有者或 root）
+  const game = await getManagedGame(db, id, session);
+  if (!game) return NextResponse.json({ error: 'Game not found or unauthorized' }, { status: 404 });
 
-  if (!result) return NextResponse.json({ error: 'Game not found or unauthorized' }, { status: 404 });
+  await db.delete(schema.games).where(eq(schema.games.id, id));
 
   return NextResponse.json({ success: true });
 }

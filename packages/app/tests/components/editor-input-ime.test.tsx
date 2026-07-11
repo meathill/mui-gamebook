@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -118,14 +119,17 @@ describe('编辑器输入框的 IME 键盘保护', () => {
   });
 
   it('ChatPanel 组合输入时 Enter 不发送，组合结束后才发送', () => {
+    // ChatPanel 内部使用 useAiPermissions（react-query），需要 QueryClientProvider
     render(
-      <ChatPanel
-        gameId="game-1"
-        isOpen
-        onClose={vi.fn()}
-        dsl=""
-        onFunctionCall={vi.fn()}
-      />,
+      <QueryClientProvider client={new QueryClient()}>
+        <ChatPanel
+          gameId="game-1"
+          isOpen
+          onClose={vi.fn()}
+          dsl=""
+          onFunctionCall={vi.fn()}
+        />
+      </QueryClientProvider>,
     );
 
     const textarea = screen.getByPlaceholderText('输入你的请求...');

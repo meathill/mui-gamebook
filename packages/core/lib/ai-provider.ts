@@ -102,8 +102,10 @@ export interface TTSResult {
 
 /**
  * AI 提供者类型
+ * - mimo: 小米 MiMo（OpenAI 兼容协议，仅文本/工具调用）
+ * - anthropic: Anthropic Claude（仅文本/工具调用）
  */
-export type AiProviderType = 'google' | 'openai';
+export type AiProviderType = 'google' | 'openai' | 'mimo' | 'anthropic';
 
 /**
  * AI 提供者配置

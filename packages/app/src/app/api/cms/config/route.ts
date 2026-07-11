@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { getSession } from '@/lib/auth-server';
 import { getConfig } from '@/lib/config';
 
 /**
  * 获取 CMS 当前配置（用户级别，非管理员）
- * 只返回用户需要知道的配置信息
+ * 只返回用户需要知道的配置信息，包括当前用户的 AI 权限
  */
 export async function GET() {
   const session = await getSession();
@@ -14,9 +15,11 @@ export async function GET() {
 
   try {
     const config = await getConfig();
+    const aiPermissions = await getUserAiPermissions(session.user);
     // 只返回用户需要的配置
     return NextResponse.json({
       defaultAiProvider: config.defaultAiProvider,
+      aiPermissions,
     });
   } catch (e: unknown) {
     console.error('获取配置失败:', e);

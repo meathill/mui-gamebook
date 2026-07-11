@@ -1,8 +1,11 @@
-import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
+import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
+import { getSession } from '@/lib/auth-server';
+import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 const SYSTEM_PROMPT = `
@@ -27,18 +30,25 @@ export async function POST(req: Request, { params }: Props) {
   }
 
   const { id } = await params;
-  const { story } = (await req.json()) as {
+  const { story, provider: requestedProvider } = (await req.json()) as {
     story: string;
+    provider?: string;
   };
   if (!story) return NextResponse.json({ error: 'Story is required' }, { status: 400 });
+
+  // 校验游戏归属（所有者或 root）
+  const { env } = getCloudflareContext();
+  const game = await getManagedGame(drizzle(env.DB), Number(id), session);
+  if (!game) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
 
   // fetch DSL
   const f = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/DSL_SPEC.md`);
   const dslSpec = await f.text();
 
   try {
-    // 使用 AI Provider 工厂创建提供者
-    const provider = await createAiProvider();
+    // 按用户权限解析文本提供者
+    const permissions = await getUserAiPermissions(session.user);
+    const provider = await createAiProvider(resolveTextProvider(permissions, requestedProvider));
     const { text: script, usage } = await provider.generateText(
       `${SYSTEM_PROMPT}
 

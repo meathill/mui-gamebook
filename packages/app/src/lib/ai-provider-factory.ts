@@ -2,12 +2,25 @@
  * AI 提供者工厂
  * 根据配置创建对应的 AI 提供者
  */
-import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 import { GoogleGenAI } from '@google/genai';
 import type { AiProvider, AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import { ClaudeProvider } from '@mui-gamebook/core/lib/claude-provider';
 import { GoogleAiProvider } from '@mui-gamebook/core/lib/google-ai-provider';
+import { MimoProvider } from '@mui-gamebook/core/lib/mimo-provider';
 import { OpenAiProvider } from '@mui-gamebook/core/lib/openai-provider';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { getConfig } from './config';
+
+/**
+ * 解析媒体生成（图片/TTS/视频）使用的提供者类型
+ * MiMo/Claude 只支持文本，全局默认被设为它们时媒体链路回退到 Google
+ */
+export async function resolveMediaProviderType(): Promise<'google' | 'openai'> {
+  const config = await getConfig();
+  const defaultType = config.defaultAiProvider;
+  return defaultType === 'google' || defaultType === 'openai' ? defaultType : 'google';
+}
 
 /**
  * 创建 AI 提供者
@@ -18,6 +31,24 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
   const config = await getConfig();
 
   const providerType = type || config.defaultAiProvider || 'google';
+
+  if (providerType === 'mimo') {
+    const apiKey = env.MIMO_API_KEY || process.env.MIMO_API_KEY;
+    if (!apiKey) {
+      throw new Error('MIMO_API_KEY not configured');
+    }
+
+    return new MimoProvider(apiKey, { text: config.mimoTextModel }, config.mimoBaseUrl);
+  }
+
+  if (providerType === 'anthropic') {
+    const apiKey = env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error('ANTHROPIC_API_KEY not configured');
+    }
+
+    return new ClaudeProvider(apiKey, { text: config.anthropicTextModel });
+  }
 
   if (providerType === 'openai') {
     const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;

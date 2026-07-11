@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
+import { getSession } from '@/lib/auth-server';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 export async function POST(req: Request) {
@@ -12,6 +13,12 @@ export async function POST(req: Request) {
   const usageCheck = await checkUserUsageLimit(session.user.id);
   if (!usageCheck.allowed) {
     return NextResponse.json({ error: usageCheck.message }, { status: 429 });
+  }
+
+  // 图片生成默认关闭，管理员按用户开通
+  const permissions = await getUserAiPermissions(session.user);
+  if (!permissions.canGenerateImage) {
+    return NextResponse.json({ error: '您没有权限使用图片生成功能，请联系管理员开通' }, { status: 403 });
   }
 
   try {

@@ -267,6 +267,8 @@ export const CHAT_SYSTEM_PROMPT = `你是一个互动小说编辑助手。用户
  */
 export interface ChatRequest {
   message: string;
+  // 指定使用的 AI 提供者（须在用户许可列表内，否则回退用户默认）
+  provider?: string;
   context: {
     dsl: string;
     story?: string;

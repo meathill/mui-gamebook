@@ -4,7 +4,9 @@
  */
 import { GoogleGenAI } from '@google/genai';
 import type { AiProvider, AiProviderType } from './ai-provider';
+import { ClaudeProvider } from './claude-provider';
 import { GoogleAiProvider } from './google-ai-provider';
+import { MimoProvider } from './mimo-provider';
 import { OpenAiProvider } from './openai-provider';
 
 /**
@@ -17,6 +19,12 @@ export interface AiProviderOptions {
   googleApiKey?: string;
   /** OpenAI API Key */
   openaiApiKey?: string;
+  /** 小米 MiMo API Key */
+  mimoApiKey?: string;
+  /** 小米 MiMo base URL（默认 Token Plan 地址） */
+  mimoBaseUrl?: string;
+  /** Anthropic API Key */
+  anthropicApiKey?: string;
   /** 模型配置 */
   models?: {
     text?: string;
@@ -33,6 +41,20 @@ export interface AiProviderOptions {
  */
 export function createAiProvider(options: AiProviderOptions): AiProvider {
   const providerType = options.type || 'google';
+
+  if (providerType === 'mimo') {
+    if (!options.mimoApiKey) {
+      throw new Error('MiMo API Key is required for MiMo provider');
+    }
+    return new MimoProvider(options.mimoApiKey, { text: options.models?.text }, options.mimoBaseUrl);
+  }
+
+  if (providerType === 'anthropic') {
+    if (!options.anthropicApiKey) {
+      throw new Error('Anthropic API Key is required for Claude provider');
+    }
+    return new ClaudeProvider(options.anthropicApiKey, { text: options.models?.text });
+  }
 
   if (providerType === 'openai') {
     if (!options.openaiApiKey) {
@@ -70,6 +92,9 @@ export function createAiProviderFromEnv(type?: AiProviderType): AiProvider {
     type: providerType,
     googleApiKey: process.env.GOOGLE_API_KEY,
     openaiApiKey: process.env.OPENAI_API_KEY,
+    mimoApiKey: process.env.MIMO_API_KEY,
+    mimoBaseUrl: process.env.MIMO_BASE_URL,
+    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
     models: {
       text: process.env.AI_TEXT_MODEL,
       image: process.env.AI_IMAGE_MODEL || process.env.GOOGLE_IMAGE_MODEL,

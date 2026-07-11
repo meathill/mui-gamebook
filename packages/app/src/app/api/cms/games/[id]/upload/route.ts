@@ -1,10 +1,9 @@
-import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and } from 'drizzle-orm';
-import * as schema from '@/db/schema';
+import { NextResponse } from 'next/server';
 import slugify from 'slugify';
+import { getSession } from '@/lib/auth-server';
+import { getManagedGame } from '@/lib/game-access';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -29,13 +28,8 @@ export async function POST(req: Request, { params }: Props) {
     const { env } = getCloudflareContext();
     const db = drizzle(env.DB);
 
-    // 验证游戏所有权
-    const game = await db
-      .select()
-      .from(schema.games)
-      .where(and(eq(schema.games.id, id), eq(schema.games.ownerId, session.user.id)))
-      .get();
-
+    // 验证游戏管理权限（所有者或 root）
+    const game = await getManagedGame(db, id, session);
     if (!game) {
       return NextResponse.json({ error: '游戏不存在' }, { status: 404 });
     }

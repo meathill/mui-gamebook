@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
 import { checkAndCompleteVideoGeneration } from '@/lib/ai-service';
+import { getSession } from '@/lib/auth-server';
 import {
-  getOperationById,
-  updateOperationStatus,
-  isPlaceholderUrl,
   extractOperationId,
+  getOperationById,
+  isPlaceholderUrl,
+  updateOperationStatus,
 } from '@/lib/pending-operations';
 
 /**

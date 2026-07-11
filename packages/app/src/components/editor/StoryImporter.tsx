@@ -1,6 +1,7 @@
-import { useState, useMemo } from 'react';
-import { XIcon, SparkleIcon, SpinnerIcon, LightbulbIcon } from '@phosphor-icons/react/dist/ssr';
+import { LightbulbIcon, SparkleIcon, SpinnerIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
+import { useMemo, useState } from 'react';
 import { useDialog } from '@/components/Dialog';
+import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
 
 // AI 故事创作引导提示
 const STORY_PROMPTS = [
@@ -54,6 +55,11 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
   const [loading, setLoading] = useState(false);
   const dialog = useDialog();
 
+  // 用户被授权多个 AI 时可切换，默认第一项（用户默认提供者）
+  const { providers } = useAiPermissions();
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
+  const activeProvider = selectedProvider || providers[0];
+
   // 随机选择一个提示
   const randomPrompt = useMemo(() => {
     const index = Math.floor(Math.random() * STORY_PROMPTS.length);
@@ -72,7 +78,7 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
       const res = await fetch(`/api/cms/games/${id}/generate-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ story }),
+        body: JSON.stringify({ story, provider: activeProvider }),
       });
 
       if (!res.ok) {
@@ -143,7 +149,22 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
           placeholder="在这里输入你的故事..."
         />
 
-        <div className="flex justify-end">
+        <div className="flex justify-end items-center gap-3">
+          {providers.length > 1 && (
+            <select
+              value={activeProvider}
+              onChange={(e) => setSelectedProvider(e.target.value)}
+              className="text-sm text-gray-600 border border-gray-300 rounded-md px-2 py-2 outline-none focus:border-purple-500"
+              title="选择 AI 提供者">
+              {providers.map((provider) => (
+                <option
+                  key={provider}
+                  value={provider}>
+                  {AI_PROVIDER_LABELS[provider]}
+                </option>
+              ))}
+            </select>
+          )}
           <button
             onClick={handleGenerate}
             disabled={loading || !story.trim()}

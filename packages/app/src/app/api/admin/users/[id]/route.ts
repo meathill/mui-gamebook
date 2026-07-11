@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { drizzle } from 'drizzle-orm/d1';
 import { eq, sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
+import { ALL_TEXT_PROVIDERS } from '@/lib/ai-permissions';
 import { getSession } from '@/lib/auth-server';
 import { isRootUser } from '@/lib/config';
 
@@ -32,6 +33,7 @@ export async function GET(_request: Request, { params }: Props) {
         email: schema.user.email,
         emailVerified: schema.user.emailVerified,
         createdAt: schema.user.createdAt,
+        aiPermissions: schema.user.aiPermissions,
         gameCount: sql<number>`(SELECT COUNT(*) FROM Games WHERE owner_id = ${schema.user.id})`,
       })
       .from(schema.user)
@@ -64,16 +66,40 @@ export async function PUT(request: Request, { params }: Props) {
     const { id } = await params;
     const { env } = getCloudflareContext();
     const db = drizzle(env.DB);
-    const body = (await request.json()) as { name?: string; email?: string };
-    const { name, email } = body;
+    const body = (await request.json()) as {
+      name?: string;
+      email?: string;
+      aiPermissions?: { providers: string[]; canGenerateImage: boolean; canGenerateVideo: boolean } | null;
+    };
+    const { name, email, aiPermissions } = body;
 
-    if (!name && !email) {
-      return NextResponse.json({ error: '至少需要提供名称或邮箱' }, { status: 400 });
+    if (!name && !email && aiPermissions === undefined) {
+      return NextResponse.json({ error: '至少需要提供名称、邮箱或 AI 权限' }, { status: 400 });
     }
 
     const updates: Record<string, unknown> = { updatedAt: new Date() };
     if (name) updates.name = name;
     if (email) updates.email = email;
+    if (aiPermissions !== undefined) {
+      if (aiPermissions === null) {
+        // null = 恢复默认权限
+        updates.aiPermissions = null;
+      } else {
+        const providers = Array.isArray(aiPermissions.providers)
+          ? aiPermissions.providers.filter((p): p is (typeof ALL_TEXT_PROVIDERS)[number] =>
+              (ALL_TEXT_PROVIDERS as string[]).includes(p),
+            )
+          : [];
+        if (providers.length === 0) {
+          return NextResponse.json({ error: '至少需要保留一个可用的 AI 提供者' }, { status: 400 });
+        }
+        updates.aiPermissions = JSON.stringify({
+          providers,
+          canGenerateImage: aiPermissions.canGenerateImage === true,
+          canGenerateVideo: aiPermissions.canGenerateVideo === true,
+        });
+      }
+    }
 
     await db.update(schema.user).set(updates).where(eq(schema.user.id, id));
 

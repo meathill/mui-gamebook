@@ -1,9 +1,13 @@
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth-server';
+import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
-import { checkUserUsageLimit } from '@/lib/usage-limit';
 import { recordAiUsage } from '@/lib/ai-usage';
-import { CHAT_FUNCTION_DECLARATIONS, ChatRequest, buildChatHistory } from '@/lib/editor/chat-declarations';
+import { getSession } from '@/lib/auth-server';
+import { buildChatHistory, CHAT_FUNCTION_DECLARATIONS, ChatRequest } from '@/lib/editor/chat-declarations';
+import { getManagedGame } from '@/lib/game-access';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -22,10 +26,28 @@ export async function POST(req: Request, { params }: Props) {
   }
 
   const { id } = await params;
-  const { message, context, history } = (await req.json()) as ChatRequest;
+  const { message, context, history, provider: requestedProvider } = (await req.json()) as ChatRequest;
 
   if (!message) {
     return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+  }
+
+  // 校验游戏归属（所有者或 root）
+  const { env } = getCloudflareContext();
+  const game = await getManagedGame(drizzle(env.DB), Number(id), session);
+  if (!game) {
+    return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+  }
+
+  // 按用户权限解析文本提供者；创建失败（如密钥缺失）在进入 SSE 前返回 JSON 错误
+  const permissions = await getUserAiPermissions(session.user);
+  const providerType = resolveTextProvider(permissions, requestedProvider);
+  let provider: Awaited<ReturnType<typeof createAiProvider>>;
+  try {
+    provider = await createAiProvider(providerType);
+  } catch (error) {
+    console.error('Chat provider init error:', error);
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 
   // 构建上下文提示
@@ -57,9 +79,6 @@ export async function POST(req: Request, { params }: Props) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // 使用 AI Provider 工厂创建提供者
-        const provider = await createAiProvider();
-
         // 检查 provider 是否支持 chatWithTools
         if (!provider.chatWithTools) {
           throw new Error('当前 AI 提供者不支持 function calling');

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
+import { ConfigTextField } from '@/components/admin/ConfigTextField';
 import { type AdminConfigDraft, createAdminConfigDraft, parseAdminConfigDraft } from '@/lib/admin-config-draft';
 import { authClient } from '@/lib/auth-client';
 import type { AppConfig } from '@/lib/config';
@@ -149,26 +150,57 @@ export default function AdminConfigPage() {
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
                   <option value="google">Google GenAI</option>
                   <option value="openai">OpenAI</option>
+                  <option value="mimo">小米 MiMo</option>
+                  <option value="anthropic">Anthropic Claude</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  选择默认用于文本和图片生成的 AI 提供者。视频生成始终使用 Google GenAI。
+                  全局默认文本提供者。MiMo/Claude 只支持文本，图片/TTS/视频会自动回退到 Google。
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">默认 TTS 音色</label>
-                <input
-                  type="text"
-                  value={formData.defaultTtsVoice}
-                  onChange={(e) => updateField('defaultTtsVoice', e.target.value)}
-                  placeholder="Aoede"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Google TTS 可选音色：Aoede, Charon, Fenrir, Kore, Puck, Zephyr 等<br />
-                  OpenAI TTS 可选音色：marin，cedar
-                </p>
-              </div>
+              <ConfigTextField
+                label="默认 TTS 音色"
+                value={formData.defaultTtsVoice}
+                onChange={(value) => updateField('defaultTtsVoice', value)}
+                placeholder="Aoede"
+                hint={
+                  <>
+                    Google TTS 可选音色：Aoede, Charon, Fenrir, Kore, Puck, Zephyr 等<br />
+                    OpenAI TTS 可选音色：marin，cedar
+                  </>
+                }
+              />
+            </div>
+          </section>
+
+          {/* MiMo / Claude 模型配置 */}
+          <section className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2">MiMo / Claude 模型</h2>
+
+            <div className="space-y-4">
+              <ConfigTextField
+                label="MiMo 文本模型"
+                value={formData.mimoTextModel}
+                onChange={(value) => updateField('mimoTextModel', value)}
+                placeholder="mimo-v2.5-pro"
+                hint="普通用户默认使用的文本模型"
+              />
+
+              <ConfigTextField
+                label="MiMo base URL"
+                value={formData.mimoBaseUrl}
+                onChange={(value) => updateField('mimoBaseUrl', value)}
+                placeholder="https://token-plan-cn.xiaomimimo.com/v1"
+                hint="Token Plan 订阅地址；按量付费可改为 https://api.xiaomimimo.com/v1"
+              />
+
+              <ConfigTextField
+                label="Claude 文本模型"
+                value={formData.anthropicTextModel}
+                onChange={(value) => updateField('anthropicTextModel', value)}
+                placeholder="claude-sonnet-5"
+                hint="仅授权用户可用（在用户管理中按用户开通）"
+              />
             </div>
           </section>
 
@@ -177,49 +209,30 @@ export default function AdminConfigPage() {
             <h2 className="text-lg font-semibold mb-4 border-b pb-2">Google GenAI 模型</h2>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">文本模型</label>
-                <input
-                  type="text"
-                  value={formData.googleTextModel}
-                  onChange={(e) => updateField('googleTextModel', e.target.value)}
-                  placeholder="gemini-2.5-flash"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">图片模型</label>
-                <input
-                  type="text"
-                  value={formData.googleImageModel}
-                  onChange={(e) => updateField('googleImageModel', e.target.value)}
-                  placeholder="gemini-3-pro-image-preview"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">TTS 模型</label>
-                <input
-                  type="text"
-                  value={formData.googleTtsModel}
-                  onChange={(e) => updateField('googleTtsModel', e.target.value)}
-                  placeholder="gemini-2.5-flash-preview-tts"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">视频模型</label>
-                <input
-                  type="text"
-                  value={formData.googleVideoModel}
-                  onChange={(e) => updateField('googleVideoModel', e.target.value)}
-                  placeholder="veo-3.1-fast-generate-preview"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-              </div>
+              <ConfigTextField
+                label="文本模型"
+                value={formData.googleTextModel}
+                onChange={(value) => updateField('googleTextModel', value)}
+                placeholder="gemini-3.1-pro-preview"
+              />
+              <ConfigTextField
+                label="图片模型"
+                value={formData.googleImageModel}
+                onChange={(value) => updateField('googleImageModel', value)}
+                placeholder="gemini-3.1-flash-image"
+              />
+              <ConfigTextField
+                label="TTS 模型"
+                value={formData.googleTtsModel}
+                onChange={(value) => updateField('googleTtsModel', value)}
+                placeholder="gemini-3.1-flash-tts-preview"
+              />
+              <ConfigTextField
+                label="视频模型"
+                value={formData.googleVideoModel}
+                onChange={(value) => updateField('googleVideoModel', value)}
+                placeholder="veo-3.1-generate-preview"
+              />
             </div>
           </section>
 
@@ -228,49 +241,30 @@ export default function AdminConfigPage() {
             <h2 className="text-lg font-semibold mb-4 border-b pb-2">OpenAI 模型</h2>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">文本模型</label>
-                <input
-                  type="text"
-                  value={formData.openaiTextModel}
-                  onChange={(e) => updateField('openaiTextModel', e.target.value)}
-                  placeholder="gpt-4o"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">图片模型</label>
-                <input
-                  type="text"
-                  value={formData.openaiImageModel}
-                  onChange={(e) => updateField('openaiImageModel', e.target.value)}
-                  placeholder="gpt-image-1"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">TTS 模型</label>
-                <input
-                  type="text"
-                  value={formData.openaiTtsModel}
-                  onChange={(e) => updateField('openaiTtsModel', e.target.value)}
-                  placeholder="tts-1"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">视频模型</label>
-                <input
-                  type="text"
-                  value={formData.openaiVideoModel}
-                  onChange={(e) => updateField('openaiVideoModel', e.target.value)}
-                  placeholder="sora-1"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-              </div>
+              <ConfigTextField
+                label="文本模型"
+                value={formData.openaiTextModel}
+                onChange={(value) => updateField('openaiTextModel', value)}
+                placeholder="gpt-5.5"
+              />
+              <ConfigTextField
+                label="图片模型"
+                value={formData.openaiImageModel}
+                onChange={(value) => updateField('openaiImageModel', value)}
+                placeholder="gpt-image-1.5"
+              />
+              <ConfigTextField
+                label="TTS 模型"
+                value={formData.openaiTtsModel}
+                onChange={(value) => updateField('openaiTtsModel', value)}
+                placeholder="gpt-4o-mini-tts"
+              />
+              <ConfigTextField
+                label="视频模型"
+                value={formData.openaiVideoModel}
+                onChange={(value) => updateField('openaiVideoModel', value)}
+                placeholder="sora-2"
+              />
             </div>
           </section>
 

@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { and, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, and } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
+import { createAuth } from '@/lib/auth-config';
 import { getSession } from '@/lib/auth-server';
 import { isRootUser } from '@/lib/config';
-import { createAuth } from '@/lib/auth-config';
 
 type Props = {
   params: Promise<{ id: string }>;

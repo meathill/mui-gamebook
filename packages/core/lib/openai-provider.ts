@@ -2,8 +2,10 @@
  * OpenAI 提供者实现
  */
 import OpenAI from 'openai';
+import { buildMiniGamePrompt, extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
 import type {
   AiProvider,
+  AiProviderType,
   AiUsageInfo,
   ChatMessage,
   ChatWithToolsResult,
@@ -16,22 +18,23 @@ import type {
   VideoGenerationStartResult,
   VideoGenerationStatusResult,
 } from './ai-provider';
-import { buildMiniGamePrompt, extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
 
 export class OpenAiProvider implements AiProvider {
-  readonly type = 'openai' as const;
-  private client: OpenAI;
+  readonly type: AiProviderType;
+  protected client: OpenAI;
 
   constructor(
-    private apiKey: string,
-    private models: {
+    protected apiKey: string,
+    protected models: {
       text?: string;
       image?: string;
       video?: string;
       tts?: string;
     } = {},
+    options?: { baseURL?: string; type?: AiProviderType },
   ) {
-    this.client = new OpenAI({ apiKey });
+    this.type = options?.type ?? 'openai';
+    this.client = new OpenAI({ apiKey, ...(options?.baseURL && { baseURL: options.baseURL }) });
   }
 
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
