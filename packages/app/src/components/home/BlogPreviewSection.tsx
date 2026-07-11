@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { ArrowRightIcon, CalendarIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublishedPosts, getCategoryLabel } from '@/lib/blog';
@@ -33,9 +34,11 @@ export default async function BlogPreviewSection() {
               href={`/blog/${post.slug}`}
               className="block p-5 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all">
               {post.coverUrl && (
-                <img
+                <Image
                   src={post.coverUrl}
                   alt={post.title}
+                  width={384}
+                  height={144}
                   className="w-full h-36 object-cover rounded-lg mb-4"
                 />
               )}

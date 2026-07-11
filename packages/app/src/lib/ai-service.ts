@@ -107,7 +107,7 @@ export async function generateAndUploadImage(
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
   await bucket.put(finalFileName, buffer, {
-    httpMetadata: { contentType: type },
+    httpMetadata: { contentType: type, cacheControl: 'public, max-age=31536000, immutable' },
   });
 
   // 返回公开 URL 和用量信息
@@ -202,7 +202,7 @@ export async function checkAndCompleteVideoGeneration(
   const video = await videoResponse.arrayBuffer();
 
   await bucket.put(fileName, video, {
-    httpMetadata: { contentType: 'video/mp4' },
+    httpMetadata: { contentType: 'video/mp4', cacheControl: 'public, max-age=31536000, immutable' },
   });
 
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
@@ -313,7 +313,7 @@ export async function generateAndUploadTTS(
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
   await bucket.put(finalFileName, audioBuffer, {
-    httpMetadata: { contentType },
+    httpMetadata: { contentType, cacheControl: 'public, max-age=31536000, immutable' },
   });
 
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;

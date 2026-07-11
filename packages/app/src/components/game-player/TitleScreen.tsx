@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
@@ -19,11 +20,13 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
     <div className="flex flex-col min-h-150 bg-white">
       <div className="relative w-full h-64 md:h-80 bg-gray-200 overflow-hidden">
         {game.cover_image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={game.cover_image}
             alt={game.title}
-            className="object-cover w-full h-full"
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 768px) 100vw, 768px"
           />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">

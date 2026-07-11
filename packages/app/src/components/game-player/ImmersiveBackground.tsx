@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 interface ImmersiveBackgroundProps {
   url?: string;
@@ -37,34 +38,40 @@ export default function ImmersiveBackground({ url }: ImmersiveBackgroundProps) {
     <div className="absolute inset-0 overflow-hidden bg-black">
       {prevUrl && (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={prevUrl}
             alt=""
             aria-hidden
-            className="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-70"
+            fill
+            className="object-cover scale-125 blur-2xl opacity-70"
+            sizes="100vw"
           />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={prevUrl}
             alt=""
             aria-hidden
-            className="absolute inset-0 w-full h-full object-contain"
+            fill
+            className="object-contain"
+            sizes="100vw"
           />
         </>
       )}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src={currentUrl}
         alt=""
         aria-hidden
-        className={`absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-70 transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-70'}`}
+        fill
+        priority
+        className={`object-cover scale-125 blur-2xl opacity-70 transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-70'}`}
+        sizes="100vw"
       />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src={currentUrl}
         alt="Scene"
-        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
+        fill
+        priority
+        className={`object-contain transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}
+        sizes="100vw"
       />
     </div>
   );

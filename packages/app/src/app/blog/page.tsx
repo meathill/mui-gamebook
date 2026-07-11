@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublishedPosts, getCategoryLabel } from '@/lib/blog';
@@ -70,9 +71,11 @@ export default async function BlogPage({
                 className="block p-6 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all">
                 <div className="flex items-start gap-4">
                   {post.coverUrl && (
-                    <img
+                    <Image
                       src={post.coverUrl}
                       alt={post.title}
+                      width={128}
+                      height={80}
                       className="w-32 h-20 object-cover rounded-lg shrink-0 hidden sm:block"
                     />
                   )}

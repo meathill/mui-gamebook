@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
@@ -376,13 +377,16 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
         {/* Persistent ImageIcon Display */}
         {currentImageUrl && (
           <div className="w-full sm:relative absolute inset-0 overflow-hidden bg-gray-100">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={currentImageUrl}
               alt="Scene"
+              width={1200}
+              height={675}
               className={`w-full h-full object-cover sm:h-auto sm:object-contain transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}
               onLoad={() => setImageLoading(false)}
               onClick={handleImageClick}
+              sizes="(max-width: 640px) 100vw, 1200px"
+              priority
             />
             {/* 移动端渐变遮罩，提升文字可读性 */}
             <div

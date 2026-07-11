@@ -60,7 +60,7 @@ export async function POST(req: Request, { params }: Props) {
     }
 
     await bucket.put(fileName, buffer, {
-      httpMetadata: { contentType: file.type },
+      httpMetadata: { contentType: file.type, cacheControl: 'public, max-age=31536000, immutable' },
     });
 
     const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ArrowLeftIcon, CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
@@ -67,11 +68,16 @@ export default async function BlogPostPage({ params }: Props) {
 
         {/* Cover image */}
         {post.coverUrl && (
-          <img
-            src={post.coverUrl}
-            alt={post.title}
-            className="w-full rounded-lg mb-8 border border-gray-200"
-          />
+          <div className="relative w-full aspect-square md:aspect-video rounded-lg mb-8 border border-gray-200 overflow-hidden">
+            <Image
+              src={post.coverUrl}
+              alt={post.title}
+              fill
+              priority
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 768px"
+            />
+          </div>
         )}
 
         {/* Content */}

@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
     // 上传到 R2
     await bucket.put(filePath, bytes.buffer, {
-      httpMetadata: { contentType },
+      httpMetadata: { contentType, cacheControl: 'public, max-age=31536000, immutable' },
     });
 
     // 返回公开 URL
