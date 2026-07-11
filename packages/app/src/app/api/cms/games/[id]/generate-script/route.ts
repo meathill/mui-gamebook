@@ -5,16 +5,14 @@ import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions'
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import {
+  buildCorrectionPrompt,
+  buildGenerateScriptPrompt,
+  stripCodeFence,
+  validateGeneratedScript,
+} from '@/lib/editor/generate-script';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
-
-const SYSTEM_PROMPT = `
-You are an expert game designer for "MUI Gamebook". Your task is to convert a raw story provided by the user into a specific Gamebook DSL (Markdown-based) format. Convert the user's story into a playable game with multiple scenes (at least 3-5), choices, and basic state management if applicable.
-
-IMPORTANT: When generating YAML blocks (like \`minigame-gen\` or \`image-gen\`), if a field (like \`prompt\`) contains multi-line text or a list, you MUST use the YAML block scalar syntax (e.g. \`prompt: |\`). Do NOT put a list structure directly under a scalar key without the block scalar indicator.
-
-Output ONLY the raw Markdown content, no extra conversational text.
-`;
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -49,32 +47,41 @@ export async function POST(req: Request, { params }: Props) {
     // 按用户权限解析文本提供者
     const permissions = await getUserAiPermissions(session.user);
     const provider = await createAiProvider(resolveTextProvider(permissions, requestedProvider));
-    const { text: script, usage } = await provider.generateText(
-      `${SYSTEM_PROMPT}
 
-${dslSpec}
+    // 第一次生成
+    const first = await provider.generateText(buildGenerateScriptPrompt(dslSpec, story), { thinking: true });
+    let script = stripCodeFence(first.text);
+    const totalUsage = { ...first.usage };
 
-## UserIcon Story:
+    // 校验角色/属性是否齐全，缺失则做一次纠错重生成
+    const validation = validateGeneratedScript(script);
+    if (!validation.ok) {
+      console.log(
+        `[Generate Script] 首次生成校验未通过（characters 缺失: ${validation.missingCharacters}, state 缺失: ${validation.missingState}），执行纠错重生成`,
+      );
+      const correction = await provider.generateText(buildCorrectionPrompt(script, validation), { thinking: true });
+      totalUsage.promptTokens += correction.usage.promptTokens;
+      totalUsage.completionTokens += correction.usage.completionTokens;
+      totalUsage.totalTokens += correction.usage.totalTokens;
 
-"""${story}"""`,
-      { thinking: true },
-    );
-    // Cleanup: Remove markdown code blocks if AI wrapped it
-    const cleanScript = script
-      .replace(/^```markdown\n/, '')
-      .replace(/^```\n/, '')
-      .replace(/\n```$/, '');
+      // 修正版能解析就采用，否则保留第一版兜底（前端解析报错提示维持现状）
+      const correctedScript = stripCodeFence(correction.text);
+      const revalidation = validateGeneratedScript(correctedScript);
+      if (!revalidation.parseError) {
+        script = correctedScript;
+      }
+    }
 
-    // 记录 AI 用量
+    // 记录 AI 用量（两次调用合计）
     await recordAiUsage({
       userId: session.user.id,
       type: 'text_generation',
       model: provider.type,
-      usage,
+      usage: totalUsage,
       gameId: Number(id),
     });
 
-    return NextResponse.json({ script: cleanScript });
+    return NextResponse.json({ script });
   } catch (e) {
     console.error('AI Generation Error:', e);
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
