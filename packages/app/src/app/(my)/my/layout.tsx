@@ -2,12 +2,19 @@
 
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import MyNav from '@/components/my/MyNav';
 import CreateGameModal from '@/components/admin/CreateGameModal';
 
 export default function MyLayout({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!isPending && !session) {
+      router.push('/sign-in');
+    }
+  }, [isPending, session, router]);
 
   if (isPending) {
     return (
@@ -18,7 +25,6 @@ export default function MyLayout({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) {
-    router.push('/sign-in');
     return null;
   }
 

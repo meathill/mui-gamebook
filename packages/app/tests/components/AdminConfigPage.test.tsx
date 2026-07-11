@@ -39,6 +39,9 @@ const INITIAL_CONFIG: AppConfig = {
   openaiImageModel: 'openai-image',
   openaiTtsModel: 'openai-tts',
   openaiVideoModel: 'openai-video',
+  mimoTextModel: 'mimo-text',
+  mimoBaseUrl: 'https://mimo.example.com/v1',
+  anthropicTextModel: 'anthropic-text',
 };
 
 const fetchMock = vi.fn<typeof fetch>();

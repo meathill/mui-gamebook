@@ -16,6 +16,9 @@ const CONFIG: AppConfig = {
   openaiImageModel: 'openai-image',
   openaiTtsModel: 'openai-tts',
   openaiVideoModel: 'openai-video',
+  mimoTextModel: 'mimo-text',
+  mimoBaseUrl: 'https://mimo.example.com/v1',
+  anthropicTextModel: 'anthropic-text',
 };
 
 describe('admin config draft', () => {

@@ -48,6 +48,12 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   useUnsavedChangesWarning();
   useUndoRedoShortcuts();
 
+  useEffect(() => {
+    if (!isAuthPending && !session) {
+      router.push('/sign-in');
+    }
+  }, [isAuthPending, session, router]);
+
   // Store UI 状态
   const activeTab = useEditorStore((s) => s.activeTab);
   const setViewMode = useEditorStore((s) => s.setViewMode);
@@ -263,7 +269,6 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
 
   if (isAuthPending || loading) return <div className="p-8 text-center">加载中...</div>;
   if (!session) {
-    router.push('/sign-in');
     return null;
   }
   if (error) return <div className="p-8 text-center text-red-600">{error}</div>;

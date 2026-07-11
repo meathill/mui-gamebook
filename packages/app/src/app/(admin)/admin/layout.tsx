@@ -2,6 +2,7 @@
 
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 import AdminNav from '@/components/admin/AdminNav';
 
 function isRootUserClient(email: string | undefined): boolean {
@@ -14,6 +15,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
 
+  useEffect(() => {
+    if (isPending) return;
+    if (!session) {
+      router.push('/sign-in');
+    } else if (!isRootUserClient(session.user.email)) {
+      router.push('/my/dashboard');
+    }
+  }, [isPending, session, router]);
+
   if (isPending) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -22,13 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!session) {
-    router.push('/sign-in');
-    return null;
-  }
-
-  if (!isRootUserClient(session.user.email)) {
-    router.push('/my/dashboard');
+  if (!session || !isRootUserClient(session.user.email)) {
     return null;
   }
 

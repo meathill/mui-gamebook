@@ -66,12 +66,17 @@ export default function AdminConfigPage() {
     }
   }, [config, isDirty]);
 
+  useEffect(() => {
+    if (!isAuthPending && !session) {
+      router.push('/sign-in');
+    }
+  }, [isAuthPending, session, router]);
+
   if (isAuthPending || isLoading) {
     return <div className="p-8 text-center">加载中...</div>;
   }
 
   if (!session) {
-    router.push('/sign-in');
     return null;
   }
 
