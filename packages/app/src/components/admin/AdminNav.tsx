@@ -1,8 +1,8 @@
 'use client';
 
+import { GameControllerIcon, GearIcon, TrendUpIcon, UsersIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { TrendUpIcon, UsersIcon, GearIcon } from '@phosphor-icons/react';
 
 interface NavItem {
   href: string;
@@ -13,6 +13,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/admin/stats', label: '全站统计', icon: <TrendUpIcon size={20} /> },
   { href: '/admin/users', label: '用户管理', icon: <UsersIcon size={20} /> },
+  { href: '/admin/games', label: '游戏管理', icon: <GameControllerIcon size={20} /> },
   { href: '/admin/config', label: '系统配置', icon: <GearIcon size={20} /> },
 ];
 

@@ -1,21 +1,28 @@
-import { NextResponse } from 'next/server';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { drizzle } from 'drizzle-orm/d1';
-import { eq } from 'drizzle-orm';
-import * as schema from '@/db/schema';
 import { parse, stringify } from '@mui-gamebook/parser';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
+import * as schema from '@/db/schema';
+import { getSession } from '@/lib/auth-server';
+import { isRootUser } from '@/lib/config';
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
 /**
- * 验证管理员密钥
+ * 验证管理员访问：ADMIN_PASSWORD Bearer（脚本通道）或 root 用户 session（后台通道）
  */
-function validateAdminAuth(req: Request, env: { ADMIN_PASSWORD?: string }): boolean {
+async function validateAdminAccess(req: Request, env: { ADMIN_PASSWORD?: string }): Promise<boolean> {
   const secret = env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
   const authHeader = req.headers.get('Authorization');
-  return !!(secret && authHeader === `Bearer ${secret}`);
+  if (secret && authHeader === `Bearer ${secret}`) {
+    return true;
+  }
+
+  const session = await getSession();
+  return Boolean(session?.user?.email && isRootUser(session.user.email));
 }
 
 /**
@@ -25,7 +32,7 @@ function validateAdminAuth(req: Request, env: { ADMIN_PASSWORD?: string }): bool
 export async function GET(req: Request, { params }: Props) {
   const { env } = getCloudflareContext();
 
-  if (!validateAdminAuth(req, env)) {
+  if (!(await validateAdminAccess(req, env))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -56,7 +63,7 @@ export async function GET(req: Request, { params }: Props) {
 export async function PUT(req: Request, { params }: Props) {
   const { env } = getCloudflareContext();
 
-  if (!validateAdminAuth(req, env)) {
+  if (!(await validateAdminAccess(req, env))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -101,4 +108,58 @@ export async function PUT(req: Request, { params }: Props) {
   await db.update(schema.gameContent).set({ content }).where(eq(schema.gameContent.gameId, game.id));
 
   return NextResponse.json({ success: true, slug });
+}
+
+/**
+ * PATCH /api/admin/games/[slug]
+ * 切换发布状态
+ */
+export async function PATCH(req: Request, { params }: Props) {
+  const { env } = getCloudflareContext();
+
+  if (!(await validateAdminAccess(req, env))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const slug = (await params).slug;
+  const { published } = (await req.json()) as { published?: boolean };
+
+  if (typeof published !== 'boolean') {
+    return NextResponse.json({ error: 'published 必须为布尔值' }, { status: 400 });
+  }
+
+  const db = drizzle(env.DB);
+  const game = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
+
+  if (!game) {
+    return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+  }
+
+  await db.update(schema.games).set({ published, updatedAt: new Date() }).where(eq(schema.games.id, game.id));
+
+  return NextResponse.json({ success: true, published });
+}
+
+/**
+ * DELETE /api/admin/games/[slug]
+ * 删除游戏（GameContent/GameTags/analytics 通过外键级联清理）
+ */
+export async function DELETE(req: Request, { params }: Props) {
+  const { env } = getCloudflareContext();
+
+  if (!(await validateAdminAccess(req, env))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const slug = (await params).slug;
+  const db = drizzle(env.DB);
+
+  const game = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
+  if (!game) {
+    return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+  }
+
+  await db.delete(schema.games).where(eq(schema.games.id, game.id));
+
+  return NextResponse.json({ success: true });
 }

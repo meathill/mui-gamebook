@@ -525,3 +525,41 @@ isValidVoiceId(voiceId: string, provider): boolean
 - API: `/api/cms/games/[id]/generate-voice-preview`
 - 组件: `CharacterForm.tsx` 中的语音预览按钮
 
+
+## AI 提供者分级与按用户权限（2026-07）
+
+### 提供者矩阵
+
+| 提供者 | 能力 | 定位 |
+|--------|------|------|
+| MiMo（小米） | 文本 + function calling | 普通用户默认，低成本 |
+| Claude（Anthropic） | 文本 + function calling | 管理员按用户开通 |
+| Google Gemini | 文本/图片/TTS/视频 | 媒体生成主力 |
+| OpenAI | 文本/图片/TTS/视频 | 备选 |
+
+- MiMo 走 OpenAI 兼容协议（`MimoProvider extends OpenAiProvider`，自定义 baseURL），默认 Token Plan 订阅地址 `https://token-plan-cn.xiaomimimo.com/v1`（按量付费为 `https://api.xiaomimimo.com/v1`，可在管理后台配置 `mimoBaseUrl` 切换）。不发送 `reasoning_effort` 等 OpenAI 专有参数。
+- Claude 用 `@anthropic-ai/sdk`，默认 `claude-sonnet-5`。**不发送 temperature/top_p**（新模型会 400），`max_tokens` 必填，thinking 用 `{ type: 'adaptive' }`。
+- 全局默认 provider 被设为 mimo/anthropic 时，图片/TTS/视频链路经 `resolveMediaProviderType()` 自动回退 Google。
+
+### 按用户权限
+
+- 存储：`user.ai_permissions` 列（JSON：`{providers, canGenerateImage, canGenerateVideo}`），null = 默认权限（仅 MiMo，无生图/生视频）。root 用户（`ROOT_USER_EMAIL`）全开。
+- 助手：`packages/app/src/lib/ai-permissions.ts`；管理入口：用户管理编辑弹窗。
+- 视频旧 `videoWhitelist`（KV 配置）保留为只读 fallback，等白名单用户权限落库后可删（见 TODO）。
+- better-auth 不感知该列（未声明 additionalFields），session shape 不变。
+
+### Secrets 与部署顺序
+
+- 新 secrets：`MIMO_API_KEY`、`ANTHROPIC_API_KEY`（本地写 `.dev.vars`，生产 `wrangler secret put`）。
+- **上线硬性顺序**：1) `wrangler secret put` 两个 key → 2) `pnpm --filter @mui-gamebook/app run db:migrate:remote`（必须先于 deploy，代码 select 全列）→ 3) deploy → 4) 管理员进 `/admin/config` 保存一次（KV 配置是 `{...DEFAULT, ...stored}` 合并，旧存量会盖住新模型默认值）。
+
+### 游戏访问控制
+
+- `packages/app/src/lib/game-access.ts`：`canManageGame`/`getManagedGame`（所有者或 root）。所有 cms 游戏路由统一走它，root 管理员可打开 `/my/edit/[id]` 编辑任意游戏。
+- 例外：`register-ip` 保持 owner-only（IP 注册绑定所有者身份）。
+- `/api/admin/games/[slug]` 双通道鉴权：ADMIN_PASSWORD Bearer（脚本）或 root session（后台）。
+
+### 大纲导入生成剧本
+
+- 提示词与校验在 `packages/app/src/lib/editor/generate-script.ts`：强制 frontmatter 含 `state`（≥2 变量）与 `ai.characters`（每个具名角色），内嵌可解析示例。
+- 服务端生成后用 parser 校验，缺失则一次纠错重生成；示例有守护测试防与 parser 漂移（`tests/lib/editor/generate-script.test.ts`）。
