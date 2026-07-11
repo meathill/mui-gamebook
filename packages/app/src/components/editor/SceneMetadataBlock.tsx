@@ -13,10 +13,7 @@ import {
   CodeIcon,
   EyeIcon,
   MagnifyingGlassPlusIcon,
-  PencilIcon,
   PlusIcon,
-  SparkleIcon,
-  SpinnerIcon,
 } from '@phosphor-icons/react';
 import {
   parseSceneMetadata,
@@ -25,11 +22,17 @@ import {
   type SceneMetadata,
 } from '@/lib/editor/extensions/matchers';
 import type { SceneMetadataOptions } from '@/lib/editor/extensions/scene-metadata';
-import { FormField, SelectField, FormActions } from './SceneMetadataForm';
-import FileDropZone from './FileDropZone';
+import { FormActions, FormField } from './SceneMetadataForm';
 import ImageLightbox from './ImageLightbox';
-
-type SectionKey = 'image' | 'audio' | 'video' | 'minigame' | 'characters';
+import {
+  AudioEditForm,
+  EditButton,
+  ImageEditForm,
+  VideoEditForm,
+  type SceneMetadataEditForm,
+  type SceneMetadataFieldKey,
+  type SceneMetadataSectionKey,
+} from './scene-metadata-edit-forms';
 
 const AUDIO_TYPE_LABELS: Record<string, string> = {
   background_music: '背景音乐',
@@ -42,8 +45,8 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
   const uploadUrl = gameId ? `/api/cms/games/${gameId}/upload` : '';
 
   const [sourceMode, setSourceMode] = useState(false);
-  const [editingSection, setEditingSection] = useState<SectionKey | null>(null);
-  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [editingSection, setEditingSection] = useState<SceneMetadataSectionKey | null>(null);
+  const [editForm, setEditForm] = useState<SceneMetadataEditForm>({});
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -70,15 +73,15 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
     editor.view.dispatch(tr);
   }
 
-  function startEdit(section: SectionKey) {
+  function startEdit(section: SceneMetadataSectionKey) {
     if (section === 'characters') {
       setEditForm({ characters: (metadata.characters || []).join(', ') });
     } else {
       const data = metadata[section];
-      const form: Record<string, string> = {};
+      const form: SceneMetadataEditForm = {};
       if (data && typeof data === 'object') {
         for (const [k, v] of Object.entries(data)) {
-          if (v != null) form[k] = String(v);
+          if (v != null) form[k as SceneMetadataFieldKey] = String(v);
         }
       }
       setEditForm(form);
@@ -125,7 +128,7 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
     setTimeout(() => startEdit(type), 0);
   }
 
-  function setField(key: string, value: string) {
+  function setField(key: SceneMetadataFieldKey, value: string) {
     setEditForm((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -188,177 +191,6 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
     );
   }
 
-  function EditBtn({ section }: { section: SectionKey }) {
-    return (
-      <button
-        type="button"
-        className="smc-edit-btn"
-        onClick={() => startEdit(section)}
-        title="编辑">
-        <PencilIcon size={12} />
-      </button>
-    );
-  }
-
-  // 图片编辑表单（含预览 + 上传 + AI 生成）
-  function ImageEditForm() {
-    return (
-      <div className="smc-form">
-        {/* 编辑时也显示已有图片 */}
-        {editForm.url && (
-          <div className="scene-metadata-image-wrap">
-            <img
-              src={editForm.url}
-              alt="当前图片"
-              className="scene-metadata-thumb"
-              onClick={() => setLightboxUrl(editForm.url)}
-            />
-          </div>
-        )}
-        <FormField
-          label="图片描述"
-          value={editForm.prompt || ''}
-          onChange={(v) => setField('prompt', v)}
-          multiline
-          autoFocus
-        />
-        <FormField
-          label="图片地址"
-          value={editForm.url || ''}
-          onChange={(v) => setField('url', v)}
-        />
-        <FormField
-          label="宽高比"
-          value={editForm.aspectRatio || ''}
-          onChange={(v) => setField('aspectRatio', v)}
-        />
-        {uploadUrl && (
-          <FileDropZone
-            uploadUrl={uploadUrl}
-            assetType="scene"
-            accept="image/*"
-            onUploaded={handleUploaded}
-            hint="点击或拖拽图片上传"
-          />
-        )}
-        <div className="smc-form-actions">
-          {gameId && (
-            <button
-              type="button"
-              className="smc-btn smc-btn-ai"
-              onClick={handleGenerate}
-              disabled={generating || !editForm.prompt}>
-              {generating ? (
-                <SpinnerIcon
-                  size={12}
-                  className="animate-spin"
-                />
-              ) : (
-                <SparkleIcon size={12} />
-              )}
-              {generating ? '生成中...' : editForm.url ? '重新生成' : '生成图片'}
-            </button>
-          )}
-          <FormActions
-            onSave={saveEdit}
-            onCancel={() => setEditingSection(null)}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // 音频编辑表单
-  function AudioEditForm() {
-    return (
-      <div className="smc-form">
-        {editForm.url && (
-          <audio
-            src={editForm.url}
-            controls
-            preload="none"
-            className="scene-metadata-audio"
-          />
-        )}
-        <SelectField
-          label="音频类型"
-          value={editForm.type || 'background_music'}
-          onChange={(v) => setField('type', v)}
-          options={[
-            { value: 'background_music', label: '背景音乐' },
-            { value: 'sfx', label: '音效' },
-          ]}
-        />
-        <FormField
-          label="音频描述"
-          value={editForm.prompt || ''}
-          onChange={(v) => setField('prompt', v)}
-          multiline
-          autoFocus
-        />
-        <FormField
-          label="音频地址"
-          value={editForm.url || ''}
-          onChange={(v) => setField('url', v)}
-        />
-        {uploadUrl && (
-          <FileDropZone
-            uploadUrl={uploadUrl}
-            assetType="audio"
-            accept="audio/*"
-            onUploaded={handleUploaded}
-            hint="点击或拖拽音频上传"
-          />
-        )}
-        <FormActions
-          onSave={saveEdit}
-          onCancel={() => setEditingSection(null)}
-        />
-      </div>
-    );
-  }
-
-  // 视频编辑表单
-  function VideoEditForm() {
-    return (
-      <div className="smc-form">
-        {editForm.url && (
-          <video
-            src={editForm.url}
-            controls
-            preload="none"
-            className="scene-metadata-video"
-          />
-        )}
-        <FormField
-          label="视频描述"
-          value={editForm.prompt || ''}
-          onChange={(v) => setField('prompt', v)}
-          multiline
-          autoFocus
-        />
-        <FormField
-          label="视频地址"
-          value={editForm.url || ''}
-          onChange={(v) => setField('url', v)}
-        />
-        {uploadUrl && (
-          <FileDropZone
-            uploadUrl={uploadUrl}
-            assetType="video"
-            accept="video/*"
-            onUploaded={handleUploaded}
-            hint="点击或拖拽视频上传"
-          />
-        )}
-        <FormActions
-          onSave={saveEdit}
-          onCancel={() => setEditingSection(null)}
-        />
-      </div>
-    );
-  }
-
   return (
     <NodeViewWrapper>
       <div
@@ -404,10 +236,26 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
             <div className="scene-metadata-label">
               <ImageIcon size={13} />
               场景图片
-              {editingSection !== 'image' && <EditBtn section="image" />}
+              {editingSection !== 'image' && (
+                <EditButton
+                  section="image"
+                  onEdit={startEdit}
+                />
+              )}
             </div>
             {editingSection === 'image' ? (
-              <ImageEditForm />
+              <ImageEditForm
+                editForm={editForm}
+                uploadUrl={uploadUrl}
+                canGenerate={Boolean(gameId)}
+                isGenerating={generating}
+                onFieldChange={setField}
+                onUploaded={handleUploaded}
+                onGenerate={handleGenerate}
+                onImageClick={setLightboxUrl}
+                onSave={saveEdit}
+                onCancel={() => setEditingSection(null)}
+              />
             ) : (
               <>
                 {metadata.image.url && (
@@ -439,10 +287,22 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
             <div className="scene-metadata-label">
               <MusicNoteIcon size={13} />
               {AUDIO_TYPE_LABELS[metadata.audio.type || ''] || '音频'}
-              {editingSection !== 'audio' && <EditBtn section="audio" />}
+              {editingSection !== 'audio' && (
+                <EditButton
+                  section="audio"
+                  onEdit={startEdit}
+                />
+              )}
             </div>
             {editingSection === 'audio' ? (
-              <AudioEditForm />
+              <AudioEditForm
+                editForm={editForm}
+                uploadUrl={uploadUrl}
+                onFieldChange={setField}
+                onUploaded={handleUploaded}
+                onSave={saveEdit}
+                onCancel={() => setEditingSection(null)}
+              />
             ) : (
               <>
                 {metadata.audio.url && (
@@ -465,10 +325,22 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
             <div className="scene-metadata-label">
               <VideoIcon size={13} />
               场景视频
-              {editingSection !== 'video' && <EditBtn section="video" />}
+              {editingSection !== 'video' && (
+                <EditButton
+                  section="video"
+                  onEdit={startEdit}
+                />
+              )}
             </div>
             {editingSection === 'video' ? (
-              <VideoEditForm />
+              <VideoEditForm
+                editForm={editForm}
+                uploadUrl={uploadUrl}
+                onFieldChange={setField}
+                onUploaded={handleUploaded}
+                onSave={saveEdit}
+                onCancel={() => setEditingSection(null)}
+              />
             ) : (
               <>
                 {metadata.video.url && (
@@ -491,7 +363,12 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
             <div className="scene-metadata-label">
               <GameControllerIcon size={13} />
               小游戏
-              {editingSection !== 'minigame' && <EditBtn section="minigame" />}
+              {editingSection !== 'minigame' && (
+                <EditButton
+                  section="minigame"
+                  onEdit={startEdit}
+                />
+              )}
             </div>
             {editingSection === 'minigame' ? (
               <div className="smc-form">
@@ -524,7 +401,12 @@ export default function SceneMetadataBlock({ node, editor, getPos, extension }: 
             <div className="scene-metadata-label">
               <UsersIcon size={13} />
               出场角色
-              {editingSection !== 'characters' && <EditBtn section="characters" />}
+              {editingSection !== 'characters' && (
+                <EditButton
+                  section="characters"
+                  onEdit={startEdit}
+                />
+              )}
             </div>
             {editingSection === 'characters' ? (
               <div className="smc-form">

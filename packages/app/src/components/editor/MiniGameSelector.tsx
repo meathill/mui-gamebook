@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MagnifyingGlassIcon, PlusIcon, SpinnerIcon, GameControllerIcon } from '@phosphor-icons/react/dist/ssr';
+import { isImeComposing } from '@/lib/keyboard';
 
 interface MiniGame {
   id: number;
@@ -52,6 +53,8 @@ export default function MiniGameSelector({ onSelect, onGenerate, isGenerating }:
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (isImeComposing(e)) return;
+
     if (e.key === 'Enter') {
       handleSearch();
     }

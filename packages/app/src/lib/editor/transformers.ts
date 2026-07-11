@@ -1,12 +1,40 @@
 import { Node, Edge } from '@xyflow/react';
 import { Game, Scene, SceneNode } from '@mui-gamebook/parser/src/types';
 
+export interface EditorSceneAsset {
+  editorId: string;
+  asset: SceneNode;
+}
+
+export function createEditorSceneAsset(asset: SceneNode): EditorSceneAsset {
+  return {
+    editorId: crypto.randomUUID(),
+    asset,
+  };
+}
+
+export function replaceEditorSceneAssetUrl(
+  assets: EditorSceneAsset[],
+  currentUrl: string,
+  nextUrl: string | undefined,
+): EditorSceneAsset[] {
+  return assets.map((entry) => {
+    if ('prompt' in entry.asset && entry.asset.url === currentUrl) {
+      return {
+        ...entry,
+        asset: { ...entry.asset, url: nextUrl },
+      };
+    }
+    return entry;
+  });
+}
+
 // Type definitions for our custom Node data
 export interface SceneNodeData extends Record<string, unknown> {
   label: string; // Scene ID
   content: string; // Concatenated text content
   audio_url?: string; // TTS audio URL for the text content
-  assets: SceneNode[]; // Non-text, non-choice nodes (images, etc.)
+  assets: EditorSceneAsset[]; // 编辑器内部素材，editorId 不进入 DSL
 }
 
 export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: Edge[] } {
@@ -31,7 +59,7 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
         label: id,
         content,
         audio_url,
-        assets: assetNodes,
+        assets: assetNodes.map(createEditorSceneAsset),
       },
       type: 'scene', // We will create a custom node type later
     });
@@ -74,7 +102,7 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
     // Let's preserve the order from data.assets if possible, or put images top.
     // For simplicity: Assets -> Text -> Choices
     if (node.data.assets) {
-      sceneNodes.push(...node.data.assets);
+      sceneNodes.push(...node.data.assets.map((entry) => entry.asset));
     }
 
     // 2. Add Text (with optional audio_url)

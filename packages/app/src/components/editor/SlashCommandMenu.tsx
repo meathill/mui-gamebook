@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import { isImeComposing } from '@/lib/keyboard';
 import type { SlashCommandItem } from '@/lib/editor/extensions/slash-commands';
 
 interface SlashCommandMenuProps {
@@ -19,6 +20,8 @@ export default function SlashCommandMenu({ items, command }: SlashCommandMenuPro
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      if (isImeComposing(e)) return;
+
       if (e.key === 'ArrowUp') {
         e.preventDefault();
         setSelectedIndex((i) => (i - 1 + items.length) % items.length);

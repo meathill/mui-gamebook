@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
 import type { DisplayMode, Game, SiteTemplate, TextBoxPosition } from '@mui-gamebook/parser/src/types';
+import { ArrowSquareOutIcon, ShieldIcon, SpinnerIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
 import MDEditor from '@uiw/react-md-editor';
-import { XIcon, SpinnerIcon, ShieldIcon, ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr';
+import { useEffect, useState } from 'react';
 import { useDialog } from '@/components/Dialog';
+import { isImeComposing } from '@/lib/keyboard';
 import MediaAssetItem from './MediaAssetItem';
+import TypewriterSpeedField from './TypewriterSpeedField';
 
 interface IpStatus {
   registered: boolean;
@@ -78,6 +80,8 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
   }
 
   function handleTagsChange(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (isImeComposing(e)) return;
+
     if (e.key === 'Enter') {
       e.preventDefault();
       const val = e.currentTarget.value.trim();
@@ -192,17 +196,9 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                 </div>
                 <div>
                   <label className="block text-xs text-amber-800 mb-1">逐字速度（毫秒/字）</label>
-                  <input
-                    type="number"
-                    min={10}
-                    max={200}
-                    step={5}
+                  <TypewriterSpeedField
                     value={game.typewriter_speed ?? 40}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      handleChange('typewriter_speed', Number.isFinite(v) && v > 0 ? v : 40);
-                    }}
-                    className="block w-full rounded-md border-gray-300 border shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 text-sm"
+                    onChange={(value) => handleChange('typewriter_speed', value)}
                   />
                   <p className="mt-1 text-[11px] text-amber-700/80">默认 40，数值越小越快。</p>
                 </div>

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect, KeyboardEvent, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { isImeComposing } from '@/lib/keyboard';
 import type { MentionInputProps, MentionPosition } from './types';
 import CharacterDropdown from './CharacterDropdown';
 
@@ -90,6 +91,7 @@ export default function MentionInput({
 
   // 处理键盘事件
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (isImeComposing(e)) return;
     if (!showDropdown) return;
 
     switch (e.key) {

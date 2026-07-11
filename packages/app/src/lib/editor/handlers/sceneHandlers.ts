@@ -5,8 +5,8 @@
  * 返回值仅用于日志，不再用于标记操作结果。
  */
 import type { Node } from '@xyflow/react';
-import type { SceneNodeData } from '@/lib/editor/transformers';
-import type { SceneAiImageNode, SceneNode } from '@mui-gamebook/parser/src/types';
+import { createEditorSceneAsset, type SceneNodeData } from '@/lib/editor/transformers';
+import type { SceneAiImageNode } from '@mui-gamebook/parser/src/types';
 import type {
   HandlerContext,
   UpdateSceneArgs,
@@ -137,13 +137,14 @@ export function handleUpdateSceneImagePrompt(args: UpdateSceneImagePromptArgs, c
       const nodeData = node.data as SceneNodeData;
       // 查找或创建 ai_image 资源
       const assets = nodeData.assets || [];
-      const aiImageIndex = assets.findIndex((a) => a.type === 'ai_image');
+      const aiImageIndex = assets.findIndex((entry) => entry.asset.type === 'ai_image');
       if (aiImageIndex >= 0) {
         // 更新现有的 ai_image prompt
-        const existingAsset = assets[aiImageIndex] as SceneAiImageNode;
+        const existingEntry = assets[aiImageIndex];
+        const existingAsset = existingEntry.asset as SceneAiImageNode;
         const updatedAsset: SceneAiImageNode = { ...existingAsset, prompt: imagePrompt };
-        const newAssets: SceneNode[] = [...assets];
-        newAssets[aiImageIndex] = updatedAsset;
+        const newAssets = [...assets];
+        newAssets[aiImageIndex] = { ...existingEntry, asset: updatedAsset };
         return { ...node, data: { ...nodeData, assets: newAssets } };
       } else {
         // 添加新的 ai_image 资源
@@ -152,7 +153,7 @@ export function handleUpdateSceneImagePrompt(args: UpdateSceneImagePromptArgs, c
           ...node,
           data: {
             ...nodeData,
-            assets: [...assets, newAsset],
+            assets: [...assets, createEditorSceneAsset(newAsset)],
           },
         };
       }

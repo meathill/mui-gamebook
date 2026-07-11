@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import type { SceneNodeData } from '@/lib/editor/transformers';
+import type { EditorSceneAsset, SceneNodeData } from '@/lib/editor/transformers';
 import { SpinnerIcon, SpeakerHighIcon } from '@phosphor-icons/react/dist/ssr';
 import { useParams } from 'next/navigation';
-import type { SceneNode } from '@mui-gamebook/parser';
 import type { GameState } from '@mui-gamebook/parser/src/types';
 import { extractRuntimeState } from '@mui-gamebook/parser/src/utils';
 import { interpolateVariables } from '@mui-gamebook/site-common/utils';
@@ -44,7 +43,7 @@ export default function Inspector({
     );
   }
 
-  function handleAssetsChange(assets: SceneNode[]) {
+  function handleAssetsChange(assets: EditorSceneAsset[]) {
     if (!selectedNode) return;
     onNodeChange(selectedNode.id, { assets });
   }

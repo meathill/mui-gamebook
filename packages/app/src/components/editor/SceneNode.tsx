@@ -5,7 +5,9 @@ export default function SceneNode({ data }: NodeProps) {
   const { label, content, assets } = data as unknown as SceneNodeData;
 
   // 查找第一个图片素材
-  const imageAsset = assets?.find((a) => a.type === 'static_image' || a.type === 'ai_image');
+  const imageAsset = assets?.find(
+    (entry) => entry.asset.type === 'static_image' || entry.asset.type === 'ai_image',
+  )?.asset;
   const imageUrl = imageAsset && 'url' in imageAsset ? imageAsset.url : undefined;
 
   return (

@@ -4,18 +4,22 @@ import { ImageIcon, MusicNoteIcon, VideoCameraIcon, GameControllerIcon } from '@
 import type { SceneNode } from '@mui-gamebook/parser';
 import MediaAssetItem from './MediaAssetItem';
 import { buildImagePrompt, buildAudioPrompt, extractCharacterIds, type AiConfig } from '@/lib/ai-prompt-builder';
+import { createEditorSceneAsset, type EditorSceneAsset } from '@/lib/editor/transformers';
 
 interface AssetEditorProps {
   gameId: string;
-  assets: SceneNode[];
+  assets: EditorSceneAsset[];
   aiConfig?: AiConfig;
-  onAssetsChange: (assets: SceneNode[]) => void;
+  onAssetsChange: (assets: EditorSceneAsset[]) => void;
 }
 
 export default function AssetEditor({ gameId, assets, aiConfig, onAssetsChange }: AssetEditorProps) {
   function handleAssetChange(index: number, field: string, value: string) {
     const newAssets = [...assets];
-    newAssets[index] = { ...newAssets[index], [field]: value };
+    newAssets[index] = {
+      ...newAssets[index],
+      asset: { ...newAssets[index].asset, [field]: value } as SceneNode,
+    };
     onAssetsChange(newAssets);
   }
 
@@ -28,11 +32,11 @@ export default function AssetEditor({ gameId, assets, aiConfig, onAssetsChange }
   function handleAddAsset(mediaType: 'image' | 'audio' | 'video' | 'minigame') {
     const newAssets = [...assets];
     if (mediaType === 'audio') {
-      newAssets.push({ type: 'ai_audio', prompt: '', audioType: 'sfx' });
+      newAssets.push(createEditorSceneAsset({ type: 'ai_audio', prompt: '', audioType: 'sfx' }));
     } else if (mediaType === 'minigame') {
-      newAssets.push({ type: 'minigame', prompt: '', variables: {} });
+      newAssets.push(createEditorSceneAsset({ type: 'minigame', prompt: '', variables: {} }));
     } else {
-      newAssets.push({ type: `ai_${mediaType}` as 'ai_image' | 'ai_video', prompt: '' });
+      newAssets.push(createEditorSceneAsset({ type: `ai_${mediaType}` as 'ai_image' | 'ai_video', prompt: '' }));
     }
     onAssetsChange(newAssets);
   }
@@ -98,14 +102,14 @@ export default function AssetEditor({ gameId, assets, aiConfig, onAssetsChange }
 
       <div className="space-y-3">
         {assets.length > 0 ? (
-          assets.map((asset, i) => (
+          assets.map((entry, i) => (
             <MediaAssetItem
-              key={i}
-              asset={asset}
+              key={entry.editorId}
+              asset={entry.asset}
               gameId={gameId}
               variant="compact"
               showDelete={true}
-              aiStylePrompt={getAiStylePrompt(asset)}
+              aiStylePrompt={getAiStylePrompt(entry.asset)}
               aiCharacters={aiConfig?.characters}
               onAssetChange={(field, value) => handleAssetChange(i, field, value)}
               onAssetDelete={() => handleAssetDelete(i)}

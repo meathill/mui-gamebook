@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, ChangeEvent } from 'react';
+import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { TrashIcon, SpinnerIcon, UploadSimpleIcon, SparkleIcon, ListIcon } from '@phosphor-icons/react';
 import type { SceneNode } from '@mui-gamebook/parser';
 import { IconButton, Button } from '@radix-ui/themes';
@@ -25,18 +25,27 @@ export default function MediaAssetItem({
   onAssetChange,
   onAssetDelete,
 }: MediaAssetItemProps) {
-  const [showGenerator, setShowGenerator] = useState(false);
+  const assetUrl = 'url' in asset ? asset.url : undefined;
+  const assetPrompt = 'prompt' in asset ? asset.prompt : '';
+  const assetAspectRatio = 'aspectRatio' in asset ? asset.aspectRatio || '1:1' : '1:1';
+  const shouldAutoOpenGenerator = variant === 'compact' && !assetUrl && Boolean(assetPrompt);
+
+  const [showGenerator, setShowGenerator] = useState(shouldAutoOpenGenerator);
   const [showMinigameSelector, setShowMinigameSelector] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hasAutoOpenedGeneratorRef = useRef(shouldAutoOpenGenerator);
   const dialog = useDialog();
   const { data: cmsConfig } = useCmsConfig();
   const aspectRatios = getAspectRatios(cmsConfig?.defaultAiProvider);
 
-  const assetUrl = 'url' in asset ? asset.url : undefined;
-  const assetPrompt = 'prompt' in asset ? asset.prompt : '';
-  const assetAspectRatio = 'aspectRatio' in asset ? asset.aspectRatio || '1:1' : '1:1';
+  useEffect(() => {
+    if (shouldAutoOpenGenerator && !hasAutoOpenedGeneratorRef.current) {
+      hasAutoOpenedGeneratorRef.current = true;
+      setShowGenerator(true);
+    }
+  }, [shouldAutoOpenGenerator]);
 
   const isImage = asset.type.includes('image');
   const isAudio = asset.type.includes('audio');
@@ -343,7 +352,7 @@ export default function MediaAssetItem({
         </div>
       )}
 
-      {(showGenerator || (!assetUrl && assetPrompt)) && (
+      {showGenerator && (
         <MediaGenerator
           prompt={assetPrompt}
           aspectRatio={assetAspectRatio}

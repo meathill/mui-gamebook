@@ -2,6 +2,7 @@
 
 import { useState, useRef, useMemo, KeyboardEvent, useCallback } from 'react';
 import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import { isImeComposing } from '@/lib/keyboard';
 
 interface CharacterMentionTextareaProps {
   value: string;
@@ -118,6 +119,7 @@ export default function CharacterMentionTextarea({
 
   // 键盘导航
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (isImeComposing(e)) return;
     if (!showPopover || filteredCharacters.length === 0) return;
 
     switch (e.key) {
@@ -228,12 +230,16 @@ export default function CharacterMentionTextarea({
               onClick={() => {
                 // 在当前光标位置插入 @角色ID
                 if (textareaRef.current) {
-                  const cursorPos = textareaRef.current.selectionStart || value.length;
+                  const cursorPos = textareaRef.current.selectionStart ?? value.length;
                   const before = value.slice(0, cursorPos);
                   const after = value.slice(cursorPos);
                   onChange(`${before}@${char.id} ${after}`);
-                  // 恢复焦点
-                  setTimeout(() => textareaRef.current?.focus(), 0);
+                  const newCursorPos = cursorPos + char.id.length + 2;
+                  // 恢复焦点和插入位置
+                  setTimeout(() => {
+                    textareaRef.current?.focus();
+                    textareaRef.current?.setSelectionRange(newCursorPos, newCursorPos);
+                  }, 0);
                 }
               }}>
               @{char.id}

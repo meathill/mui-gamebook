@@ -7,6 +7,7 @@
 import { createRoot, type Root } from 'react-dom/client';
 import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion';
 import SlashCommandMenu from '@/components/editor/SlashCommandMenu';
+import { isImeComposing } from '@/lib/keyboard';
 import type { SlashCommandItem } from './slash-commands';
 
 export function slashCommandRender() {
@@ -33,6 +34,9 @@ export function slashCommandRender() {
     },
 
     onKeyDown(props: SuggestionKeyDownProps) {
+      if (props.view.composing || isImeComposing(props.event)) {
+        return false;
+      }
       if (props.event.key === 'Escape') {
         return true;
       }

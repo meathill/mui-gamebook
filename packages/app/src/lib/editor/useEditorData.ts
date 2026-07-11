@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { parse, stringify } from '@mui-gamebook/parser';
-import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
+import { gameToFlow, flowToGame, replaceEditorSceneAssetUrl, SceneNodeData } from '@/lib/editor/transformers';
 import { pendingOperationsManager, isPlaceholderUrl, extractOperationId } from '@/lib/pending-operations-manager';
 import { loadDraft, clearDraft } from '@/hooks/useAutoSave';
 import { useDialog } from '@/components/Dialog';
 import type { Game } from '@mui-gamebook/parser/src/types';
-import type { SceneNode } from '@mui-gamebook/parser';
 import type { Node, Edge } from '@xyflow/react';
 
 // 扩展 Game 类型，添加编辑器特有的字段
@@ -68,21 +67,13 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
           if (!nodeData.assets) return node;
 
           const hasThisOperation = nodeData.assets.some(
-            (asset: SceneNode) => 'url' in asset && asset.url === pendingUrl,
+            (entry) => 'url' in entry.asset && entry.asset.url === pendingUrl,
           );
 
           if (!hasThisOperation) return node;
 
-          const newAssets = nodeData.assets.map((asset: SceneNode) => {
-            if ('url' in asset && asset.url === pendingUrl) {
-              if (result.status === 'completed' && result.url) {
-                return { ...asset, url: result.url };
-              } else {
-                return { ...asset, url: undefined };
-              }
-            }
-            return asset;
-          });
+          const nextUrl = result.status === 'completed' ? result.url : undefined;
+          const newAssets = replaceEditorSceneAssetUrl(nodeData.assets, pendingUrl, nextUrl);
 
           return { ...node, data: { ...nodeData, assets: newAssets } };
         });
@@ -156,9 +147,9 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
         const nodeData = node.data as SceneNodeData;
         if (!nodeData.assets) return;
 
-        nodeData.assets.forEach((asset: SceneNode) => {
-          if ('url' in asset && asset.url && isPlaceholderUrl(asset.url)) {
-            const operationId = extractOperationId(asset.url);
+        nodeData.assets.forEach((entry) => {
+          if ('url' in entry.asset && entry.asset.url && isPlaceholderUrl(entry.asset.url)) {
+            const operationId = extractOperationId(entry.asset.url);
             if (operationId && !registeredOperationsRef.current.has(operationId)) {
               registeredOperationsRef.current.add(operationId);
               pendingOperationsManager.register(operationId, handleOperationComplete);

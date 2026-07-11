@@ -1,8 +1,10 @@
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MediaAssetItem from '@/components/editor/MediaAssetItem';
+import type { SceneAiImageNode } from '@mui-gamebook/parser/src/types';
 
 // Mock useDialog
 vi.mock('@/components/Dialog', () => ({
@@ -37,6 +39,19 @@ function createWrapper() {
   });
   return ({ children }: { children: React.ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
+
+function ControlledCompactAsset({ initialPrompt }: { initialPrompt: string }) {
+  const [asset, setAsset] = useState<SceneAiImageNode>({ type: 'ai_image', prompt: initialPrompt });
+
+  return (
+    <MediaAssetItem
+      asset={asset}
+      gameId="123"
+      variant="compact"
+      onAssetChange={(field, value) => setAsset((current) => ({ ...current, [field]: value }))}
+    />
   );
 }
 
@@ -123,6 +138,46 @@ describe('MediaAssetItem', () => {
       fireEvent.click(aiButton);
 
       expect(screen.getByPlaceholderText('输入 AI 生成提示词...')).toBeInTheDocument();
+    });
+
+    it('清空已有提示词后应该保持生成器、DOM 和焦点', () => {
+      render(<ControlledCompactAsset initialPrompt="待清空" />, { wrapper: createWrapper() });
+
+      const textarea = screen.getByPlaceholderText('输入 AI 生成提示词...');
+      textarea.focus();
+      fireEvent.change(textarea, { target: { value: '' } });
+
+      expect(screen.getByPlaceholderText('输入 AI 生成提示词...')).toBe(textarea);
+      expect(document.activeElement).toBe(textarea);
+      expect(textarea).toHaveValue('');
+    });
+
+    it('外部首次补入提示词时只自动展开一次', () => {
+      const onAssetChange = vi.fn();
+      const { rerender } = render(
+        <MediaAssetItem
+          asset={{ type: 'ai_image', prompt: '' }}
+          gameId="123"
+          variant="compact"
+          onAssetChange={onAssetChange}
+        />,
+        { wrapper: createWrapper() },
+      );
+
+      expect(screen.queryByPlaceholderText('输入 AI 生成提示词...')).not.toBeInTheDocument();
+
+      rerender(
+        <MediaAssetItem
+          asset={{ type: 'ai_image', prompt: '外部补入的提示词' }}
+          gameId="123"
+          variant="compact"
+          onAssetChange={onAssetChange}
+        />,
+      );
+      expect(screen.getByPlaceholderText('输入 AI 生成提示词...')).toBeInTheDocument();
+
+      fireEvent.click(screen.getByTitle('AI 生成素材'));
+      expect(screen.queryByPlaceholderText('输入 AI 生成提示词...')).not.toBeInTheDocument();
     });
   });
 

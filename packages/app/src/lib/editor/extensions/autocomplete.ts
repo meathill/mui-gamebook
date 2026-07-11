@@ -7,6 +7,7 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
+import { isImeComposing } from '@/lib/keyboard';
 
 const pluginKey = new PluginKey('autocomplete');
 
@@ -132,6 +133,7 @@ export const Autocomplete = Extension.create({
         key: pluginKey,
         props: {
           handleKeyDown(view, event) {
+            if (view.composing || isImeComposing(event)) return false;
             if (!menuEl) return false;
 
             if (event.key === 'ArrowDown') {

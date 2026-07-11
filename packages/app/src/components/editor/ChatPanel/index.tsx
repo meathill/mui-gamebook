@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { PaperPlaneRightIcon, SpinnerIcon, TrashIcon, RobotIcon, SquareIcon } from '@phosphor-icons/react';
 import { useChatbot, Message, FunctionCall } from './useChatbot';
 import { Button } from '@radix-ui/themes';
+import { isImeComposing } from '@/lib/keyboard';
 
 interface ChatPanelProps {
   gameId: string;
@@ -60,6 +61,8 @@ export default function ChatPanel({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      if (isImeComposing(e)) return;
+
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         handleSubmit();

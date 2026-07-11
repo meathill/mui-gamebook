@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { gameToFlow, flowToGame } from '@/lib/editor/transformers';
+import { createEditorSceneAsset, gameToFlow, flowToGame, replaceEditorSceneAssetUrl } from '@/lib/editor/transformers';
 import type { Game } from '@mui-gamebook/parser/src/types';
 
 const mockGame: Game = {
@@ -40,6 +40,24 @@ const mockGameWithAudio: Game = {
     end: {
       id: 'end',
       nodes: [{ type: 'text', content: '故事结束', audio_url: 'https://example.com/end.wav' }],
+    },
+  },
+};
+
+const mockGameWithAssets: Game = {
+  slug: 'test-game-assets',
+  title: 'Test Game With Assets',
+  initialState: {},
+  ai: {},
+  published: false,
+  scenes: {
+    start: {
+      id: 'start',
+      nodes: [
+        { type: 'ai_image', prompt: '森林' },
+        { type: 'ai_audio', audioType: 'sfx', prompt: '鸟鸣' },
+        { type: 'text', content: '进入森林' },
+      ],
     },
   },
 };
@@ -117,5 +135,44 @@ describe('Editor Transformers', () => {
     // 验证 audio_url 仍然存在
     const startNode = nodes2.find((n) => n.id === 'start');
     expect(startNode?.data.audio_url).toBe('https://example.com/welcome.wav');
+  });
+
+  it('应该为编辑器素材生成唯一 UI ID，并在保存时完全剥离', () => {
+    const { nodes, edges } = gameToFlow(mockGameWithAssets);
+    const assets = nodes[0].data.assets;
+
+    expect(assets).toHaveLength(2);
+    expect(assets[0].editorId).toEqual(expect.any(String));
+    expect(assets[1].editorId).toEqual(expect.any(String));
+    expect(assets[0].editorId).not.toBe(assets[1].editorId);
+    expect(assets.map((entry) => entry.asset)).toEqual([
+      { type: 'ai_image', prompt: '森林' },
+      { type: 'ai_audio', audioType: 'sfx', prompt: '鸟鸣' },
+    ]);
+
+    const roundTripped = flowToGame(nodes, edges, mockGameWithAssets);
+    expect(roundTripped.scenes.start.nodes).toEqual(mockGameWithAssets.scenes.start.nodes);
+    expect(JSON.stringify(roundTripped)).not.toContain('editorId');
+  });
+
+  it('异步 URL 回填应该保留素材 UI ID', () => {
+    const pending = createEditorSceneAsset({
+      type: 'ai_video',
+      prompt: '海浪',
+      url: 'pending://42',
+    });
+    const untouched = createEditorSceneAsset({ type: 'ai_image', prompt: '沙滩' });
+
+    const updated = replaceEditorSceneAssetUrl([pending, untouched], 'pending://42', 'https://example.com/wave.mp4');
+
+    expect(updated[0]).toEqual({
+      editorId: pending.editorId,
+      asset: {
+        type: 'ai_video',
+        prompt: '海浪',
+        url: 'https://example.com/wave.mp4',
+      },
+    });
+    expect(updated[1]).toBe(untouched);
   });
 });

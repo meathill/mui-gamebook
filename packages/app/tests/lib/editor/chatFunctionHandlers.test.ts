@@ -6,7 +6,7 @@ import {
   FunctionCall,
 } from '@/lib/editor/chatFunctionHandlers';
 import type { Node, Edge } from '@xyflow/react';
-import type { SceneNodeData } from '@/lib/editor/transformers';
+import { createEditorSceneAsset, type SceneNodeData } from '@/lib/editor/transformers';
 import type { Game } from '@mui-gamebook/parser/src/types';
 
 // 创建测试用的 mock 函数
@@ -164,13 +164,18 @@ describe('chatFunctionHandlers', () => {
 
       expect(result).toBe('已更新场景 "start" 的图片 prompt');
       const startNode = ctx.nodes.find((n) => n.id === 'start');
-      expect(startNode?.data.assets).toContainEqual({ type: 'ai_image', prompt: '一个美丽的森林' });
+      expect(startNode?.data.assets.map((entry) => entry.asset)).toContainEqual({
+        type: 'ai_image',
+        prompt: '一个美丽的森林',
+      });
+      expect(startNode?.data.assets[0].editorId).toEqual(expect.any(String));
     });
 
     it('updateSceneImagePrompt 应该更新已有的 ai_image prompt', () => {
       const ctx = createMockContext();
       // 先添加一个 ai_image
-      ctx.nodes[0].data.assets = [{ type: 'ai_image', prompt: '旧 prompt' }];
+      ctx.nodes[0].data.assets = [createEditorSceneAsset({ type: 'ai_image', prompt: '旧 prompt' })];
+      const editorId = ctx.nodes[0].data.assets[0].editorId;
 
       const result = handleChatFunctionCall(
         'updateSceneImagePrompt',
@@ -180,7 +185,10 @@ describe('chatFunctionHandlers', () => {
 
       expect(result).toBe('已更新场景 "start" 的图片 prompt');
       expect(ctx.nodes[0].data.assets).toHaveLength(1);
-      expect(ctx.nodes[0].data.assets[0]).toMatchObject({ type: 'ai_image', prompt: '新 prompt' });
+      expect(ctx.nodes[0].data.assets[0]).toEqual({
+        editorId,
+        asset: { type: 'ai_image', prompt: '新 prompt' },
+      });
     });
   });
 
