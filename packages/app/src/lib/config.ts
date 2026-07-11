@@ -35,6 +35,9 @@ const DEFAULT_CONFIG = {
   mimoBaseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
   // Anthropic Claude 文本模型
   anthropicTextModel: 'claude-sonnet-5',
+  // Cloudflare AI Gateway 基础地址（形如 https://gateway.ai.cloudflare.com/v1/{account}/{gateway}）
+  // 配置后 Claude/Gemini/OpenAI 统一经网关转发，留空则直连官方 API；MiMo 始终直连官方
+  cfAiGatewayBaseUrl: '',
 };
 
 export type AppConfig = typeof DEFAULT_CONFIG;

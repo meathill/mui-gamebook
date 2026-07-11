@@ -164,6 +164,14 @@ export default function AdminConfigPage() {
               </div>
 
               <ConfigTextField
+                label="Cloudflare AI Gateway 地址"
+                value={formData.cfAiGatewayBaseUrl}
+                onChange={(value) => updateField('cfAiGatewayBaseUrl', value)}
+                placeholder="https://gateway.ai.cloudflare.com/v1/{account}/{gateway}"
+                hint="配置后 Claude/Gemini/OpenAI 统一经网关转发（MiMo 始终直连官方）；留空则全部直连官方 API"
+              />
+
+              <ConfigTextField
                 label="默认 TTS 音色"
                 value={formData.defaultTtsVoice}
                 onChange={(value) => updateField('defaultTtsVoice', value)}

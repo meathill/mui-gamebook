@@ -20,6 +20,8 @@ import { buildMiniGamePrompt, MINIGAME_API_SPEC } from './ai';
 
 export class GoogleAiProvider implements AiProvider {
   readonly type = 'google' as const;
+  /** API base URL，SDK 之外的裸 fetch（视频轮询）也走它，便于经 AI Gateway 转发 */
+  private apiBaseUrl: string;
 
   constructor(
     private genAI: GoogleGenAI,
@@ -29,7 +31,10 @@ export class GoogleAiProvider implements AiProvider {
       image?: string;
       video?: string;
     } = {},
-  ) {}
+    options?: { apiBaseUrl?: string },
+  ) {
+    this.apiBaseUrl = options?.apiBaseUrl ?? 'https://generativelanguage.googleapis.com';
+  }
 
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
     const model = this.models.text || 'gemini-2.5-flash';
@@ -205,7 +210,7 @@ export class GoogleAiProvider implements AiProvider {
   async checkVideoGenerationStatus(operationName: string): Promise<VideoGenerationStatusResult> {
     console.log(`[Google AI] Checking video generation status: ${operationName}`);
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/${operationName}`;
+    const url = `${this.apiBaseUrl}/v1beta/${operationName}`;
     try {
       const response = await fetch(url, {
         headers: {

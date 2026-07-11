@@ -22,6 +22,8 @@ import type {
 export class OpenAiProvider implements AiProvider {
   readonly type: AiProviderType;
   protected client: OpenAI;
+  /** API base URL，SDK 之外的裸 fetch（Sora 视频）也走它，便于经 AI Gateway 转发 */
+  protected apiBaseUrl: string;
 
   constructor(
     protected apiKey: string,
@@ -34,6 +36,7 @@ export class OpenAiProvider implements AiProvider {
     options?: { baseURL?: string; type?: AiProviderType },
   ) {
     this.type = options?.type ?? 'openai';
+    this.apiBaseUrl = options?.baseURL ?? 'https://api.openai.com/v1';
     this.client = new OpenAI({ apiKey, ...(options?.baseURL && { baseURL: options.baseURL }) });
   }
 
@@ -165,7 +168,7 @@ export class OpenAiProvider implements AiProvider {
     const resolution = resolutionMap[aspectRatio] || '720p';
 
     // 调用 Sora API 创建视频生成任务
-    const response = await fetch('https://api.openai.com/v1/videos/generations', {
+    const response = await fetch(`${this.apiBaseUrl}/videos/generations`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
@@ -210,7 +213,7 @@ export class OpenAiProvider implements AiProvider {
 
     try {
       // 查询视频生成状态
-      const response = await fetch(`https://api.openai.com/v1/videos/generations/${operationName}`, {
+      const response = await fetch(`${this.apiBaseUrl}/videos/generations/${operationName}`, {
         method: 'GET',
         headers: {
           Authorization: `Bearer ${this.apiKey}`,

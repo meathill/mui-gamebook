@@ -538,6 +538,7 @@ isValidVoiceId(voiceId: string, provider): boolean
 | OpenAI | 文本/图片/TTS/视频 | 备选 |
 
 - MiMo 走 OpenAI 兼容协议（`MimoProvider extends OpenAiProvider`，自定义 baseURL），默认 Token Plan 订阅地址 `https://token-plan-cn.xiaomimimo.com/v1`（按量付费为 `https://api.xiaomimimo.com/v1`，可在管理后台配置 `mimoBaseUrl` 切换）。不发送 `reasoning_effort` 等 OpenAI 专有参数。
+- **Cloudflare AI Gateway**：管理后台配置 `cfAiGatewayBaseUrl`（形如 `https://gateway.ai.cloudflare.com/v1/{account}/{gateway}`）后，Claude/Gemini/OpenAI 统一经网关转发（SDK base URL 分别指向 `/anthropic`、`/google-ai-studio`、`/openai` 子路径；Sora/Veo 的裸 fetch 也跟随）。留空 = 直连官方，可作为网关故障时的回退开关。**MiMo 始终直连官方**。注意：若网关开了 Authenticated Gateway，需要额外发 `cf-aig-authorization` 头，目前未实现。
 - Claude 用 `@anthropic-ai/sdk`，默认 `claude-sonnet-5`。**不发送 temperature/top_p**（新模型会 400），`max_tokens` 必填，thinking 用 `{ type: 'adaptive' }`。
 - 全局默认 provider 被设为 mimo/anthropic 时，图片/TTS/视频链路经 `resolveMediaProviderType()` 自动回退 Google。
 

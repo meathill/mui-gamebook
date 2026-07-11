@@ -42,6 +42,7 @@ const INITIAL_CONFIG: AppConfig = {
   mimoTextModel: 'mimo-text',
   mimoBaseUrl: 'https://mimo.example.com/v1',
   anthropicTextModel: 'anthropic-text',
+  cfAiGatewayBaseUrl: '',
 };
 
 const fetchMock = vi.fn<typeof fetch>();

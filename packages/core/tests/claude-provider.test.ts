@@ -33,6 +33,17 @@ describe('ClaudeProvider', () => {
     expect(createMock.mock.calls[0][0].model).toBe(CLAUDE_DEFAULT_TEXT_MODEL);
   });
 
+  it('默认不传 baseURL，配置后透传给 SDK（AI Gateway 场景）', () => {
+    new ClaudeProvider('sk-ant-test');
+    expect(constructorSpy).toHaveBeenLastCalledWith({ apiKey: 'sk-ant-test' });
+
+    new ClaudeProvider('sk-ant-test', {}, { baseURL: 'https://gateway.ai.cloudflare.com/v1/acc/gw/anthropic' });
+    expect(constructorSpy).toHaveBeenLastCalledWith({
+      apiKey: 'sk-ant-test',
+      baseURL: 'https://gateway.ai.cloudflare.com/v1/acc/gw/anthropic',
+    });
+  });
+
   it('generateText 不发送 temperature/top_p，usage 正确映射', async () => {
     const provider = new ClaudeProvider('sk-ant-test');
     const result = await provider.generateText('写故事');

@@ -10,7 +10,7 @@ import { GoogleAiProvider } from '@mui-gamebook/core/lib/google-ai-provider';
 import { MimoProvider } from '@mui-gamebook/core/lib/mimo-provider';
 import { OpenAiProvider } from '@mui-gamebook/core/lib/openai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getConfig } from './config';
+import { type AppConfig, getConfig } from './config';
 
 /**
  * 解析媒体生成（图片/TTS/视频）使用的提供者类型
@@ -20,6 +20,19 @@ export async function resolveMediaProviderType(): Promise<'google' | 'openai'> {
   const config = await getConfig();
   const defaultType = config.defaultAiProvider;
   return defaultType === 'google' || defaultType === 'openai' ? defaultType : 'google';
+}
+
+/**
+ * 计算某提供者经 Cloudflare AI Gateway 转发的 base URL
+ * 未配置网关时返回 undefined（直连官方 API）；MiMo 不走网关
+ */
+function resolveGatewayBaseUrl(
+  config: AppConfig,
+  provider: 'openai' | 'anthropic' | 'google-ai-studio',
+): string | undefined {
+  const gateway = config.cfAiGatewayBaseUrl?.trim().replace(/\/+$/, '');
+  if (!gateway) return undefined;
+  return `${gateway}/${provider}`;
 }
 
 /**
@@ -47,7 +60,8 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
       throw new Error('ANTHROPIC_API_KEY not configured');
     }
 
-    return new ClaudeProvider(apiKey, { text: config.anthropicTextModel });
+    const baseURL = resolveGatewayBaseUrl(config, 'anthropic');
+    return new ClaudeProvider(apiKey, { text: config.anthropicTextModel }, baseURL ? { baseURL } : undefined);
   }
 
   if (providerType === 'openai') {
@@ -56,25 +70,20 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
       throw new Error('OPENAI_API_KEY not configured');
     }
 
-    return new OpenAiProvider(apiKey, {
-      text: config.openaiTextModel,
-      image: config.openaiImageModel,
-      video: config.openaiVideoModel,
-    });
+    const baseURL = resolveGatewayBaseUrl(config, 'openai');
+    return new OpenAiProvider(
+      apiKey,
+      {
+        text: config.openaiTextModel,
+        image: config.openaiImageModel,
+        video: config.openaiVideoModel,
+      },
+      baseURL ? { baseURL } : undefined,
+    );
   }
 
   // 默认使用 Google AI
-  const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY not configured');
-  }
-
-  const genAI = new GoogleGenAI({ apiKey });
-  return new GoogleAiProvider(genAI, apiKey, {
-    text: config.googleTextModel,
-    image: config.googleImageModel,
-    video: config.googleVideoModel,
-  });
+  return buildGoogleAiProvider(env, config);
 }
 
 /**
@@ -83,16 +92,25 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
 export async function createGoogleAiProvider(): Promise<GoogleAiProvider> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
+  return buildGoogleAiProvider(env, config);
+}
 
+function buildGoogleAiProvider(env: { GOOGLE_API_KEY?: string }, config: AppConfig): GoogleAiProvider {
   const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
   if (!apiKey) {
     throw new Error('GOOGLE_API_KEY not configured');
   }
 
-  const genAI = new GoogleGenAI({ apiKey });
-  return new GoogleAiProvider(genAI, apiKey, {
-    text: config.googleTextModel,
-    image: config.googleImageModel,
-    video: config.googleVideoModel,
-  });
+  const apiBaseUrl = resolveGatewayBaseUrl(config, 'google-ai-studio');
+  const genAI = new GoogleGenAI({ apiKey, ...(apiBaseUrl && { httpOptions: { baseUrl: apiBaseUrl } }) });
+  return new GoogleAiProvider(
+    genAI,
+    apiKey,
+    {
+      text: config.googleTextModel,
+      image: config.googleImageModel,
+      video: config.googleVideoModel,
+    },
+    apiBaseUrl ? { apiBaseUrl } : undefined,
+  );
 }

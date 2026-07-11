@@ -32,8 +32,9 @@ export class ClaudeProvider implements AiProvider {
   constructor(
     apiKey: string,
     private models: { text?: string } = {},
+    options?: { baseURL?: string },
   ) {
-    this.client = new Anthropic({ apiKey });
+    this.client = new Anthropic({ apiKey, ...(options?.baseURL && { baseURL: options.baseURL }) });
   }
 
   private get textModel(): string {

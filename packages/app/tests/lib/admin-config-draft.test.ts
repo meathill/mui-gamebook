@@ -19,6 +19,7 @@ const CONFIG: AppConfig = {
   mimoTextModel: 'mimo-text',
   mimoBaseUrl: 'https://mimo.example.com/v1',
   anthropicTextModel: 'anthropic-text',
+  cfAiGatewayBaseUrl: '',
 };
 
 describe('admin config draft', () => {
