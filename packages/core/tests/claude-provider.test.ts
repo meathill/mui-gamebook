@@ -44,6 +44,17 @@ describe('ClaudeProvider', () => {
     });
   });
 
+  it('配置 headers 时透传为 defaultHeaders（网关鉴权场景），未配置时不传该字段', () => {
+    new ClaudeProvider('sk-ant-test', {}, { headers: { 'cf-aig-authorization': 'Bearer cf-token' } });
+    expect(constructorSpy).toHaveBeenLastCalledWith({
+      apiKey: 'sk-ant-test',
+      defaultHeaders: { 'cf-aig-authorization': 'Bearer cf-token' },
+    });
+
+    new ClaudeProvider('sk-ant-test', {}, { headers: {} });
+    expect(constructorSpy).toHaveBeenLastCalledWith({ apiKey: 'sk-ant-test' });
+  });
+
   it('generateText 不发送 temperature/top_p，usage 正确映射', async () => {
     const provider = new ClaudeProvider('sk-ant-test');
     const result = await provider.generateText('写故事');

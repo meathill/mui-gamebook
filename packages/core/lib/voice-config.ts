@@ -1,6 +1,6 @@
 /**
  * TTS 音色配置
- * 定义 Google Gemini 和 OpenAI 支持的音色列表
+ * 定义 Google Gemini、OpenAI、小米 MiMo 支持的音色列表
  * 这是音色配置的唯一来源，其它地方应该导入这里的配置
  */
 
@@ -10,6 +10,9 @@ export interface VoiceOption {
   description: string;
   gender: 'male' | 'female' | 'neutral';
 }
+
+/** 支持 TTS 的 AI 提供者（Claude 不支持 TTS，不在此列） */
+export type TtsProviderType = 'google' | 'openai' | 'mimo';
 
 /**
  * Google Gemini TTS 音色列表
@@ -71,39 +74,65 @@ export const OPENAI_VOICES: VoiceOption[] = [
   { id: 'verse', name: 'Verse', description: '中性声音', gender: 'neutral' },
 ];
 
+/**
+ * 小米 MiMo TTS 音色列表
+ * 参考（第三方镜像文档交叉核对，未能从官方站点抓取到完整原始文档，音色 ID 建议实际调用验证）：
+ * https://doc.dmxapi.cn/mimo-v2.5-tts-speech-synthesis.html
+ * https://www.mimo-v2.com/zh/docs/usage-guide/tts
+ */
+export const MIMO_VOICES: VoiceOption[] = [
+  { id: 'mimo_default', name: '默认音色', description: '通用音色', gender: 'neutral' },
+  { id: '冰糖', name: '冰糖', description: '清亮女声', gender: 'female' },
+  { id: '茉莉', name: '茉莉', description: '温柔女声', gender: 'female' },
+  { id: '苏打', name: '苏打', description: '活泼男声', gender: 'male' },
+  { id: '白桦', name: '白桦', description: '沉稳男声', gender: 'male' },
+  { id: 'Mia', name: 'Mia', description: '英文女声', gender: 'female' },
+  { id: 'Chloe', name: 'Chloe', description: '英文女声', gender: 'female' },
+  { id: 'Milo', name: 'Milo', description: '英文男声', gender: 'male' },
+  { id: 'Dean', name: 'Dean', description: '英文男声', gender: 'male' },
+];
+
 /** Google 音色 ID 列表 */
 export const GOOGLE_VOICE_IDS = GOOGLE_VOICES.map((v) => v.id);
 
 /** OpenAI 音色 ID 列表 */
 export const OPENAI_VOICE_IDS = OPENAI_VOICES.map((v) => v.id);
 
+/** MiMo 音色 ID 列表 */
+export const MIMO_VOICE_IDS = MIMO_VOICES.map((v) => v.id);
+
+const VOICES_BY_PROVIDER: Record<TtsProviderType, VoiceOption[]> = {
+  google: GOOGLE_VOICES,
+  openai: OPENAI_VOICES,
+  mimo: MIMO_VOICES,
+};
+
 /**
  * 根据 AI 提供者类型获取可用的音色列表
  */
-export function getAvailableVoices(provider: 'google' | 'openai' = 'google'): VoiceOption[] {
-  return provider === 'openai' ? OPENAI_VOICES : GOOGLE_VOICES;
+export function getAvailableVoices(provider: TtsProviderType = 'google'): VoiceOption[] {
+  return VOICES_BY_PROVIDER[provider];
 }
 
 /**
  * 根据 AI 提供者类型获取可用的音色 ID 列表
  */
-export function getAvailableVoiceIds(provider: 'google' | 'openai' = 'google'): string[] {
-  return provider === 'openai' ? OPENAI_VOICE_IDS : GOOGLE_VOICE_IDS;
+export function getAvailableVoiceIds(provider: TtsProviderType = 'google'): string[] {
+  return VOICES_BY_PROVIDER[provider].map((v) => v.id);
 }
 
 /**
  * 检查音色 ID 是否有效
  */
-export function isValidVoiceId(voiceId: string, provider: 'google' | 'openai' = 'google'): boolean {
-  const ids = getAvailableVoiceIds(provider);
-  return ids.includes(voiceId);
+export function isValidVoiceId(voiceId: string, provider: TtsProviderType = 'google'): boolean {
+  return getAvailableVoiceIds(provider).includes(voiceId);
 }
 
 /**
  * 根据音色 ID 获取音色信息
  */
 export function getVoiceById(id: string): VoiceOption | undefined {
-  return [...GOOGLE_VOICES, ...OPENAI_VOICES].find((v) => v.id === id);
+  return [...GOOGLE_VOICES, ...OPENAI_VOICES, ...MIMO_VOICES].find((v) => v.id === id);
 }
 
 /** Google 默认音色 */
@@ -112,9 +141,18 @@ export const DEFAULT_GOOGLE_VOICE = 'Aoede';
 /** OpenAI 默认音色 */
 export const DEFAULT_OPENAI_VOICE = 'marin';
 
+/** MiMo 默认音色 */
+export const DEFAULT_MIMO_VOICE = 'mimo_default';
+
+const DEFAULT_VOICE_BY_PROVIDER: Record<TtsProviderType, string> = {
+  google: DEFAULT_GOOGLE_VOICE,
+  openai: DEFAULT_OPENAI_VOICE,
+  mimo: DEFAULT_MIMO_VOICE,
+};
+
 /**
  * 获取默认音色
  */
-export function getDefaultVoice(provider: 'google' | 'openai' = 'google'): string {
-  return provider === 'openai' ? DEFAULT_OPENAI_VOICE : DEFAULT_GOOGLE_VOICE;
+export function getDefaultVoice(provider: TtsProviderType = 'google'): string {
+  return DEFAULT_VOICE_BY_PROVIDER[provider];
 }

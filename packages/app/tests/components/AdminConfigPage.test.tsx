@@ -30,7 +30,7 @@ const INITIAL_CONFIG: AppConfig = {
   adminUserIds: ['admin-1'],
   videoWhitelist: ['one@example.com'],
   defaultAiProvider: 'google',
-  defaultTtsVoice: 'Aoede',
+  defaultTtsProvider: 'mimo',
   googleTextModel: 'google-text',
   googleImageModel: 'google-image',
   googleTtsModel: 'google-tts',
@@ -41,6 +41,7 @@ const INITIAL_CONFIG: AppConfig = {
   openaiVideoModel: 'openai-video',
   mimoTextModel: 'mimo-text',
   mimoBaseUrl: 'https://mimo.example.com/v1',
+  mimoTtsModel: 'mimo-tts',
   anthropicTextModel: 'anthropic-text',
   cfAiGatewayBaseUrl: '',
 };

@@ -22,6 +22,8 @@ export class GoogleAiProvider implements AiProvider {
   readonly type = 'google' as const;
   /** API base URL，SDK 之外的裸 fetch（视频轮询）也走它，便于经 AI Gateway 转发 */
   private apiBaseUrl: string;
+  /** 经 AI Gateway 转发时需要的额外 header（如 cf-aig-authorization），裸 fetch 需要手动带上 */
+  private gatewayHeaders: Record<string, string>;
 
   constructor(
     private genAI: GoogleGenAI,
@@ -30,10 +32,12 @@ export class GoogleAiProvider implements AiProvider {
       text?: string;
       image?: string;
       video?: string;
+      tts?: string;
     } = {},
-    options?: { apiBaseUrl?: string },
+    options?: { apiBaseUrl?: string; headers?: Record<string, string> },
   ) {
     this.apiBaseUrl = options?.apiBaseUrl ?? 'https://generativelanguage.googleapis.com';
+    this.gatewayHeaders = options?.headers ?? {};
   }
 
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
@@ -216,6 +220,7 @@ export class GoogleAiProvider implements AiProvider {
         headers: {
           'Content-type': 'application/json',
           'x-goog-api-key': this.apiKey,
+          ...this.gatewayHeaders,
         },
       });
 
@@ -362,7 +367,8 @@ export class GoogleAiProvider implements AiProvider {
   }
 
   async generateTTS(text: string, voiceName: string = 'Aoede'): Promise<TTSResult> {
-    console.log(`[Google AI] Generating TTS with voice: ${voiceName}`);
+    const model = this.models.tts || 'gemini-2.5-flash-preview-tts';
+    console.log(`[Google AI] Generating TTS with model: ${model}, voice: ${voiceName}`);
 
     // 为儿童故事添加朗读指导
     const enhancedText = `请用温柔、有表现力的方式朗读这段故事，语速稍慢，适合小朋友听：
@@ -370,7 +376,7 @@ export class GoogleAiProvider implements AiProvider {
 ${text}`;
 
     const response = await this.genAI.models.generateContent({
-      model: 'gemini-2.5-flash-preview-tts',
+      model,
       contents: [{ parts: [{ text: enhancedText }] }],
       config: {
         responseModalities: ['AUDIO'],

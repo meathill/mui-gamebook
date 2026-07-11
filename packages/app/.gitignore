@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 .dev.vars
 
 # vercel
@@ -40,6 +41,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# wrangler 生成物，部署前用 `pnpm run cf-typegen` 本地重新生成（读取本机 .dev.vars）
+cloudflare-env.d.ts
 .open-next
 .next
 .wrangler

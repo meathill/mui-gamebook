@@ -537,10 +537,19 @@ isValidVoiceId(voiceId: string, provider): boolean
 | Google Gemini | 文本/图片/TTS/视频 | 媒体生成主力 |
 | OpenAI | 文本/图片/TTS/视频 | 备选 |
 
-- MiMo 走 OpenAI 兼容协议（`MimoProvider extends OpenAiProvider`，自定义 baseURL），默认 Token Plan 订阅地址 `https://token-plan-cn.xiaomimimo.com/v1`（按量付费为 `https://api.xiaomimimo.com/v1`，可在管理后台配置 `mimoBaseUrl` 切换）。不发送 `reasoning_effort` 等 OpenAI 专有参数。
-- **Cloudflare AI Gateway**：管理后台配置 `cfAiGatewayBaseUrl`（形如 `https://gateway.ai.cloudflare.com/v1/{account}/{gateway}`）后，Claude/Gemini/OpenAI 统一经网关转发（SDK base URL 分别指向 `/anthropic`、`/google-ai-studio`、`/openai` 子路径；Sora/Veo 的裸 fetch 也跟随）。留空 = 直连官方，可作为网关故障时的回退开关。**MiMo 始终直连官方**。注意：若网关开了 Authenticated Gateway，需要额外发 `cf-aig-authorization` 头，目前未实现。
+- MiMo 走 OpenAI 兼容协议（`MimoProvider extends OpenAiProvider`，自定义 baseURL），默认 Token Plan 订阅地址 `https://token-plan-cn.xiaomimimo.com/v1`（按量付费为 `https://api.xiaomimimo.com/v1`，可在管理后台配置 `mimoBaseUrl` 切换）。不发送 `reasoning_effort` 等 OpenAI 专有参数。**MiMo 官方直连，唯一需要 app 持有真实 key（`MIMO_API_KEY`）的 provider**。
+- **Cloudflare AI Gateway（必需）**：Claude/Gemini/OpenAI 的真实密钥存在网关的 BYOK 里（Gateway 控制台 → Provider Keys），app 自身不再持有、不再要求 `GOOGLE_API_KEY`/`OPENAI_API_KEY`/`ANTHROPIC_API_KEY`。`packages/app/src/lib/ai-provider-factory.ts` 用固定占位 key（`AI_GATEWAY_MANAGED_KEY = 'cf-ai-gateway-managed'`）构造 SDK 客户端，真实鉴权由网关完成；SDK base URL 分别指向 `{cfAiGatewayBaseUrl}/anthropic`、`/google-ai-studio`、`/openai`。**必须在管理后台系统配置里填 `cfAiGatewayBaseUrl`，否则这三家调用时直接抛错**（不再有直连官方的回退路径）。
+- **网关鉴权（`cf-aig-authorization`）与 BYOK 是两码事**：BYOK 只解决"网关侧存了 provider 的真实密钥"，网关本身若开了 Authenticated Gateway（Cloudflare 官方推荐生产环境启用），每个请求都必须先带 `cf-aig-authorization: Bearer <CF token>` 通过网关这一关的校验，跟 BYOK 配没配无关——不带这个 header 会在到达 provider 之前就被网关 401。已实现：`CF_AI_GATEWAY_TOKEN`（Workers secret，`.dev.vars.example` 有说明，去 Cloudflare Dashboard My Profile → API Tokens 建一个 `AI Gateway - Read` 权限的 token）配置后，`resolveGatewayHeaders()` 会给 Claude/OpenAI SDK 的 `defaultHeaders`、Google GenAI 的 `httpOptions.headers`，以及 Sora/Veo 的裸 fetch 统一加上这个 header；未配置则不发送（对应网关是 Unauthenticated 模式的场景）。
+- **已知缺口**：Veo/Sora 视频生成完成后，下载视频文件（`ai-service.ts` 的 `checkAndCompleteVideoGeneration`）是对 Google/OpenAI 存储的直接请求，网关不代理这一步，仍需要真实的 `GOOGLE_API_KEY`/`OPENAI_API_KEY`（走 `process.env`，纯可选，缺失时只影响视频下载，文本/图片/TTS 不受影响）。视频生成本身默认对所有用户关闭，影响面很小。
 - Claude 用 `@anthropic-ai/sdk`，默认 `claude-sonnet-5`。**不发送 temperature/top_p**（新模型会 400），`max_tokens` 必填，thinking 用 `{ type: 'adaptive' }`。
-- 全局默认 provider 被设为 mimo/anthropic 时，图片/TTS/视频链路经 `resolveMediaProviderType()` 自动回退 Google。
+
+### TTS provider 选择独立于文本（2026-07）
+
+- **TTS 不跟随 `defaultAiProvider`**：图片/视频用 `resolveImageVideoProviderType()`（只支持 google/openai，mimo/anthropic 回退 google），TTS 用独立的 `resolveTtsProviderType()`（三选一 google/openai/mimo，读 `config.defaultTtsProvider`，非法值回退 mimo）。两者拆开是因为 MiMo 能做 TTS 但不能做图片/视频——原来共用一个 `resolveMediaProviderType()` 导致"把 TTS 换成 MiMo"这种简单需求，因为文本/TTS/图片/视频全被绑在一个开关上而做不到。
+- **默认 TTS provider 是 MiMo**（`defaultTtsProvider: 'mimo'`），因为 Gemini/GPT 的中文语音质量一般。管理后台「系统配置」有独立的「默认 TTS 提供者」下拉，与「默认 AI 提供者」分开。
+- MiMo TTS 协议：**不是标准的 `/v1/audio/speech`**，而是复用 `/v1/chat/completions`，目标文本放在 `assistant` 角色消息里（`user` 角色消息可选，用于调整语气），额外带一个 `audio: {format, voice}` 字段；响应在 `choices[0].message.audio.data`（base64）。因为协议形状完全不同，`MimoProvider.generateTTS()` 是手写 `fetch` 而不是复用继承来的 OpenAI SDK `audio.speech.create()`。协议细节来自第三方文档镜像交叉核对（`doc.dmxapi.cn`、`mimo-v2.com`），官方站点是 JS 渲染的 SPA，抓不到原始文档，**上线前务必用真实 key 冒烟验证一遍**（尤其是预置音色 ID 列表，`packages/core/lib/voice-config.ts` 的 `MIMO_VOICES`）。
+- 顺手修了两个死配置 bug：`ai-provider-factory.ts` 里 OpenAI/Google 分支之前漏传 `tts` 字段给 provider 构造函数，导致管理后台的「OpenAI TTS 模型」「Google TTS 模型」两个字段改了从来不生效（`GoogleAiProvider.generateTTS` 还硬编码了模型名，没读 `this.models.tts`）。已修复，新加的 `mimoTtsModel` 字段不会重蹈覆辙。
+- 删掉了从不生效的 `defaultTtsVoice` 配置字段（同上，从未被任何 TTS 调用读取）；各 provider 的默认音色现在由 `voice-config.ts` 的 `getDefaultVoice(provider)` 按当前 TTS provider 动态派生。
 
 ### 按用户权限
 
@@ -549,10 +558,16 @@ isValidVoiceId(voiceId: string, provider): boolean
 - 视频旧 `videoWhitelist`（KV 配置）保留为只读 fallback，等白名单用户权限落库后可删（见 TODO）。
 - better-auth 不感知该列（未声明 additionalFields），session shape 不变。
 
-### Secrets 与部署顺序
+### Secrets 与环境变量
 
-- 新 secrets：`MIMO_API_KEY`、`ANTHROPIC_API_KEY`（本地写 `.dev.vars`，生产 `wrangler secret put`）。
-- **上线硬性顺序**：1) `wrangler secret put` 两个 key → 2) `pnpm --filter @mui-gamebook/app run db:migrate:remote`（必须先于 deploy，代码 select 全列）→ 3) deploy → 4) 管理员进 `/admin/config` 保存一次（KV 配置是 `{...DEFAULT, ...stored}` 合并，旧存量会盖住新模型默认值）。
+- Workers secrets（`.dev.vars` 本地 / `wrangler secret put` 生产）：`MIMO_API_KEY` 必需；`GOOGLE_API_KEY`/`OPENAI_API_KEY` 仅视频下载需要，可选；其余见 `packages/app/.dev.vars.example`。**不再需要 `ANTHROPIC_API_KEY`**（密钥存在 AI Gateway）。
+- Next 构建期变量（`NEXT_PUBLIC_*`）：**必须直接用 `process.env.X` 读取，不能用 `getCloudflareContext().env.X`**——Next 编译器只对 `process.env.NEXT_PUBLIC_*` 做静态字面量替换，替换发生在构建时，Workers 的 `env` 绑定对它完全不起作用（即使 wrangler.jsonc 的 `vars` 里写了同名变量也没用）。本地跑 `pnpm --filter @mui-gamebook/app exec node --experimental-strip-types scripts/setup-local-env.ts` 生成 `.env`（不会覆盖已存在的），或手动 `cp .env.example .env` 填值；`next build`/`opennextjs-cloudflare build` 前必须有值，否则打进产物的就是 `undefined`。清单见 `packages/app/.env.example`。
+- `wrangler.jsonc` 的 `vars` 只放真正的 Workers 运行时变量（服务端 `process.env.X` 会被 OpenNext 从 Workers `env` 绑定桥接过去，这是 non-`NEXT_PUBLIC_` 变量能用 `process.env` 读取的原因）；`NEXT_PUBLIC_*` 不要放这里，会误导人以为改它能生效。
+- **d.ts 类型（2026-07 修正）**：`packages/app/env.d.ts`（手写 secret 类型补充）已删除；`cloudflare-env.d.ts` 由 `wrangler types`（`pnpm --filter @mui-gamebook/app run cf-typegen`）生成，已从 git 移除、加入 `.gitignore`。secret 的类型来源**不是**本机 `.dev.vars`，而是 `wrangler.jsonc` 里的 `secrets.required` 字段——按 wrangler 官方设计，这个字段"replaces .dev.vars/.env/process.env inference for type generation"，所以任何机器（包括没有 `.dev.vars` 的 CI 构建机）跑 `cf-typegen` 都会生成一致、正确的类型，**不依赖本机 `.dev.vars` 的内容**。新增一个 secret 时，两处都要改：`wrangler secret put <NAME>`（实际值）+ `wrangler.jsonc` 的 `secrets.required` 数组里加上名字（类型声明，不含值，可以放心提交 git）。mdx 模块声明搬到了 `packages/app/src/types/mdx.d.ts`（与 Cloudflare 类型无关，独立保留）。
+  - **踩过的坑**：一开始只让 `secrets` 三个字段+MIMO+网关 token 落地，但漏了这条——CI 构建机没有 `.dev.vars`，之前设想"部署前手动跑一次 cf-typegen"完全不成立（人跑的是本机，CI 跑的是它自己的干净环境），导致 `ADMIN_PASSWORD` 这类只在窄类型参数里出现的 secret，在 CI 上因为「传入的 `Cloudflare.Env` 和目标类型没有任何字段重叠」触发 TS 的 weak-type 检测报错。`secrets.required` 才是对的、可移植的修法。
+  - **连带的坑**：`vars` 里默认值是单一字面量（如 `HEADLESS_MODE: "false"`、`TRUSTED_ORIGINS: ""`）的字段，wrangler 会把类型推断成那个字面量本身而不是 `string`，导致 `=== 'true'` 或"先真值判断再用"的代码在类型层面出错（真值判断后被收窄成 `never`）。这几处（`app/page.tsx`、`app/my/edit/[id]/page.tsx`、`lib/auth-config.ts`）已经加了 `as string` 显式加宽类型；新增类似的 `vars` 字段、且代码里会跟别的字面量比较或做真值判断时，记得同样处理。
+  - **另一个连带的坑**：`NEXT_PUBLIC_SITE_URL`/`NEXT_PUBLIC_GA_ID` 从 `wrangler.jsonc` 的 `vars` 移出去之后（见上一节，它们本该走构建期 `process.env` 而不是 Workers 绑定），`process.env.NEXT_PUBLIC_X` 的类型从"wrangler 认定的非空 string"变回 `@types/node` 的 `string | undefined`，暴露出 `auth-config.ts`、`layout.tsx` 两处从未做空值兜底的地方（`next build` 之前一直"能过"是因为本机 stale 的 d.ts 碰巧还留着旧类型）。已加默认值兜底 / 条件渲染修复。
+- **上线硬性顺序**：1) 配置 AI Gateway 并在 `/admin/config` 填 `cfAiGatewayBaseUrl`、`wrangler secret put` 补齐 `wrangler.jsonc` 里 `secrets.required` 列出的所有 secret → 2) `pnpm --filter @mui-gamebook/app run db:migrate:remote`（必须先于 deploy，代码 select 全列）→ 3) deploy（CI/本地跑 `cf-typegen` 都会拿到一致的类型，不需要额外手动步骤）→ 4) 管理员进 `/admin/config` 保存一次（KV 配置是 `{...DEFAULT, ...stored}` 合并，旧存量会盖住新模型默认值）。
 
 ### 游戏访问控制
 

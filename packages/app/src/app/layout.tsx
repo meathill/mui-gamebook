@@ -61,7 +61,7 @@ export default async function RootLayout({
           type="image/png"
         />
       </head>
-      <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+      {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />}
       <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
         <NextIntlClientProvider messages={messages}>
           <Theme

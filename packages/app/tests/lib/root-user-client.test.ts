@@ -15,12 +15,12 @@ describe('isRootUserClient', () => {
     if (originalEnv !== undefined) {
       process.env.NEXT_PUBLIC_ROOT_USER_EMAIL = originalEnv;
     } else {
-      delete process.env.NEXT_PUBLIC_ROOT_USER_EMAIL;
+      delete (process.env as Record<string, string | undefined>).NEXT_PUBLIC_ROOT_USER_EMAIL;
     }
   });
 
   it('应该在未设置环境变量时返回 false', () => {
-    delete process.env.NEXT_PUBLIC_ROOT_USER_EMAIL;
+    delete (process.env as Record<string, string | undefined>).NEXT_PUBLIC_ROOT_USER_EMAIL;
     expect(isRootUserClient('any@test.com')).toBe(false);
   });
 

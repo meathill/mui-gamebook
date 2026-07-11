@@ -159,7 +159,26 @@ export default function AdminConfigPage() {
                   <option value="anthropic">Anthropic Claude</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
-                  全局默认文本提供者。MiMo/Claude 只支持文本，图片/TTS/视频会自动回退到 Google。
+                  全局默认文本提供者。图片/视频只有 Google/OpenAI 支持，MiMo/Claude 会自动回退到 Google；TTS
+                  用下面单独的开关。
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认 TTS 提供者</label>
+                <select
+                  value={formData.defaultTtsProvider}
+                  onChange={(e) =>
+                    updateField('defaultTtsProvider', e.target.value as AdminConfigDraft['defaultTtsProvider'])
+                  }
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                  <option value="mimo">小米 MiMo</option>
+                  <option value="google">Google GenAI</option>
+                  <option value="openai">OpenAI</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  与「默认 AI 提供者」相互独立（Claude 不支持
+                  TTS，不在此列）。各提供者的可选音色在编辑器角色配置里按当前 TTS 提供者动态显示。
                 </p>
               </div>
 
@@ -168,20 +187,7 @@ export default function AdminConfigPage() {
                 value={formData.cfAiGatewayBaseUrl}
                 onChange={(value) => updateField('cfAiGatewayBaseUrl', value)}
                 placeholder="https://gateway.ai.cloudflare.com/v1/{account}/{gateway}"
-                hint="配置后 Claude/Gemini/OpenAI 统一经网关转发（MiMo 始终直连官方）；留空则全部直连官方 API"
-              />
-
-              <ConfigTextField
-                label="默认 TTS 音色"
-                value={formData.defaultTtsVoice}
-                onChange={(value) => updateField('defaultTtsVoice', value)}
-                placeholder="Aoede"
-                hint={
-                  <>
-                    Google TTS 可选音色：Aoede, Charon, Fenrir, Kore, Puck, Zephyr 等<br />
-                    OpenAI TTS 可选音色：marin，cedar
-                  </>
-                }
+                hint="必填：Claude/Gemini/OpenAI 的密钥存储在网关（BYOK），必须经它转发才能调用；MiMo 不受影响，始终直连官方。若网关开启了 Authenticated Gateway，还需配置 CF_AI_GATEWAY_TOKEN（Workers secret，不在这里填）"
               />
             </div>
           </section>
@@ -205,6 +211,14 @@ export default function AdminConfigPage() {
                 onChange={(value) => updateField('mimoBaseUrl', value)}
                 placeholder="https://token-plan-cn.xiaomimimo.com/v1"
                 hint="Token Plan 订阅地址；按量付费可改为 https://api.xiaomimimo.com/v1"
+              />
+
+              <ConfigTextField
+                label="MiMo TTS 模型"
+                value={formData.mimoTtsModel}
+                onChange={(value) => updateField('mimoTtsModel', value)}
+                placeholder="mimo-v2.5-tts"
+                hint="预置音色版本；仅在「默认 TTS 提供者」选 MiMo 时生效"
               />
 
               <ConfigTextField

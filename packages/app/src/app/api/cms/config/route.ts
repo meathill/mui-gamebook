@@ -19,6 +19,7 @@ export async function GET() {
     // 只返回用户需要的配置
     return NextResponse.json({
       defaultAiProvider: config.defaultAiProvider,
+      defaultTtsProvider: config.defaultTtsProvider,
       aiPermissions,
     });
   } catch (e: unknown) {

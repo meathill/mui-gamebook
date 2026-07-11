@@ -24,6 +24,8 @@ export class OpenAiProvider implements AiProvider {
   protected client: OpenAI;
   /** API base URL，SDK 之外的裸 fetch（Sora 视频）也走它，便于经 AI Gateway 转发 */
   protected apiBaseUrl: string;
+  /** 经 AI Gateway 转发时需要的额外 header（如 cf-aig-authorization），裸 fetch 需要手动带上 */
+  protected gatewayHeaders: Record<string, string>;
 
   constructor(
     protected apiKey: string,
@@ -33,11 +35,16 @@ export class OpenAiProvider implements AiProvider {
       video?: string;
       tts?: string;
     } = {},
-    options?: { baseURL?: string; type?: AiProviderType },
+    options?: { baseURL?: string; type?: AiProviderType; headers?: Record<string, string> },
   ) {
     this.type = options?.type ?? 'openai';
     this.apiBaseUrl = options?.baseURL ?? 'https://api.openai.com/v1';
-    this.client = new OpenAI({ apiKey, ...(options?.baseURL && { baseURL: options.baseURL }) });
+    this.gatewayHeaders = options?.headers ?? {};
+    this.client = new OpenAI({
+      apiKey,
+      ...(options?.baseURL && { baseURL: options.baseURL }),
+      ...(options?.headers && Object.keys(options.headers).length > 0 && { defaultHeaders: options.headers }),
+    });
   }
 
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
@@ -173,6 +180,7 @@ export class OpenAiProvider implements AiProvider {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
+        ...this.gatewayHeaders,
       },
       body: JSON.stringify({
         model,
@@ -218,6 +226,7 @@ export class OpenAiProvider implements AiProvider {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
+          ...this.gatewayHeaders,
         },
       });
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { createMock, constructorSpy } = vi.hoisted(() => ({
   createMock: vi.fn(),
@@ -14,7 +14,12 @@ vi.mock('openai', () => ({
   },
 }));
 
-import { MIMO_DEFAULT_BASE_URL, MIMO_DEFAULT_TEXT_MODEL, MimoProvider } from '../lib/mimo-provider';
+import {
+  MIMO_DEFAULT_BASE_URL,
+  MIMO_DEFAULT_TEXT_MODEL,
+  MIMO_DEFAULT_TTS_MODEL,
+  MimoProvider,
+} from '../lib/mimo-provider';
 
 describe('MimoProvider', () => {
   beforeEach(() => {
@@ -82,11 +87,65 @@ describe('MimoProvider', () => {
     expect(result.functionCalls).toEqual([{ name: 'addCharacter', args: { id: 'hero', name: '勇者' } }]);
   });
 
-  it('不支持图片/视频/TTS 生成', async () => {
+  it('不支持图片/视频生成', async () => {
     const provider = new MimoProvider('tp-test-key');
     await expect(provider.generateImage()).rejects.toThrow('MiMo 不支持图片生成');
     await expect(provider.startVideoGeneration()).rejects.toThrow('MiMo 不支持视频生成');
     await expect(provider.checkVideoGenerationStatus()).rejects.toThrow('MiMo 不支持视频生成');
-    await expect(provider.generateTTS()).rejects.toThrow('MiMo 不支持 TTS 生成');
+  });
+
+  describe('generateTTS', () => {
+    const fetchMock = vi.fn();
+
+    beforeEach(() => {
+      vi.stubGlobal('fetch', fetchMock);
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({ choices: [{ message: { audio: { data: Buffer.from('fake-wav').toString('base64') } } }] }),
+      });
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('走 /chat/completions，目标文本放在 assistant 角色消息里，默认模型/音色', async () => {
+      const provider = new MimoProvider('tp-test-key');
+      const result = await provider.generateTTS('你好，世界');
+
+      expect(fetchMock.mock.calls[0][0]).toBe(`${MIMO_DEFAULT_BASE_URL}/chat/completions`);
+      const request = fetchMock.mock.calls[0][1];
+      expect(request.headers.Authorization).toBe('Bearer tp-test-key');
+      const body = JSON.parse(request.body);
+      expect(body.model).toBe(MIMO_DEFAULT_TTS_MODEL);
+      expect(body.messages).toEqual([{ role: 'assistant', content: '你好，世界' }]);
+      expect(body.audio).toEqual({ format: 'wav', voice: 'mimo_default' });
+
+      expect(result.mimeType).toBe('audio/wav');
+      expect(result.buffer.toString()).toBe('fake-wav');
+    });
+
+    it('无效音色回退默认音色，合法音色透传，自定义模型生效', async () => {
+      const provider = new MimoProvider('tp-test-key', { tts: 'mimo-v2.5-tts-voicedesign' });
+
+      await provider.generateTTS('文本', 'not-a-real-voice');
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).audio.voice).toBe('mimo_default');
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).model).toBe('mimo-v2.5-tts-voicedesign');
+
+      await provider.generateTTS('文本', '茉莉');
+      expect(JSON.parse(fetchMock.mock.calls[1][1].body).audio.voice).toBe('茉莉');
+    });
+
+    it('请求失败时抛出明确错误', async () => {
+      fetchMock.mockResolvedValue({ ok: false, status: 401, text: async () => 'unauthorized' });
+      const provider = new MimoProvider('tp-test-key');
+      await expect(provider.generateTTS('文本')).rejects.toThrow('MiMo TTS 请求失败: 401 unauthorized');
+    });
+
+    it('响应缺少音频数据时抛出明确错误', async () => {
+      fetchMock.mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: {} }] }) });
+      const provider = new MimoProvider('tp-test-key');
+      await expect(provider.generateTTS('文本')).rejects.toThrow('MiMo TTS 未返回音频数据');
+    });
   });
 });

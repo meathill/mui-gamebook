@@ -1,0 +1,59 @@
+# Cloudflare Workers 机密变量示例
+#
+# 本地开发：cp .dev.vars.example .dev.vars 后填入真实值（.dev.vars 已 gitignore）
+# 生产部署：逐个执行 `wrangler secret put <NAME>`（在 packages/app 目录下）
+#
+# 非机密配置（模型名、ROOT_USER_EMAIL 等）在 wrangler.jsonc 的 vars 里，
+# 运行时模型/网关配置优先走管理后台 /admin/config（存 KV）。
+# NEXT_PUBLIC_* 变量不在这里，见 .env.example（构建期变量，机制完全不同）。
+#
+# 这里列出的每个 key 都要同步加进 wrangler.jsonc 的 secrets.required 数组
+# （只写名字，不含值，可以放心提交 git）——那才是类型检查/CI 构建的类型来源，
+# 不依赖这份本机文件。新增一个 secret 时两处都要改。
+
+# ============ AI 提供者 ============
+
+# Google Gemini / OpenAI（GPT/Sora）/ Anthropic Claude 的真实 API key
+# 统一存放在 Cloudflare AI Gateway 的 BYOK 配置里（Gateway 控制台 → 你的网关 → Provider Keys → Add），
+# app 自身不再持有，因此这里不需要 GOOGLE_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY。
+# 请在管理后台「系统配置」填写 cfAiGatewayBaseUrl，三家提供者都经它转发。
+
+# Cloudflare AI Gateway 的网关鉴权 token（不是 provider key，是 Cloudflare 自己签发的）。
+# 如果网关是 Authenticated Gateway（官方推荐生产环境启用，见 Gateway 设置里的 Authentication），
+# 每个请求都必须带这个 token（cf-aig-authorization 头），否则请求在到达 provider/BYOK 之前
+# 就会被网关直接拒绝，跟 provider key 有没有存对完全无关。
+# 获取方式：My Profile → API Tokens → Create Token，权限给 "AI Gateway - Read" 即可。
+# 如果网关设置成 Unauthenticated（不推荐，任何人拿到网关 URL 都能调用），可以留空。
+CF_AI_GATEWAY_TOKEN=
+
+# 小米 MiMo —— 普通用户默认文本模型，官方直连（不走 AI Gateway）
+# Token Plan 订阅 key 形如 tp-xxx（对应 base URL https://token-plan-cn.xiaomimimo.com/v1）
+# 按量付费 key 形如 sk-xxx（需在管理后台把 MiMo base URL 改为 https://api.xiaomimimo.com/v1）
+MIMO_API_KEY=
+
+# 例外：Veo/Sora 视频生成完成后，下载视频文件是对 Google/OpenAI 存储的直接请求，
+# 不经过 AI Gateway（Gateway 只代理生成调用本身）。只有真的要用视频生成功能时才需要配置，
+# 否则可以留空——文本/图片走 Gateway 完全不受影响。
+GOOGLE_API_KEY=
+OPENAI_API_KEY=
+
+# ============ 认证与后台 ============
+
+# better-auth 会话签名密钥（better-auth 内部读取，生成方式：openssl rand -base64 32）
+BETTER_AUTH_SECRET=
+
+# /api/admin/games/[slug] 等脚本通道的 Bearer 密钥（后台 root 用户 session 不需要它）
+ADMIN_PASSWORD=
+
+# ============ 邮件 ============
+
+# Sendflare 邮件发送 key（注册验证、找回密码）
+SENDFLARE_KEY=
+
+# ============ Story Protocol（IP 注册，可选） ============
+
+# 注册 IP 用的钱包私钥
+STORY_PRIVATE_KEY=
+
+# Pinata IPFS 上传 JWT
+PINATA_JWT=

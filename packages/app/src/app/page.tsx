@@ -21,7 +21,10 @@ export default async function Home() {
   const { env } = await getCloudflareContext({ async: true });
 
   // Headless 模式：自动跳转到 admin 页面
-  if (env.HEADLESS_MODE === 'true') {
+  // wrangler.jsonc 里 HEADLESS_MODE 的默认值固定是 "false"，wrangler types 会把它
+  // 推断成字面量类型而不是 string，这里显式加宽类型，避免部署环境把它改成 "true" 时
+  // 这个比较被 TS 判定为"两个字面量类型没有交集"
+  if ((env.HEADLESS_MODE as string) === 'true') {
     if (!env.COOKIE_DOMAIN) {
       throw new Error('HEADLESS_MODE 启用时必须配置 COOKIE_DOMAIN');
     }

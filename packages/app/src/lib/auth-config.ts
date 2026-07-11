@@ -7,10 +7,12 @@ import { sendEmail } from './email';
 export function createAuth(env: CloudflareEnv) {
   const db = drizzle(env.DB);
   const domain = env.COOKIE_DOMAIN || undefined;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
   // 允许的认证来源
   const trustedOrigins: string[] = [siteUrl];
-  const extraOrigins = env.TRUSTED_ORIGINS;
+  // wrangler.jsonc 里 TRUSTED_ORIGINS 默认值是 ""，wrangler types 会把它推断成字面量类型，
+  // 真值判断后被收窄成 never，这里显式加宽类型
+  const extraOrigins = env.TRUSTED_ORIGINS as string;
   if (extraOrigins) {
     trustedOrigins.push(...extraOrigins.split(',').map((o: string) => o.trim()));
   }

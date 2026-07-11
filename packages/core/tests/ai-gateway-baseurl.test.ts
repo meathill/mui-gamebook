@@ -61,4 +61,25 @@ describe('裸 fetch 走自定义 base URL', () => {
     await viaGateway.checkVideoGenerationStatus('operations/op-1');
     expect(fetchMock.mock.calls[1][0]).toBe(`${GATEWAY}/google-ai-studio/v1beta/operations/op-1`);
   });
+
+  it('配置了 gateway headers 时，OpenAI/Google 的裸 fetch 都带上 cf-aig-authorization', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({ id: 'x', done: false }) });
+    const gatewayHeaders = { 'cf-aig-authorization': 'Bearer cf-token' };
+
+    const openai = new OpenAiProvider('sk-test', {}, { baseURL: `${GATEWAY}/openai`, headers: gatewayHeaders });
+    await openai.startVideoGeneration('视频');
+    expect(fetchMock.mock.calls[0][1].headers).toMatchObject(gatewayHeaders);
+
+    await openai.checkVideoGenerationStatus('op-1');
+    expect(fetchMock.mock.calls[1][1].headers).toMatchObject(gatewayHeaders);
+
+    const google = new GoogleAiProvider(
+      {} as GoogleGenAI,
+      'g-key',
+      {},
+      { apiBaseUrl: `${GATEWAY}/google-ai-studio`, headers: gatewayHeaders },
+    );
+    await google.checkVideoGenerationStatus('operations/op-1');
+    expect(fetchMock.mock.calls[2][1].headers).toMatchObject(gatewayHeaders);
+  });
 });

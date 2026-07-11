@@ -9,10 +9,11 @@ const DEFAULT_CONFIG = {
   adminUserIds: [] as string[],
   // 允许生成视频的用户邮箱白名单
   videoWhitelist: [] as string[],
-  // 默认 AI 提供者
+  // 默认 AI 提供者（文本）
   defaultAiProvider: 'google' as AiProviderType,
-  // 默认 TTS 音色
-  defaultTtsVoice: 'Aoede',
+  // 默认 TTS 提供者，与 defaultAiProvider 独立（Claude 不支持 TTS，不在可选范围）
+  // 各 provider 的默认音色由 voice-config.ts 的 getDefaultVoice() 按 provider 派生，不在这里单独配置
+  defaultTtsProvider: 'mimo' as 'google' | 'openai' | 'mimo',
   // Google AI 文本模型
   googleTextModel: 'gemini-3.1-pro-preview',
   // Google AI 图片模型
@@ -33,10 +34,13 @@ const DEFAULT_CONFIG = {
   mimoTextModel: 'mimo-v2.5-pro',
   // 小米 MiMo base URL（默认 Token Plan 订阅地址，按量付费为 https://api.xiaomimimo.com/v1）
   mimoBaseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
+  // 小米 MiMo TTS 模型（预置音色版本；-voicedesign/-voiceclone 暂未接入）
+  mimoTtsModel: 'mimo-v2.5-tts',
   // Anthropic Claude 文本模型
   anthropicTextModel: 'claude-sonnet-5',
   // Cloudflare AI Gateway 基础地址（形如 https://gateway.ai.cloudflare.com/v1/{account}/{gateway}）
-  // 配置后 Claude/Gemini/OpenAI 统一经网关转发，留空则直连官方 API；MiMo 始终直连官方
+  // Claude/Gemini/OpenAI 的密钥存储在网关（BYOK），必须配置此项才能调用这三家；
+  // 留空会在调用时抛出明确错误。MiMo 不受影响，始终直连官方。
   cfAiGatewayBaseUrl: '',
 };
 

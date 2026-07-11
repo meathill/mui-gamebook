@@ -1,6 +1,11 @@
 import type { AiProviderType, AiUsageInfo } from '@mui-gamebook/core/lib/ai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { createAiProvider, createGoogleAiProvider, resolveMediaProviderType } from './ai-provider-factory';
+import {
+  createAiProvider,
+  createGoogleAiProvider,
+  resolveImageVideoProviderType,
+  resolveTtsProviderType,
+} from './ai-provider-factory';
 import { wrapWav } from './audio';
 
 export type { AiUsageInfo };
@@ -88,7 +93,7 @@ export async function generateAndUploadImage(
   const { env } = getCloudflareContext();
 
   // 图片生成只支持 Google/OpenAI，全局默认为 MiMo/Claude 时回退
-  const provider = await createAiProvider(await resolveMediaProviderType());
+  const provider = await createAiProvider(await resolveImageVideoProviderType());
   const { buffer, type, usage } = await provider.generateImage(prompt, {
     aspectRatio: options?.aspectRatio,
     referenceImages: options?.referenceImages,
@@ -124,7 +129,7 @@ export async function startAsyncVideoGeneration(
   config?: { durationSeconds?: number; aspectRatio?: string },
 ): Promise<StartVideoGenerationResult> {
   // 视频生成只支持 Google/OpenAI，全局默认为 MiMo/Claude 时回退
-  const provider = await createAiProvider(await resolveMediaProviderType());
+  const provider = await createAiProvider(await resolveImageVideoProviderType());
 
   if (!provider.startVideoGeneration) {
     throw new Error('当前 AI 提供者不支持视频生成');
@@ -177,13 +182,16 @@ export async function checkAndCompleteVideoGeneration(
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
-  // 根据 provider 类型设置不同的下载认证
+  // 下载生成完成的视频文件：这是对 Google/OpenAI 存储的直接请求，不经过 AI Gateway
+  // （Gateway 只代理生成调用本身，不代理响应里返回的资源下载链接），因此仍需要真实的
+  // provider key。GOOGLE_API_KEY/OPENAI_API_KEY 不再是必需的 app secret（生成调用走
+  // Gateway 的 BYOK），只有需要下载视频时才用得到；未配置时下载会因鉴权失败报错。
   const headers: Record<string, string> = {};
   if (providerType === 'google' || !providerType) {
-    const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GOOGLE_API_KEY;
     headers['x-goog-api-key'] = apiKey || '';
   } else if (providerType === 'openai') {
-    const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     headers['Authorization'] = `Bearer ${apiKey}`;
   }
 
@@ -247,32 +255,41 @@ export async function generateAndStoreMiniGame(
 /**
  * TTS 声音选项（从 core 配置派生）
  */
-import { GOOGLE_VOICE_IDS, OPENAI_VOICE_IDS } from '@mui-gamebook/core/lib/voice-config';
-export type TTSVoiceName = (typeof GOOGLE_VOICE_IDS)[number] | (typeof OPENAI_VOICE_IDS)[number];
+import {
+  GOOGLE_VOICE_IDS,
+  OPENAI_VOICE_IDS,
+  MIMO_VOICE_IDS,
+  getDefaultVoice,
+} from '@mui-gamebook/core/lib/voice-config';
+export type TTSVoiceName =
+  | (typeof GOOGLE_VOICE_IDS)[number]
+  | (typeof OPENAI_VOICE_IDS)[number]
+  | (typeof MIMO_VOICE_IDS)[number];
 
 const DEFAULT_SAMPLE_RATE = 24000;
 
 /**
  * 生成 TTS 语音并上传到 R2
- * 支持 Google 和 OpenAI TTS
+ * 支持 Google、OpenAI、MiMo 三家 TTS，走独立于文本生成的 defaultTtsProvider 配置
  * 会根据实际生成的音频格式自动修正文件扩展名
  */
 export async function generateAndUploadTTS(
   text: string,
   fileName: string,
-  voiceName: TTSVoiceName = 'Aoede',
+  voiceName?: TTSVoiceName,
 ): Promise<GenerateTTSResult> {
   const { env } = getCloudflareContext();
 
-  // TTS 只支持 Google/OpenAI，全局默认为 MiMo/Claude 时回退
-  const provider = await createAiProvider(await resolveMediaProviderType());
+  const ttsProviderType = await resolveTtsProviderType();
+  const provider = await createAiProvider(ttsProviderType);
 
   // 检查 provider 是否支持 TTS
   if (!provider.generateTTS) {
     throw new Error('当前 AI 提供者不支持 TTS');
   }
 
-  const result = await provider.generateTTS(text, voiceName);
+  // 未指定音色时按当前 TTS 提供者取默认音色，而不是写死某一家的音色 ID
+  const result = await provider.generateTTS(text, voiceName || getDefaultVoice(ttsProviderType));
 
   // 处理音频数据
   let audioBuffer: Buffer;

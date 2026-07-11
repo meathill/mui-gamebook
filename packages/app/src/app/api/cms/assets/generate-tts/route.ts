@@ -27,8 +27,8 @@ export async function POST(req: Request) {
     // 生成文件名
     const fileName = `audio/${gameId}/${Date.now()}.wav`;
 
-    // 生成 TTS 并上传
-    const { url } = await generateAndUploadTTS(text, fileName, voiceName || 'Aoede');
+    // 生成 TTS 并上传（未指定音色时由 generateAndUploadTTS 按当前 TTS 提供者取默认音色）
+    const { url } = await generateAndUploadTTS(text, fileName, voiceName);
 
     return NextResponse.json({ url });
   } catch (e: unknown) {

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { SparkleIcon, UploadSimpleIcon, SpinnerIcon, PlayIcon, StopCircleIcon } from '@phosphor-icons/react/dist/ssr';
 import type { CharacterFormData } from './index';
-import { getAvailableVoices, DEFAULT_VOICE } from '@/lib/voice-config';
+import { getAvailableVoices, getDefaultVoice, type TtsProviderType } from '@/lib/voice-config';
 
 interface Props {
   formData: CharacterFormData;
@@ -18,19 +18,21 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
   // 缓存每个音色的预览 URL，key 为音色名称
   const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
   const [isPlaying, setIsPlaying] = useState(false);
-  const [aiProvider, setAiProvider] = useState<'google' | 'openai'>('google');
+  // 默认先按新装的全局默认值展示（MiMo），拿到 /api/cms/config 的真实配置后再纠正
+  const [ttsProvider, setTtsProvider] = useState<TtsProviderType>('mimo');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const voices = getAvailableVoices(aiProvider);
+  const voices = getAvailableVoices(ttsProvider);
+  const defaultVoice = getDefaultVoice(ttsProvider);
 
-  // 获取当前 AI provider 配置
+  // 获取当前 TTS provider 配置（与文本生成的 defaultAiProvider 相互独立）
   useEffect(() => {
     fetch('/api/cms/config')
       .then((res) => res.json())
       .then((data) => {
-        const config = data as { defaultAiProvider?: 'google' | 'openai' };
-        if (config.defaultAiProvider) {
-          setAiProvider(config.defaultAiProvider);
+        const config = data as { defaultTtsProvider?: TtsProviderType };
+        if (config.defaultTtsProvider) {
+          setTtsProvider(config.defaultTtsProvider);
         }
       })
       .catch(console.error);
@@ -91,7 +93,7 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
       return;
     }
 
-    const voiceName = formData.voice_name || DEFAULT_VOICE;
+    const voiceName = formData.voice_name || defaultVoice;
     const text = formData.description || formData.name || '你好，我是这个故事里的角色。';
 
     // 如果已有该音色的缓存预览 URL，直接播放
@@ -262,7 +264,7 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
           <label className="block text-sm font-medium text-gray-700 mb-1">角色音色</label>
           <div className="flex items-center gap-2">
             <select
-              value={formData.voice_name || DEFAULT_VOICE}
+              value={formData.voice_name || defaultVoice}
               onChange={(e) => handleVoiceChange(e.target.value)}
               className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               {voices.map((voice) => (

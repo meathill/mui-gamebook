@@ -54,6 +54,25 @@
       "service": "mui-gamebook"
     }
   ],
+  // 声明本项目用到的 secret 名单（不含真实值，值仍然只能用 `wrangler secret put` 设置）。
+  // 有了这个列表，`wrangler types`/CI 构建不再依赖本机 .dev.vars 就能生成正确的类型，
+  // `wrangler dev` 也会在缺少某个 secret 时给出警告。新增 secret 时记得同步这里。
+  "secrets": {
+    "required": [
+      "ADMIN_PASSWORD",
+      "BETTER_AUTH_SECRET",
+      "GOOGLE_API_KEY",
+      "OPENAI_API_KEY",
+      "MIMO_API_KEY",
+      "CF_AI_GATEWAY_TOKEN",
+      "SENDFLARE_KEY",
+      "STORY_PRIVATE_KEY",
+      "PINATA_JWT"
+    ]
+  },
+  // 注意：NEXT_PUBLIC_* 变量不要放这里。它们由 Next.js 在构建期静态替换进产物，
+  // 运行时读取的是打包时的字面量，Workers 的 env 绑定对它们不起作用。
+  // 构建前请确保 .env（本地）或构建环境变量里已经填好，见 .env.example。
   "vars": {
     "ASSETS_PUBLIC_DOMAIN": "https://i.muistory.com",
     "COOKIE_DOMAIN": "",
@@ -65,12 +84,10 @@
     "GOOGLE_VIDEO_MODEL": "veo-3.1-fast-generate-preview",
     "OPENAI_TTS_MODEL": "gpt-4o-mini-tts",
     "OPENAI_VIDEO_MODEL": "sora-2",
-    "NEXT_PUBLIC_GA_ID": "G-244NXPS1H0",
-    "NEXT_PUBLIC_SITE_URL": "https://muistory.com",
-    "NEXT_PUBLIC_SITE_NAME": "",
     "ROOT_USER_EMAIL": "meathill@gmail.com",
     "RPC_PROVIDER_URL": "https://aeneid.storyrpc.io",
     "SENDER_EMAIL": "noreply@muistory.com",
-    "TRUSTED_ORIGINS": ""
+    "TRUSTED_ORIGINS": "",
+    "HEADLESS_MODE": "false"
   }
 }

@@ -32,9 +32,13 @@ export class ClaudeProvider implements AiProvider {
   constructor(
     apiKey: string,
     private models: { text?: string } = {},
-    options?: { baseURL?: string },
+    options?: { baseURL?: string; headers?: Record<string, string> },
   ) {
-    this.client = new Anthropic({ apiKey, ...(options?.baseURL && { baseURL: options.baseURL }) });
+    this.client = new Anthropic({
+      apiKey,
+      ...(options?.baseURL && { baseURL: options.baseURL }),
+      ...(options?.headers && Object.keys(options.headers).length > 0 && { defaultHeaders: options.headers }),
+    });
   }
 
   private get textModel(): string {

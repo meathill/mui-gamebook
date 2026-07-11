@@ -13,26 +13,54 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { type AppConfig, getConfig } from './config';
 
 /**
- * 解析媒体生成（图片/TTS/视频）使用的提供者类型
- * MiMo/Claude 只支持文本，全局默认被设为它们时媒体链路回退到 Google
+ * 解析图片/视频生成使用的提供者类型
+ * 只有 Google/OpenAI 支持图片和视频；全局默认是 mimo/anthropic 时回退到 Google
  */
-export async function resolveMediaProviderType(): Promise<'google' | 'openai'> {
+export async function resolveImageVideoProviderType(): Promise<'google' | 'openai'> {
   const config = await getConfig();
   const defaultType = config.defaultAiProvider;
   return defaultType === 'google' || defaultType === 'openai' ? defaultType : 'google';
 }
 
 /**
- * 计算某提供者经 Cloudflare AI Gateway 转发的 base URL
- * 未配置网关时返回 undefined（直连官方 API）；MiMo 不走网关
+ * 解析 TTS 使用的提供者类型
+ * 三选一（Claude 不支持 TTS），独立于 defaultAiProvider（后者只管文本），
+ * 由管理后台单独配置的 defaultTtsProvider 决定
  */
-function resolveGatewayBaseUrl(
-  config: AppConfig,
-  provider: 'openai' | 'anthropic' | 'google-ai-studio',
-): string | undefined {
+export async function resolveTtsProviderType(): Promise<'google' | 'openai' | 'mimo'> {
+  const config = await getConfig();
+  const ttsType = config.defaultTtsProvider;
+  return ttsType === 'google' || ttsType === 'openai' || ttsType === 'mimo' ? ttsType : 'mimo';
+}
+
+/**
+ * Claude/Gemini/OpenAI 的真实密钥存储在 Cloudflare AI Gateway（BYOK），
+ * app 自身不再持有这些密钥。SDK 客户端仍需要一个非空 apiKey 字段才能构造，
+ * 但实际鉴权由 Gateway 用它存储的密钥完成，这里只是占位。
+ */
+const AI_GATEWAY_MANAGED_KEY = 'cf-ai-gateway-managed';
+
+/**
+ * 计算某提供者经 Cloudflare AI Gateway 转发的 base URL
+ * Claude/Gemini/OpenAI 必须经网关（密钥存在网关侧）；MiMo 不受影响，始终直连官方
+ */
+function resolveGatewayBaseUrl(config: AppConfig, provider: 'openai' | 'anthropic' | 'google-ai-studio'): string {
   const gateway = config.cfAiGatewayBaseUrl?.trim().replace(/\/+$/, '');
-  if (!gateway) return undefined;
+  if (!gateway) {
+    throw new Error(
+      `Cloudflare AI Gateway 未配置：${provider} 的密钥存储在网关中，请在管理后台系统配置里填写 cfAiGatewayBaseUrl`,
+    );
+  }
   return `${gateway}/${provider}`;
+}
+
+/**
+ * 网关鉴权 header：如果网关开启了 Authenticated Gateway（Cloudflare 官方推荐生产环境启用），
+ * 每个请求都必须带 cf-aig-authorization，否则请求在到达 provider 之前就会被网关拒绝（401），
+ * 与 BYOK 是否配置无关。未配置 CF_AI_GATEWAY_TOKEN 时按未鉴权网关处理，不发这个 header。
+ */
+function resolveGatewayHeaders(token: string | undefined): Record<string, string> {
+  return token ? { 'cf-aig-authorization': `Bearer ${token}` } : {};
 }
 
 /**
@@ -51,39 +79,36 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
       throw new Error('MIMO_API_KEY not configured');
     }
 
-    return new MimoProvider(apiKey, { text: config.mimoTextModel }, config.mimoBaseUrl);
+    return new MimoProvider(apiKey, { text: config.mimoTextModel, tts: config.mimoTtsModel }, config.mimoBaseUrl);
   }
 
-  if (providerType === 'anthropic') {
-    const apiKey = env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error('ANTHROPIC_API_KEY not configured');
-    }
+  const gatewayHeaders = resolveGatewayHeaders(env.CF_AI_GATEWAY_TOKEN || process.env.CF_AI_GATEWAY_TOKEN);
 
+  if (providerType === 'anthropic') {
     const baseURL = resolveGatewayBaseUrl(config, 'anthropic');
-    return new ClaudeProvider(apiKey, { text: config.anthropicTextModel }, baseURL ? { baseURL } : undefined);
+    return new ClaudeProvider(
+      AI_GATEWAY_MANAGED_KEY,
+      { text: config.anthropicTextModel },
+      { baseURL, headers: gatewayHeaders },
+    );
   }
 
   if (providerType === 'openai') {
-    const apiKey = env.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      throw new Error('OPENAI_API_KEY not configured');
-    }
-
     const baseURL = resolveGatewayBaseUrl(config, 'openai');
     return new OpenAiProvider(
-      apiKey,
+      AI_GATEWAY_MANAGED_KEY,
       {
         text: config.openaiTextModel,
         image: config.openaiImageModel,
         video: config.openaiVideoModel,
+        tts: config.openaiTtsModel,
       },
-      baseURL ? { baseURL } : undefined,
+      { baseURL, headers: gatewayHeaders },
     );
   }
 
   // 默认使用 Google AI
-  return buildGoogleAiProvider(env, config);
+  return buildGoogleAiProvider(config, gatewayHeaders);
 }
 
 /**
@@ -92,25 +117,25 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
 export async function createGoogleAiProvider(): Promise<GoogleAiProvider> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
-  return buildGoogleAiProvider(env, config);
+  const gatewayHeaders = resolveGatewayHeaders(env.CF_AI_GATEWAY_TOKEN || process.env.CF_AI_GATEWAY_TOKEN);
+  return buildGoogleAiProvider(config, gatewayHeaders);
 }
 
-function buildGoogleAiProvider(env: { GOOGLE_API_KEY?: string }, config: AppConfig): GoogleAiProvider {
-  const apiKey = env.GOOGLE_API_KEY || process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY not configured');
-  }
-
+function buildGoogleAiProvider(config: AppConfig, gatewayHeaders: Record<string, string>): GoogleAiProvider {
   const apiBaseUrl = resolveGatewayBaseUrl(config, 'google-ai-studio');
-  const genAI = new GoogleGenAI({ apiKey, ...(apiBaseUrl && { httpOptions: { baseUrl: apiBaseUrl } }) });
+  const genAI = new GoogleGenAI({
+    apiKey: AI_GATEWAY_MANAGED_KEY,
+    httpOptions: { baseUrl: apiBaseUrl, ...(Object.keys(gatewayHeaders).length > 0 && { headers: gatewayHeaders }) },
+  });
   return new GoogleAiProvider(
     genAI,
-    apiKey,
+    AI_GATEWAY_MANAGED_KEY,
     {
       text: config.googleTextModel,
       image: config.googleImageModel,
       video: config.googleVideoModel,
+      tts: config.googleTtsModel,
     },
-    apiBaseUrl ? { apiBaseUrl } : undefined,
+    { apiBaseUrl, headers: gatewayHeaders },
   );
 }
