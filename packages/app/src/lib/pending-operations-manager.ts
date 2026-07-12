@@ -3,6 +3,8 @@
  * 在应用级别管理 pending 操作的轮询，独立于组件生命周期
  */
 
+import { clampPollInterval } from './polling';
+
 type OperationCallback = (
   operationId: number,
   result: { status: 'completed' | 'failed'; url?: string; error?: string },
@@ -101,7 +103,7 @@ class PendingOperationsManager {
     }
 
     // 使用上次请求耗时作为间隔，限制在 [min, max] 范围内
-    const interval = Math.min(Math.max(operation.lastRequestDuration, this.minPollInterval), this.maxPollInterval);
+    const interval = clampPollInterval(operation.lastRequestDuration, this.minPollInterval, this.maxPollInterval);
 
     operation.timeoutId = setTimeout(() => this.checkOperation(operationId), interval);
   }

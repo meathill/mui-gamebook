@@ -175,7 +175,7 @@ export async function generateImagePrompts(
  */
 export function insertImageNodes(game: Game, prompts: GeneratedPrompt[]): Game {
   // 深拷贝以避免修改原对象
-  const updatedGame = JSON.parse(JSON.stringify(game)) as Game;
+  const updatedGame = structuredClone(game);
 
   for (const prompt of prompts) {
     const scene = updatedGame.scenes[prompt.sceneId] as Scene | undefined;

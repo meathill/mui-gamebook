@@ -115,16 +115,16 @@ export default function MiniGamePlayer({ url, variables, runtimeState, onComplet
     };
   }, []);
 
-  const handleStart = () => {
+  function handleStart() {
     setIsStarted(true);
-  };
+  }
 
-  const handleRetry = () => {
+  function handleRetry() {
     setError(null);
     if (containerRef.current) {
       loadGame(containerRef.current);
     }
-  };
+  }
 
   if (error) {
     return (

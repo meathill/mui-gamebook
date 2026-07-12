@@ -48,17 +48,17 @@ export default function MiniGameSelector({ onSelect, onGenerate, isGenerating }:
     }
   };
 
-  const handleSearch = () => {
+  function handleSearch() {
     loadMinigames(search);
-  };
+  }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  function handleKeyDown(e: React.KeyboardEvent) {
     if (isImeComposing(e)) return;
 
     if (e.key === 'Enter') {
       handleSearch();
     }
-  };
+  }
 
   return (
     <div className="space-y-2">

@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { clampPollInterval } from '@/lib/polling';
 
 export type OperationStatus = 'pending' | 'completed' | 'failed';
 
@@ -95,7 +96,7 @@ export function useAsyncOperation(placeholderUrl: string | undefined, options: U
       const done = await checkStatus();
       if (!done) {
         // 使用上次请求耗时作为间隔，限制在 [min, max] 范围内
-        const interval = Math.min(Math.max(lastDurationRef.current, minPollInterval), maxPollInterval);
+        const interval = clampPollInterval(lastDurationRef.current, minPollInterval, maxPollInterval);
         timeoutRef.current = setTimeout(poll, interval);
       }
     };

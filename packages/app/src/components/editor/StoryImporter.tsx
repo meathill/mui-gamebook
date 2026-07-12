@@ -100,9 +100,9 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
     }
   }
 
-  const handleUseExample = () => {
+  function handleUseExample() {
     setStory(randomPrompt.example);
-  };
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

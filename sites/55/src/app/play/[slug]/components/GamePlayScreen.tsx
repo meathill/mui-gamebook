@@ -2,14 +2,14 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import {
-  MapIcon,
-  SettingsIcon,
-  SaveIcon,
+  MapTrifoldIcon,
+  GearIcon,
+  FloppyDiskIcon,
   FolderOpenIcon,
   PlayIcon,
   FastForwardIcon,
   ArrowLeftIcon,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import type { PlayableGame, PlayableScene, RuntimeState } from '@mui-gamebook/parser/src/types';
 import {
   evaluateCondition,
@@ -303,7 +303,7 @@ export default function GamePlayScreen({
             }}
             className="hud-btn"
             title="路线图">
-            <MapIcon size={16} />
+            <MapTrifoldIcon size={16} />
             <span className="hidden sm:inline">路线图</span>
           </button>
         </div>
@@ -342,7 +342,7 @@ export default function GamePlayScreen({
             }}
             className="hud-btn"
             title="存档">
-            <SaveIcon size={16} />
+            <FloppyDiskIcon size={16} />
             <span className="hidden sm:inline">存档</span>
           </button>
           <button
@@ -364,7 +364,7 @@ export default function GamePlayScreen({
             }}
             className="hud-btn"
             title="设置">
-            <SettingsIcon size={16} />
+            <GearIcon size={16} />
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { XIcon, TrashIcon } from 'lucide-react';
+import { XIcon, TrashIcon } from '@phosphor-icons/react';
 import type { SaveSlot, SaveSlotId } from '@mui-gamebook/site-common/game-player';
 
 interface Props {

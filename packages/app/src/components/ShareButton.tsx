@@ -16,7 +16,7 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
   const t = useTranslations('share');
   const tHeader = useTranslations('header');
 
-  const handleShare = async () => {
+  async function handleShare() {
     // 尝试使用原生分享 API
     if (navigator.share) {
       try {
@@ -30,7 +30,7 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
         // 用户取消分享或不支持，继续使用下拉菜单
       }
     }
-  };
+  }
 
   const copyToClipboard = async () => {
     try {

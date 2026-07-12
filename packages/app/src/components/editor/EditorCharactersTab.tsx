@@ -34,20 +34,20 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
     );
   }, [characterList, searchQuery]);
 
-  const handleSelectCharacter = (id: string) => {
+  function handleSelectCharacter(id: string) {
     setSelectedId(id);
     setIsCreating(false);
     setFormData(characterToFormData(id, characters[id]));
-  };
+  }
 
-  const handleCreateNew = () => {
+  function handleCreateNew() {
     setSelectedId(null);
     setIsCreating(true);
     const newId = `char_${Date.now().toString().slice(-4)}`;
     setFormData({ ...defaultCharacterFormData, id: newId });
-  };
+  }
 
-  const handleSaveCharacter = async () => {
+  async function handleSaveCharacter() {
     if (!formData.id.trim()) {
       await dialog.alert('角色 ID 不能为空');
       return;
@@ -79,9 +79,9 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
 
     setSelectedId(formData.id);
     setIsCreating(false);
-  };
+  }
 
-  const handleDeleteCharacter = async (id: string) => {
+  async function handleDeleteCharacter(id: string) {
     const confirmed = await dialog.confirm(`确定删除角色 "${characters[id].name}" 吗？`);
     if (!confirmed) return;
 
@@ -93,7 +93,7 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
       setSelectedId(null);
       setFormData(defaultCharacterFormData);
     }
-  };
+  }
 
   const updateFormData = async (updates: Partial<CharacterFormData>) => {
     const newFormData = { ...formData, ...updates };

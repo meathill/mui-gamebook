@@ -38,7 +38,7 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
       .catch(console.error);
   }, []);
 
-  const handleGenerateImage = async () => {
+  async function handleGenerateImage() {
     if (!formData.image_prompt) return;
     setGeneratingImage(true);
     try {
@@ -58,9 +58,9 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
     } finally {
       setGeneratingImage(false);
     }
-  };
+  }
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingImage(true);
@@ -82,9 +82,9 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
     } finally {
       setUploadingImage(false);
     }
-  };
+  }
 
-  const handleVoicePreview = async () => {
+  async function handleVoicePreview() {
     // 如果正在播放，停止播放
     if (isPlaying && audioRef.current) {
       audioRef.current.pause();
@@ -125,7 +125,7 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
     } finally {
       setGeneratingPreview(false);
     }
-  };
+  }
 
   function playAudio(url: string) {
     if (audioRef.current) {
@@ -139,14 +139,14 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
     audio.play();
   }
 
-  const handleVoiceChange = (voiceName: string) => {
+  function handleVoiceChange(voiceName: string) {
     onUpdate({ voice_name: voiceName });
     // 停止当前播放（不清除缓存，保留已生成的预览）
     if (audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
     }
-  };
+  }
 
   return (
     <div className="p-6">

@@ -1,6 +1,6 @@
 'use client';
 
-import { XIcon, RotateCcwIcon } from 'lucide-react';
+import { XIcon, ArrowCounterClockwiseIcon } from '@phosphor-icons/react';
 import type { GameSettings } from '@mui-gamebook/site-common/game-player';
 
 interface Props {
@@ -108,7 +108,7 @@ export default function SettingsScreen({ settings, onUpdateSetting, onReset, onC
           <button
             onClick={onReset}
             className="btn btn-ghost w-full text-sm">
-            <RotateCcwIcon size={14} />
+            <ArrowCounterClockwiseIcon size={14} />
             恢复默认设置
           </button>
         </div>

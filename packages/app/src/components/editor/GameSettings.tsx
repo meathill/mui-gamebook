@@ -18,7 +18,7 @@ export default function GameSettings({ game, onSave, onClose }: Props) {
     published: game.published || false,
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSave({
       ...game,
@@ -29,7 +29,7 @@ export default function GameSettings({ game, onSave, onClose }: Props) {
         .filter((t) => t),
     });
     onClose();
-  };
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

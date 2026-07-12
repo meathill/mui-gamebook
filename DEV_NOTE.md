@@ -91,7 +91,7 @@
 **Radix UI 引入**
 - 时机：编辑器功能复杂化后，需要更可靠的无障碍组件
 - 使用 Radix Themes 作为基础 UI 库
-- 图标统一使用 lucide-react
+- 图标最初统一使用 lucide-react，2026-06-28 起改为统一使用 @phosphor-icons/react（packages/app 与 jianjian 已全量迁移；sites/55 在 2026-07 的全盘维护中补齐迁移，全仓库不再有 lucide-react 依赖）
 
 **MediaAssetItem 统一组件**
 - 将封面编辑器和素材编辑器合并

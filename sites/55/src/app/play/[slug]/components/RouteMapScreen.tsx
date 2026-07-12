@@ -1,6 +1,6 @@
 'use client';
 
-import { XIcon, LockIcon, CheckCircleIcon, PlayIcon } from 'lucide-react';
+import { XIcon, LockIcon, CheckCircleIcon, PlayIcon } from '@phosphor-icons/react';
 import type { RouteMapNode } from '@mui-gamebook/site-common/game-player';
 
 interface Props {

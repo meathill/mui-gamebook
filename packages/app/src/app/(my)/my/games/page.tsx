@@ -65,16 +65,16 @@ export default function GamesPage() {
     },
   });
 
-  const handleCreate = (e: React.FormEvent) => {
+  function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     createMutation.mutate(newTitle);
-  };
+  }
 
-  const handleDelete = async (id: string) => {
+  async function handleDelete(id: string) {
     const confirmed = await dialog.confirm('确定要删除吗？此操作无法撤销。');
     if (!confirmed) return;
     deleteMutation.mutate(id);
-  };
+  }
 
   return (
     <div>

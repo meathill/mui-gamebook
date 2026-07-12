@@ -94,11 +94,11 @@ export default function GlobalStatsPage() {
     },
   });
 
-  const handlePageChange = (newPage: number) => {
+  function handlePageChange(newPage: number) {
     const params = new URLSearchParams(searchParams);
     params.set('page', newPage.toString());
     router.push(`${pathname}?${params.toString()}`);
-  };
+  }
 
   if (isLoading) {
     return (

@@ -96,19 +96,19 @@ export default function StandaloneMiniGamePlayer({ code }: StandaloneMiniGamePla
     };
   }, []);
 
-  const handleStart = () => {
+  function handleStart() {
     setIsStarted(true);
-  };
+  }
 
-  const handleRetry = () => {
+  function handleRetry() {
     setError(null);
     setIsCompleted(false);
     if (containerRef.current) {
       loadGame(containerRef.current);
     }
-  };
+  }
 
-  const handleReplay = () => {
+  function handleReplay() {
     // 销毁旧游戏
     if (gameRef.current) {
       try {
@@ -123,7 +123,7 @@ export default function StandaloneMiniGamePlayer({ code }: StandaloneMiniGamePla
     if (containerRef.current) {
       loadGame(containerRef.current);
     }
-  };
+  }
 
   if (error) {
     return (

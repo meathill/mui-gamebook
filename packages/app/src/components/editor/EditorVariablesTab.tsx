@@ -33,20 +33,20 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
     return variables.filter(([name]) => name.toLowerCase().includes(query));
   }, [variables, searchQuery]);
 
-  const handleSelectVariable = (name: string) => {
+  function handleSelectVariable(name: string) {
     setSelectedVar(name);
     setIsCreating(false);
     setFormData(variableToFormData(name, state[name]));
-  };
+  }
 
-  const handleCreateNew = () => {
+  function handleCreateNew() {
     setSelectedVar(null);
     setIsCreating(true);
     const newName = `var_${Date.now().toString().slice(-4)}`;
     setFormData({ ...defaultFormData, name: newName });
-  };
+  }
 
-  const handleSaveVariable = async () => {
+  async function handleSaveVariable() {
     if (!formData.name.trim()) {
       await dialog.alert('变量名不能为空');
       return;
@@ -72,9 +72,9 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
 
     setSelectedVar(formData.name);
     setIsCreating(false);
-  };
+  }
 
-  const handleDeleteVariable = async (name: string) => {
+  async function handleDeleteVariable(name: string) {
     const confirmed = await dialog.confirm(`确定删除变量 "${name}" 吗？`);
     if (!confirmed) return;
     const newState = { ...state };
@@ -85,7 +85,7 @@ export default function EditorVariablesTab({ state, onChange, scenes }: Props) {
       setSelectedVar(null);
       setFormData(defaultFormData);
     }
-  };
+  }
 
   const updateFormData = async (updates: Partial<VariableFormData>) => {
     const newFormData = { ...formData, ...updates };
