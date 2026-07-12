@@ -40,6 +40,16 @@ export class GoogleAiProvider implements AiProvider {
     this.gatewayHeaders = options?.headers ?? {};
   }
 
+  private static extractUsage(response: {
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number };
+  }): AiUsageInfo {
+    return {
+      promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
+      completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
+      totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
+    };
+  }
+
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
     const model = this.models.text || 'gemini-2.5-flash';
     console.log(`[Google AI] Generating text with model: ${model}`);
@@ -74,11 +84,7 @@ export class GoogleAiProvider implements AiProvider {
       config: getThinkingConfig(),
     });
 
-    const usage: AiUsageInfo = {
-      promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
-      completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
-      totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
-    };
+    const usage = GoogleAiProvider.extractUsage(response);
 
     return {
       text: response.text || '',
@@ -149,11 +155,7 @@ export class GoogleAiProvider implements AiProvider {
       },
     });
 
-    const usage: AiUsageInfo = {
-      promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
-      completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
-      totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
-    };
+    const usage = GoogleAiProvider.extractUsage(response);
 
     if (!response.candidates || response.candidates.length === 0) {
       throw new Error('No candidates received from Google AI.');
@@ -284,11 +286,7 @@ export class GoogleAiProvider implements AiProvider {
       ],
     });
 
-    const usage: AiUsageInfo = {
-      promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
-      completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
-      totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
-    };
+    const usage = GoogleAiProvider.extractUsage(response);
 
     let code = response.text || '';
     code = code
@@ -333,11 +331,7 @@ export class GoogleAiProvider implements AiProvider {
       },
     });
 
-    const usage: AiUsageInfo = {
-      promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
-      completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
-      totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
-    };
+    const usage = GoogleAiProvider.extractUsage(response);
 
     const candidate = response.candidates?.[0];
     if (!candidate?.content?.parts) {

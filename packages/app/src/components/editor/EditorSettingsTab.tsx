@@ -1,20 +1,10 @@
-import type { DisplayMode, Game, SiteTemplate, TextBoxPosition } from '@mui-gamebook/parser/src/types';
-import { ArrowSquareOutIcon, ShieldIcon, SpinnerIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
+import type { Game } from '@mui-gamebook/parser/src/types';
+import { XIcon } from '@phosphor-icons/react/dist/ssr';
 import MDEditor from '@uiw/react-md-editor';
-import { useEffect, useState } from 'react';
-import { useDialog } from '@/components/Dialog';
 import { isImeComposing } from '@/lib/keyboard';
+import { PlaybackModeSection, SiteTemplateSection } from './EditorSettingsSections';
+import IpRegistrationCard from './IpRegistrationCard';
 import MediaAssetItem from './MediaAssetItem';
-import TypewriterSpeedField from './TypewriterSpeedField';
-
-interface IpStatus {
-  registered: boolean;
-  ipId?: string;
-  txHash?: string;
-  tokenId?: string;
-  registeredAt?: string;
-  explorerUrl?: string;
-}
 
 interface Props {
   game: Game;
@@ -25,56 +15,6 @@ interface Props {
 }
 
 export default function EditorSettingsTab({ game, id, onChange, onSlugChange, slug }: Props) {
-  const [ipStatus, setIpStatus] = useState<IpStatus | null>(null);
-  const [registeringIp, setRegisteringIp] = useState(false);
-  const [loadingIpStatus, setLoadingIpStatus] = useState(true);
-  const dialog = useDialog();
-
-  useEffect(() => {
-    async function fetchIpStatus() {
-      try {
-        const res = await fetch(`/api/cms/games/${id}/register-ip`);
-        if (res.ok) {
-          const data = (await res.json()) as IpStatus;
-          setIpStatus(data);
-        }
-      } catch (e) {
-        console.error('获取 IP 状态失败:', e);
-      } finally {
-        setLoadingIpStatus(false);
-      }
-    }
-    fetchIpStatus();
-  }, [id]);
-
-  async function handleRegisterIp() {
-    const confirmed = await dialog.confirm(
-      '注册 IP 将把您的作品记录在 Story Protocol 区块链上，这个操作不可撤销。确定要继续吗？',
-    );
-    if (!confirmed) return;
-
-    setRegisteringIp(true);
-    try {
-      const res = await fetch(`/api/cms/games/${id}/register-ip`, { method: 'POST' });
-      const data = (await res.json()) as {
-        success?: boolean;
-        ipId?: string;
-        explorerUrl?: string;
-        error?: string;
-      };
-      if (res.ok && data.success) {
-        await dialog.success('IP 注册成功！您的作品已被记录在区块链上。');
-        setIpStatus({ registered: true, ipId: data.ipId, explorerUrl: data.explorerUrl });
-      } else {
-        await dialog.error(data.error || 'IP 注册失败');
-      }
-    } catch (e) {
-      await dialog.error('IP 注册失败：' + (e as Error).message);
-    } finally {
-      setRegisteringIp(false);
-    }
-  }
-
   function handleChange(field: string, value: string | number | boolean | Record<string, unknown>) {
     onChange({ ...game, [field]: value });
   }
@@ -136,122 +76,15 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
             />
           </div>
 
-          <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 space-y-3">
-            <h3 className="text-sm font-medium text-amber-900">播放模式</h3>
-            <div>
-              <label className="block text-xs text-amber-800 mb-1">展示方式</label>
-              <div className="flex gap-2">
-                {(
-                  [
-                    { value: 'classic', label: '经典（图+文+选项）' },
-                    { value: 'immersive', label: '沉浸（视觉小说）' },
-                  ] as { value: DisplayMode; label: string }[]
-                ).map((opt) => {
-                  const current = game.display_mode || 'classic';
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleChange('display_mode', opt.value)}
-                      className={`flex-1 px-3 py-2 text-sm rounded border transition ${
-                        current === opt.value
-                          ? 'bg-amber-600 text-white border-amber-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
-                      }`}>
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            {(game.display_mode || 'classic') === 'immersive' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-amber-800 mb-1">文字框默认位置</label>
-                  <div className="flex gap-1">
-                    {(
-                      [
-                        { value: 'bottom', label: '底部' },
-                        { value: 'center', label: '居中' },
-                        { value: 'top', label: '顶部' },
-                      ] as { value: TextBoxPosition; label: string }[]
-                    ).map((opt) => {
-                      const current = game.text_box_position || 'bottom';
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => handleChange('text_box_position', opt.value)}
-                          className={`flex-1 px-2 py-2 text-sm rounded border transition ${
-                            current === opt.value
-                              ? 'bg-amber-600 text-white border-amber-600'
-                              : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
-                          }`}>
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <p className="mt-1 text-[11px] text-amber-700/80">读者可在游戏内菜单临时覆盖。</p>
-                </div>
-                <div>
-                  <label className="block text-xs text-amber-800 mb-1">逐字速度（毫秒/字）</label>
-                  <TypewriterSpeedField
-                    value={game.typewriter_speed ?? 40}
-                    onChange={(value) => handleChange('typewriter_speed', value)}
-                  />
-                  <p className="mt-1 text-[11px] text-amber-700/80">默认 40，数值越小越快。</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <PlaybackModeSection
+            game={game}
+            onChange={handleChange}
+          />
 
-          <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100 space-y-3">
-            <h3 className="text-sm font-medium text-emerald-900">站点模版</h3>
-            <div>
-              <label className="block text-xs text-emerald-800 mb-1">模版类型</label>
-              <div className="flex gap-2">
-                {(
-                  [
-                    { value: 'default', label: '默认' },
-                    { value: 'visual-novel', label: '视觉小说' },
-                  ] as { value: SiteTemplate; label: string }[]
-                ).map((opt) => {
-                  const current = game.site_template || 'default';
-                  return (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleChange('site_template', opt.value)}
-                      className={`flex-1 px-3 py-2 text-sm rounded border transition ${
-                        current === opt.value
-                          ? 'bg-emerald-600 text-white border-emerald-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'
-                      }`}>
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-              <p className="mt-1 text-[11px] text-emerald-700/80">视觉小说模版支持路线图、多存档、设置等功能。</p>
-            </div>
-            {game.site_template === 'visual-novel' && (
-              <div>
-                <label className="block text-xs text-emerald-800 mb-1">二级域名前缀</label>
-                <div className="flex items-center gap-1">
-                  <input
-                    type="text"
-                    value={game.subdomain || ''}
-                    onChange={(e) => handleChange('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                    placeholder="如：55"
-                    className="w-24 rounded-md border-gray-300 border shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-2 text-sm"
-                  />
-                  <span className="text-sm text-gray-500">.muistory.com</span>
-                </div>
-                <p className="mt-1 text-[11px] text-emerald-700/80">绑定后主站会自动跳转到子站点。</p>
-              </div>
-            )}
-          </div>
+          <SiteTemplateSection
+            game={game}
+            onChange={handleChange}
+          />
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">标签</label>
@@ -353,63 +186,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
             </div>
           </div>
 
-          {/* IP 注册 - Story Protocol */}
-          <div className="p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-lg border border-purple-200">
-            <h3 className="text-sm font-medium text-purple-900 mb-2 flex items-center gap-2">
-              <ShieldIcon size={16} />
-              IP 版权保护
-            </h3>
-            {loadingIpStatus ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <SpinnerIcon
-                  size={14}
-                  className="animate-spin"
-                />
-                加载中...
-              </div>
-            ) : ipStatus?.registered ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                    已注册
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600 break-all">IP ID: {ipStatus.ipId}</p>
-                <a
-                  href={ipStatus.explorerUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800">
-                  在区块链浏览器查看 <ArrowSquareOutIcon size={12} />
-                </a>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-xs text-gray-600">
-                  通过 Story Protocol 将您的作品注册为 IP Asset，在区块链上永久记录您的版权。
-                </p>
-                <button
-                  onClick={handleRegisterIp}
-                  disabled={registeringIp}
-                  className="w-full py-2 bg-purple-600 text-white rounded text-sm font-medium hover:bg-purple-700 disabled:opacity-50 flex justify-center items-center gap-2">
-                  {registeringIp ? (
-                    <>
-                      <SpinnerIcon
-                        size={14}
-                        className="animate-spin"
-                      />
-                      注册中...
-                    </>
-                  ) : (
-                    <>
-                      <ShieldIcon size={14} />
-                      注册 IP 版权
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
+          <IpRegistrationCard gameId={id} />
         </div>
       </div>
     </div>

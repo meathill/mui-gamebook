@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
 import {
@@ -9,8 +9,6 @@ import {
   Background,
   useNodesState,
   useEdgesState,
-  addEdge,
-  Connection,
   Edge,
   MiniMap,
   useOnSelectionChange,
@@ -20,9 +18,8 @@ import {
 import '@xyflow/react/dist/style.css';
 import { parse, stringify } from '@mui-gamebook/parser';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
-import { getLayoutedElements } from '@/lib/editor/layout';
-import { handleBatchFunctionCalls } from '@/lib/editor/chatFunctionHandlers';
 import { useEditorData } from '@/lib/editor/useEditorData';
+import { useFlowNodeHandlers } from '@/lib/editor/useFlowNodeHandlers';
 import { useEditorStore } from '@/lib/editor/store';
 import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
@@ -174,98 +171,29 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
     );
   }
 
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge({ ...params, type: 'default', label: 'Choice' }, eds)),
-    [setEdges],
-  );
-
-  function handleNodeChange(nodeId: string, data: Partial<SceneNodeData>) {
-    setNodes((nds) => nds.map((node) => (node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node)));
-    if (selectedNode && selectedNode.id === nodeId) {
-      setSelectedNode({ ...selectedNode, data: { ...selectedNode.data, ...data } } as Node);
-    }
-  }
-
-  async function handleNodeIdChange(oldId: string, newId: string) {
-    if (!newId || oldId === newId) return;
-    if (nodes.some((n) => n.id === newId)) {
-      await dialog.alert(`场景 ID "${newId}" 已存在。`);
-      return;
-    }
-    setNodes((nds) =>
-      nds.map((node) => (node.id === oldId ? { ...node, id: newId, data: { ...node.data, label: newId } } : node)),
-    );
-    setEdges((eds) =>
-      eds.map((edge) => {
-        let u = false,
-          s = edge.source,
-          t = edge.target;
-        if (s === oldId) {
-          s = newId;
-          u = true;
-        }
-        if (t === oldId) {
-          t = newId;
-          u = true;
-        }
-        return u ? { ...edge, source: s, target: t } : edge;
-      }),
-    );
-  }
-
-  function handleEdgeChange(edgeId: string, changes: { label?: string; data?: Record<string, unknown> }) {
-    setEdges((eds) =>
-      eds.map((edge) =>
-        edge.id === edgeId
-          ? {
-              ...edge,
-              ...(changes.label ? { label: changes.label } : {}),
-              ...(changes.data ? { data: { ...edge.data, ...changes.data } } : {}),
-            }
-          : edge,
-      ),
-    );
-    if (selectedEdge && selectedEdge.id === edgeId) {
-      setSelectedEdge({
-        ...selectedEdge,
-        ...(changes.label ? { label: changes.label } : {}),
-        ...(changes.data ? { data: { ...selectedEdge.data, ...changes.data } } : {}),
-      } as Edge);
-    }
-  }
-
-  function handleAddScene() {
-    const sceneId = `scene_${Date.now().toString().slice(-4)}`;
-    const newNode = {
-      id: sceneId,
-      position: screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 }),
-      data: { label: sceneId, content: 'New scene content', assets: [] },
-      type: 'scene',
-    };
-    setNodes((nds) => nds.concat(newNode));
-  }
-
-  const handleLayout = useCallback(() => {
-    const { nodes: ln, edges: le } = getLayoutedElements(nodes, edges);
-    setNodes([...ln]);
-    setEdges([...le]);
-    window.requestAnimationFrame(() => fitView());
-  }, [nodes, edges, setNodes, setEdges, fitView]);
-
-  // AI function call 处理器
-  const handleFunctionCall = useCallback(
-    (calls: Array<{ name: string; args: Record<string, unknown> }>) => {
-      handleBatchFunctionCalls(calls, {
-        nodes: nodes as Node<SceneNodeData>[],
-        edges,
-        originalGame,
-        setNodes,
-        setEdges,
-        setOriginalGame,
-      });
-    },
-    [nodes, edges, originalGame, setNodes, setEdges, setOriginalGame],
-  );
+  const {
+    onConnect,
+    handleNodeChange,
+    handleNodeIdChange,
+    handleEdgeChange,
+    handleAddScene,
+    handleLayout,
+    handleFunctionCall,
+  } = useFlowNodeHandlers({
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    selectedNode,
+    setSelectedNode,
+    selectedEdge,
+    setSelectedEdge,
+    originalGame,
+    setOriginalGame,
+    screenToFlowPosition,
+    fitView,
+    dialog,
+  });
 
   if (isAuthPending || loading) return <div className="p-8 text-center">加载中...</div>;
   if (!session) {
