@@ -10,7 +10,7 @@
   - [x] 登记本批次划分到 WIP.md
 - [x] 批次 1：认证与计费核心 lib（`usage-limit.ts`/`ai-usage.ts`/`auth-server.ts`/`auth-config.ts`）
 - [x] 批次 2：AI 生成计费闭环 route 群（6 个 route 补测试 + 修复 TTS 记账缺口）
-- [ ] 批次 3：Story Protocol 链上集成（`story-protocol.ts` + `register-ip` route）
+- [x] 批次 3：Story Protocol 链上集成（`story-protocol.ts` + `register-ip` route）——上线前仍需在测试网跑一次真实注册人工验收，测试无法替代
 - [ ] 批次 4：其余零覆盖 API route（24 个，拆 2-3 次提交）
 - [ ] 批次 5：编辑器核心业务逻辑非 UI（`lib/editor/handlers/` + 3 个新拆分 hook）
 - [ ] 批次 6：编辑器 UI 组件（39 个文件，拆 4-6 次提交）
