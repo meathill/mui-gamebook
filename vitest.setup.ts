@@ -26,3 +26,20 @@ Object.defineProperty(globalThis, 'localStorage', {
   value: localStorageMock,
   writable: true,
 });
+
+// jsdom 没有实现 ResizeObserver（@xyflow/react 等库依赖它来监听容器尺寸变化）
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+Object.defineProperty(globalThis, 'ResizeObserver', {
+  value: ResizeObserverMock,
+  writable: true,
+});
+
+// jsdom 没有实现 scrollIntoView（下拉菜单等组件依赖它滚动到选中项）
+Object.defineProperty(Element.prototype, 'scrollIntoView', {
+  value: vi.fn(),
+  writable: true,
+});
