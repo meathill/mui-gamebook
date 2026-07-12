@@ -11,17 +11,15 @@ import messages from '../../src/i18n/messages/en.json';
 window.scrollTo = vi.fn();
 
 // Mock MiniGamePlayer to control completion
-vi.mock('@/components/game-player', async () => {
-  const actual = await vi.importActual('@/components/game-player');
-  return {
-    ...actual,
-    MiniGamePlayer: ({ onComplete }: { onComplete: (vars: any) => void }) => (
-      <div data-testid="minigame-mock">
-        <button onClick={() => onComplete({ score: 100 })}>Complete Minigame</button>
-      </div>
-    ),
-  };
-});
+// 直接 mock 其自身模块路径，而不是 game-player barrel：SceneNodes 现在直接从
+// './MiniGamePlayer' 引入它，barrel 层面的 mock 不会拦截到实际渲染路径。
+vi.mock('@/components/game-player/MiniGamePlayer', () => ({
+  default: ({ onComplete }: { onComplete: (vars: Record<string, number | string | boolean>) => void }) => (
+    <div data-testid="minigame-mock">
+      <button onClick={() => onComplete({ score: 100 })}>Complete Minigame</button>
+    </div>
+  ),
+}));
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(

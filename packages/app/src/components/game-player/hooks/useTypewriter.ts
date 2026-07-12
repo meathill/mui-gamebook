@@ -10,14 +10,17 @@ interface UseTypewriterResult {
 /**
  * 逐字输出 hook。
  * - text 变化时自动重置并开始输出
- * - complete() 立刻显示全部
+ * - complete() 立刻显示全部（不会触发 onTick）
  * - speed 单位是毫秒/字，默认 40
+ * - onTick 在逐字输出的每一步（非 complete()）触发一次，可用于打字音效
  */
-export function useTypewriter(text: string, speed = 40): UseTypewriterResult {
+export function useTypewriter(text: string, speed = 40, onTick?: () => void): UseTypewriterResult {
   const [displayed, setDisplayed] = useState('');
   const [isComplete, setIsComplete] = useState(false);
   const indexRef = useRef(0);
   const timerRef = useRef<number | null>(null);
+  const onTickRef = useRef(onTick);
+  onTickRef.current = onTick;
 
   function clearTimer() {
     if (timerRef.current !== null) {
@@ -46,6 +49,7 @@ export function useTypewriter(text: string, speed = 40): UseTypewriterResult {
       }
       indexRef.current += 1;
       setDisplayed(chars.slice(0, indexRef.current).join(''));
+      onTickRef.current?.();
       timerRef.current = window.setTimeout(step, speed);
     }
 

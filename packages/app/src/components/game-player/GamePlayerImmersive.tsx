@@ -1,10 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { PlayableGame, PlayableScene, RuntimeState, TextBoxPosition } from '@mui-gamebook/parser/src/types';
-import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
-import { evaluateCondition, executeSet, interpolateVariables } from '@mui-gamebook/site-common/utils';
+import type { PlayableGame, PlayableScene, TextBoxPosition } from '@mui-gamebook/parser/src/types';
+import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
+import { evaluateCondition, interpolateVariables } from '@mui-gamebook/site-common/utils';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
@@ -46,19 +46,34 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   const dialog = useDialog();
   const analytics = useGameAnalytics();
 
-  const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
-  const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isGameStarted, setIsGameStarted] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
   const [textIndex, setTextIndex] = useState(0);
   const [choicesRevealed, setChoicesRevealed] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentOpen, setCommentOpen] = useState(false);
-
   const [textPosition, setTextPosition] = useState<TextBoxPosition>(game.text_box_position || 'bottom');
 
-  const visibleVariables = getVisibleVariables(game.initialState);
+  const gamePlayer = useGamePlayer(game, slug, {
+    storagePrefix: 'game_progress',
+    confirmRestart: () => dialog.confirm(t('restartConfirm')),
+    onChoice: (sceneId, choiceIndex) => {
+      if (game.id && typeof choiceIndex === 'number') {
+        analytics.trackChoice(game.id, sceneId, choiceIndex);
+      }
+    },
+  });
+  const {
+    currentSceneId,
+    currentScene,
+    runtimeState,
+    isLoaded,
+    isGameStarted,
+    currentImageUrl,
+    visibleVariables,
+    hasConfiguredChoices,
+    handleStartGame,
+    handleRestart,
+    handleChoice,
+  } = gamePlayer;
 
   // 加载保存的阅读器位置偏好
   useEffect(() => {
@@ -76,53 +91,10 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     }
   }
 
-  // 变量触发器
-  const checkTriggers = useCallback(
-    (state: RuntimeState): string | null => {
-      for (const [key, val] of Object.entries(game.initialState)) {
-        if (isVariableMeta(val) && val.trigger) {
-          const condition = `${state[key]} ${val.trigger.condition}`;
-          if (evaluateCondition(condition, {})) {
-            return val.trigger.scene;
-          }
-        }
-      }
-      return null;
-    },
-    [game.initialState],
-  );
-
-  // 恢复进度
-  useEffect(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem(`game_progress_${slug}`) : null;
-    if (saved) {
-      try {
-        const { sceneId, state, imageUrl } = JSON.parse(saved);
-        if (game.scenes[sceneId]) {
-          setCurrentSceneId(sceneId);
-          setIsGameStarted(true);
-        }
-        setRuntimeState(state);
-        if (imageUrl) setCurrentImageUrl(imageUrl);
-      } catch (e) {
-        console.error('Failed to load progress', e);
-      }
-    } else {
-      const startScene = game.scenes[game.startSceneId || 'start'];
-      const firstImage = startScene?.nodes.find(isImageNode);
-      if (firstImage && 'url' in firstImage && firstImage.url) {
-        setCurrentImageUrl(firstImage.url);
-      }
-    }
-    setIsLoaded(true);
-  }, [slug, game.scenes, game.startSceneId]);
-
   useEffect(() => {
     if (game.id) analytics.trackOpen(game.id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const currentScene = game.scenes[currentSceneId];
 
   // 当前场景的有序文本节点
   const textNodes = useMemo(() => {
@@ -130,7 +102,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     return currentScene.nodes.filter(isTextNode);
   }, [currentScene]);
 
-  // 当前文字节点对应的背景图：取当前位置之前出现的最近一张图
+  // 当前文字节点对应的背景图：取当前位置之前出现的最近一张图，找不到则回退到 gamePlayer 追踪的场景基线图
   const activeBgUrl = useMemo(() => {
     if (!currentScene) return currentImageUrl;
     const nodes = currentScene.nodes;
@@ -150,51 +122,26 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     return lastImg || currentImageUrl;
   }, [currentScene, textIndex, currentImageUrl]);
 
-  // 场景切换后：重置 textIndex / choicesRevealed，更新背景图基线
+  // 场景切换后：重置 textIndex / choicesRevealed，上报场景访问
   useEffect(() => {
     if (!isGameStarted || !currentScene) return;
     setTextIndex(0);
     setChoicesRevealed(false);
-    const firstImg = currentScene.nodes.find(isImageNode);
-    if (firstImg && 'url' in firstImg && firstImg.url) {
-      setCurrentImageUrl(firstImg.url);
-    }
     if (game.id) analytics.trackScene(game.id, currentSceneId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, isGameStarted]);
 
-  // 保存进度
+  // 回到标题画面时（初始挂载或重新开始成功后）重置文本推进进度
   useEffect(() => {
-    if (isLoaded && isGameStarted) {
-      localStorage.setItem(
-        `game_progress_${slug}`,
-        JSON.stringify({ sceneId: currentSceneId, state: runtimeState, imageUrl: activeBgUrl }),
-      );
-    }
-  }, [currentSceneId, runtimeState, slug, isLoaded, isGameStarted, activeBgUrl]);
+    if (!isGameStarted) setTextIndex(0);
+  }, [isGameStarted]);
 
-  const hasConfiguredChoices = currentScene ? currentScene.nodes.some((n) => n.type === 'choice') : false;
   const showEndScreen = !hasConfiguredChoices && textNodes.length > 0 && textIndex >= textNodes.length - 1;
   const isLastText = textNodes.length === 0 || textIndex >= textNodes.length - 1;
 
   function handleStart() {
-    setIsGameStarted(true);
-    if (!localStorage.getItem(`game_progress_${slug}`)) {
-      setCurrentSceneId(game.startSceneId || 'start');
-      setRuntimeState(extractRuntimeState(game.initialState));
-      setTextIndex(0);
-    }
-  }
-
-  async function handleRestart(noConfirm = false) {
-    const confirmed = noConfirm || (await dialog.confirm(t('restartConfirm')));
-    if (!confirmed) return;
-    localStorage.removeItem(`game_progress_${slug}`);
-    setCurrentSceneId(game.startSceneId || 'start');
-    setRuntimeState(extractRuntimeState(game.initialState));
-    setCurrentImageUrl(undefined);
+    handleStartGame();
     setTextIndex(0);
-    setIsGameStarted(false);
   }
 
   function handleAdvance() {
@@ -205,19 +152,6 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     if (!choicesRevealed) {
       setChoicesRevealed(true);
     }
-  }
-
-  function handleChoice(nextSceneId: string, setInstruction?: string, choiceIndex?: number) {
-    if (game.id && typeof choiceIndex === 'number') {
-      analytics.trackChoice(game.id, currentSceneId, choiceIndex);
-    }
-    let newState = runtimeState;
-    if (setInstruction) {
-      newState = executeSet(setInstruction, runtimeState);
-      setRuntimeState(newState);
-    }
-    const triggerScene = checkTriggers(newState);
-    setCurrentSceneId(triggerScene && game.scenes[triggerScene] ? triggerScene : nextSceneId);
   }
 
   useEffect(() => {

@@ -1,12 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import ReactMarkdown from 'react-markdown';
-import type { PlayableGame, RuntimeState } from '@mui-gamebook/parser/src/types';
-import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
-import { evaluateCondition, executeSet, interpolateVariables } from '@mui-gamebook/site-common/utils';
+import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
 import { Button } from '@radix-ui/themes';
@@ -14,21 +12,13 @@ import {
   TitleScreen,
   EndScreen,
   VariableIndicator,
-  MiniGamePlayer,
-  AudioControls,
+  SceneNodes,
   usePreload,
   useAudioPlayer,
 } from '@/components/game-player';
-import { SpeakerHighIcon } from '@phosphor-icons/react';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 
 export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?: number }; slug: string }) {
-  const [currentSceneId, setCurrentSceneId] = useState<string>(game.startSceneId || 'start');
-  const [runtimeState, setRuntimeState] = useState<RuntimeState>(() => extractRuntimeState(game.initialState));
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isGameStarted, setIsGameStarted] = useState(false);
-  const [currentImageUrl, setCurrentImageUrl] = useState<string | undefined>(undefined);
-  const [imageLoading, setImageLoading] = useState(false);
   const [minigameCompleted, setMinigameCompleted] = useState(false);
   const [textVisible, setTextVisible] = useState(true);
   const [hasReadAll, setHasReadAll] = useState(false);
@@ -39,78 +29,45 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   const t = useTranslations('game');
   const audioPlayer = useAudioPlayer();
   const analytics = useGameAnalytics();
-  const trackedScenes = useRef<Set<string>>(new Set());
 
-  const visibleVariables = getVisibleVariables(game.initialState);
+  const gamePlayer = useGamePlayer(game, slug, {
+    storagePrefix: 'game_progress',
+    confirmRestart: () => dialog.confirm(t('restartConfirm')),
+    onChoice: (sceneId, choiceIndex) => {
+      if (game.id && typeof choiceIndex === 'number') {
+        analytics.trackChoice(game.id, sceneId, choiceIndex);
+      }
+    },
+  });
+  const {
+    currentSceneId,
+    currentScene,
+    runtimeState,
+    isLoaded,
+    isGameStarted,
+    currentImageUrl,
+    imageLoading,
+    visibleVariables,
+    hasConfiguredChoices,
+    handleStartGame,
+    handleRestart,
+    handleChoice: gamePlayerHandleChoice,
+    applyStateUpdate,
+    setImageLoading,
+  } = gamePlayer;
 
   // 预加载下一个可能场景的素材
   usePreload(game, currentSceneId);
 
-  // 检查变量触发器
-  const checkTriggers = useCallback(
-    (state: RuntimeState): string | null => {
-      for (const [key, val] of Object.entries(game.initialState)) {
-        if (isVariableMeta(val) && val.trigger) {
-          const currentValue = state[key];
-          const condition = `${currentValue} ${val.trigger.condition}`;
-          if (evaluateCondition(condition, {})) {
-            return val.trigger.scene;
-          }
-        }
-      }
-      return null;
-    },
-    [game.initialState],
-  );
-
-  // Load progress from localStorage on mount
-  useEffect(() => {
-    const savedProgress = localStorage.getItem(`game_progress_${slug}`);
-
-    if (savedProgress) {
-      try {
-        const { sceneId, state, imageUrl } = JSON.parse(savedProgress);
-
-        if (game.scenes[sceneId]) {
-          setCurrentSceneId(sceneId);
-          setIsGameStarted(true);
-        }
-        setRuntimeState(state);
-        if (imageUrl) setCurrentImageUrl(imageUrl);
-      } catch (e) {
-        console.error('Failed to load progress', e);
-      }
-    } else {
-      const startScene = game.scenes[game.startSceneId || 'start'];
-      const firstImage = startScene?.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
-      if (firstImage && 'url' in firstImage && firstImage.url) {
-        setCurrentImageUrl(firstImage.url);
-      }
-    }
-    setIsLoaded(true);
-  }, [slug, game.scenes, game.startSceneId]);
-
-  // Track game open
+  // 打开游戏页面时上报（与"点击开始"是两个不同事件，页面一加载就算打开）
   useEffect(() => {
     if (game.id) {
       analytics.trackOpen(game.id);
     }
-    // Only track once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const currentScene = game.scenes[currentSceneId];
-
-  // Track completion
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const hasConfiguredChoices =
-    currentScene && currentSceneId ? game.scenes[currentSceneId].nodes.some((node) => node.type === 'choice') : false;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const hasMinigame =
-    currentScene && currentSceneId
-      ? game.scenes[currentSceneId].nodes.some((node) => node.type === 'minigame' && node.url)
-      : false;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const hasMinigame = currentScene ? currentScene.nodes.some((node) => node.type === 'minigame' && node.url) : false;
   const showEndScreen = !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
 
   useEffect(() => {
@@ -120,21 +77,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showEndScreen]);
 
-  // Update image when scene changes
-  useEffect(() => {
-    if (isGameStarted && currentScene) {
-      const newImageNode = currentScene.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
-      if (newImageNode && 'url' in newImageNode && newImageNode.url) {
-        if (newImageNode.url !== currentImageUrl) {
-          setImageLoading(true);
-          setCurrentImageUrl(newImageNode.url);
-        }
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSceneId, currentScene, currentImageUrl, isGameStarted]);
-
-  // Track scene visit (separate effect to avoid duplicate calls)
+  // 每次到达场景都上报（不去重，与埋点数据的既有口径一致）
   useEffect(() => {
     if (isGameStarted && game.id && currentSceneId) {
       analytics.trackScene(game.id, currentSceneId);
@@ -145,85 +88,32 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   // 场景切换时自动播放语音
   useEffect(() => {
     if (isGameStarted && currentScene) {
-      // 停止之前的音频
       audioPlayer.stop();
-
-      // 查找文本节点的音频
-      const textNode = currentScene.nodes.find((n) => n.type === 'text' && 'audio_url' in n && n.audio_url);
-      if (textNode && 'audio_url' in textNode && textNode.audio_url) {
-        // 延迟播放，让用户先看到文字
+      const audioUrl = gamePlayer.getSceneAudioUrl(currentScene.nodes);
+      if (audioUrl) {
         setTimeout(() => {
-          audioPlayer.play(textNode.audio_url!);
+          audioPlayer.play(audioUrl);
         }, 500);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, isGameStarted]);
 
-  // FloppyDiskIcon progress whenever state changes
-  useEffect(() => {
-    if (isLoaded && isGameStarted) {
-      localStorage.setItem(
-        `game_progress_${slug}`,
-        JSON.stringify({
-          sceneId: currentSceneId,
-          state: runtimeState,
-          imageUrl: currentImageUrl,
-        }),
-      );
-    }
-  }, [currentSceneId, runtimeState, slug, isLoaded, currentImageUrl, isGameStarted]);
-
-  const handleStartGame = () => {
-    setIsGameStarted(true);
-    if (!localStorage.getItem(`game_progress_${slug}`)) {
-      setCurrentSceneId(game.startSceneId || 'start');
-      setRuntimeState(extractRuntimeState(game.initialState));
-    }
-  };
-
-  const handleRestart = async (noConfirm = false) => {
-    const confirmed = noConfirm || (await dialog.confirm(t('restartConfirm')));
-    if (!confirmed) return;
-
-    localStorage.removeItem(`game_progress_${slug}`);
-    setCurrentSceneId(game.startSceneId || 'start');
-    setRuntimeState(extractRuntimeState(game.initialState));
-    setCurrentImageUrl(undefined);
-    setIsGameStarted(false);
-    trackedScenes.current.clear(); // Clear tracked scenes
-
-    const startScene = game.scenes[game.startSceneId || 'start'];
-    const firstImage = startScene?.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
-    if (firstImage && 'url' in firstImage && firstImage.url) {
-      setCurrentImageUrl(firstImage.url);
-    }
-  };
-
-  const handleChoice = (nextSceneId: string, setInstruction?: string, choiceIndex?: number) => {
-    if (game.id && typeof choiceIndex === 'number') {
-      analytics.trackChoice(game.id, currentSceneId, choiceIndex);
-    }
-
-    let newState = runtimeState;
-    if (setInstruction) {
-      newState = executeSet(setInstruction, runtimeState);
-      setRuntimeState(newState);
-    }
-
-    const triggerScene = checkTriggers(newState);
-    if (triggerScene && game.scenes[triggerScene]) {
-      setCurrentSceneId(triggerScene);
-    } else {
-      setCurrentSceneId(nextSceneId);
-    }
+  function handleChoice(nextSceneId: string, setInstruction?: string, choiceIndex?: number) {
+    gamePlayerHandleChoice(nextSceneId, setInstruction, choiceIndex);
     // 切换场景时重置小游戏完成状态和停止音频
     setMinigameCompleted(false);
     setTextVisible(true);
     setHasReadAll(false);
     setAutoScrolling(true);
     audioPlayer.stop();
-  };
+  }
+
+  // 处理小游戏完成后的变量更新
+  function handleMiniGameComplete(updatedVars: Record<string, number | string | boolean>) {
+    const triggerScene = applyStateUpdate(updatedVars);
+    setMinigameCompleted(!triggerScene);
+  }
 
   // 处理滚动检测是否读完
   function handleScroll(e: React.UIEvent<HTMLDivElement>) {
@@ -292,20 +182,6 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   function handleImageClick() {
     setTextVisible((prev) => !prev);
   }
-
-  // 处理小游戏完成后的变量更新
-  const handleMiniGameComplete = (updatedVars: Record<string, number | string | boolean>) => {
-    const newState = { ...runtimeState, ...updatedVars };
-    setRuntimeState(newState);
-    setMinigameCompleted(true);
-
-    // 检查触发器
-    const triggerScene = checkTriggers(newState);
-    if (triggerScene && game.scenes[triggerScene]) {
-      setCurrentSceneId(triggerScene);
-      setMinigameCompleted(false);
-    }
-  };
 
   if (!isLoaded) {
     return <div className="p-8 text-center">{t('loading')}</div>;
@@ -409,82 +285,17 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
           onWheel={handleUserInteraction}
           className={`relative z-10 p-4 md:p-8 max-w-2xl mx-auto w-full flex flex-col overflow-y-auto transition-opacity duration-300 ${currentImageUrl ? 'absolute bottom-0 left-0 right-0 h-[50dvh] sm:static sm:h-auto sm:inset-auto' : ''} ${textVisible ? 'opacity-100' : 'opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto'}`}>
           <div className="mt-auto space-y-2 sm:mt-0 sm:space-y-6">
-            {currentScene.nodes.map((node, index) => {
-              switch (node.type) {
-                case 'text': {
-                  const hasTextAudio = 'audio_url' in node && !!node.audio_url;
-                  return (
-                    <div
-                      key={index}
-                      className="sm:space-y-2">
-                      <div
-                        className={`prose prose-lg max-w-none ${currentImageUrl ? 'prose-invert sm:prose-gray' : 'prose-gray'}`}>
-                        <ReactMarkdown>{interpolateVariables(node.content, runtimeState)}</ReactMarkdown>
-                      </div>
-                      {hasTextAudio && (
-                        <AudioControls
-                          audioPlayer={audioPlayer}
-                          hasAudio={hasTextAudio}
-                        />
-                      )}
-                    </div>
-                  );
-                }
-
-                case 'static_image':
-                case 'ai_image':
-                  return null;
-
-                case 'minigame':
-                  if (!node.url) return null;
-                  return (
-                    <MiniGamePlayer
-                      key={index}
-                      url={node.url}
-                      variables={node.variables || []}
-                      runtimeState={runtimeState}
-                      onComplete={handleMiniGameComplete}
-                    />
-                  );
-
-                case 'choice':
-                  if (hasMinigame && !minigameCompleted) {
-                    return null;
-                  }
-                  if (!evaluateCondition(node.condition, runtimeState)) {
-                    return null;
-                  }
-                  // 移动端：阅读完才显示；桌面端：始终显示
-                  if (!hasReadAll && currentImageUrl) {
-                    return null;
-                  }
-                  const hasChoiceAudio = 'audio_url' in node && !!node.audio_url;
-                  return (
-                    <button
-                      key={index}
-                      className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md flex items-center gap-3 ${currentImageUrl ? 'bg-white/90 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100'} hover:border-orange-400 hover:bg-orange-50`}
-                      onClick={() => handleChoice(node.nextSceneId, node.set, index)}>
-                      {hasChoiceAudio && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            audioPlayer.play((node as { audio_url: string }).audio_url);
-                          }}
-                          className="p-2 rounded-full bg-orange-100 hover:bg-orange-200 text-orange-600 transition-colors flex-shrink-0"
-                          title="播放语音">
-                          <SpeakerHighIcon size={16} />
-                        </button>
-                      )}
-                      <span className="font-medium text-amber-800 group-hover:text-orange-700 text-lg flex-1">
-                        {interpolateVariables(node.text, runtimeState)}
-                      </span>
-                    </button>
-                  );
-
-                default:
-                  return null;
-              }
-            })}
+            <SceneNodes
+              nodes={currentScene.nodes}
+              runtimeState={runtimeState}
+              hasMinigame={hasMinigame}
+              minigameCompleted={minigameCompleted}
+              hasReadAll={hasReadAll}
+              hasImage={!!currentImageUrl}
+              audioPlayer={audioPlayer}
+              onChoice={handleChoice}
+              onMiniGameComplete={handleMiniGameComplete}
+            />
 
             {/* End Screen */}
             {showEndScreen && (

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { useAudioPlayer } from '@mui-gamebook/app/hooks/useAudioPlayer';
-import { evaluateCondition, interpolateVariables } from './evaluator';
+import { evaluateCondition, interpolateVariables } from '@mui-gamebook/site-common/utils';
 import { useGameState } from './hooks/useGameState';
 import SceneImage from './components/SceneImage';
 import AudioControls from './components/AudioControls';

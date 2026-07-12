@@ -501,6 +501,9 @@ importers:
       '@mui-gamebook/parser':
         specifier: workspace:*
         version: link:../../packages/parser
+      '@mui-gamebook/site-common':
+        specifier: workspace:*
+        version: link:../../packages/site-common
       '@opennextjs/cloudflare':
         specifier: ^1.20.1
         version: 1.20.1(next@16.2.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(wrangler@4.105.0)

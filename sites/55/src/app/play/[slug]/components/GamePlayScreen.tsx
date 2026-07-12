@@ -17,6 +17,7 @@ import {
   useSfx,
   useGameSettings,
 } from '@mui-gamebook/site-common/game-player';
+import { useTypewriter } from '@mui-gamebook/app/components/game-player/hooks/useTypewriter';
 import type { getVisibleVariables } from '@mui-gamebook/parser/src/utils';
 
 interface Props {
@@ -36,53 +37,6 @@ interface Props {
   onOpenSettings: () => void;
   onReturnToTitle: () => void;
   onRestart: () => void;
-}
-
-/**
- * 打字机效果文本组件
- */
-function TypewriterText({
-  text,
-  speed = 40,
-  onFinished,
-  forceInstant = false,
-  onTick,
-}: {
-  text: string;
-  speed?: number;
-  onFinished?: () => void;
-  forceInstant?: boolean;
-  onTick?: () => void;
-}) {
-  const [displayedText, setDisplayedText] = useState(forceInstant ? text : '');
-  const onFinishedRef = useRef(onFinished);
-  onFinishedRef.current = onFinished;
-  const onTickRef = useRef(onTick);
-  onTickRef.current = onTick;
-
-  useEffect(() => {
-    if (forceInstant) {
-      setDisplayedText(text);
-      onFinishedRef.current?.();
-      return;
-    }
-
-    setDisplayedText('');
-    let currentIndex = 0;
-    const interval = setInterval(() => {
-      currentIndex++;
-      setDisplayedText(text.slice(0, currentIndex));
-      onTickRef.current?.();
-      if (currentIndex >= text.length) {
-        clearInterval(interval);
-        onFinishedRef.current?.();
-      }
-    }, speed);
-
-    return () => clearInterval(interval);
-  }, [text, speed, forceInstant]);
-
-  return <span>{displayedText}</span>;
 }
 
 /**
@@ -134,45 +88,42 @@ export default function GamePlayScreen({
   }, [currentScene.nodes]);
 
   const [visibleTextCount, setVisibleTextCount] = useState(1);
-  const [typingFinished, setTypingFinished] = useState(false);
-  const [forceInstant, setForceInstant] = useState(false);
 
-  // 当场景发生变化时，重置所有打字相关的状态
+  // 场景切换时重置文本推进进度
   useEffect(() => {
     setVisibleTextCount(1);
-    setForceInstant(false);
-    if (textNodes.length === 0) {
-      setTypingFinished(true);
-    } else {
-      setTypingFinished(false);
-    }
-  }, [currentScene.id, textNodes.length]);
+  }, [currentScene.id]);
+
+  // 当前正在打字的这一行内容（已做变量插值）
+  const currentLineText = useMemo(() => {
+    const node = textNodes[visibleTextCount - 1];
+    return node ? interpolateVariables(node.content, runtimeState) : '';
+  }, [textNodes, visibleTextCount, runtimeState]);
+
+  const { displayed, isComplete, complete } = useTypewriter(currentLineText, game.typewriter_speed ?? 40, sfx.playTick);
 
   // 文字数量增长、打字完成或场景切换时触发自动滚动
   useEffect(() => {
     scrollToBottom();
     const t = setTimeout(scrollToBottom, 60);
     return () => clearTimeout(t);
-  }, [visibleTextCount, typingFinished, currentScene.id, scrollToBottom]);
+  }, [displayed, currentScene.id, scrollToBottom]);
 
   const handleNext = useCallback(() => {
-    if (showEndScreen && visibleTextCount >= textNodes.length && typingFinished) return;
+    if (showEndScreen && visibleTextCount >= textNodes.length && isComplete) return;
 
     // 如果当前句子还在打字，立刻完成打字
-    if (!typingFinished) {
-      setForceInstant(true);
-      setTypingFinished(true);
+    if (!isComplete) {
+      complete();
       return;
     }
 
     // 如果还有下一句，显示下一句
     if (visibleTextCount < textNodes.length) {
       setVisibleTextCount((prev) => prev + 1);
-      setTypingFinished(false);
-      setForceInstant(false);
       sfx.playNext();
     }
-  }, [visibleTextCount, textNodes.length, typingFinished, showEndScreen, sfx]);
+  }, [visibleTextCount, textNodes.length, isComplete, showEndScreen, sfx, complete]);
 
   // 监听键盘事件 (空格 / 回车)
   useEffect(() => {
@@ -193,7 +144,7 @@ export default function GamePlayScreen({
   useEffect(() => {
     if (!isAutoPlaying) return;
 
-    if (typingFinished) {
+    if (isComplete) {
       const timer = setTimeout(() => {
         if (visibleTextCount < textNodes.length) {
           handleNext();
@@ -201,18 +152,25 @@ export default function GamePlayScreen({
       }, 2000); // 文字显示完后停顿 2 秒
       return () => clearTimeout(timer);
     }
-  }, [isAutoPlaying, typingFinished, visibleTextCount, textNodes.length, handleNext]);
+  }, [isAutoPlaying, isComplete, visibleTextCount, textNodes.length, handleNext]);
 
-  // 跳过（快进）处理
+  // 跳过（快进）处理：先推进到最后一行
   useEffect(() => {
-    if (isSkipping) {
+    if (isSkipping && visibleTextCount < textNodes.length) {
       setVisibleTextCount(textNodes.length);
-      setTypingFinished(true);
-      setForceInstant(true);
     }
-  }, [isSkipping, textNodes.length]);
+  }, [isSkipping, textNodes.length, visibleTextCount]);
 
-  const allTextsShown = visibleTextCount >= textNodes.length && typingFinished;
+  // 跳过（快进）处理：确保当前这一行（可能刚因上面的 effect 切换）也立即打完。
+  // 这里不能和上面合并成一步：切到新的一行后 useTypewriter 会先重置 isComplete，
+  // 需要等它重置完成后这个 effect 才能对新内容调用 complete()。
+  useEffect(() => {
+    if (isSkipping && !isComplete) {
+      complete();
+    }
+  }, [isSkipping, isComplete, complete]);
+
+  const allTextsShown = visibleTextCount >= textNodes.length && isComplete;
 
   return (
     <div className="flex flex-col h-full">
@@ -252,28 +210,20 @@ export default function GamePlayScreen({
 
           {/* 场景文字 */}
           <div className="space-y-4 mb-6">
-            {textNodes.slice(0, visibleTextCount).map((node, index) => {
-              const textContent = interpolateVariables(node.content, runtimeState);
-              const isLast = index === visibleTextCount - 1;
-
-              return (
-                <p
-                  key={index}
-                  className="game-text">
-                  {isLast ? (
-                    <TypewriterText
-                      text={textContent}
-                      speed={game.typewriter_speed ?? 40}
-                      forceInstant={forceInstant}
-                      onFinished={() => setTypingFinished(true)}
-                      onTick={sfx.playTick}
-                    />
-                  ) : (
-                    <span>{textContent}</span>
-                  )}
-                </p>
-              );
-            })}
+            {textNodes.slice(0, visibleTextCount - 1).map((node, index) => (
+              <p
+                key={index}
+                className="game-text">
+                <span>{interpolateVariables(node.content, runtimeState)}</span>
+              </p>
+            ))}
+            {textNodes[visibleTextCount - 1] && (
+              <p
+                key={visibleTextCount - 1}
+                className="game-text">
+                <span>{displayed}</span>
+              </p>
+            )}
           </div>
 
           {/* 选项 */}
