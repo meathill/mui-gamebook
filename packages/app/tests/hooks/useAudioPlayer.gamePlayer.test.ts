@@ -1,12 +1,10 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { useAudioPlayer } from '@/components/game-player/useAudioPlayer';
 
-// 原本挪自 sites/jianjian/src/app/play/[slug]/useAudioPlayer.test.ts——jianjian
-// 没有自己的封装，直接跨包引用这个 hook，测试理应放在源码所在的这个包里。
-// 另有 src/components/game-player/useAudioPlayer.ts 是几乎重复的独立实现
-// （多暴露一个 currentUrl 字段），见 tests/hooks/useAudioPlayer.gamePlayer.test.ts。
-//
+// 文件名带 .gamePlayer 后缀：另有 src/hooks/useAudioPlayer.ts 是几乎重复的
+// 独立实现（GamePlayer.tsx / sites/jianjian 用），二者同名会在打平的 tests/hooks/
+// 目录下冲突，因此用来源子目录限定区分，见 tests/hooks/useAudioPlayer.test.ts
 // jsdom 的 HTMLMediaElement.play/pause 是 "not implemented" 桩实现，不会真正
 // 改变 paused 状态也不返回 Promise；因此用一个有状态的假 Audio 类替代全局构造函数，
 // 测试显式调用 onplay/onpause/onended/onerror 来模拟浏览器事件时机
@@ -52,21 +50,15 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('useAudioPlayer (src/hooks)', () => {
-  it('初始状态未播放未暂停', () => {
-    const { result } = renderHook(() => useAudioPlayer());
-
-    expect(result.current.isPlaying).toBe(false);
-    expect(result.current.isPaused).toBe(false);
-  });
-
-  it('play() 创建 Audio 实例', () => {
+describe('useAudioPlayer', () => {
+  it('play() 创建 Audio 实例并记录 currentUrl', () => {
     const { result } = renderHook(() => useAudioPlayer());
 
     act(() => result.current.play('https://x.com/a.mp3'));
 
     expect(instances).toHaveLength(1);
     expect(instances[0].play).toHaveBeenCalledTimes(1);
+    expect(result.current.currentUrl).toBe('https://x.com/a.mp3');
   });
 
   it('onplay 触发后 isPlaying=true、isPaused=false', () => {
@@ -83,13 +75,26 @@ describe('useAudioPlayer (src/hooks)', () => {
     const { result } = renderHook(() => useAudioPlayer());
     act(() => result.current.play('https://x.com/a.mp3'));
     act(() => instances[0].onplay?.());
-    instances[0].currentTime = 10;
-    instances[0].paused = true;
+    instances[0].currentTime = 10; // 小于 duration=100，属于中途暂停
+    instances[0].paused = true; // 现实中 pause 事件必然伴随 paused 变为 true
 
     act(() => instances[0].onpause?.());
 
     expect(result.current.isPlaying).toBe(false);
     expect(result.current.isPaused).toBe(true);
+  });
+
+  it('播放到结尾触发 onpause 时不进入 isPaused（currentTime 已等于 duration）', () => {
+    const { result } = renderHook(() => useAudioPlayer());
+    act(() => result.current.play('https://x.com/a.mp3'));
+    act(() => instances[0].onplay?.());
+    instances[0].currentTime = 100;
+    instances[0].paused = true;
+
+    act(() => instances[0].onpause?.());
+
+    expect(result.current.isPaused).toBe(false);
+    expect(result.current.isPlaying).toBe(false);
   });
 
   it('onended 触发后播放/暂停状态都复位', () => {
@@ -111,6 +116,22 @@ describe('useAudioPlayer (src/hooks)', () => {
     expect(() => act(() => instances[0].onerror?.())).not.toThrow();
     expect(result.current.isPlaying).toBe(false);
     expect(result.current.isPaused).toBe(false);
+  });
+
+  it('从未调用 play() 时调用 pause() 是空操作（audioRef 尚未创建）', () => {
+    const { result } = renderHook(() => useAudioPlayer());
+
+    expect(() => act(() => result.current.pause())).not.toThrow();
+    expect(instances).toHaveLength(0);
+  });
+
+  it('调用 play() 后 paused 立即变为 false，此时 pause() 会调用底层 pause', () => {
+    const { result } = renderHook(() => useAudioPlayer());
+    act(() => result.current.play('https://x.com/a.mp3'));
+
+    act(() => result.current.pause());
+
+    expect(instances[0].pause).toHaveBeenCalledTimes(1);
   });
 
   it('resume() 仅在 paused 为 true 时调用底层 play()', () => {
@@ -148,7 +169,30 @@ describe('useAudioPlayer (src/hooks)', () => {
     expect(instances[0].play).toHaveBeenCalledTimes(2);
   });
 
-  it('toggle() 在 stop 之后（未播放未暂停但曾经播放过）重新创建播放，依赖内部记住的 URL', () => {
+  it('toggle() 播放中调用会暂停', () => {
+    const { result } = renderHook(() => useAudioPlayer());
+    act(() => result.current.play('https://x.com/a.mp3'));
+    act(() => instances[0].onplay?.());
+
+    act(() => result.current.toggle());
+
+    expect(instances[0].pause).toHaveBeenCalledTimes(1);
+  });
+
+  it('toggle() 暂停中调用会恢复播放', () => {
+    const { result } = renderHook(() => useAudioPlayer());
+    act(() => result.current.play('https://x.com/a.mp3'));
+    act(() => instances[0].onplay?.());
+    instances[0].currentTime = 10;
+    instances[0].paused = true;
+    act(() => instances[0].onpause?.());
+
+    act(() => result.current.toggle());
+
+    expect(instances[0].play).toHaveBeenCalledTimes(2);
+  });
+
+  it('toggle() 在 stop 之后（有 currentUrl 但未播放未暂停）重新创建播放', () => {
     const { result } = renderHook(() => useAudioPlayer());
     act(() => result.current.play('https://x.com/a.mp3'));
     act(() => result.current.stop());
@@ -158,23 +202,24 @@ describe('useAudioPlayer (src/hooks)', () => {
     expect(instances).toHaveLength(2);
   });
 
-  it('提供全部必要方法', () => {
+  it('play() 新音频前会先暂停上一个音频', () => {
     const { result } = renderHook(() => useAudioPlayer());
+    act(() => result.current.play('https://x.com/a.mp3'));
+    const first = instances[0];
 
-    expect(typeof result.current.play).toBe('function');
-    expect(typeof result.current.pause).toBe('function');
-    expect(typeof result.current.resume).toBe('function');
-    expect(typeof result.current.stop).toBe('function');
-    expect(typeof result.current.replay).toBe('function');
-    expect(typeof result.current.toggle).toBe('function');
+    act(() => result.current.play('https://x.com/b.mp3'));
+
+    expect(first.pause).toHaveBeenCalledTimes(1);
+    expect(instances).toHaveLength(2);
   });
 
-  it('卸载时清理音频：暂停并清空 src，不抛出异常', () => {
+  it('卸载时清理音频：暂停并清空 src', () => {
     const { result, unmount } = renderHook(() => useAudioPlayer());
     act(() => result.current.play('https://x.com/a.mp3'));
     const instance = instances[0];
 
-    expect(() => unmount()).not.toThrow();
+    unmount();
+
     expect(instance.pause).toHaveBeenCalled();
     expect(instance.src).toBe('');
   });

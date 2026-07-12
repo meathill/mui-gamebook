@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '../../lib/auth-client';
 import { useRouter } from 'next/navigation';
 
 export default function SignInPage() {

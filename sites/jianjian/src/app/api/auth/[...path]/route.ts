@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CMS_API_URL } from '@/lib/config';
+import { CMS_API_URL } from '../../../../lib/config';
 
 type Props = {
   params: Promise<{ path: string[] }>;

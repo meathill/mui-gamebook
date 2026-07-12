@@ -5,7 +5,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import * as Avatar from '@radix-ui/react-avatar';
 import { SignOutIcon, UserIcon } from '@phosphor-icons/react';
 import Link from 'next/link';
-import { authClient } from '@/lib/auth-client';
+import { authClient } from '../lib/auth-client';
 
 interface UserIcon {
   name?: string | null;

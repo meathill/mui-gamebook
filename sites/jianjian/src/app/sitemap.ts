@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { getGames } from '@/lib/api';
+import { getGames } from '../lib/api';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL!;
