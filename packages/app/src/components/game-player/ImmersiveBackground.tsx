@@ -28,7 +28,9 @@ export default function ImmersiveBackground({ url }: ImmersiveBackgroundProps) {
       setPrevUrl(undefined);
     }, 300);
     return () => window.clearTimeout(timer);
-  }, [url, currentUrl]);
+    // currentUrl 不能进依赖数组：否则 setCurrentUrl 触发的重渲染会让 effect 自我重入，
+    // cleanup 抢在计时器触发前把它清掉，淡出永远无法完成。
+  }, [url]);
 
   if (!currentUrl) {
     return <div className="absolute inset-0 bg-black" />;
