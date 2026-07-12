@@ -2,6 +2,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
 import { generateAndUploadTTS, type TTSVoiceName } from '@/lib/ai-service';
+import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
@@ -69,7 +70,16 @@ export async function POST(req: Request, { params }: Params) {
     console.log(`[Voice Preview] Generating new preview: ${cacheFileName}`);
 
     // 生成 TTS 并上传（带缓存文件名）
-    const { url } = await generateAndUploadTTS(text, cacheFileName, voiceName as TTSVoiceName);
+    const { url, usage, model } = await generateAndUploadTTS(text, cacheFileName, voiceName as TTSVoiceName);
+
+    // 记录 AI 用量（缓存命中分支在上面提前 return，不会走到这里，不会重复记账）
+    await recordAiUsage({
+      userId: session.user.id,
+      type: 'audio_generation',
+      model,
+      usage,
+      gameId: Number(gameId),
+    });
 
     return NextResponse.json({ url, cached: false });
   } catch (e: unknown) {

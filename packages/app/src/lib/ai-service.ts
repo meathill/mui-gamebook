@@ -79,6 +79,7 @@ export interface GenerateMiniGameResult {
 
 export interface GenerateTTSResult {
   url: string;
+  usage: AiUsageInfo;
   model: string;
 }
 
@@ -317,8 +318,19 @@ export async function generateAndUploadTTS(
   });
 
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
+
+  // Google/OpenAI/MiMo 的 TTS 响应都不暴露可靠的 token 用量，用输入文本长度做估算，
+  // 确保 TTS 生成至少会计入每日用量限额（此前完全不记账，是持续发生的计费缺口）。
+  // 这不是精确的计费口径，如果某个 provider 之后能拿到真实用量，再替换成真实值。
+  const usage: AiUsageInfo = {
+    promptTokens: text.length,
+    completionTokens: 0,
+    totalTokens: text.length,
+  };
+
   return {
     url: `${publicDomain}/${finalFileName}`,
+    usage,
     model: provider.type,
   };
 }

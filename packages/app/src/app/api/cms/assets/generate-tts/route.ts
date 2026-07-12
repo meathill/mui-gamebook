@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generateAndUploadTTS, type TTSVoiceName } from '@/lib/ai-service';
+import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
@@ -28,7 +29,16 @@ export async function POST(req: Request) {
     const fileName = `audio/${gameId}/${Date.now()}.wav`;
 
     // 生成 TTS 并上传（未指定音色时由 generateAndUploadTTS 按当前 TTS 提供者取默认音色）
-    const { url } = await generateAndUploadTTS(text, fileName, voiceName);
+    const { url, usage, model } = await generateAndUploadTTS(text, fileName, voiceName);
+
+    // 记录 AI 用量
+    await recordAiUsage({
+      userId: session.user.id,
+      type: 'audio_generation',
+      model,
+      usage,
+      gameId: Number(gameId),
+    });
 
     return NextResponse.json({ url });
   } catch (e: unknown) {
