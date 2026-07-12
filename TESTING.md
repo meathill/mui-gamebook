@@ -52,17 +52,24 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 
 ## 覆盖现状（如实记录，不是目标）
 
-覆盖较好的部分：
+2026-07 完成了一轮大规模测试覆盖补齐（Phase 7，按认证/计费/链上 > 核心业务逻辑 > UI 组件 > 边缘代码的优先级分批推进，过程记录已从 `WIP.md` 清空）。目前覆盖较完整的部分：
+
 - DSL 解析器（`packages/parser`）
 - `site-common` 的游戏播放核心 hooks（`use-game-player`/`use-save-system`/`use-route-map`/`use-game-controls`/`use-game-settings`/`use-sfx`）
-- AI provider 实现：`claude`/`mimo` 有专属测试且较完整，`openai` 有专属测试但较薄；`google`（`packages/core/lib/google-ai-provider.ts`，四者中最大的实现）**没有专属测试文件**，只在网关相关测试里被间接触及一小部分逻辑，是四者中风险最高的一个
+- 四个 AI provider（`claude`/`mimo`/`openai`/`google`）均有专属测试
+- 认证与计费核心 lib（`usage-limit.ts`/`ai-usage.ts`/`auth-server.ts`/`auth-config.ts`）
+- `packages/app/src/app/api/**/route.ts` 绝大部分 route（AI 生成计费闭环、Story Protocol 注册、其余 CRUD/代理类 route）
+- 编辑器核心业务逻辑 `packages/app/src/lib/editor/handlers/`，以及编辑器 UI 组件（`RichEditor`/`VisualEditor`/`Inspector`/`ChatPanel` 等）
+- `packages/app/src/components/admin/`、`game-player/`，`packages/cronjob`
+- `sites/55`、`sites/jianjian` 的组件层和数据/逻辑层
 
-覆盖有明显缺口，属于长期待补的部分：
-- 大部分 API route（`packages/app/src/app/**/route.ts`，38 个里约九成零覆盖）
-- 多数 UI 组件，尤其编辑器核心组件（`RichEditor`/`VisualEditor`/`Inspector`/`ChatPanel` 等）
-- **编辑器核心业务逻辑** `packages/app/src/lib/editor/handlers/`（choice/scene/character/variable 四类 DSL 操作，编辑器最核心的部分）
-- 认证（`auth-server.ts`/`auth-config.ts`）与 Story Protocol 相关逻辑
-- `packages/app/src/components/admin/`
-- `packages/cms`、`packages/cronjob`（均为整包零覆盖）、`sites/55` 的大部分代码
+明确不测的部分（结构性障碍或纯展示，非遗漏）：
+- Next.js `page.tsx`/`layout.tsx` 里用 `async function` 声明的 Server Component——React DOM 的客户端渲染器不支持 async 函数组件，`@testing-library/react` 的 `render()` 无法调用，需要真实浏览器/RSC 渲染管线才能测
+- `StandaloneMiniGamePlayer.tsx` 通过 Blob + 动态 `import(blobUrl)` 加载小游戏模块，Node/jsdom 的模块加载器不支持 `blob:` scheme，"加载成功"和"游戏完成"分支不可达
+- `story-protocol.ts` 的 `createStoryClient`/`getIpInfo` 在函数体内直接 `new` 出 viem/Story Protocol SDK 对象且依赖真实网络请求；上线前仍需在测试网跑一次真实注册，测试无法替代
+- `packages/cms` 的 Payload 声明式配置（collections 均为纯字段声明，无自定义 `hooks`/`access`/`validate`）、`app/(payload)/**` admin 面板样板代码
+- 纯静态展示组件（无 props、无条件渲染、无状态），如 `components/home/*`、jianjian 的 `Header.tsx`/`Footer.tsx`/隐私政策与服务条款页
+- 已确认零引用的死代码（如曾经的 `packages/app/src/lib/auth.ts`，已删除）；`GameSettings.tsx` 已确认死代码但受权限限制未删除，暂时也未补测试
 
-这些缺口不追求一次性补齐，按优先级（核心播放逻辑 > 高风险 lib > API route > 组件）分批推进即可，当前进度见 `WIP.md`。
+已知但不修复、记入 `TODO.md` 的问题：
+- `usage-limit.ts` 的 `incrementUserDailyUsage` 并发下非原子读改写，计数可能丢失（需要 D1 原子 UPDATE 或 Durable Object，架构改动，测试只做了特征化测试锁定现状）
