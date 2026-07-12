@@ -3,6 +3,7 @@ import type { Game } from '@mui-gamebook/parser';
 import { parse, stringify } from '@mui-gamebook/parser';
 import fs from 'node:fs';
 import path from 'node:path';
+import { stripTimestampPrefix } from '../utils';
 
 export interface ProcessedGame {
   markdown: string;
@@ -175,7 +176,7 @@ export async function processGame(
             assetPath = candidate;
           } else {
             // Try stripping timestamp prefix (e.g. 1768...-name.png)
-            const cleanName = remoteBasename.replace(/^\d+-/, '');
+            const cleanName = stripTimestampPrefix(remoteBasename);
             candidate = path.join(assetsDir, cleanName);
             if (fs.existsSync(candidate)) {
               assetPath = candidate;

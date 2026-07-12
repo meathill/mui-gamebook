@@ -1,15 +1,9 @@
 'use client';
 
-import { authClient } from '@/lib/auth-client';
+import { authClient, isRootUserClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminNav from '@/components/admin/AdminNav';
-
-function isRootUserClient(email: string | undefined): boolean {
-  if (!email) return false;
-  const rootEmails = process.env.NEXT_PUBLIC_ROOT_USER_EMAIL?.split(',').map((e) => e.trim().toLowerCase()) || [];
-  return rootEmails.includes(email.toLowerCase());
-}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();

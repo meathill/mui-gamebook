@@ -1,12 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-
-// Test the isRootUserClient logic used in Header and admin layout
-// This is a pure function that checks NEXT_PUBLIC_ROOT_USER_EMAIL env var
-function isRootUserClient(email: string | undefined): boolean {
-  if (!email) return false;
-  const rootEmails = process.env.NEXT_PUBLIC_ROOT_USER_EMAIL?.split(',').map((e) => e.trim().toLowerCase()) || [];
-  return rootEmails.includes(email.toLowerCase());
-}
+import { describe, it, expect, afterEach } from 'vitest';
+import { isRootUserClient } from '@/lib/auth-client';
 
 describe('isRootUserClient', () => {
   const originalEnv = process.env.NEXT_PUBLIC_ROOT_USER_EMAIL;

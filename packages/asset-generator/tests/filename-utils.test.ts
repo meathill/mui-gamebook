@@ -1,12 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import path from 'node:path';
+import { stripTimestampPrefix } from '../src/lib/utils';
 
 describe('filename utils regression test', () => {
-  // Logic copied from upload-game.ts for verification
-  // const cleanBasename = path.basename(filePath, '.png').replace(/^\d+-/, '');
-
   const cleanFilename = (filePath: string) => {
-    return path.basename(filePath, '.png').replace(/^\d+-/, '');
+    return stripTimestampPrefix(path.basename(filePath, '.png'));
   };
 
   it('should strip existing timestamp from filename', () => {

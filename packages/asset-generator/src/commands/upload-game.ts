@@ -4,6 +4,7 @@ import { findAssets } from '../lib/upload/asset-finder';
 import { processGame } from '../lib/upload/game-processor';
 import { ApiService } from '../lib/upload/api-service';
 import { imageToWebp } from '../lib/converter';
+import { stripTimestampPrefix } from '../lib/utils';
 
 interface UploadOptions {
   file: string;
@@ -57,7 +58,7 @@ export async function uploadGame(options: UploadOptions) {
         uploadContent = imageToWebp(pngContent);
         mime = 'image/webp';
         // Change extension for upload filename, and remove existing timestamp prefix if present
-        const cleanBasename = path.basename(filePath, '.png').replace(/^\d+-/, '');
+        const cleanBasename = stripTimestampPrefix(path.basename(filePath, '.png'));
         const filename = cleanBasename + '.webp';
         uploadPath = path.join(path.dirname(filePath), filename);
       } else {

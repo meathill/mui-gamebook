@@ -12,11 +12,15 @@ interface SessionState {
 
 const sessionState: SessionState = { data: null, isPending: false };
 
-vi.mock('@/lib/auth-client', () => ({
-  authClient: {
-    useSession: () => ({ ...sessionState }),
-  },
-}));
+vi.mock('@/lib/auth-client', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/auth-client')>();
+  return {
+    ...actual,
+    authClient: {
+      useSession: () => ({ ...sessionState }),
+    },
+  };
+});
 
 const pushSpy = vi.fn();
 let routerPush: (path: string) => void = pushSpy;

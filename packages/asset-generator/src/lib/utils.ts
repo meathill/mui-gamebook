@@ -17,6 +17,13 @@ export async function retry<T>(operation: () => Promise<T>, retries: number = 3,
 }
 
 /**
+ * 去除文件名开头的时间戳前缀（如 1768371908430-name.png -> name.png）
+ */
+export function stripTimestampPrefix(filename: string): string {
+  return filename.replace(/^\d+-/, '');
+}
+
+/**
  * 显示帮助信息
  */
 export function showHelp(): void {
