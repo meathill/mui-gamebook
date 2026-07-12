@@ -5,10 +5,10 @@
 长期任务，跨多次会话/提交渐进推进，每个批次对应一次独立提交。完整背景和每批的具体测试目标见规划记录（认证/计费/链上优先，其后核心业务逻辑，再其后 UI 组件）。
 
 - [x] 批次 0：清理死代码 + 文档基线
-  - [ ] 删除 `packages/app/src/lib/auth.ts`（已验证零引用死代码，**被权限分类器拦截，需要用户手动确认/删除**）
+  - [x] 删除 `packages/app/src/lib/auth.ts`（已验证零引用死代码）
   - [x] 更正 `TESTING.md` 覆盖现状描述
   - [x] 登记本批次划分到 WIP.md
-- [ ] 批次 1：认证与计费核心 lib（`usage-limit.ts`/`ai-usage.ts`/`auth-server.ts`/`auth-config.ts`）
+- [x] 批次 1：认证与计费核心 lib（`usage-limit.ts`/`ai-usage.ts`/`auth-server.ts`/`auth-config.ts`）
 - [ ] 批次 2：AI 生成计费闭环 route 群（6 个 route 补测试 + 修复 TTS 记账缺口）
 - [ ] 批次 3：Story Protocol 链上集成（`story-protocol.ts` + `register-ip` route）
 - [ ] 批次 4：其余零覆盖 API route（24 个，拆 2-3 次提交）
