@@ -12,10 +12,11 @@
     "./lib/games": "./src/lib/games.ts"
   },
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "dev": "next dev --turbopack --port 3020",
     "build": "next build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "cp ../../DSL_SPEC.md ./public && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "cp ../../docs/DSL_SPEC.md ./public && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "upload": "opennextjs-cloudflare build && opennextjs-cloudflare upload",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "db:migrate:local": "wrangler d1 migrations apply mui-gamebook --local",

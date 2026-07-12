@@ -1,6 +1,6 @@
 # 游戏资源命名规范
 
-本文档定义了上传脚本 (`scripts/upload-game-assets.ts`) 识别和匹配游戏资源的命名规则。
+本文档定义了资源查找逻辑 (`packages/asset-generator/src/lib/upload/asset-finder.ts`) 识别和匹配游戏资源的命名规则。
 
 ## 目录结构
 
@@ -37,13 +37,13 @@ demo/${slug}/
   1. 去除尾部时间戳 (`_\d{10,14}$`)
   2. 去除游戏前缀 (`${slug}_`)
   3. 尝试匹配 `scene_${id}` 或直接 `${id}`
-- **映射目标**: `image-gen` 块的 `url` 字段
+- **映射目标**: `image` 块的 `url` 字段
 
 ### 4. 小游戏代码 (Minigames)
 - **模式**: `{slug}_{场景ID}_minigame.js`
 - **示例**: `harry-potter_de_gnoming_game_minigame.js`
 - **匹配逻辑**: 提取 `{场景ID}_minigame` 作为键
-- **映射目标**: `minigame-gen` 块的 `url` 字段
+- **映射目标**: `minigame` 块的 `url` 字段
 
 ## 自定义映射 (mapping.json)
 
@@ -63,11 +63,11 @@ demo/${slug}/
 ## 重复上传防护
 
 脚本会检查 Markdown 中已存在的 `url` 字段：
-- 如果某个 `image-gen` 或 `minigame-gen` 的 `url` 已是 `http://` 或 `https://` 开头，则跳过上传
+- 如果某个 `image` 或 `minigame` 块的 `url` 已是 `http://` 或 `https://` 开头，则跳过上传
 - 这确保多次运行脚本不会重复上传已有资源
 
 ## 上传失败重试
 
 - 默认重试 3 次
-- 采用指数退避策略（1s, 2s, 3s）
+- 采用指数退避策略，每次失败后延迟翻倍（1s → 2s → 4s）
 - 所有重试失败后记录错误但继续处理其他资源

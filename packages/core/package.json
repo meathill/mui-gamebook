@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "description": "",
   "type": "module",
-  "scripts": {},
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",

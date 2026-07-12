@@ -147,46 +147,48 @@ export async function processGame(
   for (const scene of Object.values(game.scenes)) {
     for (const node of scene.nodes) {
       // AI Image - skip if already has remote URL, UNLESS it's a PNG we want to upgrade to WebP
-      const isRemote = node.url && node.url.startsWith('http');
-      const isPng = node.url && node.url.endsWith('.png');
+      if (node.type === 'ai_image') {
+        const isRemote = node.url && node.url.startsWith('http');
+        const isPng = node.url && node.url.endsWith('.png');
 
-      if (node.type === 'ai_image' && (!isRemote || isPng)) {
-        // Priority 1: Use existing local path if available
-        let assetPath = node.url;
-        if (assetPath && !path.isAbsolute(assetPath)) {
-          // Resolve relative to markdown file location
-          const baseDir = path.dirname(markdownPath);
-          assetPath = path.resolve(baseDir, assetPath);
-        }
+        if (!isRemote || isPng) {
+          // Priority 1: Use existing local path if available
+          let assetPath = node.url;
+          if (assetPath && !path.isAbsolute(assetPath)) {
+            // Resolve relative to markdown file location
+            const baseDir = path.dirname(markdownPath);
+            assetPath = path.resolve(baseDir, assetPath);
+          }
 
-        // Priority 2: Try to find by key pattern if no local path or file doesn't exist
-        if (!assetPath || !fs.existsSync(assetPath)) {
-          assetPath = keyMap.get(`scene_${scene.id}`) || keyMap.get(scene.id);
-        }
+          // Priority 2: Try to find by key pattern if no local path or file doesn't exist
+          if (!assetPath || !fs.existsSync(assetPath)) {
+            assetPath = keyMap.get(`scene_${scene.id}`) || keyMap.get(scene.id);
+          }
 
-        // Priority 3: Reverse lookup from remote URL filename (handling timestamp prefixes)
-        if ((!assetPath || !fs.existsSync(assetPath)) && isRemote && typeof node.url === 'string') {
-          const remoteBasename = path.basename(node.url);
-          // Try exact match in assets dir (assuming assets dir is 'assets' relative to md)
-          const baseDir = path.dirname(markdownPath);
-          const assetsDir = path.join(baseDir, 'assets');
+          // Priority 3: Reverse lookup from remote URL filename (handling timestamp prefixes)
+          if ((!assetPath || !fs.existsSync(assetPath)) && isRemote && typeof node.url === 'string') {
+            const remoteBasename = path.basename(node.url);
+            // Try exact match in assets dir (assuming assets dir is 'assets' relative to md)
+            const baseDir = path.dirname(markdownPath);
+            const assetsDir = path.join(baseDir, 'assets');
 
-          let candidate = path.join(assetsDir, remoteBasename);
-          if (fs.existsSync(candidate)) {
-            assetPath = candidate;
-          } else {
-            // Try stripping timestamp prefix (e.g. 1768...-name.png)
-            const cleanName = stripTimestampPrefix(remoteBasename);
-            candidate = path.join(assetsDir, cleanName);
+            let candidate = path.join(assetsDir, remoteBasename);
             if (fs.existsSync(candidate)) {
               assetPath = candidate;
+            } else {
+              // Try stripping timestamp prefix (e.g. 1768...-name.png)
+              const cleanName = stripTimestampPrefix(remoteBasename);
+              candidate = path.join(assetsDir, cleanName);
+              if (fs.existsSync(candidate)) {
+                assetPath = candidate;
+              }
             }
           }
-        }
 
-        if (assetPath) {
-          const url = await d_upload(assetPath, 'image');
-          if (url) node.url = url;
+          if (assetPath) {
+            const url = await d_upload(assetPath, 'image');
+            if (url) node.url = url;
+          }
         }
       }
 

@@ -8,6 +8,9 @@
     "./components": "./src/components/index.ts",
     "./utils": "./src/utils/index.ts"
   },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@mui-gamebook/core": "workspace:*",
     "@mui-gamebook/parser": "workspace:*",

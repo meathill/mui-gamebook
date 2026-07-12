@@ -127,17 +127,18 @@ curl -X POST http://localhost:3000/api/admin/invite \
 
 魁地奇比赛开始了！
 
-\`\`\`minigame-gen
-prompt: 创建一个点击金色飞贼的游戏，10秒内点击10次即可获胜
-variables:
-  - snitch_caught: 捕获的飞贼数量
+\`\`\`yaml
+minigame:
+  prompt: 创建一个点击金色飞贼的游戏，10秒内点击10次即可获胜
+  variables:
+    snitch_caught: 捕获的飞贼数量
 \`\`\`
 
 * [查看结果] -> win (if: snitch_caught >= 10)
 * [查看结果] -> lose (if: snitch_caught < 10)
 ```
 
-详细的 DSL 规范请参阅 [DSL_SPEC.md](./DSL_SPEC.md)。
+详细的 DSL 规范请参阅 [DSL_SPEC.md](./docs/DSL_SPEC.md)。
 
 ## IP 版权保护 (Story Protocol)
 

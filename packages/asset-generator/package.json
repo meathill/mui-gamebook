@@ -6,6 +6,7 @@
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "scripts": {
+    "typecheck": "tsc --noEmit",
     "generate": "tsx src/index.ts",
     "batch": "tsx src/batch-generate.ts --config configs/corlenka.my.json",
     "enhance": "tsx src/ai-enhance.ts",

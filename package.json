@@ -5,7 +5,8 @@
     "format": "biome format --write",
     "lint": "biome lint",
     "test": "vitest run",
-    "test:ui": "vitest --ui"
+    "test:ui": "vitest --ui",
+    "typecheck": "pnpm -r --if-present run typecheck"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
