@@ -1,20 +1,14 @@
 /**
  * 有声书生成模块的类型定义
+ * NARRATOR_SPEAKER_ID/RawSegment 是跟 @mui-gamebook/core（app 也会用）共享的类型，
+ * 从那里重新导出，避免出现两份定义
  */
 import type { Game } from '@mui-gamebook/parser';
+import { NARRATOR_SPEAKER_ID, type RawSegment } from '@mui-gamebook/core/lib/audiobook/types';
 
-/** 旁白说话人 ID（保留字），narrator 的音色解析规则见 voice-assignment.ts */
-export const NARRATOR_SPEAKER_ID = 'narrator';
+export { NARRATOR_SPEAKER_ID, type RawSegment };
 
-/** LLM 分段返回的原始分段（尚未解析音色） */
-export interface RawSegment {
-  /** NARRATOR_SPEAKER_ID 或 game.ai.characters 的 key */
-  speaker: string;
-  /** 原文逐字摘录 */
-  text: string;
-}
-
-/** 分段任务所需的上下文 */
+/** 分段任务所需的上下文（CLI 专用：直接拿完整 Game，而不是通用角色名单） */
 export interface SegmentationContext {
   game: Game;
   sceneId: string;

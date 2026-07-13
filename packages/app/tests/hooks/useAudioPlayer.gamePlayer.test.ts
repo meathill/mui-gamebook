@@ -108,6 +108,24 @@ describe('useAudioPlayer', () => {
     expect(result.current.isPaused).toBe(false);
   });
 
+  it('onended 触发后调用传入的 onEnded 回调（用于有声书逐句顺序播放）', () => {
+    const onEnded = vi.fn();
+    const { result } = renderHook(() => useAudioPlayer(onEnded));
+    act(() => result.current.play('https://x.com/a.mp3'));
+    act(() => instances[0].onplay?.());
+
+    act(() => instances[0].onended?.());
+
+    expect(onEnded).toHaveBeenCalledTimes(1);
+  });
+
+  it('没有传入 onEnded 时 onended 触发不会抛出异常', () => {
+    const { result } = renderHook(() => useAudioPlayer());
+    act(() => result.current.play('https://x.com/a.mp3'));
+
+    expect(() => act(() => instances[0].onended?.())).not.toThrow();
+  });
+
   it('onerror 触发后状态复位且不抛出异常', () => {
     const { result } = renderHook(() => useAudioPlayer());
     act(() => result.current.play('https://x.com/a.mp3'));

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { splitIntoSentences, explodeSegmentsToSentences } from '../../src/lib/audiobook/sentence-split';
+import { splitIntoSentences, explodeSegmentsToSentences } from '../../lib/audiobook/sentence-split';
 
 describe('splitIntoSentences', () => {
   it('splits a paragraph with multiple sentence-ending punctuation marks', () => {

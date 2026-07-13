@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import { useDialog } from '@/components/Dialog';
+import type { AudiobookClip } from '@/lib/audiobook-types';
 import ShareButton from '@/components/ShareButton';
 import { Button } from '@radix-ui/themes';
 import {
@@ -27,7 +28,19 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   const autoScrollRef = useRef<number | null>(null);
   const dialog = useDialog();
   const t = useTranslations('game');
-  const audioPlayer = useAudioPlayer();
+  // 分角色有声书按句顺序播放：clipQueueRef 记录当前场景的 clip 列表，
+  // clipIndexRef 记录播放到第几句，onEnded 驱动"这句读完，播放下一句"
+  const clipQueueRef = useRef<AudiobookClip[]>([]);
+  const clipIndexRef = useRef(0);
+  function playNextAudiobookClip() {
+    const queue = clipQueueRef.current;
+    const nextIndex = clipIndexRef.current + 1;
+    if (nextIndex < queue.length) {
+      clipIndexRef.current = nextIndex;
+      audioPlayer.play(queue[nextIndex].url);
+    }
+  }
+  const audioPlayer = useAudioPlayer(playNextAudiobookClip);
   const analytics = useGameAnalytics();
 
   const gamePlayer = useGamePlayer(game, slug, {
@@ -85,17 +98,52 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, isGameStarted]);
 
-  // 场景切换时自动播放语音
+  // 场景切换时自动播放语音：优先播放已生成的分角色有声书（逐句顺序播放），
+  // 没有生成过（或请求失败）时回退到旧的单条 audio_url 播放逻辑
   useEffect(() => {
-    if (isGameStarted && currentScene) {
-      audioPlayer.stop();
+    if (!isGameStarted || !currentScene || !currentSceneId) return;
+
+    let cancelled = false;
+    audioPlayer.stop();
+    clipQueueRef.current = [];
+    clipIndexRef.current = 0;
+
+    function playClassicAudio() {
+      if (cancelled || !currentScene) return;
       const audioUrl = gamePlayer.getSceneAudioUrl(currentScene.nodes);
       if (audioUrl) {
         setTimeout(() => {
-          audioPlayer.play(audioUrl);
+          if (!cancelled) audioPlayer.play(audioUrl);
         }, 500);
       }
     }
+
+    async function loadAudiobook() {
+      try {
+        const res = await fetch(`/api/games/${slug}/audiobook/${currentSceneId}`);
+        if (cancelled) return;
+        if (res.ok) {
+          const data = (await res.json()) as { clips: AudiobookClip[] };
+          if (!cancelled && data.clips?.length > 0) {
+            clipQueueRef.current = data.clips;
+            clipIndexRef.current = 0;
+            setTimeout(() => {
+              if (!cancelled) audioPlayer.play(data.clips[0].url);
+            }, 500);
+            return;
+          }
+        }
+      } catch {
+        // 网络错误等同于"这个场景还没有有声书"，走下面的回退逻辑
+      }
+      playClassicAudio();
+    }
+
+    loadAudiobook();
+
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, isGameStarted]);
 

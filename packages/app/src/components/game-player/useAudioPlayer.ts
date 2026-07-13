@@ -17,8 +17,10 @@ export interface UseAudioPlayerReturn {
 /**
  * 音频播放器 Hook
  * 管理音频的播放、暂停、停止和重播
+ * @param onEnded 一段音频自然播放完毕时的回调（区别于手动 pause/stop）；
+ *   有声书逐句顺序播放靠它驱动"这句读完，播放下一句"
  */
-export function useAudioPlayer(): UseAudioPlayerReturn {
+export function useAudioPlayer(onEnded?: () => void): UseAudioPlayerReturn {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -40,43 +42,47 @@ export function useAudioPlayer(): UseAudioPlayerReturn {
     return cleanup;
   }, [cleanup]);
 
-  const play = useCallback((url: string) => {
-    // 清理之前的音频
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-
-    const audio = new Audio(url);
-    audioRef.current = audio;
-    setCurrentUrl(url);
-
-    audio.onplay = () => {
-      setIsPlaying(true);
-      setIsPaused(false);
-    };
-
-    audio.onpause = () => {
-      if (audio.currentTime < audio.duration) {
-        setIsPaused(true);
+  const play = useCallback(
+    (url: string) => {
+      // 清理之前的音频
+      if (audioRef.current) {
+        audioRef.current.pause();
       }
-      setIsPlaying(false);
-    };
 
-    audio.onended = () => {
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      setCurrentUrl(url);
 
-    audio.onerror = () => {
-      console.error('Audio playback error');
-      setIsPlaying(false);
-      setIsPaused(false);
-    };
+      audio.onplay = () => {
+        setIsPlaying(true);
+        setIsPaused(false);
+      };
 
-    audio.play().catch((e) => {
-      console.error('Failed to play audio:', e);
-    });
-  }, []);
+      audio.onpause = () => {
+        if (audio.currentTime < audio.duration) {
+          setIsPaused(true);
+        }
+        setIsPlaying(false);
+      };
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        setIsPaused(false);
+        onEnded?.();
+      };
+
+      audio.onerror = () => {
+        console.error('Audio playback error');
+        setIsPlaying(false);
+        setIsPaused(false);
+      };
+
+      audio.play().catch((e) => {
+        console.error('Failed to play audio:', e);
+      });
+    },
+    [onEnded],
+  );
 
   const pause = useCallback(() => {
     if (audioRef.current && !audioRef.current.paused) {

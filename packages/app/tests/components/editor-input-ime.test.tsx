@@ -145,7 +145,7 @@ describe('编辑器输入框的 IME 键盘保护', () => {
 
   it('标签组合输入时 Enter 不创建标签，组合结束后才创建', () => {
     const onChange = vi.fn();
-    const game = { title: '测试游戏', tags: [] } as unknown as Game;
+    const game = { title: '测试游戏', tags: [], scenes: {} } as unknown as Game;
 
     render(
       <EditorSettingsTab

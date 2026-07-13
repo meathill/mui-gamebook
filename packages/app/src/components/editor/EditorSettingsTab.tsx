@@ -2,6 +2,7 @@ import type { Game } from '@mui-gamebook/parser/src/types';
 import { XIcon } from '@phosphor-icons/react/dist/ssr';
 import MDEditor from '@uiw/react-md-editor';
 import { isImeComposing } from '@/lib/keyboard';
+import AudiobookGenerationCard from './AudiobookGenerationCard';
 import { PlaybackModeSection, SiteTemplateSection } from './EditorSettingsSections';
 import IpRegistrationCard from './IpRegistrationCard';
 import MediaAssetItem from './MediaAssetItem';
@@ -185,6 +186,11 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
               />
             </div>
           </div>
+
+          <AudiobookGenerationCard
+            gameId={id}
+            game={game}
+          />
 
           <IpRegistrationCard gameId={id} />
         </div>
