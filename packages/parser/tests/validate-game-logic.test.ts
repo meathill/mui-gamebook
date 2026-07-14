@@ -215,7 +215,7 @@ describe('validateGameLogic - 变量校验', () => {
   });
 
   describe('复杂表达式中的变量提取', () => {
-    it('应该正确解析复杂的数学表达式，并同时报告运行时不支持的运算符', () => {
+    it('复杂算术表达式合法（统一引擎已支持 * 与链式运算），变量提取正常', () => {
       const game = createMinimalGame({
         initialState: { gold: 100 },
         scenes: {
@@ -236,12 +236,12 @@ describe('validateGameLogic - 变量校验', () => {
 
       const issues = validateGameLogic(game);
 
-      // 变量提取仍然要穿透运算符工作
+      // 变量提取穿透运算符工作
       expect(issues.some((i) => i.includes('bonus'))).toBe(true);
       expect(issues.some((i) => i.includes('penalty'))).toBe(true);
       expect(issues.some((i) => i.includes('gold') && i.includes('not declared'))).toBe(false);
-      // 但 * 是运行时 executeSet 算不了的，必须报错（校验器与运行时能力对齐）
-      expect(issues.some((i) => i.includes('Unsupported operator "*"'))).toBe(true);
+      // Phase 1 语义反转：* 等运算符已被统一表达式引擎支持，不再报错
+      expect(issues.some((i) => i.includes('Invalid'))).toBe(false);
     });
   });
 });
@@ -304,84 +304,59 @@ describe('validateGameLogic - minigame 节点变量声明', () => {
   });
 });
 
-describe('validateGameLogic - 运行时能力对齐', () => {
-  it('(set:) 中的 * / % 应报 Unsupported operator', () => {
+describe('validateGameLogic - 表达式语法校验（与运行时同源，Phase 1 语义反转：* / % 已合法）', () => {
+  it('四则运算、括号、or、% 均为合法表达式，不再误报', () => {
     const game = createMinimalGame({
-      initialState: { gold: 100 },
+      initialState: { gold: 100, note: '' },
       scenes: {
         start: {
           id: 'start',
-          nodes: [{ type: 'choice', text: '翻倍', nextSceneId: 'next', set: 'gold = gold * 2' }],
+          nodes: [
+            { type: 'choice', text: '翻倍', nextSceneId: 'next', set: 'gold = gold * 2' },
+            { type: 'choice', text: '检查', nextSceneId: 'next', condition: '(gold / 2 > 10) or gold == 0' },
+            { type: 'choice', text: '买药', nextSceneId: 'next', set: 'gold = gold - 10' },
+            { type: 'choice', text: '记录', nextSceneId: 'next', set: 'note = "a*b/c"' },
+            { type: 'text', content: '{{ if gold % 2 == 0 }}偶数{{ /if }}' },
+          ],
         },
         next: { id: 'next', nodes: [] },
       },
     });
 
     const issues = validateGameLogic(game);
-    expect(issues.some((i) => i.includes('Unsupported operator "*"') && i.includes('(set:)'))).toBe(true);
+    expect(issues.some((i) => i.includes('Invalid') || i.includes('Unsupported'))).toBe(false);
   });
 
-  it('(if:) 中的算术运算符应报 Unsupported operator', () => {
+  it('缺 = 的 set 子句报 Invalid（运行时会静默跳过的历史坏写法）', () => {
     const game = createMinimalGame({
-      initialState: { gold: 100 },
+      initialState: { courage: 0 },
       scenes: {
         start: {
           id: 'start',
-          nodes: [{ type: 'choice', text: '检查', nextSceneId: 'next', condition: 'gold / 2 > 10' }],
+          nodes: [{ type: 'choice', text: '鼓起勇气', nextSceneId: 'next', set: 'courage + 10' }],
         },
         next: { id: 'next', nodes: [] },
       },
     });
 
     const issues = validateGameLogic(game);
-    expect(issues.some((i) => i.includes('Unsupported operator "/"') && i.includes('(if:)'))).toBe(true);
+    expect(issues.some((i) => i.includes('Invalid (set:)'))).toBe(true);
   });
 
-  it('运行时支持的单次 +/- 不应误报', () => {
+  it('残缺的 if 条件报 Invalid', () => {
     const game = createMinimalGame({
       initialState: { gold: 100 },
       scenes: {
         start: {
           id: 'start',
-          nodes: [{ type: 'choice', text: '买药', nextSceneId: 'next', set: 'gold = gold - 10' }],
+          nodes: [{ type: 'choice', text: '检查', nextSceneId: 'next', condition: 'gold >=' }],
         },
         next: { id: 'next', nodes: [] },
       },
     });
 
     const issues = validateGameLogic(game);
-    expect(issues.some((i) => i.includes('Unsupported operator'))).toBe(false);
-  });
-
-  it('字符串字面量里的符号不应误报', () => {
-    const game = createMinimalGame({
-      initialState: { note: '' },
-      scenes: {
-        start: {
-          id: 'start',
-          nodes: [{ type: 'choice', text: '记录', nextSceneId: 'next', set: 'note = "a*b/c"' }],
-        },
-        next: { id: 'next', nodes: [] },
-      },
-    });
-
-    const issues = validateGameLogic(game);
-    expect(issues.some((i) => i.includes('Unsupported operator'))).toBe(false);
-  });
-
-  it('{{ if }} 条件中的算术运算符应报 Unsupported operator', () => {
-    const game = createMinimalGame({
-      initialState: { gold: 100 },
-      scenes: {
-        start: {
-          id: 'start',
-          nodes: [{ type: 'text', content: '{{ if gold % 2 == 0 }}偶数{{ /if }}' }],
-        },
-      },
-    });
-
-    const issues = validateGameLogic(game);
-    expect(issues.some((i) => i.includes('Unsupported operator "%"'))).toBe(true);
+    expect(issues.some((i) => i.includes('Invalid (if:)'))).toBe(true);
   });
 });
 

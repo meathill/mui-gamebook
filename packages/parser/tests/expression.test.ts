@@ -98,6 +98,14 @@ describe('表达式引擎 - v2 新能力', () => {
     expect(evaluateCondition('a == 2 or b == 1', state)).toBe(false);
   });
 
+  it('关键字大小写不敏感（LLM 常写 SQL 风格 AND/OR，HP4 存量实锤）', () => {
+    const state = { a: 1, b: 1, flag: true };
+    expect(evaluateCondition('a == 1 AND b == 1', state)).toBe(true);
+    expect(evaluateCondition('a == 2 OR b == 1', state)).toBe(true);
+    expect(evaluateCondition('NOT flag', state)).toBe(false);
+    expect(evaluateCondition('flag == TRUE', state)).toBe(true);
+  });
+
   it('优先级：`a, b or c` ≡ a && (b || c)；and 高于 or', () => {
     expect(evaluateCondition('a, b or c', { a: 1, b: 0, c: 1 })).toBe(true);
     expect(evaluateCondition('a, b or c', { a: 0, b: 1, c: 1 })).toBe(false);

@@ -256,7 +256,14 @@ not  !
 
 验证：`pnpm vitest run` 全绿（含 `template-escape.test.ts` 与校验器新检查的回归测试）；validate 脚本跑 13 demo 无 Nested/Unsupported 报错。
 
-### Phase 1：表达式统一 + 防丢失 + 透传（核心）
+### Phase 1：表达式统一 + 防丢失 + 透传（核心）—— ✅ 已完成
+
+> 五个批次全部落地（对拍 diff=0，无白名单）。与原计划的偏差记录：
+> trigger 归一在运行时而非 parse 期（保持 `trigger.condition` 原文往返）；
+> 多存档合并通过新增 `useGamePlayer.restoreSave` 落地（顺带修复 55 站读档丢状态）；
+> 同类多素材节点序列化为 console.warn 保留第一个而非 throw（编辑器保存不能崩）；
+> golden 快照取 3 个小而全样本 + 13 demo 结构摘要（控制仓库体积）。
+> 附带成果：roundtrip 断言抓出 7 个 demo 残留 image-gen 旧围栏并全部迁移。
 
 - 新增 `packages/parser/src/expression/{lexer,parse,evaluate,index}.ts`
 - `types.ts`：`Game.extra`/`Scene.extra`/`dsl_version`/结构化诊断类型/trigger 归一字段

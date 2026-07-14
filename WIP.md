@@ -1,61 +1,22 @@
 # WIP
 
-## DSL v2 Phase 1：统一表达式引擎 + 防丢失 + 透传
+## DSL v2 实施进度
 
-设计依据：`docs/DSL_V2_DESIGN.md` §4.1（表达式）、§4.3（透传）、§4.5-4.7（`---` 降级/选项健壮化/版本）。
-Phase 0 已完成（除 D1 清洗，见 TODO.md）。
+**Phase 0（止血）与 Phase 1（统一表达式引擎 + 防丢失 + 透传）已全部完成**，
+详细设计、各批次内容与偏差记录见 `docs/DSL_V2_DESIGN.md` §6 及 git log
+（`7c99840`…Phase 1 各批次提交）。
 
-**本阶段不做**（Phase 2/3 边界）：对话行 `@角色ID`、手写序列化器、编辑器保序改造、块级 `->` 重定向、chatbot 操作集。
+Phase 1 达成的关键能力：
+- 统一表达式引擎：`or`/括号/四则运算/中文变量名在 if/set/trigger/条件文本四处可用，
+  校验器与运行时同源；对拍 13 demo 全量子句 diff=0
+- 防丢失：结构化诊断 `diagnostics[]`（legacy-fence 为 error），被丢弃内容一律可见
+- 透传：`game.extra` / `scene.extra` / `choice.clauses`，新功能不需要动 parser
+- conformance：roundtrip 幂等 + golden 快照 + transparency 用例
 
-### 批次 1：表达式引擎本体（纯新增，无存量风险）
+**下一步：Phase 2（对话行 + 手写序列化器 + 编辑器保序，风险最高）**，
+范围见 `docs/DSL_V2_DESIGN.md` §6 Phase 2。开工前先把该阶段任务分解写回本文件。
 
-- [x] `packages/parser/src/expression/lexer.ts`：tokenizer——数字、字符串（单/双引号）、标识符（`\p{L}\p{N}_`，首字符非数字，支持中文）、运算符 `|| && ! == != >= <= > < + - * / % ( ) ,` 与关键字 `or and not true false`
-- [x] `packages/parser/src/expression/parse.ts`：递归下降 → 表达式 AST，深度上限（防恶意输入炸栈）；两个入口：
-  - `parseExpression`：if/trigger/条件文本用，顶层 `,` = 最低优先级 AND
-  - `parseStatementList`：set 用，`,` 分隔赋值语句
-  - 优先级（低→高）：`,` < `or`/`||` < `and`/`&&` < `not`/`!` < 比较 < `+ -` < `* / %` < 一元负号/括号
-- [x] `packages/parser/src/expression/evaluate.ts`：求值——`==` 同类型严格 + 数字形字符串数值提升；未定义变量 falsy + `console.warn`（不 throw）；禁用 eval/new Function
-- [x] `packages/parser/src/expression/index.ts`：门面 `evaluateCondition` / `executeSet` / `validateExpression`（供 lint 用：返回标识符表 + 诊断）
-- [x] `packages/parser/tests/expression.test.ts`：文法全覆盖 + 存量形态兼容用例（单 token 真值、逗号 AND、`&&`、宽松 `==` 的数字/字符串场景、trigger 前缀式补全）
-- 每个文件 ≤400 行
-
-### 批次 2：新旧引擎对拍（合入批次 1 的验收门槛）
-
-- [x] 一次性脚本（scratchpad，不入库）：扫 13 个 demo 提取全部 `(if:)`/`(set:)`/trigger/`{{if}}` 子句，旧 `evaluator.ts` 与新引擎在 4 组确定性状态变体下双跑 diff
-- [x] **结果：112 条条件 + 261 条 set + 2 个 trigger，diff = 0**——demo 的 trigger 均为数字型，未触发旧引擎字符串 bug，无需白名单
-
-### 批次 3：运行时切换
-
-- [x] `packages/site-common/src/utils/evaluator.ts` 降级为薄适配层：`evaluateCondition`/`executeSet` 直接 re-export 新引擎，`interpolateVariables` 留守负责模板扫描，导出签名不变
-- [x] `{{var}}` 插值升级：支持 Unicode 变量名与空格（`{{ gold }}`）——Unicode 已改齐五处：表达式 lexer、`{{var}}` 插值、`{{if}}` 条件提取、validator 两处正则、`replace-character-mentions.ts` 的 `@id`（场景 ID 维持 ASCII）
-- [x] trigger 归一（偏差说明：改为**运行时**归一而非 parse 期——`checkTriggers` 调 `normalizeTriggerCondition` 后带完整 state 求值，`trigger.condition` 原文保持往返不变）；字符串变量 trigger bug 已修，测试锁定
-- [x] 存档底座合并：单存档路径在 `use-game-player` load 时合并；多存档路径（偏差说明）没有改 `save-manager.load`（它不持有 initialState），而是给 `useGamePlayer` 新增 `restoreSave(sceneId, savedState)` action 内做底座合并——**顺带修复 55 站读档丢弃变量状态的存量 bug**（`VisualNovelShell.handleLoadSave` 原来 restart+跳场景的 hack 根本没恢复 `runtimeState`）
-
-### 批次 4：parser 防丢失 + 透传 + 选项健壮化
-
-- [x] `types.ts`：`Game.extra` / `Scene.extra` / `SceneChoiceNode.clauses` / 结构化诊断 `Diagnostic {severity, code, message, sceneId?, line?}`（mdast position；`warnings: string[]` 兼容并存）
-- [x] `index.ts` 重构为编排层，拆出 `parse-scene.ts` / `parse-choice.ts`：
-  - 全局/场景未知键透传（`game.extra` / `scene.extra`），stringify 原样写回
-  - 场景元数据门槛改为「首个 yaml 块一律元数据」（顺带删除死代码的 `---` Strategy 1）
-  - 旧围栏检测 → error 级 `legacy-fence`；结构化 warning：duplicate-scene-id / orphan-audio / stray-content / ignored-block / ignored-list-item / invalid-yaml
-  - 选项行贪婪文本（可含 `]`）+ 引号感知的括号平衡子句扫描（值可含 `)`）；未知子句 → `choice.clauses` 透传
-  - 顺带修复隐藏 bug：正文 yaml 音频块的 `type` 键展开会覆盖节点 `type: 'ai_audio'`
-- [x] `stringify.ts`：extra/clauses 写回；同类多 AI 节点（偏差说明）console.warn 保留第一个而非 throw——编辑器保存不能崩，多素材支持是独立的语法设计问题
-- [x] 一致性收尾：`bgm` 别名统一归一为 `background_music`（含缺省值）
-- [x] `dsl_version` 字段已前置落地（一等公民字段，parse/stringify/测试齐备；语义=兼容性标注与 lint 严格度，不分叉解析）
-- [x] 测试：`tests/golden/`（偏差说明：3 个小而全样本存完整 AST 快照 + roundtrip 里 13 demo 结构摘要，避免仓库堆几 MB 快照）+ `tests/roundtrip.test.ts`（stringify∘parse 幂等 + 无结构性丢失）+ `tests/transparency.test.ts`（透传/健壮化/诊断）；biome 忽略 golden 目录（快照须字节精确）
-- [x] 附带成果：roundtrip 的「demo 无 error 诊断」断言当场抓出 7 个 demo 残留的 `image-gen` 旧围栏（此前子任务只迁了 minigame-gen）——已全部迁移，**恢复了这些游戏被静默丢弃的场景配图**（如小红帽 9 张）
-
-### 批次 5：validator 收敛 + 文档同步
-
-- [ ] `scripts/validate-game-script.ts` 改用 `validateExpression`：删除手写 `extractVariablesFromExpression`
-- [ ] **注意语义反转**：Phase 0 加的 `* / %` 报错检查在引擎落地后退役（这些运算符变为合法），`checkUnsupportedOperators` 删除、相关测试翻转为「合法」断言；嵌套 `{{if}}` 检查保留（运行时仍不支持嵌套）
-- [ ] `docs/DSL_SPEC.md` 同步：§5.2/§5.3 的能力边界段落（「不支持 or/括号/乘除」「仅 ASCII 变量名」）随实现更新；`{{ gold }}` 空格限制解除
-- [ ] `docs/DSL_V2_DESIGN.md`：Phase 1 勾选、记录对拍白名单
-
-### 验收标准
-
-- 对拍 diff = 0（白名单除外）
-- 13 个 demo round-trip 深比对等价；golden 快照全绿
-- `pnpm test` / `pnpm run typecheck` / app 构建全绿
-- 手工验收：一个含 `or` + 括号 + 中文变量名的临时场景在播放器中行为正确
+遗留（非阻塞）：
+- D1 生产数据清洗（需 `MUI_ADMIN_PASSWORD`，见 TODO.md）
+- 编辑器场景元数据表单（`lib/editor/extensions/matchers.ts`）尚不认识未知键透传，
+  文本模式编辑含 extra 键的场景时注意观察（parser 层已保真，属 UI 展示问题）

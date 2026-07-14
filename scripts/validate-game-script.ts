@@ -8,6 +8,7 @@
 
 import * as fs from 'fs';
 import path from 'path';
+import { validateExpression } from '../packages/parser/src/expression';
 import { parse } from '../packages/parser/src/index';
 import type { Game, SceneNode } from '../packages/parser/src/types';
 
@@ -32,39 +33,19 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
     }
   }
 
-  // 提取变量名的辅助函数
-  function extractVariablesFromExpression(expr: string): string[] {
-    // 匹配变量名（字母或下划线开头，后跟字母、数字或下划线）
-    // 排除数字、布尔值和运算符
-    const tokens = expr.split(/[\s,=<>!+\-*/&|()]+/).filter(Boolean);
-    const variables: string[] = [];
-    // 逻辑运算符关键字
-    const keywords = new Set(['true', 'false', 'and', 'or', 'not']);
-    for (const token of tokens) {
-      // 跳过数字
-      if (/^\d/.test(token)) continue;
-      // 跳过关键字
-      if (keywords.has(token.toLowerCase())) continue;
-      // 跳过字符串字面量
-      if (/^['"]/.test(token)) continue;
-      // 这是一个变量名（Unicode 标识符，支持中文变量名）
-      if (/^[\p{L}_][\p{L}\p{N}_]*$/u.test(token)) {
-        variables.push(token);
-      }
+  // 表达式校验：与运行时共用 parser 的统一表达式引擎（同一文法），
+  // 语法错误与变量提取都来自引擎本身——杜绝「校验器接受、运行时不认」
+  function checkExpression(expr: string, mode: 'condition' | 'statements', context: string, sceneId: string) {
+    const result = validateExpression(expr, mode);
+    if (!result.ok) {
+      issues.push(`Scene "${sceneId}": Invalid ${context} expression: "${expr}" (${result.error})`);
+      return;
     }
-    return variables;
-  }
-
-  // 检测运行时不支持的算术运算符：executeSet 每条赋值只支持单次 +/-，
-  // evaluateCondition 完全不支持算术（DSL_V2_DESIGN §2.4）——校验器必须与运行时能力对齐
-  function checkUnsupportedOperators(expr: string, context: string, sceneId: string) {
-    // 先剔除字符串字面量，避免把文本内容里的符号误报
-    const stripped = expr.replace(/"[^"]*"|'[^']*'/g, '""');
-    const op = stripped.match(/[*/%]/);
-    if (op) {
-      issues.push(
-        `Scene "${sceneId}": Unsupported operator "${op[0]}" in ${context} (runtime only supports a single + or - per assignment): "${expr}"`,
-      );
+    const referenced = new Set([...result.identifiers, ...(result.assignedKeys ?? [])]);
+    for (const v of referenced) {
+      if (!declaredVariables.has(v)) {
+        issues.push(`Scene "${sceneId}": Variable "${v}" used in ${context} but not declared in state`);
+      }
     }
   }
 
@@ -94,26 +75,14 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
       if (node.type === 'choice') {
         referencedScenes.add(node.nextSceneId);
 
-        // 检查 (set:) 中的变量
+        // 检查 (set:) 表达式：语法 + 未声明变量
         if (node.set) {
-          const vars = extractVariablesFromExpression(node.set);
-          for (const v of vars) {
-            if (!declaredVariables.has(v)) {
-              issues.push(`Scene "${sceneId}": Variable "${v}" used in (set:) but not declared in state`);
-            }
-          }
-          checkUnsupportedOperators(node.set, '(set:)', sceneId);
+          checkExpression(node.set, 'statements', '(set:)', sceneId);
         }
 
-        // 检查 (if:) 中的变量
+        // 检查 (if:) 表达式：语法 + 未声明变量
         if (node.condition) {
-          const vars = extractVariablesFromExpression(node.condition);
-          for (const v of vars) {
-            if (!declaredVariables.has(v)) {
-              issues.push(`Scene "${sceneId}": Variable "${v}" used in (if:) condition but not declared in state`);
-            }
-          }
-          checkUnsupportedOperators(node.condition, '(if:)', sceneId);
+          checkExpression(node.condition, 'condition', '(if:) condition', sceneId);
         }
       }
 
@@ -143,14 +112,7 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
         // 检查 {{ if condition }} 条件块中的变量
         const conditionBlockMatches = node.content.matchAll(/\{\{\s*if\s+(.+?)\s*\}\}/g);
         for (const match of conditionBlockMatches) {
-          const conditionExpr = match[1];
-          const vars = extractVariablesFromExpression(conditionExpr);
-          for (const v of vars) {
-            if (!declaredVariables.has(v)) {
-              issues.push(`Scene "${sceneId}": Variable "${v}" used in {{ if }} condition but not declared in state`);
-            }
-          }
-          checkUnsupportedOperators(conditionExpr, '{{ if }} condition', sceneId);
+          checkExpression(match[1], 'condition', '{{ if }} condition', sceneId);
         }
 
         // 检查嵌套 {{ if }} 条件块
@@ -270,10 +232,7 @@ function main() {
 
     const hasErrors = logicIssues.some(
       (i) =>
-        i.includes('not defined') ||
-        i.includes('Missing') ||
-        i.includes('Unsupported operator') ||
-        i.includes('Nested {{ if }}'),
+        i.includes('not defined') || i.includes('Missing') || i.includes('Invalid') || i.includes('Nested {{ if }}'),
     );
     process.exit(hasErrors ? 1 : 0);
   } catch (e) {

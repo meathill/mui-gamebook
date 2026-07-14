@@ -21,7 +21,7 @@ export class ExpressionError extends Error {
   }
 }
 
-/** 关键字（仅识别小写形式） */
+/** 关键字（大小写不敏感：LLM 作者常写 SQL 风格的 AND/OR，token 值归一为小写） */
 const KEYWORDS = new Set(['or', 'and', 'not', 'true', 'false']);
 
 /** 多字符运算符优先匹配 */
@@ -76,7 +76,12 @@ export function tokenize(source: string): Token[] {
       i++;
       while (i < source.length && IDENT_REST.test(source[i])) i++;
       const word = source.slice(start, i);
-      tokens.push({ type: KEYWORDS.has(word) ? 'keyword' : 'identifier', value: word, pos: start });
+      const lower = word.toLowerCase();
+      if (KEYWORDS.has(lower)) {
+        tokens.push({ type: 'keyword', value: lower, pos: start });
+      } else {
+        tokens.push({ type: 'identifier', value: word, pos: start });
+      }
       continue;
     }
 

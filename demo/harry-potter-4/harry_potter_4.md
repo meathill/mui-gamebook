@@ -2848,7 +2848,7 @@ minigame:
 
 "先想想这东西：即便没有声音，我也能轻声呢喃；即便没有翅膀，我也能空中飞舞；即使没有牙齿，我也能咬得痛苦。我是什么？"
 
-* [回答谜语] -> puzzle_solved (if: sphinx_answer == "2" OR sphinx_answer == "风")
+* [回答谜语] -> puzzle_solved (if: sphinx_answer == "2" or sphinx_answer == "风")
 * [答错了……] -> maze_fight (set: health = health - 10)
 
 ---
@@ -3119,9 +3119,9 @@ image:
 
 一道绿光闪过。
 
-* [警告塞德里克！] -> warn_cedric (if: investigation >= 80 AND cedric_trust >= 50) (set: saved_cedric = true)
+* [警告塞德里克！] -> warn_cedric (if: investigation >= 80 and cedric_trust >= 50) (set: saved_cedric = true)
 * [什么都做不了……] -> cedric_death
-* [推开他！] -> push_cedric_away (if: courage >= 90 AND cedric_trust >= 30) (set: saved_cedric = true)
+* [推开他！] -> push_cedric_away (if: courage >= 90 and cedric_trust >= 30) (set: saved_cedric = true)
 
 ---
 
@@ -3404,9 +3404,9 @@ image:
 
 你是怎么做到这一切的？根据你在旅途中的选择，你的故事迎来了不同的结局……
 
-* [真正的勇士] -> ending_true (if: task_points >= 150 AND cedric_trust > 0 AND health > 0)
+* [真正的勇士] -> ending_true (if: task_points >= 150 and cedric_trust > 0 and health > 0)
 * [改变命运] -> ending_hidden (if: saved_cedric == true)
-* [友谊万岁] -> ending_friend (if: ron_friendship >= 100 AND hermione_help == true)
+* [友谊万岁] -> ending_friend (if: ron_friendship >= 100 and hermione_help == true)
 * [幸存者] -> ending_survivor
 
 ---

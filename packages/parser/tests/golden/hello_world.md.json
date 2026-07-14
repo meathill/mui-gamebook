@@ -38,6 +38,15 @@
             "nextSceneId": "next_scene"
           }
         ]
+      },
+      "next_scene": {
+        "id": "next_scene",
+        "nodes": [
+          {
+            "type": "text",
+            "content": "旅程开始了。这是这个最小示例的终点。"
+          }
+        ]
       }
     }
   },
