@@ -19,6 +19,19 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
   // 收集所有已声明的变量名
   const declaredVariables = new Set<string>(Object.keys(game.initialState));
 
+  // minigame 节点的 variables 字段（变量名 -> 用途说明，DSL_SPEC §4.1.4）是运行时注入变量的
+  // 官方声明位置：小游戏结束后由前端直接把结果变量合并进 state，不要求预先出现在 initialState 中
+  // （packages/site-common/src/game-player/use-game-player.ts 的 applyStateUpdate 是无白名单的展开合并）
+  for (const scene of Object.values(game.scenes)) {
+    for (const node of scene.nodes) {
+      if (node.type === 'minigame' && node.variables) {
+        for (const varName of Object.keys(node.variables)) {
+          declaredVariables.add(varName);
+        }
+      }
+    }
+  }
+
   // 提取变量名的辅助函数
   function extractVariablesFromExpression(expr: string): string[] {
     // 匹配变量名（字母或下划线开头，后跟字母、数字或下划线）

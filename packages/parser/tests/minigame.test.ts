@@ -119,6 +119,67 @@ minigame:
       expect(node.type).toBe('minigame');
       expect(node.variables).toBeUndefined();
     });
+
+    it('应该归一化列表形式的变量定义（YAML `- key: value`，常见于 AI 生成内容）', () => {
+      const source = `---
+title: "List Form Vars"
+---
+# start
+\`\`\`yaml
+minigame:
+  prompt: 抵抗夺魂咒小游戏
+  variables:
+    - resist_score: 抵抗得分
+\`\`\`
+`;
+      const result = parse(source);
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+
+      const node = result.data.scenes['start']?.nodes[0] as SceneMiniGameNode;
+      expect(node.variables).toEqual({ resist_score: '抵抗得分' });
+    });
+
+    it('应该合并多个列表项形式的变量定义', () => {
+      const source = `---
+title: "List Form Multi Vars"
+---
+# start
+\`\`\`yaml
+minigame:
+  prompt: 测试游戏
+  variables:
+    - hits: 击中次数
+    - misses: 失误次数
+\`\`\`
+`;
+      const result = parse(source);
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+
+      const node = result.data.scenes['start']?.nodes[0] as SceneMiniGameNode;
+      expect(node.variables).toEqual({ hits: '击中次数', misses: '失误次数' });
+    });
+
+    it('应该将变量说明统一转换为字符串（YAML 会把纯数字值解析为 number）', () => {
+      const source = `---
+title: "Numeric Value Vars"
+---
+# start
+\`\`\`yaml
+minigame:
+  prompt: 测试游戏
+  variables:
+    score: 0
+\`\`\`
+`;
+      const result = parse(source);
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+
+      const node = result.data.scenes['start']?.nodes[0] as SceneMiniGameNode;
+      expect(node.variables).toEqual({ score: '0' });
+    });
   });
 
   describe('stringify', () => {
@@ -212,6 +273,32 @@ minigame:
         expect(node.url).toBe('https://example.com/game.js');
         expect(node.variables).toEqual(['score']); // 只有变量名，没有描述
         expect((node as any).prompt).toBeUndefined(); // prompt 应该被过滤
+      }
+    });
+
+    it('回归：列表形式的变量经完整解析管线后，variables 应为变量名而非数组下标', () => {
+      const source = `---
+title: "Regression Test"
+---
+# start
+\`\`\`yaml
+minigame:
+  prompt: 这是创作者的 prompt
+  variables:
+    - resist_score: 抵抗得分
+  url: https://example.com/game.js
+\`\`\`
+`;
+      const result = parse(source);
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+
+      const playable = toPlayableGame(result.data);
+      const node = playable.scenes['start']?.nodes[0];
+
+      expect(node?.type).toBe('minigame');
+      if (node?.type === 'minigame') {
+        expect(node.variables).toEqual(['resist_score']);
       }
     });
   });

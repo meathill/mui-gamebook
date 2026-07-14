@@ -52,6 +52,25 @@ function parseChoices(list: List): SceneNode[] {
   return nodes;
 }
 
+/**
+ * 归一化 minigame.variables：作者（尤其 AI 生成）常把 "变量名: 说明" 的映射误写成
+ * YAML 列表形式（`- 变量名: 说明`），yaml.load 会产出 Array<Record<string, string>>
+ * 而非类型声明的 Record<string, string>。parser 是唯一数据入口，这里统一收敛两种写法。
+ */
+function normalizeMiniGameVariables(raw: unknown): Record<string, string> | undefined {
+  if (raw == null) return undefined;
+
+  const items = Array.isArray(raw) ? raw : [raw];
+  const variables: Record<string, string> = {};
+  for (const item of items) {
+    if (!item || typeof item !== 'object') continue;
+    for (const [key, value] of Object.entries(item)) {
+      variables[key] = String(value);
+    }
+  }
+  return Object.keys(variables).length > 0 ? variables : undefined;
+}
+
 function parseSceneNodes(nodes: RootContent[]): SceneNode[] {
   const sceneNodes: SceneNode[] = [];
 
@@ -146,6 +165,7 @@ function parseSceneNodes(nodes: RootContent[]): SceneNode[] {
             sceneNodes.push({
               type: 'minigame',
               ...parsed.minigame,
+              variables: normalizeMiniGameVariables(parsed.minigame.variables),
             });
           }
           if (parsed.image) {
@@ -259,7 +279,7 @@ export function parse(source: string): ParseResult {
         nodes.unshift({
           type: 'minigame',
           prompt: minigame.prompt,
-          variables: minigame.variables,
+          variables: normalizeMiniGameVariables(minigame.variables),
           url: minigame.url,
         });
       if (video)

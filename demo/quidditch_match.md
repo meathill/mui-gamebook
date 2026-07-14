@@ -42,11 +42,12 @@ ai:
 
 突然，你看到了它！金色飞贼正在快速移动！
 
-```minigame-gen
-prompt: 创建一个点击金色飞贼的游戏。屏幕上会有一个金色小球快速移动，玩家需要在10秒内点击10次才算成功。使用 Canvas 绘制，小球会随机改变方向并且有翅膀动画效果。
-variables:
-  - snitch_caught: 成功捕获飞贼的次数
-url: /api/cms/minigames/1
+```yaml
+minigame:
+  prompt: 创建一个点击金色飞贼的游戏。屏幕上会有一个金色小球快速移动，玩家需要在10秒内点击10次才算成功。使用 Canvas 绘制，小球会随机改变方向并且有翅膀动画效果。
+  variables:
+    - snitch_caught: 成功捕获飞贼的次数
+  url: /api/cms/minigames/1
 ```
 
 * [查看结果] -> quidditch_win (if: snitch_caught >= 10)

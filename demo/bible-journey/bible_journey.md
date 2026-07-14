@@ -85,14 +85,15 @@ url: https://i.muistory.com/images/bible-journey/1768012480524-scene_start.webp
 prompt: Abstract colorful personality dimensions visualization, four pathways of light representing different personality types
 url: https://i.muistory.com/images/bible-journey/1768012481962-scene_personality_test.webp
 ```
-```minigame-gen
-prompt: MBTI性格测试小游戏，8道快速选择题判断四个维度(E/I, S/N, T/F, J/P)，每题限5秒，结束后返回四个维度分数
-variables:
-  - ei: E/I维度分数
-  - sn: S/N维度分数
-  - tf: T/F维度分数
-  - jp: J/P维度分数
-url: https://i.muistory.com/images/bible-journey/1768012482510-bible-journey_start_minigame.js
+```yaml
+minigame:
+  prompt: MBTI性格测试小游戏，8道快速选择题判断四个维度(E/I, S/N, T/F, J/P)，每题限5秒，结束后返回四个维度分数
+  variables:
+    ei: E/I维度分数
+    sn: S/N维度分数
+    tf: T/F维度分数
+    jp: J/P维度分数
+  url: https://i.muistory.com/images/bible-journey/1768012482510-bible-journey_start_minigame.js
 ```
 正在分析你的性格维度...
 * [查看结果] -> result_nt (if: sn < 0 && tf > 0)
@@ -490,12 +491,13 @@ url: https://i.muistory.com/images/bible-journey/1768012501086-scene_david_5.web
 你决定用音乐反击。你写了一首歌——《歌利亚》。
 
 现在，是时候让全世界听到你的声音了！
-```minigame-gen
-prompt: 音乐节奏小游戏，点击下落的音符节奏点击败歌利亚，15秒内命中5次获胜，连击可增加伤害
-variables:
-  - music_score: 命中次数
-  - goliath_defeated: 是否击败歌利亚
-url: https://i.muistory.com/images/bible-journey/1768012501675-bible-journey_david_5_minigame.js
+```yaml
+minigame:
+  prompt: 音乐节奏小游戏，点击下落的音符节奏点击败歌利亚，15秒内命中5次获胜，连击可增加伤害
+  variables:
+    music_score: 命中次数
+    goliath_defeated: 是否击败歌利亚
+  url: https://i.muistory.com/images/bible-journey/1768012501675-bible-journey_david_5_minigame.js
 ```
 * [查看结果] -> david_5_victory (if: goliath_defeated == true)
 * [查看结果] -> david_5_continue (if: goliath_defeated == false)

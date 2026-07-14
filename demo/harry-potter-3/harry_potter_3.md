@@ -458,11 +458,12 @@ url: https://i.muistory.com/images/harry-potter-3/1767943539202-scene_bow_to_buc
 ---
 
 # buckbeak_flight
-```minigame-gen
-prompt: '鹰头马身有翼兽飞行小游戏。玩家需要保持平衡并控制方向。左右倾斜控制转向，避开树枝和障碍物。围绕霍格沃茨城堡飞行一圈即可成功。保持稳定可获得额外勇气值。'
-variables:
-  flight_score: 飞行得分
-url: https://i.muistory.com/images/harry-potter-3/1767943538330-harry-potter-3_buckbeak_flight_minigame.js
+```yaml
+minigame:
+  prompt: '鹰头马身有翼兽飞行小游戏。玩家需要保持平衡并控制方向。左右倾斜控制转向，避开树枝和障碍物。围绕霍格沃茨城堡飞行一圈即可成功。保持稳定可获得额外勇气值。'
+  variables:
+    flight_score: 飞行得分
+  url: https://i.muistory.com/images/harry-potter-3/1767943538330-harry-potter-3_buckbeak_flight_minigame.js
 ```
 ```image-gen
 prompt: Harry riding Buckbeak flying over Hogwarts castle and the Black Lake, wind in his hair, exhilarating freedom. Panoramic view of the grounds.
@@ -545,11 +546,12 @@ url: https://i.muistory.com/images/harry-potter-3/1767943551943-scene_patronus_l
 ---
 
 # patronus_attempt_1
-```minigame-gen
-prompt: '守护神练习小游戏。屏幕会出现金色光点代表"快乐回忆碎片"，玩家需要在正确时机点击收集它们。积累能量条，当能量满时释放守护神。博格特摄魂怪会逐渐逼近，增加压力。成功产生银色光芒即可通过。'
-variables:
-  patronus_strength: 守护神强度
-url: https://i.muistory.com/images/harry-potter-3/1767943538335-harry-potter-3_patronus_attempt_1_minigame.js
+```yaml
+minigame:
+  prompt: '守护神练习小游戏。屏幕会出现金色光点代表"快乐回忆碎片"，玩家需要在正确时机点击收集它们。积累能量条，当能量满时释放守护神。博格特摄魂怪会逐渐逼近，增加压力。成功产生银色光芒即可通过。'
+  variables:
+    patronus_strength: 守护神强度
+  url: https://i.muistory.com/images/harry-potter-3/1767943538335-harry-potter-3_patronus_attempt_1_minigame.js
 ```
 ```image-gen
 prompt: Harry concentrating hard, wand raised, faint silver mist forming at the wand tip. A dark Dementor shape approaching from the trunk.
@@ -775,11 +777,12 @@ url: https://i.muistory.com/images/harry-potter-3/1767943542641-scene_dementor_h
 ---
 
 # patronus_battle_hogsmeade
-```minigame-gen
-prompt: '摄魂怪对抗小游戏。三个摄魂怪从不同方向逼近。玩家需要保持专注，在恐惧干扰中收集快乐回忆碎片，积累能量释放守护神。摄魂怪每靠近一步，屏幕会变暗，干扰会增加。能量满后点击释放，击退所有摄魂怪即可获胜。失败则生命值大幅减少。'
-variables:
-  battle_result: 战斗结果
-url: https://i.muistory.com/images/harry-potter-3/1767943538335-harry-potter-3_patronus_battle_hogsmeade_minigame.js
+```yaml
+minigame:
+  prompt: '摄魂怪对抗小游戏。三个摄魂怪从不同方向逼近。玩家需要保持专注，在恐惧干扰中收集快乐回忆碎片，积累能量释放守护神。摄魂怪每靠近一步，屏幕会变暗，干扰会增加。能量满后点击释放，击退所有摄魂怪即可获胜。失败则生命值大幅减少。'
+  variables:
+    battle_result: 战斗结果
+  url: https://i.muistory.com/images/harry-potter-3/1767943538335-harry-potter-3_patronus_battle_hogsmeade_minigame.js
 ```
 寒冷侵入骨髓。你的视线开始模糊...
 
@@ -1210,11 +1213,12 @@ url: https://i.muistory.com/images/harry-potter-3/1767943559710-scene_time_turn_
 ---
 
 # rescue_buckbeak
-```minigame-gen
-prompt: '时间追逐小游戏。玩家需要在不被发现的情况下潜入救巴克比克。屏幕上会显示"过去的人物"的位置和视野范围。避开它们的视线，在时限内解开巴克比克的绳索即可成功。被发现则造成时间悖论，任务失败。'
-variables:
-  rescue_success: 救援成功
-url: https://i.muistory.com/images/harry-potter-3/1767943538993-harry-potter-3_rescue_buckbeak_minigame.js
+```yaml
+minigame:
+  prompt: '时间追逐小游戏。玩家需要在不被发现的情况下潜入救巴克比克。屏幕上会显示"过去的人物"的位置和视野范围。避开它们的视线，在时限内解开巴克比克的绳索即可成功。被发现则造成时间悖论，任务失败。'
+  variables:
+    rescue_success: 救援成功
+  url: https://i.muistory.com/images/harry-potter-3/1767943538993-harry-potter-3_rescue_buckbeak_minigame.js
 ```
 ```image-gen
 prompt: Harry and Hermione hiding behind Hagrid's pumpkins, watching their past selves inside the hut. Buckbeak tied up nearby. Tense stealth moment.
@@ -1299,11 +1303,12 @@ url: https://i.muistory.com/images/harry-potter-3/1767943560757-scene_wait_for_l
 ---
 
 # final_patronus
-```minigame-gen
-prompt: '最终守护神决战小游戏。数百个摄魂怪围攻湖边。玩家需要集中所有意志，释放有史以来最强大的守护神。难度最高，需要完美收集所有快乐回忆碎片，在黑暗完全吞噬屏幕前填满能量条。成功则释放完整雄鹿守护神驱散一切；失败则前功尽弃。'
-variables:
-  final_result: 最终结果
-url: https://i.muistory.com/images/harry-potter-3/1767943538381-harry-potter-3_final_patronus_minigame.js
+```yaml
+minigame:
+  prompt: '最终守护神决战小游戏。数百个摄魂怪围攻湖边。玩家需要集中所有意志，释放有史以来最强大的守护神。难度最高，需要完美收集所有快乐回忆碎片，在黑暗完全吞噬屏幕前填满能量条。成功则释放完整雄鹿守护神驱散一切；失败则前功尽弃。'
+  variables:
+    final_result: 最终结果
+  url: https://i.muistory.com/images/harry-potter-3/1767943538381-harry-potter-3_final_patronus_minigame.js
 ```
 ```image-gen
 prompt: Harry standing at the lake edge, wand raised toward the sky, face illuminated by rising silver light. Hundreds of Dementors recoiling. Epic magical moment.

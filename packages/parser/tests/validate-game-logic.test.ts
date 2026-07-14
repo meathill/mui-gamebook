@@ -246,6 +246,64 @@ describe('validateGameLogic - 变量校验', () => {
   });
 });
 
+describe('validateGameLogic - minigame 节点变量声明', () => {
+  it('minigame 节点 variables 字段中的变量名应视为已声明', () => {
+    const game = createMinimalGame({
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            {
+              type: 'minigame',
+              prompt: '测试小游戏',
+              variables: { flight_score: '飞行得分' },
+            },
+            {
+              type: 'choice',
+              text: '成功完成飞行',
+              nextSceneId: 'next',
+              condition: 'flight_score >= 50',
+            },
+          ],
+        },
+        next: { id: 'next', nodes: [] },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+
+    expect(issues.some((i) => i.includes('flight_score') && i.includes('not declared'))).toBe(false);
+  });
+
+  it('minigame 节点不应影响其他未声明变量的检测', () => {
+    const game = createMinimalGame({
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            {
+              type: 'minigame',
+              prompt: '测试小游戏',
+              variables: { flight_score: '飞行得分' },
+            },
+            {
+              type: 'choice',
+              text: '走别的路',
+              nextSceneId: 'next',
+              condition: 'flight_score >= 50 && other_var == true',
+            },
+          ],
+        },
+        next: { id: 'next', nodes: [] },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+
+    expect(issues.some((i) => i.includes('other_var') && i.includes('not declared'))).toBe(true);
+  });
+});
+
 describe('validateGameLogic - 运行时能力对齐', () => {
   it('(set:) 中的 * / % 应报 Unsupported operator', () => {
     const game = createMinimalGame({

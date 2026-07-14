@@ -187,6 +187,15 @@ interface MiniGameAPI {
 - 反应类：快速反应测试
 - 收集类：限时收集物品
 
+### `minigame.variables` 的 YAML 形态归一化
+
+DSL 作者（尤其 AI 生成）会把 `变量名: 说明` 的映射误写成列表形式（`- 变量名: 说明`），
+两种写法在 `yaml.load` 后分别产出 `Record<string, string>` 和 `Array<Record<string, string>>`，
+后者会让下游 `Object.keys()` 拿到数组下标而不是变量名（`toPlayableGame` → `MiniGamePlayer` 传给
+小游戏的初始变量因此静默变空对象）。已在 `packages/parser/src/index.ts` 的
+`normalizeMiniGameVariables` 统一收敛为 `Record<string, string>`——parser 是唯一数据入口，
+下游（`utils.ts`、`MiniGamePlayer.tsx`、`validate-game-script.ts`）不需要也不应该再做防御性判断。
+
 ## API 数据格式规范
 
 ### CMS 公开 API

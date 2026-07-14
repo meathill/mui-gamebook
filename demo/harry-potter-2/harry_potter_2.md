@@ -150,11 +150,12 @@ url: https://i.muistory.com/images/harry-potter-2/1767800383996-hp2_scene_04_fly
 ---
 
 # de_gnoming_game
-```minigame-gen
-prompt: '这是一个投掷类小游戏。玩家需要抓住花园里的地精，旋转并将其抛出花园墙外。操作：点击并拖动以旋转，松开以投掷。目标：将地精扔得越远越好。成功条件：扔出 5 只地精。'
-variables:
-  throw_distance: 投掷距离
-url: https://i.muistory.com/images/harry-potter-2/1767800379116-harry-potter-2_de_gnoming_game_minigame.js
+```yaml
+minigame:
+  prompt: '这是一个投掷类小游戏。玩家需要抓住花园里的地精，旋转并将其抛出花园墙外。操作：点击并拖动以旋转，松开以投掷。目标：将地精扔得越远越好。成功条件：扔出 5 只地精。'
+  variables:
+    throw_distance: 投掷距离
+  url: https://i.muistory.com/images/harry-potter-2/1767800379116-harry-potter-2_de_gnoming_game_minigame.js
 ```
 ```image-gen
 prompt: Harry and Ron in a garden, swinging small potato-like gnomes by their feet to throw them over a wall. Funny comic style.
@@ -192,11 +193,12 @@ url: https://i.muistory.com/images/harry-potter-2/1767800384122-hp2_scene_06_pla
 ---
 
 # flying_car_scene
-```minigame-gen
-prompt: '驾驶福特安格利亚飞车追赶霍格沃茨特快列车。避开云层中的鸟群和突然出现的障碍物。保持隐形开关开启（如果能量耗尽会显形，增加麻瓜目击风险）。最终目标：安全抵达霍格沃茨城堡上空。'
-variables:
-  car_health: 汽车耐久度
-url: https://i.muistory.com/images/harry-potter-2/1767800382308-harry-potter-2_flying_car_scene_minigame.js
+```yaml
+minigame:
+  prompt: '驾驶福特安格利亚飞车追赶霍格沃茨特快列车。避开云层中的鸟群和突然出现的障碍物。保持隐形开关开启（如果能量耗尽会显形，增加麻瓜目击风险）。最终目标：安全抵达霍格沃茨城堡上空。'
+  variables:
+    car_health: 汽车耐久度
+  url: https://i.muistory.com/images/harry-potter-2/1767800382308-harry-potter-2_flying_car_scene_minigame.js
 ```
 ```image-gen
 prompt: The blue Ford Anglia flying through clouds, following the steam train below. Scenic landscape of Scotland.
@@ -354,11 +356,12 @@ url: https://i.muistory.com/images/harry-potter-2/1767800387156-hp2_scene_14_due
 ---
 
 # dueling_minigame
-```minigame-gen
-prompt: '巫师决斗小游戏。机制：石头剪刀布式的咒语克制。攻击咒语克制防御咒语，防御咒语克制干扰咒语，干扰咒语克制攻击咒语。需要在规定时间内选择咒语。'
-variables:
-  duel_wins: 胜利次数
-url: https://i.muistory.com/images/harry-potter-2/1767800381912-harry-potter-2_dueling_minigame_minigame.js
+```yaml
+minigame:
+  prompt: '巫师决斗小游戏。机制：石头剪刀布式的咒语克制。攻击咒语克制防御咒语，防御咒语克制干扰咒语，干扰咒语克制攻击咒语。需要在规定时间内选择咒语。'
+  variables:
+    duel_wins: 胜利次数
+  url: https://i.muistory.com/images/harry-potter-2/1767800381912-harry-potter-2_dueling_minigame_minigame.js
 ```
 你和马尔福展开了激烈的对攻。你需要快速反应，选择正确的咒语来克制他！
 
@@ -451,11 +454,12 @@ url: https://i.muistory.com/images/harry-potter-2/1767800388162-hp2_scene_18_ara
 ---
 
 # spider_chase_minigame
-```minigame-gen
-prompt: '禁林逃亡跑酷游戏。驾驶破损的飞车在树根和蜘蛛群中穿梭。躲避巨型蜘蛛的扑咬和倒下的树木。坚持一定距离直到冲出禁林。'
-variables:
-  escape_success: 逃脱成功
-url: https://i.muistory.com/images/harry-potter-2/1767800383553-harry-potter-2_spider_chase_minigame_minigame.js
+```yaml
+minigame:
+  prompt: '禁林逃亡跑酷游戏。驾驶破损的飞车在树根和蜘蛛群中穿梭。躲避巨型蜘蛛的扑咬和倒下的树木。坚持一定距离直到冲出禁林。'
+  variables:
+    escape_success: 逃脱成功
+  url: https://i.muistory.com/images/harry-potter-2/1767800383553-harry-potter-2_spider_chase_minigame_minigame.js
 ```
 （小游戏：蜘蛛大逃亡）
 
@@ -553,11 +557,12 @@ url: https://i.muistory.com/images/harry-potter-2/1767800388104-hp2_scene_22_bas
 ---
 
 # basilisk_battle
-```minigame-gen
-prompt: '最终BOSS战：蛇怪。阶段1：躲避蛇怪的尾巴扫击和毒牙撕咬。阶段2：利用地形掩护，寻找进攻机会。阶段3（决胜）：当时机出现时，使用格兰芬多宝剑刺穿蛇怪的上颚。'
-variables:
-  boss_hp: 蛇怪生命值
-url: https://i.muistory.com/images/harry-potter-2/1767800377975-harry-potter-2_basilisk_battle_minigame.js
+```yaml
+minigame:
+  prompt: '最终BOSS战：蛇怪。阶段1：躲避蛇怪的尾巴扫击和毒牙撕咬。阶段2：利用地形掩护，寻找进攻机会。阶段3（决胜）：当时机出现时，使用格兰芬多宝剑刺穿蛇怪的上颚。'
+  variables:
+    boss_hp: 蛇怪生命值
+  url: https://i.muistory.com/images/harry-potter-2/1767800377975-harry-potter-2_basilisk_battle_minigame.js
 ```
 （小游戏：决战蛇怪）
 

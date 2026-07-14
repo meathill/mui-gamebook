@@ -322,11 +322,12 @@ character: harry
 url: https://i.muistory.com/images/harry-potter-1/1767799042652-hp1_wand_chooses_1767687509262.webp
 ```
 
-```minigame-gen
-prompt: 魔杖选择游戏。屏幕显示一个目标光圈，玩家需点击中心。前两根魔杖点击时光圈会严重偏移（怎么点都不对），第3根魔杖光圈稳定且有吸附效果。
-variables:
-  - wand_found: 是否找到正确魔杖
-url: https://i.muistory.com/images/harry-potter-1/1767799042705-hp1_wand_chooses_minigame_v1.js
+```yaml
+minigame:
+  prompt: 魔杖选择游戏。屏幕显示一个目标光圈，玩家需点击中心。前两根魔杖点击时光圈会严重偏移（怎么点都不对），第3根魔杖光圈稳定且有吸附效果。
+  variables:
+    - wand_found: 是否找到正确魔杖
+  url: https://i.muistory.com/images/harry-potter-1/1767799042705-hp1_wand_chooses_minigame_v1.js
 ```
 
 第一根魔杖炸碎了花瓶。第二根刚碰到就枯萎了。
@@ -522,11 +523,12 @@ character: harry
 url: https://i.muistory.com/images/harry-potter-1/1767799041324-hp1_sorting_hat_1767715718504.webp
 ```
 
-```minigame-gen
-prompt: 分院帽小游戏。屏幕快速闪现四个学院徽章，玩家需要在5秒内点击格兰芬多徽章3次。
-variables:
-  - sorting_choice: 成功点击格兰芬多的次数
-url: https://i.muistory.com/images/harry-potter-1/1767799041206-hp1_sorting_hat_minigame_v1.js
+```yaml
+minigame:
+  prompt: 分院帽小游戏。屏幕快速闪现四个学院徽章，玩家需要在5秒内点击格兰芬多徽章3次。
+  variables:
+    - sorting_choice: 成功点击格兰芬多的次数
+  url: https://i.muistory.com/images/harry-potter-1/1767799041206-hp1_sorting_hat_minigame_v1.js
 ```
 
 细小的声音在耳边响起："嗯……困难……心地不坏，也有天赋……把你放在哪里呢？"
@@ -648,11 +650,12 @@ prompt: Two boys fighting a troll, magical sparks flying
 characters: [harry, ron]
 ```
 
-```minigame-gen
-prompt: 击退巨怪游戏。屏幕显示方向箭头序列，2秒内按正确顺序点击。成功3轮击退巨怪。
-variables:
-  - spell_success: 成功次数
-url: https://i.muistory.com/images/harry-potter-1/1767799041244-hp1_save_hermione_minigame_v1.js
+```yaml
+minigame:
+  prompt: 击退巨怪游戏。屏幕显示方向箭头序列，2秒内按正确顺序点击。成功3轮击退巨怪。
+  variables:
+    - spell_success: 成功次数
+  url: https://i.muistory.com/images/harry-potter-1/1767799041244-hp1_save_hermione_minigame_v1.js
 ```
 
 你跳到巨怪背上插了它的鼻子！罗恩用漂浮咒让木棒砸晕了巨怪。
@@ -685,11 +688,12 @@ character: harry
 url: https://i.muistory.com/images/harry-potter-1/1767799041296-hp1_quidditch_match_1767715969204.webp
 ```
 
-```minigame-gen
-prompt: 金色飞贼捕捉。金色小球快速移动，15秒内点击8次。
-variables:
-  - snitch_caught: 成功点击次数
-url: https://i.muistory.com/images/harry-potter-1/1767799041201-hp1_quidditch_match_minigame_v1.js
+```yaml
+minigame:
+  prompt: 金色飞贼捕捉。金色小球快速移动，15秒内点击8次。
+  variables:
+    - snitch_caught: 成功点击次数
+  url: https://i.muistory.com/images/harry-potter-1/1767799041201-hp1_quidditch_match_minigame_v1.js
 ```
 
 比赛中你的扫帚失控（赫敏以为是斯内普干的，帮了解咒），但你吞下并吐出了飞贼，赢了！
@@ -793,11 +797,12 @@ characters: [harry, ron, hermione]
 url: https://i.muistory.com/images/harry-potter-1/1767799032632-hp1_chess_game_1767749785427.webp
 ```
 
-```minigame-gen
-prompt: 简化巫师棋。3x3棋盘，控制骑士L形走位吃掉3个兵，限时30秒。
-variables:
-  - chess_victory: 获胜
-url: https://i.muistory.com/images/harry-potter-1/1767799032025-hp1_chess_game_minigame_v1.js
+```yaml
+minigame:
+  prompt: 简化巫师棋。3x3棋盘，控制骑士L形走位吃掉3个兵，限时30秒。
+  variables:
+    - chess_victory: 获胜
+  url: https://i.muistory.com/images/harry-potter-1/1767799032025-hp1_chess_game_minigame_v1.js
 ```
 
 罗恩指挥棋局。为了让你获胜，他牺牲了自己被白皇后击倒。

@@ -669,7 +669,7 @@ image:
 minigame:
   prompt: 抵抗夺魂咒小游戏。屏幕中央有一个代表意志力的光球，玩家需要连续快速点击来增强意志力。同时会出现金色诱惑符号试图分散注意力。在30秒内将意志力槽充满即可抵抗成功。变量 resist_score 记录最终得分。
   variables:
-    - resist_score: 抵抗得分
+    resist_score: 抵抗得分
   url: https://i.muistory.com/images/harry-potter-4/1768218061169-harry-potter-4_imperius_curse_minigame.js
 ```
 
@@ -1290,7 +1290,7 @@ image:
 minigame:
   prompt: 召唤火弩箭小游戏。屏幕上出现散落的魔法符文，玩家需要按正确顺序点击收集它们来完成飞来咒。有30秒时限，收集越多符文，召唤越成功。summon_score记录得分。
   variables:
-    - summon_score: 召唤得分
+    summon_score: 召唤得分
   url: https://i.muistory.com/images/harry-potter-4/1768218074083-harry-potter-4_summon_firebolt_practice_minigame.js
 ```
 
@@ -1455,7 +1455,7 @@ image:
 minigame:
   prompt: 躲避龙焰飞行小游戏。玩家控制哈利在空中左右移动躲避龙喷出的火焰。屏幕从下往上滚动，火焰从顶端落下。持续45秒，每躲过一道火焰得10分，被击中扣20生命。变量dragon_score记录得分。
   variables:
-    - dragon_score: 龙斗得分
+    dragon_score: 龙斗得分
   url: https://i.muistory.com/images/harry-potter-4/1768218080845-harry-potter-4_dragon_fight_minigame_minigame.js
 ```
 
@@ -2331,7 +2331,7 @@ image:
 minigame:
   prompt: 水下探索小游戏。迷宫类，玩家控制哈利在水下迷宫中寻找人鱼村的路径。需要躲避格林迪洛的追击，有限定氧气时间（模拟鳃囊草时效）。
   variables:
-    - swim_score: 游泳得分
+    swim_score: 游泳得分
   url: https://i.muistory.com/images/harry-potter-4/1768218121542-harry-potter-4_underwater_journey_minigame.js
 ```
 
@@ -2808,6 +2808,26 @@ image:
 
 ---
 
+# maze_navigate
+
+```yaml
+image:
+  prompt: Harry pressing deeper into the maze, hedge walls creaking and slowly shifting position behind him, wand lit, oppressive silence
+  character: harry
+```
+
+博格特消散后，四周重新陷入寂静。
+
+你继续往前走，但迷宫似乎活了过来——树篱在你身后缓缓挪动，封住了来路。
+
+你不能回头了，只能往前。
+
+拐过一丛正在移动的树墙，前方隐约传来说话声。
+
+* [靠近查看] -> cedric_encounter
+
+---
+
 # maze_sphinx
 
 ```yaml
@@ -2818,7 +2838,7 @@ image:
 minigame:
   prompt: 斯芬克斯谜语问答。屏幕上出现三个选项：1. 蝙蝠，2. 风，3. 时间。玩家需要在10秒内选择正确答案。sphinx_answer记录结果。
   variables:
-    - sphinx_answer: 谜语答案
+    sphinx_answer: 谜语答案
   url: https://i.muistory.com/images/harry-potter-4/1768218129686-harry-potter-4_maze_sphinx_minigame.js
 ```
 
@@ -2944,6 +2964,60 @@ image:
 
 ---
 
+# ignore_cedric
+
+```yaml
+image:
+  prompt: Harry sprinting past Cedric and Krum without looking back, Cedric's cries fading behind him, guilt visible on Harry's face
+  character: harry
+```
+
+塞德里克的惨叫还在身后回荡，但你没有停下。
+
+三强杯就是你的目标。你告诉自己，这是比赛，不是所有人都值得救。
+
+你穿过一道又一道树墙，胸口的负罪感却怎么也甩不掉。
+
+前方豁然开朗——奖杯就在中央的底座上闪着蓝光。
+
+你正要伸手去碰，身后传来踉跄的脚步声。
+
+塞德里克浑身是伤，但活着冲了出来，脸色复杂地看着你。
+
+"你……"他喘着气，没再说下去。
+
+* [一起走向奖杯] -> triwizard_cup
+
+---
+
+# attack_cedric
+
+```yaml
+image:
+  prompt: Harry's spell flying wide as Cedric dodges in shock and horror, Krum's cursed glassy eyes suddenly snapping toward Harry instead
+  characters:
+    - harry
+    - cedric
+```
+
+你举起魔杖，对准了塞德里克——
+
+咒语出口的瞬间，你自己都愣住了：我在做什么？
+
+那一丝犹豫救了他。塞德里克堪堪滚开，咒语擦着他的耳边炸在树篱上。
+
+"波特？！你疯了吗？！"他难以置信地看着你。
+
+还没等你回答，克鲁姆呆滞的目光已经转向了你——夺魂咒操控着他，把你当成了新目标。
+
+你不得不且战且退。等你甩开克鲁姆，塞德里克早已不知去向。
+
+再次看到他时，他已经站在三强杯旁，警惕地盯着你，魔杖没有放下。
+
+* [举起双手，走近奖杯] -> triwizard_cup (set: cedric_trust = -10, health = health - 15)
+
+---
+
 # triwizard_cup
 
 ```yaml
@@ -2957,17 +3031,17 @@ image:
 
 三强杯就在那里！在底座上闪烁着蓝光。
 
-你和塞德里克同时跑向它。但一只巨大的蜘蛛突然从阴影中窜出！
+你和塞德里克同时冲向它。一只巨大的蜘蛛突然从阴影中窜出！
 
-你们背靠背战斗，联手击退了它。
+你们几乎同时甩出咒语，合力逼退了它。
 
 现在，只剩下你们和奖杯了。
 
-"你拿吧，哈利。"塞德里克喘着气说，"你{{ if cedric_trust >= 30 }}两次{{ else }}今天{{ /if }}救了我。"
+{{ if cedric_trust >= 20 }}"你拿吧，哈利。"塞德里克喘着气说，"你救了我。"{{ else }}"我们各凭本事。"塞德里克警惕地看着你，"数到三，谁也别耍花招。"{{ /if }}
 
-"不，我们要一起拿。"你说，"还是并列第一，怎么样？"
+{{ if cedric_trust >= 20 }}"不，我们要一起拿。"你说，"还是并列第一，怎么样？"{{ else }}"一起拿。"你说，声音有些僵硬，"总比谁都拿不到强。"{{ /if }}
 
-塞德里克笑了，"这主意不错。"
+{{ if cedric_trust >= 20 }}塞德里克笑了，"这主意不错。"{{ else }}塞德里克沉默了两秒，只是点了点头。{{ /if }}
 
 * [数到三，一起拿！] -> portkey_activate
 
@@ -3177,6 +3251,30 @@ image:
 
 ---
 
+# try_escape
+
+```yaml
+image:
+  prompt: Harry sprinting toward the graveyard's edge only to be blocked by a ring of black-robed masked Death Eaters, Voldemort laughing behind him
+  characters:
+    - harry
+    - voldemort
+```
+
+你转身就跑——但只跑出几步，一圈黑袍食死徒已经堵住了所有出路。
+
+面具后传来低低的笑声。
+
+"哪儿都别想去，波特。"伏地魔的声音在你身后响起，带着毫不掩饰的戏谑，"钻心剜骨！"
+
+剧痛贯穿全身，你痛苦地跪倒在地。
+
+"现在，"他缓缓走近，"我们决斗吧。这次，别想再逃了。"
+
+* [挣扎着站起来] -> duel_voldemort (set: health = health - 15, courage = courage + 5)
+
+---
+
 # duel_voldemort
 
 ```yaml
@@ -3307,8 +3405,8 @@ image:
 你是怎么做到这一切的？根据你在旅途中的选择，你的故事迎来了不同的结局……
 
 * [真正的勇士] -> ending_true (if: task_points >= 150 AND cedric_trust > 0 AND health > 0)
-* [改变命运] -> ending_hidden (if: saved_cedric is true)
-* [友谊万岁] -> ending_friend (if: ron_friendship >= 100 AND hermione_help is true)
+* [改变命运] -> ending_hidden (if: saved_cedric == true)
+* [友谊万岁] -> ending_friend (if: ron_friendship >= 100 AND hermione_help == true)
 * [幸存者] -> ending_survivor
 
 ---
@@ -3382,3 +3480,23 @@ image:
 你知道，真正的战争才刚刚开始。而你，必须时刻准备着。
 
 GAME CLEARED: SURVIVOR ENDING
+
+---
+
+# game_over_death
+
+```yaml
+image:
+  prompt: Harry collapsing in dim light, eyes closing, the world fading to black around him, somber tragic scene
+  character: harry
+```
+
+伤势终究还是压垮了你。
+
+眼前的景象逐渐模糊，四周的声音也远去了。
+
+你已经拼尽了全力……但这一次，还不够。
+
+三强争霸赛，就这样在黑暗中画上了句号。
+
+GAME OVER

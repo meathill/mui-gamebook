@@ -24,6 +24,7 @@ state:
   score_j: 0
   score_p: 0
   mental_state: 80
+  courage: 50
   family_wealth: 100
   social_status: 50
   relationship_baoyu_daiyu: 50
@@ -532,7 +533,6 @@ image:
   characters:
     - baoyu
     - daiyu
-  url: assets/daiyu_backstage.webp
   url: assets/daiyu_backstage.webp
 ```
 
