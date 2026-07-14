@@ -1,7 +1,12 @@
 TODO
 ====
 
-- 选项倒计时
+- **DSL v2**（评审与完整设计见 `docs/DSL_V2_DESIGN.md`，Phase 0 的文档部分与 generate-script 热修已完成）：
+  - Phase 0 余项：validate-game-script 运算符集与运行时对齐；migrate 脚本修 HP4 `\_` 污染与嵌套 `{{if}}`；D1 生产数据只读摸底
+  - Phase 1：统一表达式引擎（or/括号/四则/中文变量名）+ 未知键透传 + 选项行平衡扫描 + trigger 归一 + 存档底座合并 + conformance/对拍
+  - Phase 2：对话行 `@角色ID: 台词` + 手写序列化器（替换 remark-stringify）+ 编辑器保序往返 + 有声书短路 LLM 分段
+  - Phase 3：块级 `->` 重定向 + chatbot 增 dialogue/redirect 操作 + 规范定稿 + demo 迁移
+- 选项倒计时（应基于 DSL v2 Phase 1 的未知子句透传机制实现，避免再发明一次性语法）
 - 许愿墙
 - 游戏地图推广到 `packages/app`（主站）和 `sites/jianjian`：功能本体（`use-route-map.ts`）已在 `site-common` 实现，目前只有 `sites/55`（`RouteMapScreen.tsx`）接了 UI，另外两个站点还没有对应入口
 - 修复国际化支持

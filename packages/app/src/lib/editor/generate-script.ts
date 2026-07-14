@@ -41,7 +41,7 @@ ai:
 
 雾气在林间弥漫，林小雨握紧了手里的布包。
 
-* [鼓起勇气走向密林深处] -> deep_forest (set: courage + 10)
+* [鼓起勇气走向密林深处] -> deep_forest (set: courage = courage + 10)
 * [先在林边寻找线索] -> forest_edge
 
 # deep_forest
@@ -80,7 +80,8 @@ ${EXAMPLE_SCRIPT}
 
 ## Other rules:
 
-- IMPORTANT: When generating YAML blocks (like \`minigame-gen\` or \`image-gen\`), if a field (like \`prompt\`) contains multi-line text or a list, you MUST use the YAML block scalar syntax (e.g. \`prompt: |\`). Do NOT put a list structure directly under a scalar key without the block scalar indicator.
+- IMPORTANT: Scene assets use a \`\`\`yaml code block right after the scene heading, with top-level keys \`image:\` / \`audio:\` / \`minigame:\` (legacy \`minigame-gen\`/\`image-gen\` fences are NOT supported). If a field (like \`prompt\`) contains multi-line text, you MUST use the YAML block scalar syntax (e.g. \`prompt: |\`). Do NOT put a list structure directly under a scalar key without the block scalar indicator.
+- Every \`(set: ...)\` assignment MUST contain \`=\` (e.g. \`(set: courage = courage + 10)\`); \`(set: courage + 10)\` is INVALID and will be silently ignored at runtime.
 - The first scene MUST be \`# start\`.
 - Write the story content in the same language as the user's story (通常是中文).
 - Output ONLY the raw Markdown content, no extra conversational text.
