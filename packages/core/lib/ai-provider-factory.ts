@@ -46,7 +46,11 @@ export function createAiProvider(options: AiProviderOptions): AiProvider {
     if (!options.mimoApiKey) {
       throw new Error('MiMo API Key is required for MiMo provider');
     }
-    return new MimoProvider(options.mimoApiKey, { text: options.models?.text }, options.mimoBaseUrl);
+    return new MimoProvider(
+      options.mimoApiKey,
+      { text: options.models?.text, tts: options.models?.tts },
+      options.mimoBaseUrl,
+    );
   }
 
   if (providerType === 'anthropic') {

@@ -354,9 +354,9 @@ pnpm batch --config ./configs/your-config.json [--force]
   "apiUrl": "https://cms.example.com",
   "adminSecret": "xxx",
   "gameSlug": "my-story",
-  "generate": {
-    "sceneTTS": true,
-    "choiceTTS": true
+  "tts": {
+    "sceneText": true,
+    "choices": true
   },
   "format": {
     "audio": "mp3"
@@ -369,13 +369,92 @@ pnpm batch --config ./configs/your-config.json [--force]
 - **跳过已生成**：剧本中已有 URL 的素材跳过
 - **格式转换**：远端素材格式不符时自动下载、转换、重新上传
 - 支持 WAV 转 MP3（需要系统安装 ffmpeg）
-- 使用 `ai.style.tts` 配置语音风格
+- `ai.style.tts`（语气/语速/情感）目前未被任何 TTS 调用实际读取，是个死配置，尚未修复
 
 相关文件：
 - `/packages/asset-generator/src/batch-generate.ts` - 批量生成入口
 - `/packages/asset-generator/src/lib/cache.ts` - 本地缓存
 - `/packages/asset-generator/src/lib/converter.ts` - 格式转换
 - `/packages/asset-generator/configs/example.json` - 配置示例
+
+### 有声书生成：`audiobook` / `audiobook-local`（2026-07）
+
+批量给整本书生成**分角色语音**的有声书，按章节产出 mp3 + 逐句时间戳，动机是 MiMo
+TTS 目前免费/促销价，先趁这个窗口批量把存量内容都配好音，同时满足"视觉小说配套有声书、
+支持视听同步高亮"这个具体目标（参考 https://muistory.com/play/amulet 这类标题）。
+跟上面的 `batch`/`remote`/`local` 命令是并列的独立命令，不是同一套东西：
+
+```bash
+pnpm generate audiobook-local demo/little_red_riding_hood.md --segments-only --verbose  # 先零成本预览分段
+pnpm generate audiobook my-game-slug                                                     # 确认没问题后正式生成
+```
+
+**为什么是独立命令，而不是给 `remote`/`local` 加参数**：这两个命令从头到尾都是"只读"
+的——不会调用 `updateGameContent`/写回本地文件。原因是分段/音频结果**不能**写回 DSL 的
+节点结构：可视化编辑器（`gameToFlow`/`flowToGame`）会把一个场景的所有文本节点合并成一个
+节点保存，如果往节点结构里塞这些数据，下次作者在编辑器里打开保存就会被这个合并逻辑悄悄
+冲掉。所以分段/音色/音频全部作为独立于 DSL 的旁路产物，存成一个 manifest JSON
+（`audiobook/<slug>/manifest.json`）。
+
+**章节粒度 = 场景（scene），不是更大的分组**：数据模型里没有"章节"概念，只有分支图状的
+"场景"。因为剧情会分支，跨多个场景的"章节"分组没有简洁解法（一个分支该算哪一章？），而
+"场景"天然对应现有阅读界面"一屏一场景"的渲染方式，所以直接拿场景当章节：每个场景对应
+一个完整的 mp3（`audiobook/<slug>/chapters/<sceneId>.mp3`），没有可朗读内容（纯图片、
+或整场都是 `{{变量}}` 动态文本）的场景不出现在 manifest 里。
+
+**怎么知道"这句话是谁说的"**：正文里旁白和角色对白只是普通 prose 混在一起（引号 +
+"XX说"这类归属短语），没有任何结构化 speaker 字段，只能靠 LLM 阅读理解分段
+（`lib/audiobook/segmentation.ts`），不是字符串匹配问题——尤其是角色互相假扮/冒充身份
+说话的场景（比如反派冒充另一个角色），必须结合前情提要才能判断真正的说话人。
+`manifest-generator.ts` 维护一个 800 字的滚动上下文缓冲区（跨场景累积，仅供参考）来
+帮助这类判断，但这只是个启发式兜底，不是图正确性保证——`--segments-only --verbose`
+人工抽查分段结果仍然是必要的一道检查。
+
+**分段之后还要按句切分**：说话人分段的粒度是"整段话"，一个旁白段落可能有好几句话。
+为了支持"视觉/听觉同步"（音频播放到某一句时前端能高亮对应文字），`sentence-split.ts`
+在分段基础上再按中文句末标点做一次纯规则切分（不调用 LLM），每句话独立生成 TTS、
+独立记录 cue 时间——这也意味着比只按说话人分段时多出好几倍的 TTS 调用量，是为了拿到
+逐句 hook 主动付出的代价，不是 bug。
+
+**章节音频的拼接与计时**：一个场景内所有句子的 wav 片段，按朗读顺序用 ffmpeg 的
+concat filter 拼接成一个 wav（`audio-concat.ts` 的 `concatenateWavFiles`，用 filter
+而非 concat demuxer 的 `-c copy`，容忍不同音色输出间可能存在的编码参数差异），再转
+MP3（复用 `converter.ts` 的 `wavToMp3`）。每句话的精确起止时间来自 `getWavDurationMs`
+直接解析各自 WAV 头算出的时长，累加得到 cue 的 `startMs`/`endMs`——没有用 ffprobe（一
+章节几十句话没必要每句起一个子进程）。
+
+**两级独立缓存，容易忘记的细节**：分段结果（文本 → `{speaker, text}[]`）按 `content`
+的哈希单独缓存，跟逐句音频生成（`句子文本|音色` → wav 字节）的缓存是两回事——改分段
+prompt 之后，**音频缓存不会自动失效**，因为它的 key 里根本不含 prompt 版本号。如果
+以后改了分段逻辑想让所有书重新分段，只清分段缓存（`cache/<slug>/*-segments-*.json`）
+就够了；如果连音色/文本内容也变了，两级缓存都要清（或者直接 `--force`）。**章节级的
+拼接/转码/上传每次运行都无条件重做**（不额外维护"整章是否变化"的缓存）——这是本地 CPU
+工作 + 一次上传，不是付费/限流资源，为了省这个而加一层缓存不划算。
+
+**音色分配**：旁白固定用 `mimo_default`（或 `game.ai.characters.narrator.voice_name`
+覆盖）；角色有显式 `voice_name` 就用，否则按角色 ID 哈希从冰糖/茉莉/苏打/白桦这 4 个
+中文预置音色里确定性挑一个（不会用到英文音色，也不会真随机——同一个角色 ID 每次都落
+到同一个音色，重跑不会串音色）。
+
+**玩家选项（choice）也配音**：跟屏幕上实际显示的内容保持一致——选项按钮也是"当前屏幕"
+的一部分，choice 节点的文本同样走按句切分+TTS，各自的 cue 带上 `nextSceneId`，方便
+前端在这句读完后知道可以跳转到哪。choice 节点不做说话人分段（玩家选项文本不是角色台词），
+直接当一句 narrator 处理。
+
+**已知边界（明确不做）**：
+- `{{变量}}`/条件文本节点直接跳过、不预生成语音（动态文本没法预生成）
+- 不做"一键跑全部游戏"的命令，逐本手动跑
+- 只产出 manifest + 章节 mp3，**没有消费 manifest 的播放器/前端**——生成和播放是两个
+  独立阶段，播放端（读取 cue 时间点驱动高亮/同步）是后续单独的工作
+- 章节级产物（拼接后的 mp3、manifest.json）不做增量缓存，每次运行都重新生成/上传
+
+相关文件：
+- `/packages/asset-generator/src/lib/audiobook/segmentation.ts` - LLM 说话人分段
+- `/packages/asset-generator/src/lib/audiobook/sentence-split.ts` - 按句切分（规则）
+- `/packages/asset-generator/src/lib/audiobook/voice-assignment.ts` - 确定性音色分配
+- `/packages/asset-generator/src/lib/audiobook/audio-concat.ts` - WAV 时长解析 + ffmpeg 拼接
+- `/packages/asset-generator/src/lib/audiobook/manifest-generator.ts` - 编排（分段→切句→TTS→拼接→转码→上传）
+- `/packages/asset-generator/src/commands/audiobook.ts`、`audiobook-local.ts`
 
 ## MediaAssetItem 统一组件
 

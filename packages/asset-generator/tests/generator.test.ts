@@ -43,6 +43,7 @@ vi.mock('../src/lib/tts', () => ({
     buffer: Buffer.from('audio'),
     mimeType: 'audio/wav',
   }),
+  resolveDefaultVoice: vi.fn().mockReturnValue('Aoede'),
 }));
 
 vi.mock('../src/lib/cache', () => ({

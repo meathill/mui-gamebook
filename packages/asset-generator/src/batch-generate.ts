@@ -67,6 +67,10 @@ function collectImageTasks(game: Game, force: boolean): BatchTask[] {
 async function handleBatchMode(config: BatchConfig, game: Game, force: boolean, dryRun: boolean): Promise<void> {
   const gameSlug = config.gameSlug;
   const provider = getProviderType();
+  if (provider === 'mimo') {
+    console.error('错误: MiMo 不支持图片生成，--batch 模式仅支持 openai/google');
+    process.exit(1);
+  }
   const apiKey = provider === 'google' ? process.env.GOOGLE_API_KEY : undefined;
 
   // 检查是否有进行中的 batch

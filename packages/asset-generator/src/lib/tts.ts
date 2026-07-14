@@ -3,18 +3,33 @@
  * 使用 AI Provider 将文本转换为语音
  */
 import { retry } from './utils';
-import { getAiProvider, DEFAULT_TTS_VOICE } from './config';
+import { getAiProvider, getProviderType, DEFAULT_TTS_VOICE } from './config';
 import {
   GOOGLE_VOICE_IDS,
   OPENAI_VOICE_IDS,
+  MIMO_VOICE_IDS,
   DEFAULT_GOOGLE_VOICE,
   DEFAULT_OPENAI_VOICE,
+  getDefaultVoice,
+  type TtsProviderType,
 } from '@mui-gamebook/core/lib/voice-config';
 
 // 音色类型从 core 配置派生
 export type GoogleVoiceName = (typeof GOOGLE_VOICE_IDS)[number];
 export type OpenAIVoiceName = (typeof OPENAI_VOICE_IDS)[number];
-export type VoiceName = GoogleVoiceName | OpenAIVoiceName;
+export type MimoVoiceName = (typeof MIMO_VOICE_IDS)[number];
+export type VoiceName = GoogleVoiceName | OpenAIVoiceName | MimoVoiceName;
+
+/**
+ * 按当前（或指定）Provider 解析默认音色
+ * 优先级：显式 DEFAULT_TTS_VOICE 环境变量覆盖 > 按 provider 的官方默认音色
+ */
+export function resolveDefaultVoice(provider?: TtsProviderType): VoiceName {
+  if (DEFAULT_TTS_VOICE) {
+    return DEFAULT_TTS_VOICE as VoiceName;
+  }
+  return getDefaultVoice(provider ?? getProviderType()) as VoiceName;
+}
 
 export interface TTSResult {
   buffer: Buffer;
@@ -24,7 +39,7 @@ export interface TTSResult {
 /**
  * 生成语音
  */
-async function _generateSpeech(text: string, voiceName: VoiceName = 'Aoede'): Promise<TTSResult> {
+async function _generateSpeech(text: string, voiceName: VoiceName = resolveDefaultVoice()): Promise<TTSResult> {
   console.log(`[TTS] Generating speech for: "${text.substring(0, 50)}..."`);
 
   const provider = getAiProvider();
@@ -44,10 +59,7 @@ async function _generateSpeech(text: string, voiceName: VoiceName = 'Aoede'): Pr
 /**
  * 生成语音（带重试）
  */
-export async function generateSpeech(
-  text: string,
-  voiceName: VoiceName = DEFAULT_TTS_VOICE as VoiceName,
-): Promise<TTSResult> {
+export async function generateSpeech(text: string, voiceName: VoiceName = resolveDefaultVoice()): Promise<TTSResult> {
   return retry(() => _generateSpeech(text, voiceName));
 }
 
@@ -57,7 +69,7 @@ export async function generateSpeech(
  */
 export async function generateStorySpeech(
   text: string,
-  voiceName: VoiceName = DEFAULT_TTS_VOICE as VoiceName,
+  voiceName: VoiceName = resolveDefaultVoice(),
   style?: string,
 ): Promise<TTSResult> {
   // 使用自定义风格或默认风格

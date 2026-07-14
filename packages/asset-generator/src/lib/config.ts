@@ -5,6 +5,7 @@ import 'dotenv/config';
 import { S3Client } from '@aws-sdk/client-s3';
 import { createAiProviderFromEnv } from '@mui-gamebook/core/lib/ai-provider-factory';
 import type { AiProvider, AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import type { TtsProviderType } from '@mui-gamebook/core/lib/voice-config';
 
 // Cloudflare 配置
 export const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID!;
@@ -25,8 +26,8 @@ export const s3Client = new S3Client({
 export const R2_BUCKET = process.env.R2_BUCKET!;
 export const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL!;
 
-// TTS 默认声音（适合儿童的温和声音）
-export const DEFAULT_TTS_VOICE = process.env.DEFAULT_TTS_VOICE || 'Aoede';
+// TTS 默认声音显式覆盖；未设置时由 tts.ts 的 resolveDefaultVoice() 按当前 provider 派生默认音色
+export const DEFAULT_TTS_VOICE = process.env.DEFAULT_TTS_VOICE || undefined;
 
 // 当前 AI Provider 实例（延迟初始化）
 let _aiProvider: AiProvider | null = null;
@@ -52,10 +53,11 @@ export function getAiProvider(): AiProvider {
 }
 
 /**
- * 获取当前 Provider 类型
+ * 获取当前 Provider 类型（仅 TTS 支持的三个 provider，anthropic 回退 google）
  */
-export function getProviderType(): 'openai' | 'google' {
-  return getAiProvider().type as 'openai' | 'google';
+export function getProviderType(): TtsProviderType {
+  const type = getAiProvider().type;
+  return type === 'mimo' || type === 'openai' || type === 'google' ? type : 'google';
 }
 
 /**

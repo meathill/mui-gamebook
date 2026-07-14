@@ -3,8 +3,7 @@
  * 处理文本转语音的生成
  */
 import type { Game, SceneNode } from '@mui-gamebook/parser';
-import { DEFAULT_TTS_VOICE } from './config';
-import { generateStorySpeech, type VoiceName } from './tts';
+import { generateStorySpeech, resolveDefaultVoice } from './tts';
 import { generateCacheFileName, cacheExists, readCache, writeCache } from './cache';
 import { smartUpload } from './uploader';
 
@@ -21,7 +20,7 @@ export async function processNodeTTS(
   force: boolean,
   gameSlug: string,
 ): Promise<boolean> {
-  const voiceName = (DEFAULT_TTS_VOICE as VoiceName) || 'Aoede';
+  const voiceName = resolveDefaultVoice();
 
   // 文本节点 TTS
   if (node.type === 'text' && (!node.audio_url || force)) {

@@ -11,6 +11,7 @@
     "batch": "tsx src/batch-generate.ts --config configs/corlenka.my.json",
     "enhance": "tsx src/ai-enhance.ts",
     "check": "tsx src/check-images.ts",
+    "smoke:mimo-tts": "tsx src/smoke-test-mimo-tts.ts",
     "upload": "tsx src/upload-content.ts"
   },
   "dependencies": {
