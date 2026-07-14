@@ -59,6 +59,18 @@ export type SceneContentNode = {
   content: string;
   audio_url?: string; // TTS 生成的语音 URL
 };
+/**
+ * 对话行（DSL v2）：`@角色ID: 台词` / `@角色ID (表情): 台词`。
+ * speaker 必须是 ai.characters 中已注册的角色 ID；emotion 是括号内的舞台指示自由文本，
+ * 由站点模板自行解释（立绘表情、语气标注等）。
+ */
+export type SceneDialogueNode = {
+  type: 'dialogue';
+  speaker: string;
+  emotion?: string;
+  content: string;
+  audio_url?: string; // TTS 生成的语音 URL
+};
 export type SceneStaticImageNode = { type: 'static_image'; alt?: string; url: string };
 export type SceneStaticAudioNode = { type: 'static_audio'; url: string };
 export type SceneStaticVideoNode = { type: 'static_video'; url: string };
@@ -99,6 +111,7 @@ export type SceneChoiceNode = {
 };
 export type SceneNode =
   | SceneContentNode
+  | SceneDialogueNode
   | SceneStaticImageNode
   | SceneStaticAudioNode
   | SceneStaticVideoNode
@@ -198,6 +211,7 @@ export interface PlayableCharacter {
  */
 export type PlayableSceneNode =
   | SceneContentNode
+  | SceneDialogueNode
   | SceneStaticImageNode
   | SceneStaticAudioNode
   | SceneStaticVideoNode

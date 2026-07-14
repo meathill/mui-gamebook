@@ -91,6 +91,15 @@ export function toPlayableGame(game: Game): PlayableGame {
             content: replaceCharacterMentions(node.content, characters),
             audio_url: node.audio_url,
           };
+        case 'dialogue':
+          // speaker 保留原始角色 ID（前端据此查角色名/立绘），台词内容照常替换 @mention
+          return {
+            type: 'dialogue' as const,
+            speaker: node.speaker,
+            emotion: node.emotion,
+            content: replaceCharacterMentions(node.content, characters),
+            audio_url: node.audio_url,
+          };
         case 'choice':
           // 将 @角色ID 替换为角色名称
           return {

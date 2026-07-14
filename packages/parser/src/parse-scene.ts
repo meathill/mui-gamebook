@@ -18,6 +18,9 @@ import type {
 // 块级 HTML 注释形式的文本语音：<!-- audio: URL -->，可能带同行尾随文本（旧版 stringify 产物）
 const AUDIO_COMMENT_REGEX = /^<!--\s*audio:\s*(.*?)\s*-->[ \t]*(.*)$/;
 
+// 对话行：`@角色ID: 台词` / `@角色ID (表情): 台词`——冒号与括号支持全角/半角（中文作者与 LLM 常写全角）
+const DIALOGUE_LINE_REGEX = /^@([\p{L}\p{N}_]+)\s*(?:[(（]([^)）]*)[)）])?\s*[:：]\s*(.*)$/u;
+
 /** 已废弃的代码围栏语言（现 parser 不再解析，检出必须报 error 提示迁移） */
 const LEGACY_FENCE_LANGS = new Set(['minigame-gen', 'image-gen', 'audio-gen', 'video-gen']);
 
@@ -84,7 +87,60 @@ export function buildAssetNodes(parsed: Record<string, unknown>): AssetNodes {
   return result;
 }
 
-export function parseSceneNodes(nodes: RootContent[], report?: DiagnosticReporter, sceneId?: string): SceneNode[] {
+/**
+ * 把一段正文文本按行拆出对话节点（DSL v2 对话行语法）。
+ * 只有 speaker 在 ai.characters 注册时才成为 dialogue 节点，
+ * 未注册的 `@xx:` 行按普通文本处理并发 unregistered-speaker 警告。
+ */
+function extractProseNodes(
+  textToken: string,
+  characterIds: ReadonlySet<string> | undefined,
+  report: DiagnosticReporter | undefined,
+  sceneId: string | undefined,
+  line: number | undefined,
+): SceneNode[] {
+  const nodes: SceneNode[] = [];
+  let buffer: string[] = [];
+
+  const flushBuffer = () => {
+    if (buffer.length > 0) {
+      const content = buffer.join('\n').trim();
+      if (content) nodes.push({ type: 'text', content });
+      buffer = [];
+    }
+  };
+
+  for (const rawLine of textToken.split('\n')) {
+    const match = rawLine.trim().match(DIALOGUE_LINE_REGEX);
+    if (match) {
+      const [, speaker, emotion, content] = match;
+      if (characterIds?.has(speaker)) {
+        flushBuffer();
+        const node: SceneNode = { type: 'dialogue', speaker, content: content.trim() };
+        if (emotion?.trim()) node.emotion = emotion.trim();
+        nodes.push(node);
+        continue;
+      }
+      report?.({
+        severity: 'warning',
+        code: 'unregistered-speaker',
+        message: `"@${speaker}" is not registered in ai.characters; line treated as plain text`,
+        sceneId,
+        line,
+      });
+    }
+    buffer.push(rawLine);
+  }
+  flushBuffer();
+  return nodes;
+}
+
+export function parseSceneNodes(
+  nodes: RootContent[],
+  report?: DiagnosticReporter,
+  sceneId?: string,
+  characterIds?: ReadonlySet<string>,
+): SceneNode[] {
   const sceneNodes: SceneNode[] = [];
 
   for (const node of nodes) {
@@ -98,12 +154,16 @@ export function parseSceneNodes(nodes: RootContent[], report?: DiagnosticReporte
         if (paragraphContent.length > 0) {
           const textToken = paragraphContent.join('').trim();
           if (textToken) {
-            const textNode: SceneNode = { type: 'text', content: textToken };
-            if (pendingAudioUrl) {
-              textNode.audio_url = pendingAudioUrl;
+            const proseNodes = extractProseNodes(textToken, characterIds, report, sceneId, line);
+            if (pendingAudioUrl && proseNodes.length > 0) {
+              // 行内 audio 注释附加到其后第一个正文/对话节点
+              const first = proseNodes[0];
+              if (first.type === 'text' || first.type === 'dialogue') {
+                first.audio_url = pendingAudioUrl;
+              }
               pendingAudioUrl = undefined;
             }
-            sceneNodes.push(textNode);
+            sceneNodes.push(...proseNodes);
           }
           paragraphContent = [];
         }
@@ -138,6 +198,9 @@ export function parseSceneNodes(nodes: RootContent[], report?: DiagnosticReporte
             // 行内注释：附加到下一段 flush 出的文本
             pendingAudioUrl = commentMatch[1];
           }
+        } else if (child.type === 'break') {
+          // 硬换行补回 \n：否则英文两行会被 join('') 粘成一个词，对话行扫描也依赖换行
+          paragraphContent.push('\n');
         } else if (child.type === 'strong' || child.type === 'emphasis' || child.type === 'inlineCode') {
           // Handle other formatting as text
           paragraphContent.push(toString(child));
@@ -157,9 +220,9 @@ export function parseSceneNodes(nodes: RootContent[], report?: DiagnosticReporte
           // 这里还原成带语音的 text 节点，兼容已存盘的历史内容
           sceneNodes.push({ type: 'text', content: trailingText, audio_url: audioUrl });
         } else {
-          // 规范格式（DSL_SPEC §4.3.1）：注释紧跟在文本之后，附加到前一个 text 节点
+          // 规范格式（DSL_SPEC §4.3.1）：注释紧跟在文本之后，附加到前一个 text/dialogue 节点
           const lastNode = sceneNodes[sceneNodes.length - 1];
-          if (lastNode && lastNode.type === 'text') {
+          if (lastNode && (lastNode.type === 'text' || lastNode.type === 'dialogue')) {
             lastNode.audio_url = audioUrl;
           } else {
             report?.({

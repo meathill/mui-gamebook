@@ -197,6 +197,12 @@ export function stringify(game: Game): string {
           // 语音注释独占一行、紧跟在文本之后（DSL_SPEC §4.3.1）
           if (node.audio_url) blocks.push(`<!-- audio: ${node.audio_url} -->`);
           break;
+        case 'dialogue': {
+          const emotion = node.emotion ? ` (${node.emotion})` : '';
+          blocks.push(escapeProse(`@${node.speaker}${emotion}: ${node.content}`));
+          if (node.audio_url) blocks.push(`<!-- audio: ${node.audio_url} -->`);
+          break;
+        }
         case 'static_image':
           blocks.push(`![${node.alt || ''}](${node.url})`);
           break;

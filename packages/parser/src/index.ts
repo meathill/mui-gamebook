@@ -49,6 +49,9 @@ export function parse(source: string): ParseResult {
   const warnings: string[] = [];
   const diagnostics: Diagnostic[] = [];
 
+  // 已注册角色 ID：对话行 `@角色ID: 台词` 的消歧门槛（未注册按普通文本处理）
+  const characterIds: ReadonlySet<string> = new Set(Object.keys(globalConfig?.ai?.characters ?? {}));
+
   // 诊断同时落两处：结构化 diagnostics（新）与字符串 warnings（兼容既有消费方）
   const report = (diagnostic: Diagnostic) => {
     diagnostics.push(diagnostic);
@@ -108,7 +111,7 @@ export function parse(source: string): ParseResult {
       }
     }
 
-    const nodes = [...assetNodes, ...parseSceneNodes(contentNodes, report, currentSceneId)];
+    const nodes = [...assetNodes, ...parseSceneNodes(contentNodes, report, currentSceneId, characterIds)];
 
     const scene: Scene = { id: currentSceneId, nodes };
     if (extra) scene.extra = extra;
