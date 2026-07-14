@@ -215,7 +215,7 @@ describe('validateGameLogic - 变量校验', () => {
   });
 
   describe('复杂表达式中的变量提取', () => {
-    it('应该正确解析复杂的数学表达式', () => {
+    it('应该正确解析复杂的数学表达式，并同时报告运行时不支持的运算符', () => {
       const game = createMinimalGame({
         initialState: { gold: 100 },
         scenes: {
@@ -236,9 +236,137 @@ describe('validateGameLogic - 变量校验', () => {
 
       const issues = validateGameLogic(game);
 
+      // 变量提取仍然要穿透运算符工作
       expect(issues.some((i) => i.includes('bonus'))).toBe(true);
       expect(issues.some((i) => i.includes('penalty'))).toBe(true);
       expect(issues.some((i) => i.includes('gold') && i.includes('not declared'))).toBe(false);
+      // 但 * 是运行时 executeSet 算不了的，必须报错（校验器与运行时能力对齐）
+      expect(issues.some((i) => i.includes('Unsupported operator "*"'))).toBe(true);
     });
+  });
+});
+
+describe('validateGameLogic - 运行时能力对齐', () => {
+  it('(set:) 中的 * / % 应报 Unsupported operator', () => {
+    const game = createMinimalGame({
+      initialState: { gold: 100 },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [{ type: 'choice', text: '翻倍', nextSceneId: 'next', set: 'gold = gold * 2' }],
+        },
+        next: { id: 'next', nodes: [] },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('Unsupported operator "*"') && i.includes('(set:)'))).toBe(true);
+  });
+
+  it('(if:) 中的算术运算符应报 Unsupported operator', () => {
+    const game = createMinimalGame({
+      initialState: { gold: 100 },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [{ type: 'choice', text: '检查', nextSceneId: 'next', condition: 'gold / 2 > 10' }],
+        },
+        next: { id: 'next', nodes: [] },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('Unsupported operator "/"') && i.includes('(if:)'))).toBe(true);
+  });
+
+  it('运行时支持的单次 +/- 不应误报', () => {
+    const game = createMinimalGame({
+      initialState: { gold: 100 },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [{ type: 'choice', text: '买药', nextSceneId: 'next', set: 'gold = gold - 10' }],
+        },
+        next: { id: 'next', nodes: [] },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('Unsupported operator'))).toBe(false);
+  });
+
+  it('字符串字面量里的符号不应误报', () => {
+    const game = createMinimalGame({
+      initialState: { note: '' },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [{ type: 'choice', text: '记录', nextSceneId: 'next', set: 'note = "a*b/c"' }],
+        },
+        next: { id: 'next', nodes: [] },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('Unsupported operator'))).toBe(false);
+  });
+
+  it('{{ if }} 条件中的算术运算符应报 Unsupported operator', () => {
+    const game = createMinimalGame({
+      initialState: { gold: 100 },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [{ type: 'text', content: '{{ if gold % 2 == 0 }}偶数{{ /if }}' }],
+        },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('Unsupported operator "%"'))).toBe(true);
+  });
+});
+
+describe('validateGameLogic - 嵌套 {{ if }} 检测', () => {
+  it('应该检测到嵌套条件块（HP4:2059 实锤模式，运行时会渲染裸模板标签）', () => {
+    const game = createMinimalGame({
+      initialState: { ball_partner: 'none' },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            {
+              type: 'text',
+              content:
+                '勇士们领舞。{{ if ball_partner == "parvati" }}帕瓦蒂{{ else }}{{ if ball_partner == "luna" }}卢娜{{ else }}你独自一人{{ /if }}{{ /if }}走到舞池中央。',
+            },
+          ],
+        },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('Nested {{ if }}'))).toBe(true);
+  });
+
+  it('并列（非嵌套）条件块不应误报', () => {
+    const game = createMinimalGame({
+      initialState: { ball_partner: 'none' },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            {
+              type: 'text',
+              content:
+                '{{ if ball_partner == "parvati" }}帕瓦蒂{{ /if }}{{ if ball_partner == "luna" }}卢娜{{ /if }}{{ if ball_partner != "parvati" && ball_partner != "luna" }}你独自一人{{ /if }}',
+            },
+          ],
+        },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('Nested {{ if }}'))).toBe(false);
   });
 });

@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { unescapeTemplateSpans } from '../packages/parser/src/utils';
 import { ApiService } from '../packages/asset-generator/src/lib/upload/api-service';
 
 function parseArgs() {
@@ -23,7 +24,10 @@ function parseArgs() {
 // Regex to find scenes: Capture: 1=ID, 2=Content
 const SCENE_REGEX = /(^|\n)#\s*([\w-]+)\n([\s\S]*?)(?=(?:\n#\s*[\w-]+)|$)/g;
 
-function migrateContent(content: string): string {
+function migrateContent(rawContent: string): string {
+  // 清洗 {{...}} 模板段内的转义污染（旧版 stringify 产出的 \_ 等），见 parser/src/utils.ts
+  const content = unescapeTemplateSpans(rawContent);
+
   const scenesFound: any[] = [];
   let match;
   while ((match = SCENE_REGEX.exec(content)) !== null) {

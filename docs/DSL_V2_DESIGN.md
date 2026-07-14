@@ -29,7 +29,7 @@ parser 对无法识别的内容一律静默丢弃，已造成实际损失：
 - front matter 与首个 `# 场景` 之间的正文被丢（`index.ts:301` 仅在 `currentSceneId` 存在时收集）
 - blockquote、`##`~`######` 标题、表格、段落内硬换行 `break` 整类节点被忽略（`parseSceneNodes` 无对应分支；`break` 被丢导致英文两行 `join('')` 粘成一个词）
 
-### 2.2 AI 模板教坏语法（活 bug，P0）
+### 2.2 AI 模板教坏语法（活 bug，P0，已修复）
 
 `packages/app/src/lib/editor/generate-script.ts:44` 的 `EXAMPLE_SCRIPT` few-shot 示例写的是 `(set: courage + 10)`——**缺 `=`**。运行时 `executeSet` 按 `=` 切分（`evaluator.ts:67-68`），切不出两段直接 warn 跳过。即：每次 AI 大纲导入生成的同类 set 子句**运行时静默失效**。同文件 :83 的规则文本还在指导 AI 使用已废弃的 `minigame-gen`/`image-gen` 围栏。
 
@@ -60,9 +60,18 @@ parser 对无法识别的内容一律静默丢弃，已造成实际损失：
 - `{{var}}`（`\w+`）、`@角色ID`（`@(\w+)`）、场景 ID（`[\w-]+`）全部 ASCII-only，中文项目不能用中文变量名
 - `==` 是 JS 宽松相等（`10 == "10"` 为真），语义从未成文
 
-### 2.5 转义污染已写入存量内容（活 bug）
+### 2.5 转义污染持续写入存量内容（已修复产出端）
 
-remark-stringify 会转义下划线：`{{ if ron_friendship >= 40 }}` 往返后变成 `{{ if ron\_friendship >= 40 }}`。HP4 存量文件中已有 11 处（`harry_potter_4.md:1796` 等）；`getValue("ball\_partner")` 查不到变量 → 条件恒假 → **舞会场景恒显示"你独自一人"**。现有 stringify 靠把场景标题、选项行塞进 `html` 节点规避转义（`stringify.ts:76,182`），属于补丁摞补丁。
+remark-stringify 会转义文本节点中的词内下划线：`{{ if ron_friendship >= 40 }}` 每次保存都变成 `{{ if ron\_friendship >= 40 }}`（HP4 存量 11 处，`harry_potter_4.md:1796` 等）。
+
+**实测修正**（初版评审误判为运行时活 bug）：CommonMark 把 `\_` 视为转义序列，parse 时自动还原为 `_`，**运行时条件求值不受影响**，往返也稳定。真正的危害在于：
+
+1. **AI 污染回路**：Chatbot 以原始 Markdown 为上下文，可能把看到的 `ron\_friendship` 抄进选项 `(if:)` 子句——选项行以 html 节点原样存储、**不经反转义**，届时才会真正破坏求值
+2. 文本编辑模式直接显示污染内容；grep/diff 噪音（`validate-game-script.ts` 曾为兼容 `\_` 写过化石代码）
+
+修复（Phase 0 已做）：`stringify` 输出后处理 `unescapeTemplateSpans`，`{{...}}` 模板段内不再产出转义；`migrate-game-script.ts` 同步清洗存量；根治（模板段外的转义）靠 Phase 2 手写序列化器。现有 stringify 靠把场景标题、选项行塞进 `html` 节点规避转义（`stringify.ts:76,182`），属于补丁摞补丁。
+
+另：HP4:2059 的嵌套 `{{if}}` 是**实锤的玩家可见 bug**——实测无论 `ball_partner` 取何值，都会把裸模板标签（`{{ if ball_partner == "luna" }}...` 之类）直接渲染给玩家。已拍平为三个并列条件块修复，并在校验器加了嵌套检测防复发。
 
 ### 2.6 对话无结构（视觉小说方向的最大障碍）
 
@@ -240,11 +249,12 @@ not  !
 
 - [x] `generate-script.ts`：EXAMPLE_SCRIPT 补 `=`、删除旧围栏指引（随本次评审完成）
 - [x] `DSL_SPEC.md` 勘误：对齐 v1 现状（随本次评审完成）
-- [ ] `scripts/validate-game-script.ts`：运算符集与运行时对齐（`* /` 在 Phase 1 前列为 error 而非放行）
-- [ ] `scripts/migrate-game-script.ts`：修 HP4 的 `\_` 污染（11 处）与嵌套 `{{if}}`（拍平为并列条件块）
-- [ ] D1 生产数据只读扫描摸底（同类脏数据分布）
+- [x] `stringify` 输出后处理：`{{...}}` 模板段内不再产出 `\_`（`parser/src/utils.ts` 的 `unescapeTemplateSpans`）
+- [x] `scripts/validate-game-script.ts`：运算符集与运行时对齐（`* / %` 报 error）+ 嵌套 `{{if}}` 检测
+- [x] `scripts/migrate-game-script.ts`：内容清洗接入 `unescapeTemplateSpans`；HP4 的 `\_` 污染（11 处）已清洗、嵌套 `{{if}}` 已拍平（三个并列条件块，三种取值实测渲染正确）
+- [ ] D1 生产数据摸底与清洗：逐游戏跑 `npx tsx scripts/migrate-game-script.ts --slug <slug> --dry-run`（需 `MUI_ADMIN_PASSWORD`），确认后去掉 `--dry-run` 落库
 
-验证：`pnpm vitest run` 全绿；validate 脚本跑 13 demo。
+验证：`pnpm vitest run` 全绿（含 `template-escape.test.ts` 与校验器新检查的回归测试）；validate 脚本跑 13 demo 无 Nested/Unsupported 报错。
 
 ### Phase 1：表达式统一 + 防丢失 + 透传（核心）
 

@@ -21,6 +21,19 @@ export function isVariableMeta(value: GameStateValue): value is VariableMeta {
 }
 
 /**
+ * 还原 {{ ... }} 模板段内被 Markdown 序列化转义的标点（如 `\_` → `_`）。
+ * remark-stringify 会转义文本节点中的词内下划线，落在模板表达式内会污染变量名。
+ * CommonMark 解析时会自动还原，运行时求值不受影响；但原始 Markdown 的直接消费方
+ * （文本编辑模式、AI 提示词上下文）会看到污染内容，AI 可能把 `ron\_friendship`
+ * 抄进选项子句——选项行以 html 节点原样存储、不经反转义，届时才会真正破坏求值。
+ * 已知局限：表达式字符串字面量中含 `}` 时无法正确定位模板段边界。
+ */
+export function unescapeTemplateSpans(text: string): string {
+  // \\ 后跟 CommonMark 可转义标点（ASCII 标点全集）时去掉反斜杠
+  return text.replace(/\{\{[^}]*\}\}/g, (span) => span.replace(/\\([!-\/:-@\[-`{-~])/g, '$1'));
+}
+
+/**
  * 从 GameState 提取运行时值
  */
 export function extractRuntimeState(state: GameState): RuntimeState {

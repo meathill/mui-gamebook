@@ -42,6 +42,34 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
     return variables;
   }
 
+  // 检测运行时不支持的算术运算符：executeSet 每条赋值只支持单次 +/-，
+  // evaluateCondition 完全不支持算术（DSL_V2_DESIGN §2.4）——校验器必须与运行时能力对齐
+  function checkUnsupportedOperators(expr: string, context: string, sceneId: string) {
+    // 先剔除字符串字面量，避免把文本内容里的符号误报
+    const stripped = expr.replace(/"[^"]*"|'[^']*'/g, '""');
+    const op = stripped.match(/[*/%]/);
+    if (op) {
+      issues.push(
+        `Scene "${sceneId}": Unsupported operator "${op[0]}" in ${context} (runtime only supports a single + or - per assignment): "${expr}"`,
+      );
+    }
+  }
+
+  // 检测嵌套的 {{ if }} 条件块：运行时是单趟非递归正则，嵌套会把裸模板标签渲染给玩家
+  function hasNestedConditionBlocks(content: string): boolean {
+    const tokenRegex = /\{\{\s*if\s+[^}]*\}\}|\{\{\s*\/if\s*\}\}/g;
+    let depth = 0;
+    for (const match of content.matchAll(tokenRegex)) {
+      if (/^\{\{\s*\/if/.test(match[0])) {
+        depth = Math.max(0, depth - 1);
+      } else {
+        if (depth > 0) return true;
+        depth++;
+      }
+    }
+    return false;
+  }
+
   // 1. Check Start Scene
   if (!game.scenes['start']) {
     issues.push('Missing required "# start" scene');
@@ -61,6 +89,7 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
               issues.push(`Scene "${sceneId}": Variable "${v}" used in (set:) but not declared in state`);
             }
           }
+          checkUnsupportedOperators(node.set, '(set:)', sceneId);
         }
 
         // 检查 (if:) 中的变量
@@ -71,6 +100,7 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
               issues.push(`Scene "${sceneId}": Variable "${v}" used in (if:) condition but not declared in state`);
             }
           }
+          checkUnsupportedOperators(node.condition, '(if:)', sceneId);
         }
       }
 
@@ -107,6 +137,14 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
               issues.push(`Scene "${sceneId}": Variable "${v}" used in {{ if }} condition but not declared in state`);
             }
           }
+          checkUnsupportedOperators(conditionExpr, '{{ if }} condition', sceneId);
+        }
+
+        // 检查嵌套 {{ if }} 条件块
+        if (hasNestedConditionBlocks(node.content)) {
+          issues.push(
+            `Scene "${sceneId}": Nested {{ if }} blocks are not supported by the runtime and will render raw template tags to players`,
+          );
         }
       }
     }
@@ -217,7 +255,13 @@ function main() {
     console.log(`  Estimated playtime: ${Math.round(totalWords / 300)} - ${Math.round(totalWords / 150)} minutes`); // Rough estimation based on reading speed
     console.log();
 
-    const hasErrors = logicIssues.some((i) => i.includes('not defined') || i.includes('Missing'));
+    const hasErrors = logicIssues.some(
+      (i) =>
+        i.includes('not defined') ||
+        i.includes('Missing') ||
+        i.includes('Unsupported operator') ||
+        i.includes('Nested {{ if }}'),
+    );
     process.exit(hasErrors ? 1 : 0);
   } catch (e) {
     console.error('An unexpected error occurred:', e);

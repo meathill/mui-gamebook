@@ -1,8 +1,8 @@
 TODO
 ====
 
-- **DSL v2**（评审与完整设计见 `docs/DSL_V2_DESIGN.md`，Phase 0 的文档部分与 generate-script 热修已完成）：
-  - Phase 0 余项：validate-game-script 运算符集与运行时对齐；migrate 脚本修 HP4 `\_` 污染与嵌套 `{{if}}`；D1 生产数据只读摸底
+- **DSL v2**（评审与完整设计见 `docs/DSL_V2_DESIGN.md`，Phase 0 除 D1 清洗外已全部完成）：
+  - Phase 0 余项：D1 生产数据摸底与清洗——逐游戏 `npx tsx scripts/migrate-game-script.ts --slug <slug> --dry-run`（需 `MUI_ADMIN_PASSWORD`），确认 diff 后落库
   - Phase 1：统一表达式引擎（or/括号/四则/中文变量名）+ 未知键透传 + 选项行平衡扫描 + trigger 归一 + 存档底座合并 + conformance/对拍
   - Phase 2：对话行 `@角色ID: 台词` + 手写序列化器（替换 remark-stringify）+ 编辑器保序往返 + 有声书短路 LLM 分段
   - Phase 3：块级 `->` 重定向 + chatbot 增 dialogue/redirect 操作 + 规范定稿 + demo 迁移

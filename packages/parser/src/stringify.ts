@@ -6,7 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { omitBy } from 'lodash-es';
 import type { Root, RootContent, Heading, Paragraph, List, ListItem, Yaml } from 'mdast';
 import type { AICharacter, Game, GameState, VariableMeta } from './types';
-import { isVariableMeta } from './utils';
+import { isVariableMeta, unescapeTemplateSpans } from './utils';
 
 export function stringify(game: Game): string {
   const rootChildren: RootContent[] = [];
@@ -205,5 +205,7 @@ export function stringify(game: Game): string {
   });
 
   const root: Root = { type: 'root', children: rootChildren };
-  return processor.stringify(root).trim();
+  // remark-stringify 会把文本里的词内 _ 转义成 \_，污染 {{...}} 模板表达式内的变量名，
+  // 此处统一还原模板段内的转义（模板段外的转义对 parse 无害，留待手写序列化器根治）
+  return unescapeTemplateSpans(processor.stringify(root).trim());
 }
