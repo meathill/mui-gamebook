@@ -14,6 +14,7 @@ import {
   EndScreen,
   VariableIndicator,
   SceneNodes,
+  AudioControls,
   usePreload,
   useAudioPlayer,
 } from '@/components/game-player';
@@ -32,6 +33,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   // clipIndexRef 记录播放到第几句，onEnded 驱动"这句读完，播放下一句"
   const clipQueueRef = useRef<AudiobookClip[]>([]);
   const clipIndexRef = useRef(0);
+  const [hasAudioThisScene, setHasAudioThisScene] = useState(false);
   function playNextAudiobookClip() {
     const queue = clipQueueRef.current;
     const nextIndex = clipIndexRef.current + 1;
@@ -107,11 +109,13 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     audioPlayer.stop();
     clipQueueRef.current = [];
     clipIndexRef.current = 0;
+    setHasAudioThisScene(false);
 
     function playClassicAudio() {
       if (cancelled || !currentScene) return;
       const audioUrl = gamePlayer.getSceneAudioUrl(currentScene.nodes);
       if (audioUrl) {
+        setHasAudioThisScene(true);
         setTimeout(() => {
           if (!cancelled) audioPlayer.play(audioUrl);
         }, 500);
@@ -127,6 +131,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
           if (!cancelled && data.clips?.length > 0) {
             clipQueueRef.current = data.clips;
             clipIndexRef.current = 0;
+            setHasAudioThisScene(true);
             setTimeout(() => {
               if (!cancelled) audioPlayer.play(data.clips[0].url);
             }, 500);
@@ -264,9 +269,15 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   return (
     <div className="flex flex-col min-h-dvh sm:min-h-[600px]">
       {/* Header */}
-      <div className="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10 bg-opacity-90 backdrop-blur-sm">
+      <div className="bg-white border-b p-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sticky top-0 z-10 bg-opacity-90 backdrop-blur-sm">
         <h1 className="text-lg font-bold truncate text-gray-800">{game.title}</h1>
-        <div className="flex gap-2 text-sm items-center">
+        <div className="flex justify-center">
+          <AudioControls
+            audioPlayer={audioPlayer}
+            hasAudio={hasAudioThisScene}
+          />
+        </div>
+        <div className="flex gap-2 text-sm items-center justify-end">
           <ShareButton
             title={game.title}
             url={shareUrl}

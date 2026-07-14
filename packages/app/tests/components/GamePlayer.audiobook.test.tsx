@@ -214,4 +214,58 @@ describe('GamePlayer 有声书播放', () => {
 
     expect(instances).toHaveLength(1);
   });
+
+  it('有声书播放中，header 正中间会显示暂停控制，点击会暂停当前播放', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          sceneId: 'start',
+          clips: [
+            {
+              speaker: 'narrator',
+              voice: 'mimo_default',
+              text: '第一句',
+              url: 'https://cdn.x.com/1.wav',
+              mimeType: 'audio/wav',
+            },
+          ],
+        }),
+    } as Response);
+
+    renderWithProviders(
+      <GamePlayer
+        game={mockGame}
+        slug="test-game-5"
+      />,
+    );
+    fireEvent.click(screen.getByText('Start Adventure'));
+    await vi.waitFor(() => expect(instances).toHaveLength(1), { timeout: 2000 });
+
+    act(() => instances[0].onplay?.());
+    const pauseButton = await screen.findByTitle('暂停');
+
+    fireEvent.click(pauseButton);
+
+    expect(instances[0].pause).toHaveBeenCalledTimes(1);
+  });
+
+  it('场景没有任何音频（既没有有声书也没有旧版 audio_url）时，header 不显示播放控制', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 404 } as Response);
+
+    renderWithProviders(
+      <GamePlayer
+        game={mockGame}
+        slug="test-game-6"
+      />,
+    );
+    fireEvent.click(screen.getByText('Start Adventure'));
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/games/test-game-6/audiobook/start'));
+    // 给回退逻辑一点时间确认它确实不会显示播放控制（没有 audio_url 可回退）
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.queryByTitle('播放')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('暂停')).not.toBeInTheDocument();
+    expect(instances).toHaveLength(0);
+  });
 });
