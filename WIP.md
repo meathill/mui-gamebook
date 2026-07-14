@@ -33,18 +33,18 @@ Phase 0 已完成（除 D1 清洗，见 TODO.md）。
 
 ### 批次 4：parser 防丢失 + 透传 + 选项健壮化
 
-- [ ] `types.ts`：`Game.extra` / `Scene.extra` / `dsl_version` / 结构化诊断 `{severity, code, message, sceneId?, line?}[]`（利用 mdast position；`warnings: string[]` 保持兼容并存）
-- [ ] `index.ts`：
-  - 全局 front matter 未知键 → `game.extra`；stringify 原样写回（消灭白名单抹除）
-  - 场景元数据门槛改为「首个 yaml 块一律元数据」：已知键出节点、未知键 → `scene.extra`
-  - 旧围栏（`minigame-gen`/`image-gen`/`audio-gen`）检测 → error 级诊断（不再静默丢）
-  - 结构化 warning：重复场景 ID、孤儿 audio 注释、front matter 与首个 `#` 之间的游离正文、被忽略的块类（`##`+ / blockquote / 表格）
-  - 选项行平衡扫描：文本可含 `]`、子句可含 `)`；未知 `(key: value)` 子句 → `choice.clauses` 透传
-  - 按 ≤400 行拆出 `parse-scene.ts` / `parse-choice.ts`
-- [ ] `stringify.ts`：extra 写回；同类多 AI 节点报错而非静默丢第二个
-- [ ] 一致性收尾：`audio.type` 缺省值改 `background_music`（`bgm` 作解析别名）
+- [x] `types.ts`：`Game.extra` / `Scene.extra` / `SceneChoiceNode.clauses` / 结构化诊断 `Diagnostic {severity, code, message, sceneId?, line?}`（mdast position；`warnings: string[]` 兼容并存）
+- [x] `index.ts` 重构为编排层，拆出 `parse-scene.ts` / `parse-choice.ts`：
+  - 全局/场景未知键透传（`game.extra` / `scene.extra`），stringify 原样写回
+  - 场景元数据门槛改为「首个 yaml 块一律元数据」（顺带删除死代码的 `---` Strategy 1）
+  - 旧围栏检测 → error 级 `legacy-fence`；结构化 warning：duplicate-scene-id / orphan-audio / stray-content / ignored-block / ignored-list-item / invalid-yaml
+  - 选项行贪婪文本（可含 `]`）+ 引号感知的括号平衡子句扫描（值可含 `)`）；未知子句 → `choice.clauses` 透传
+  - 顺带修复隐藏 bug：正文 yaml 音频块的 `type` 键展开会覆盖节点 `type: 'ai_audio'`
+- [x] `stringify.ts`：extra/clauses 写回；同类多 AI 节点（偏差说明）console.warn 保留第一个而非 throw——编辑器保存不能崩，多素材支持是独立的语法设计问题
+- [x] 一致性收尾：`bgm` 别名统一归一为 `background_music`（含缺省值）
 - [x] `dsl_version` 字段已前置落地（一等公民字段，parse/stringify/测试齐备；语义=兼容性标注与 lint 严格度，不分叉解析）
-- [ ] 测试：`tests/golden/`（13 demo → AST JSON 快照）+ `tests/roundtrip.test.ts`（parse→stringify→parse 深比对）+ 新语法用例
+- [x] 测试：`tests/golden/`（偏差说明：3 个小而全样本存完整 AST 快照 + roundtrip 里 13 demo 结构摘要，避免仓库堆几 MB 快照）+ `tests/roundtrip.test.ts`（stringify∘parse 幂等 + 无结构性丢失）+ `tests/transparency.test.ts`（透传/健壮化/诊断）；biome 忽略 golden 目录（快照须字节精确）
+- [x] 附带成果：roundtrip 的「demo 无 error 诊断」断言当场抓出 7 个 demo 残留的 `image-gen` 旧围栏（此前子任务只迁了 minigame-gen）——已全部迁移，**恢复了这些游戏被静默丢弃的场景配图**（如小红帽 9 张）
 
 ### 批次 5：validator 收敛 + 文档同步
 

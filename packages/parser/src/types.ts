@@ -94,6 +94,8 @@ export type SceneChoiceNode = {
   condition?: string; // e.g., "has_key == true"
   set?: string; // e.g., "gold = gold + 5, has_key = false"
   audio_url?: string; // TTS 生成的语音 URL
+  /** 未知 (key: value) 子句原文透传（如未来的 timer），stringify 原样写回 */
+  clauses?: Record<string, string>;
 };
 export type SceneNode =
   | SceneContentNode
@@ -112,6 +114,8 @@ export type SceneNode =
 export interface Scene {
   id: string;
   nodes: SceneNode[];
+  /** 场景元数据块中的未知顶层键，原样透传（stringify 写回），新功能不需要动 parser */
+  extra?: Record<string, unknown>;
 }
 
 /**
@@ -174,6 +178,9 @@ export interface Game {
   // 场景集合
   scenes: Record<string, Scene>;
 
+  /** 全局 front matter 中的未知顶层键，原样透传（stringify 写回，消灭白名单抹除） */
+  extra?: Record<string, unknown>;
+
   // 未来可能会用到
   startSceneId?: 'start';
 }
@@ -234,6 +241,27 @@ export interface PlayableGame {
 }
 
 /**
- * 解析器的返回结果。
+ * 结构化诊断（DSL_V2_DESIGN P1：宁可报错，不可静默丢弃）。
+ * error 表示内容会丢失或行为已损坏（如废弃围栏语法），warning 表示可疑但可继续。
  */
-export type ParseResult = { success: true; data: Game; warnings: string[] } | { success: false; error: string };
+export type DiagnosticSeverity = 'error' | 'warning';
+
+export interface Diagnostic {
+  severity: DiagnosticSeverity;
+  /** 稳定的诊断码，如 legacy-fence / duplicate-scene-id / ignored-block / orphan-audio / stray-content / invalid-yaml */
+  code: string;
+  message: string;
+  sceneId?: string;
+  /** 源文件行号（1 起，来自 mdast position） */
+  line?: number;
+}
+
+export type DiagnosticReporter = (diagnostic: Diagnostic) => void;
+
+/**
+ * 解析器的返回结果。
+ * warnings 为兼容保留（诊断的 message 文本）；结构化信息用 diagnostics。
+ */
+export type ParseResult =
+  | { success: true; data: Game; warnings: string[]; diagnostics: Diagnostic[] }
+  | { success: false; error: string };

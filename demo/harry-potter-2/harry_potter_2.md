@@ -74,11 +74,13 @@ ai:
 ---
 
 # start
-```image-gen
-prompt: Harry Potter in his bedroom at 4 Privet Drive, looking surprised at a small creature standing on his bed. Classic English comic style.
-character: harry
-url: https://i.muistory.com/images/harry-potter-2/1767800383596-hp2_scene_01_bedroom_1767790859478.webp
+```yaml
+image:
+  prompt: Harry Potter in his bedroom at 4 Privet Drive, looking surprised at a small creature standing on his bed. Classic English comic style.
+  character: harry
+  url: https://i.muistory.com/images/harry-potter-2/1767800383596-hp2_scene_01_bedroom_1767790859478.webp
 ```
+
 这是你在女贞路4号的卧室。虽然这里是你唯一的“家”，但你从未感到快乐。
 现在是暑假，你正想念着霍格沃茨的一切。
 
@@ -90,13 +92,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800383596-hp2_scene_01_bed
 * [把它赶走，德思礼一家会听见！] -> dobby_noise
 
 ---
-
 # dobby_warning
-```image-gen
-prompt: Dobby the house elf looking terrified and pleading, pulling on his ears. Harry looks concerned.
-character: dobby
-url: https://i.muistory.com/images/harry-potter-2/1767800383453-hp2_scene_02_dobby_warning_1767790893553.webp
+```yaml
+image:
+  prompt: Dobby the house elf looking terrified and pleading, pulling on his ears. Harry looks concerned.
+  character: dobby
+  url: https://i.muistory.com/images/harry-potter-2/1767800383453-hp2_scene_02_dobby_warning_1767790893553.webp
 ```
+
 “多比是来警告哈利·波特的，”小精灵颤抖着说，“哈利·波特今年不能回霍格沃茨！有一个阴谋，会有危险！”
 
 多比眼睛睁得大大的，似乎在努力忍住不把头往墙上撞。
@@ -110,12 +113,13 @@ url: https://i.muistory.com/images/harry-potter-2/1767800383453-hp2_scene_02_dob
 * [看向窗外] -> the_burrow
 
 ---
-
 # dobby_noise
-```image-gen
-prompt: Uncle Vernon yelling at Harry, face purple with rage. Dobby hiding or disappearing.
-url: https://i.muistory.com/images/harry-potter-2/1767800383845-hp2_scene_03_vernon_yelling_1767790915015.webp
+```yaml
+image:
+  prompt: Uncle Vernon yelling at Harry, face purple with rage. Dobby hiding or disappearing.
+  url: https://i.muistory.com/images/harry-potter-2/1767800383845-hp2_scene_03_vernon_yelling_1767790915015.webp
 ```
+
 你的惊呼引起了弗农姨父的注意。他冲进房间，咆哮着让你安静。
 多比因为你的不友善而感到悲伤，但他还是留下了一句警告：“霍格沃茨有危险！”然后消失了。
 
@@ -126,13 +130,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800383845-hp2_scene_03_ver
 * [看向窗外] -> the_burrow (set: health = health - 5)
 
 ---
-
 # the_burrow
-```image-gen
-prompt: A flying blue Ford Anglia car hovering outside a window at night. Ron Weasley is driving and waving.
-character: ron
-url: https://i.muistory.com/images/harry-potter-2/1767800383996-hp2_scene_04_flying_car_arrival_1767790938182.webp
+```yaml
+image:
+  prompt: A flying blue Ford Anglia car hovering outside a window at night. Ron Weasley is driving and waving.
+  character: ron
+  url: https://i.muistory.com/images/harry-potter-2/1767800383996-hp2_scene_04_flying_car_arrival_1767790938182.webp
 ```
+
 是一辆飞在空中的老式福特安格利亚车！罗恩·韦斯莱从驾驶座探出头来。
 
 “哈利！快上车！”
@@ -148,8 +153,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800383996-hp2_scene_04_fly
 * [开始清理地精（小游戏）] -> de_gnoming_game
 
 ---
-
 # de_gnoming_game
+```yaml
+image:
+  prompt: Harry and Ron in a garden, swinging small potato-like gnomes by their feet to throw them over a wall. Funny comic style.
+  characters: [harry, ron]
+  url: https://i.muistory.com/images/harry-potter-2/1767800380292-hp2_scene_05_de_gnoming_1767790983043.webp
+```
+
 ```yaml
 minigame:
   prompt: '这是一个投掷类小游戏。玩家需要抓住花园里的地精，旋转并将其抛出花园墙外。操作：点击并拖动以旋转，松开以投掷。目标：将地精扔得越远越好。成功条件：扔出 5 只地精。'
@@ -157,11 +168,7 @@ minigame:
     throw_distance: 投掷距离
   url: https://i.muistory.com/images/harry-potter-2/1767800379116-harry-potter-2_de_gnoming_game_minigame.js
 ```
-```image-gen
-prompt: Harry and Ron in a garden, swinging small potato-like gnomes by their feet to throw them over a wall. Funny comic style.
-characters: [harry, ron]
-url: https://i.muistory.com/images/harry-potter-2/1767800380292-hp2_scene_05_de_gnoming_1767790983043.webp
-```
+
 花园里到处是像土豆一样的小地精。罗恩示范道：“把它们转晕，然后扔出去！”
 
 （这里是小游戏环节，展示你抓地精的技巧）
@@ -169,13 +176,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800380292-hp2_scene_05_de_
 * [完成清理] -> platform_934
 
 ---
-
 # platform_934
-```image-gen
-prompt: Harry and Ron pushing trolleys into a brick wall at King's Cross Station, but crashing into it. The barrier is sealed.
-characters: [harry, ron]
-url: https://i.muistory.com/images/harry-potter-2/1767800384122-hp2_scene_06_platform_934_crash_1767791017561.webp
+```yaml
+image:
+  prompt: Harry and Ron pushing trolleys into a brick wall at King's Cross Station, but crashing into it. The barrier is sealed.
+  characters: [harry, ron]
+  url: https://i.muistory.com/images/harry-potter-2/1767800384122-hp2_scene_06_platform_934_crash_1767791017561.webp
 ```
+
 你们来到了国王十字车站。时间已经很紧了。
 哈利和罗恩推着推车冲向9¾站台的隔墙...
 
@@ -191,8 +199,13 @@ url: https://i.muistory.com/images/harry-potter-2/1767800384122-hp2_scene_06_pla
 * [驾驶飞车前往霍格沃茨] -> flying_car_scene
 
 ---
-
 # flying_car_scene
+```yaml
+image:
+  prompt: The blue Ford Anglia flying through clouds, following the steam train below. Scenic landscape of Scotland.
+  url: https://i.muistory.com/images/harry-potter-2/1767800382460-hp2_scene_07_flying_car_chase_1767791036844.webp
+```
+
 ```yaml
 minigame:
   prompt: '驾驶福特安格利亚飞车追赶霍格沃茨特快列车。避开云层中的鸟群和突然出现的障碍物。保持隐形开关开启（如果能量耗尽会显形，增加麻瓜目击风险）。最终目标：安全抵达霍格沃茨城堡上空。'
@@ -200,10 +213,7 @@ minigame:
     car_health: 汽车耐久度
   url: https://i.muistory.com/images/harry-potter-2/1767800382308-harry-potter-2_flying_car_scene_minigame.js
 ```
-```image-gen
-prompt: The blue Ford Anglia flying through clouds, following the steam train below. Scenic landscape of Scotland.
-url: https://i.muistory.com/images/harry-potter-2/1767800382460-hp2_scene_07_flying_car_chase_1767791036844.webp
-```
+
 汽车再次升空。但在长途飞行后，隐形助推器开始故障。
 你需要控制好汽车，避开麻瓜的视线，还要小心撞到云里的东西！
 
@@ -212,13 +222,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800382460-hp2_scene_07_fly
 * [抵达霍格沃茨] -> whomping_willow
 
 ---
-
 # whomping_willow
-```image-gen
-prompt: The car crashed into a giant, angry willow tree. The tree branches are smashing the car. Night time.
-characters: [harry, ron]
-url: https://i.muistory.com/images/harry-potter-2/1767800385882-hp2_scene_08_whomping_willow_crash_1767791067372.webp
+```yaml
+image:
+  prompt: The car crashed into a giant, angry willow tree. The tree branches are smashing the car. Night time.
+  characters: [harry, ron]
+  url: https://i.muistory.com/images/harry-potter-2/1767800385882-hp2_scene_08_whomping_willow_crash_1767791067372.webp
 ```
+
 就在你们以为安全抵达时，汽车引擎熄火了。你们直直地坠落下去...
 正好掉进了一棵看起来很脾气暴躁的大树怀里。
 
@@ -230,12 +241,13 @@ url: https://i.muistory.com/images/harry-potter-2/1767800385882-hp2_scene_08_who
 * [试图发动汽车！] -> escape_willow (set: health = health - 15)
 
 ---
-
 # escape_willow
-```image-gen
-prompt: Harry and Ron scrambling away from the tree on the grass. The battered car is driving itself away into the Forbidden Forest.
-url: https://i.muistory.com/images/harry-potter-2/1767800385868-hp2_scene_09_escape_willow_1767791122004.webp
+```yaml
+image:
+  prompt: Harry and Ron scrambling away from the tree on the grass. The battered car is driving itself away into the Forbidden Forest.
+  url: https://i.muistory.com/images/harry-potter-2/1767800385868-hp2_scene_09_escape_willow_1767791122004.webp
 ```
+
 你们狼狈地逃了出来。那辆伤痕累累的福特车把你们的行李吐了出来，然后愤怒地亮着车灯，独自驶进了禁林深处。
 
 “我爸爸会杀了我的。”罗恩看着远去的车，绝望地说。
@@ -246,13 +258,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800385868-hp2_scene_09_esc
 * [进入大礼堂用餐] -> great_hall
 
 ---
-
 # great_hall
-```image-gen
-prompt: The Great Hall at Hogwarts, floating candles, students eating. Harry and Ron sitting at Gryffindor table looking exhausted but relieved. Hermione is there.
-characters: [harry, ron, hermione]
-url: https://i.muistory.com/images/harry-potter-2/1767800385847-hp2_scene_10_great_hall_feast_1767791156211.webp
+```yaml
+image:
+  prompt: The Great Hall at Hogwarts, floating candles, students eating. Harry and Ron sitting at Gryffindor table looking exhausted but relieved. Hermione is there.
+  characters: [harry, ron, hermione]
+  url: https://i.muistory.com/images/harry-potter-2/1767800385847-hp2_scene_10_great_hall_feast_1767791156211.webp
 ```
+
 第二天，生活似乎恢复了正常。你见到了赫敏，还有那个新来的黑魔法防御术老师——吉德罗·洛哈特。
 他正忙着给粉丝回信，还试图给你“名气上的建议”。
 
@@ -267,7 +280,6 @@ url: https://i.muistory.com/images/harry-potter-2/1767800385847-hp2_scene_10_gre
 * [不管它，回休息室] -> ignore_voice
 
 ---
-
 # ignore_voice
 你觉得这是幻听。但那个声音越来越大，越来越急迫。
 你无法忽视它，你的直觉告诉你，如果不去看看，会发生可怕的事。
@@ -278,11 +290,13 @@ url: https://i.muistory.com/images/harry-potter-2/1767800385847-hp2_scene_10_gre
 ---
 
 # writing_on_wall
-```image-gen
-prompt: A dark corridor in Hogwarts. Writing on the wall in blood - THE CHAMBER OF SECRETS HAS BEEN OPENED. ENEMIES OF THE HEIR, BEWARE. Mrs. Norris the cat hanging stiff by her tail from a torch bracket.
-characters: [harry, ron, hermione]
-url: https://i.muistory.com/images/harry-potter-2/1767800386458-hp2_scene_11_writing_on_wall_1767791190756.webp
+```yaml
+image:
+  prompt: A dark corridor in Hogwarts. Writing on the wall in blood - THE CHAMBER OF SECRETS HAS BEEN OPENED. ENEMIES OF THE HEIR, BEWARE. Mrs. Norris the cat hanging stiff by her tail from a torch bracket.
+  characters: [harry, ron, hermione]
+  url: https://i.muistory.com/images/harry-potter-2/1767800386458-hp2_scene_11_writing_on_wall_1767791190756.webp
 ```
+
 在二楼的走廊里，地板上积满了水。
 墙上涂抹着一行闪闪发亮的字迹：
 
@@ -300,12 +314,13 @@ url: https://i.muistory.com/images/harry-potter-2/1767800386458-hp2_scene_11_wri
 * [询问赫敏关于密室的事] -> ask_hermione
 
 ---
-
 # investigate_scene
-```image-gen
-prompt: Harry and Ron looking closely at the wet floor and the spiders fleeing out the window.
-url: https://i.muistory.com/images/harry-potter-2/1767800386009-hp2_scene_12_investigate_1767799379262.webp
+```yaml
+image:
+  prompt: Harry and Ron looking closely at the wet floor and the spiders fleeing out the window.
+  url: https://i.muistory.com/images/harry-potter-2/1767800386009-hp2_scene_12_investigate_1767799379262.webp
 ```
+
 你在地上发现了一滩积水，还有... 蜘蛛？
 成群结队的蜘蛛正排着队，拼命地往窗外爬，仿佛在逃离什么巨大的捕食者。
 
@@ -317,13 +332,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800386009-hp2_scene_12_inv
 * [制定复方汤剂计划] -> polyjuice_mission (if: clues_found > 0)
 
 ---
-
 # ask_hermione
-```image-gen
-prompt: Hermione reading a giant old book in the library, explaining to Harry and Ron.
-character: hermione
-url: https://i.muistory.com/images/harry-potter-2/1767800387141-hp2_scene_13_ask_hermione_1767799404053.webp
+```yaml
+image:
+  prompt: Hermione reading a giant old book in the library, explaining to Harry and Ron.
+  character: hermione
+  url: https://i.muistory.com/images/harry-potter-2/1767800387141-hp2_scene_13_ask_hermione_1767799404053.webp
 ```
+
 赫敏依然在图书馆里翻阅着所有的古籍。
 “密室...传说中斯莱特林甚至还在学校里藏了一头怪物。”
 “能够瞬间石化活物...也许我们需要更多线索。”
@@ -333,13 +349,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800387141-hp2_scene_13_ask
 * [前往决斗俱乐部] -> dueling_club
 
 ---
-
 # dueling_club
-```image-gen
-prompt: Gilderoy Lockhart and Severus Snape bowing to each other on a dueling stage in the Great Hall. Students watching.
-characters: [harry, snape, lockhart]
-url: https://i.muistory.com/images/harry-potter-2/1767800387156-hp2_scene_14_dueling_club_1767799436466.webp
+```yaml
+image:
+  prompt: Gilderoy Lockhart and Severus Snape bowing to each other on a dueling stage in the Great Hall. Students watching.
+  characters: [harry, snape, lockhart]
+  url: https://i.muistory.com/images/harry-potter-2/1767800387156-hp2_scene_14_dueling_club_1767799436466.webp
 ```
+
 大礼堂被改成了一个决斗舞台。洛哈特穿着华丽的紫红色长袍，旁边是穿着黑袍的一脸阴沉的斯内普。
 
 斯内普仅仅用了一招“除你武器”，就把洛哈特击飞到了墙上。
@@ -354,7 +371,6 @@ url: https://i.muistory.com/images/harry-potter-2/1767800387156-hp2_scene_14_due
 * [用蛇佬腔和蛇说话] -> parseltongue_reveal
 
 ---
-
 # dueling_minigame
 ```yaml
 minigame:
@@ -373,11 +389,13 @@ minigame:
 ---
 
 # parseltongue_reveal
-```image-gen
-prompt: Harry speaking to a cobra on the floor, looking intense. Other students looking terrified and backing away.
-character: harry
-url: https://i.muistory.com/images/harry-potter-2/1767800387113-hp2_scene_15_parseltongue_1767799459265.webp
+```yaml
+image:
+  prompt: Harry speaking to a cobra on the floor, looking intense. Other students looking terrified and backing away.
+  character: harry
+  url: https://i.muistory.com/images/harry-potter-2/1767800387113-hp2_scene_15_parseltongue_1767799459265.webp
 ```
+
 那条蛇正准备攻击贾斯廷。情急之下，你冲上前去。
 你只想叫它停下，但在别人听来，你嘴里发出的是嘶嘶的可怕声音。
 
@@ -393,13 +411,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800387113-hp2_scene_15_par
 * [执行复方汤剂计划] -> polyjuice_mission
 
 ---
-
 # polyjuice_mission
-```image-gen
-prompt: Harry and Ron (looking like Crabbe and Goyle) sitting on a leather sofa in the Slytherin dungeon common room. Draco Malfoy talking.
-characters: [harry, ron]
-url: https://i.muistory.com/images/harry-potter-2/1767800387504-hp2_scene_16_polyjuice_1767799491640.webp
+```yaml
+image:
+  prompt: Harry and Ron (looking like Crabbe and Goyle) sitting on a leather sofa in the Slytherin dungeon common room. Draco Malfoy talking.
+  characters: [harry, ron]
+  url: https://i.muistory.com/images/harry-potter-2/1767800387504-hp2_scene_16_polyjuice_1767799491640.webp
 ```
+
 你们喝下了赫敏熬制的（像鼻涕一样的）药水，变成了克拉布和高尔的样子。
 在斯莱特林的地窖里，你们套出了马尔福的话：
 
@@ -412,13 +431,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800387504-hp2_scene_16_pol
 * [打开日记本] -> tom_riddle_flashback
 
 ---
-
 # tom_riddle_flashback
-```image-gen
-prompt: Harry falling into a sepia-toned memory. Standing in the Headmaster's office watching a young Tom Riddle.
-character: harry
-url: https://i.muistory.com/images/harry-potter-2/1767800387002-hp2_scene_17_tom_riddle_1767799540470.webp
+```yaml
+image:
+  prompt: Harry falling into a sepia-toned memory. Standing in the Headmaster's office watching a young Tom Riddle.
+  character: harry
+  url: https://i.muistory.com/images/harry-potter-2/1767800387002-hp2_scene_17_tom_riddle_1767799540470.webp
 ```
+
 日记本带你进入了一段记忆。你看到了50年前的汤姆·里德尔。
 他指控海格打开了密室，放出了怪物——阿拉戈克。
 
@@ -431,13 +451,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800387002-hp2_scene_17_tom
 * [查看赫敏手中的纸条] -> hermione_clue (set: clues_found = clues_found + 1)
 
 ---
-
 # aragog_meeting
-```image-gen
-prompt: Giant spider Aragog strictly talking to Harry and Ron in a dark forest clearing. Hundreds of smaller spiders surrounding them.
-character: ron
-url: https://i.muistory.com/images/harry-potter-2/1767800388162-hp2_scene_18_aragog_1767799562036.webp
+```yaml
+image:
+  prompt: Giant spider Aragog strictly talking to Harry and Ron in a dark forest clearing. Hundreds of smaller spiders surrounding them.
+  character: ron
+  url: https://i.muistory.com/images/harry-potter-2/1767800388162-hp2_scene_18_aragog_1767799562036.webp
 ```
+
 在禁林深处，你们找到了阿拉戈克——一只像大象一样大的八眼巨蛛。
 它告诉你们：
 “我不是密室里的怪物。那怪物是蜘蛛最害怕的古老生物。”
@@ -452,7 +473,6 @@ url: https://i.muistory.com/images/harry-potter-2/1767800388162-hp2_scene_18_ara
 * [上车逃跑（小游戏）] -> spider_chase_minigame
 
 ---
-
 # spider_chase_minigame
 ```yaml
 minigame:
@@ -469,10 +489,12 @@ minigame:
 ---
 
 # hermione_clue
-```image-gen
-prompt: A torn page from a library book held in a hand. Illustration of a Basilisk. Text visible - Pipes.
-url: https://i.muistory.com/images/harry-potter-2/1767800388039-hp2_scene_19_hermione_clue_1767799581731.webp
+```yaml
+image:
+  prompt: A torn page from a library book held in a hand. Illustration of a Basilisk. Text visible - Pipes.
+  url: https://i.muistory.com/images/harry-potter-2/1767800388039-hp2_scene_19_hermione_clue_1767799581731.webp
 ```
+
 你们安全了。结合阿拉戈克的话，你终于看懂了赫敏留下的纸条：
 **蛇怪（Basilisk）**。
 它是蛇类之王，视线可以杀人。蜘蛛害怕它。
@@ -488,13 +510,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800388039-hp2_scene_19_her
 * [前往默特尔的盥洗室] -> bathroom_entrance
 
 ---
-
 # bathroom_entrance
-```image-gen
-prompt: Harry speaking Parseltongue to a sink tap with a snake engraved on it. The sinks moving apart to reveal a dark tunnel.
-character: harry
-url: https://i.muistory.com/images/harry-potter-2/1767800388676-hp2_scene_20_bathroom_1767799610880.webp
+```yaml
+image:
+  prompt: Harry speaking Parseltongue to a sink tap with a snake engraved on it. The sinks moving apart to reveal a dark tunnel.
+  character: harry
+  url: https://i.muistory.com/images/harry-potter-2/1767800388676-hp2_scene_20_bathroom_1767799610880.webp
 ```
+
 你找到了那个刻着小蛇的水龙头。
 你再次用蛇佬腔命令：“*打开*”。
 
@@ -504,7 +527,6 @@ url: https://i.muistory.com/images/harry-potter-2/1767800388676-hp2_scene_20_bat
 * [跳进管道] -> chamber_slide
 
 ---
-
 # chamber_slide
 你们顺着黏糊糊的管道滑行了很久，终于落到了地底。
 地面上到处是小动物的骨头，还有一张巨大的绿色蛇皮。
@@ -521,11 +543,13 @@ url: https://i.muistory.com/images/harry-potter-2/1767800388676-hp2_scene_20_bat
 ---
 
 # chamber_of_secrets
-```image-gen
-prompt: The Chamber of Secrets. A giant stone face of Salazar Slytherin at the end of a long walkway over water. Ginny lying motionless. Tom Riddle standing there.
-characters: [harry, harry]
-url: https://i.muistory.com/images/harry-potter-2/1767800388499-hp2_scene_21_chamber_1767799650394.webp
+```yaml
+image:
+  prompt: The Chamber of Secrets. A giant stone face of Salazar Slytherin at the end of a long walkway over water. Ginny lying motionless. Tom Riddle standing there.
+  characters: [harry, harry]
+  url: https://i.muistory.com/images/harry-potter-2/1767800388499-hp2_scene_21_chamber_1767799650394.webp
 ```
+
 这是一个巨大的石室，两侧立着高耸的石柱。
 金妮躺在斯莱特林雕像脚下，面色苍白，奄奄一息。
 
@@ -540,12 +564,13 @@ url: https://i.muistory.com/images/harry-potter-2/1767800388499-hp2_scene_21_cha
 * [闭上眼睛！] -> basilisk_summoned
 
 ---
-
 # basilisk_summoned
-```image-gen
-prompt: Fawkes the Phoenix flying in, dropping the Sorting Hat. The Basilisk (giant snake) emerging from the statue.
-url: https://i.muistory.com/images/harry-potter-2/1767800388104-hp2_scene_22_basilisk_summon_1767799687777.webp
+```yaml
+image:
+  prompt: Fawkes the Phoenix flying in, dropping the Sorting Hat. The Basilisk (giant snake) emerging from the statue.
+  url: https://i.muistory.com/images/harry-potter-2/1767800388104-hp2_scene_22_basilisk_summon_1767799687777.webp
 ```
+
 就在你绝望时，一声嘹亮的凤鸣响起。
 邓布利多的凤凰——福克斯飞来了！它扔给了你**分院帽**，然后冲向了蛇怪，啄瞎了它的双眼！
 
@@ -555,7 +580,6 @@ url: https://i.muistory.com/images/harry-potter-2/1767800388104-hp2_scene_22_bas
 * [拔出格兰芬多宝剑，决一死战！] -> basilisk_battle (set: has_sword = true)
 
 ---
-
 # basilisk_battle
 ```yaml
 minigame:
@@ -572,11 +596,13 @@ minigame:
 ---
 
 # venom_scene
-```image-gen
-prompt: Harry stabbing the Basilisk through the roof of its mouth. A basilisk fang piercing Harry's arm.
-character: harry
-url: https://i.muistory.com/images/harry-potter-2/1767800389927-hp2_scene_23_venom_1767799720359.webp
+```yaml
+image:
+  prompt: Harry stabbing the Basilisk through the roof of its mouth. A basilisk fang piercing Harry's arm.
+  character: harry
+  url: https://i.muistory.com/images/harry-potter-2/1767800389927-hp2_scene_23_venom_1767799720359.webp
 ```
+
 你用尽全力将剑刺入蛇怪的上颚。它死了。
 但你还没来得及庆祝，一颗毒牙深深刺进了你的手臂。
 剧毒迅速蔓延，你的视线开始模糊。
@@ -589,13 +615,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800389927-hp2_scene_23_ven
 * [用毒牙刺向日记本！] -> destroy_diary
 
 ---
-
 # destroy_diary
-```image-gen
-prompt: Harry stabbing the black diary with the basilisk fang. Ink spurting out like blood. Tom Riddle screaming and exploding into light.
-character: harry
-url: https://i.muistory.com/images/harry-potter-2/1767800390009-hp2_scene_24_destroy_diary_1767799743692.webp
+```yaml
+image:
+  prompt: Harry stabbing the black diary with the basilisk fang. Ink spurting out like blood. Tom Riddle screaming and exploding into light.
+  character: harry
+  url: https://i.muistory.com/images/harry-potter-2/1767800390009-hp2_scene_24_destroy_diary_1767799743692.webp
 ```
+
 用尽最后的力气，你把毒牙扎进了日记本的中心。
 墨水像血一样喷涌而出。里德尔发出了凄厉的惨叫，他的身体扭曲、破碎，最后消散在空气中。
 
@@ -608,13 +635,14 @@ url: https://i.muistory.com/images/harry-potter-2/1767800390009-hp2_scene_24_des
 * [离开密室] -> ending_success
 
 ---
-
 # ending_success
-```image-gen
-prompt: The Great Hall end of year feast. Hagrid returning. Gryffindor winning the House Cup. Everyone cheering.
-characters: [harry, ron, hermione, hagrid]
-url: https://i.muistory.com/images/harry-potter-2/1767800389957-hp2_scene_25_ending_1767799782120.webp
+```yaml
+image:
+  prompt: The Great Hall end of year feast. Hagrid returning. Gryffindor winning the House Cup. Everyone cheering.
+  characters: [harry, ron, hermione, hagrid]
+  url: https://i.muistory.com/images/harry-potter-2/1767800389957-hp2_scene_25_ending_1767799782120.webp
 ```
+
 邓布利多回来了。他告诉你，只有真正的格兰芬多才能从分院帽里拔出那把剑。
 卢修斯·马尔福气急败坏地被赶走了——你还顺便耍了个花招，让多比获得了自由（一只袜子！）。
 
@@ -629,7 +657,6 @@ url: https://i.muistory.com/images/harry-potter-2/1767800389957-hp2_scene_25_end
 * [再次冒险] -> start
 
 ---
-
 # game_over_spiders
 你被蜘蛛群淹没了。在禁林深处，没有人能听见你的呼救。
 这是一个悲惨的结局。

@@ -6,7 +6,8 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false
+    "ignoreUnknown": false,
+    "includes": ["**", "!packages/parser/tests/golden/**"]
   },
   "formatter": {
     "attributePosition": "multiline",

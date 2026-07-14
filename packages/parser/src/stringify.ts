@@ -59,6 +59,11 @@ export function stringify(game: Game): string {
     }
   }
 
+  // 未知全局键原样写回（与 parse 的 extra 透传配对，消灭白名单抹除）
+  if (game.extra) {
+    Object.assign(frontMatter as Record<string, unknown>, game.extra);
+  }
+
   rootChildren.push({
     type: 'yaml',
     value: yaml.dump(frontMatter, { indent: 2, lineWidth: -1 }).trim(),
@@ -82,6 +87,17 @@ export function stringify(game: Game): string {
     const audioNode = scene.nodes.find((n) => n.type === 'ai_audio') as any;
     const videoNode = scene.nodes.find((n) => n.type === 'ai_video') as any;
     const minigameNode = scene.nodes.find((n) => n.type === 'minigame') as any;
+
+    // 元数据块每类素材只有一个键位：同类多节点无法承载，只保留第一个——
+    // 至少不再静默丢（P1）；多素材支持是独立的语法设计问题
+    for (const assetType of ['ai_image', 'ai_audio', 'ai_video', 'minigame'] as const) {
+      const count = scene.nodes.filter((n) => n.type === assetType).length;
+      if (count > 1) {
+        console.warn(
+          `Scene "${scene.id}" has ${count} nodes of type ${assetType}; only the first survives serialization.`,
+        );
+      }
+    }
 
     const metadata: any = {};
     if (imageNode)
@@ -125,14 +141,17 @@ export function stringify(game: Game): string {
         (v) => v === undefined,
       );
 
+    // 场景元数据未知键写回（与 parse 的 scene.extra 透传配对）
+    if (scene.extra) {
+      Object.assign(metadata, scene.extra);
+    }
+
     if (Object.keys(metadata).length > 0) {
-      if (Object.keys(metadata).length > 0) {
-        rootChildren.push({
-          type: 'code',
-          lang: 'yaml',
-          value: yaml.dump(metadata, { indent: 2, lineWidth: -1 }).trim(),
-        } as any);
-      }
+      rootChildren.push({
+        type: 'code',
+        lang: 'yaml',
+        value: yaml.dump(metadata, { indent: 2, lineWidth: -1 }).trim(),
+      } as any);
     }
 
     // Content Nodes
@@ -172,6 +191,10 @@ export function stringify(game: Game): string {
         if (node.condition) clauses.push(`(if: ${node.condition})`);
         if (node.set) clauses.push(`(set: ${node.set})`);
         if (node.audio_url) clauses.push(`(audio: ${node.audio_url})`);
+        // 未知子句原样写回（与 parse 的 clauses 透传配对）
+        for (const [key, value] of Object.entries(node.clauses ?? {})) {
+          clauses.push(`(${key}: ${value})`);
+        }
 
         if (clauses.length > 0) {
           text += ` ${clauses.join(' ')}`;

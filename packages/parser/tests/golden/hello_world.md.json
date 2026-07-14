@@ -1,0 +1,45 @@
+{
+  "game": {
+    "slug": "Hello-World-Game",
+    "title": "Hello World Game",
+    "description": "一个简单的测试游戏",
+    "tags": [
+      "测试",
+      "Hello World"
+    ],
+    "published": true,
+    "initialState": {},
+    "ai": {
+      "style": {
+        "image": "minimalist, line art, futuristic"
+      },
+      "characters": {}
+    },
+    "scenes": {
+      "start": {
+        "id": "start",
+        "nodes": [
+          {
+            "type": "ai_image",
+            "prompt": "a futuristic cityscape at sunset, neon lights",
+            "url": "https://images.baifo.life/images/hello-world-game/1763795098462.png"
+          },
+          {
+            "type": "text",
+            "content": "欢迎来到 Hello World 游戏！"
+          },
+          {
+            "type": "text",
+            "content": "你看到一个未来城市的壮丽景色。"
+          },
+          {
+            "type": "choice",
+            "text": "开始旅程",
+            "nextSceneId": "next_scene"
+          }
+        ]
+      }
+    }
+  },
+  "diagnostics": []
+}

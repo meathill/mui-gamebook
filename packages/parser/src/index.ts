@@ -4,197 +4,20 @@ import remarkParse from 'remark-parse';
 import remarkFrontmatter from 'remark-frontmatter';
 import remarkGfm from 'remark-gfm';
 import { toString } from 'mdast-util-to-string';
-import type { Root, RootContent, List } from 'mdast';
-import type { Game, ParseResult, Scene, SceneNode } from './types';
+import type { Root, RootContent } from 'mdast';
+import type { Diagnostic, Game, ParseResult, Scene, SceneNode } from './types';
+import { buildAssetNodes, parseSceneNodes } from './parse-scene';
 import slugify from 'slugify';
 
 export type { Game, SceneNode };
 export * from './types';
 export * from './utils';
 export { stringify } from './stringify';
+export { scanClauses } from './parse-choice';
+export { normalizeMiniGameVariables } from './parse-scene';
 
-// Regex for specific inline syntax not covered by commonmark
-const IF_REGEX = /\(if:\s*(.*?)\)/;
-const SET_REGEX = /\(set:\s*(.*?)\)/;
-const AUDIO_REGEX = /\(audio:\s*(.*?)\)/;
-// 块级 HTML 注释形式的文本语音：<!-- audio: URL -->，可能带同行尾随文本（旧版 stringify 产物）
-const AUDIO_COMMENT_REGEX = /^<!--\s*audio:\s*(.*?)\s*-->[ \t]*(.*)$/;
-
-function parseChoices(list: List): SceneNode[] {
-  const nodes: SceneNode[] = [];
-
-  if (list.ordered) return nodes;
-
-  for (const item of list.children) {
-    const firstChild = item.children[0];
-    if (!firstChild || firstChild.type !== 'paragraph') continue;
-
-    const textContent = toString(firstChild).trim();
-    // Syntax: [Text] -> ID (clauses)
-
-    const match = textContent.match(/^\[(.*?)\]\s*->\s*([\w-]+)\s*(.*?)$/);
-    if (!match) continue;
-
-    const [, text, nextSceneId, clausesStr] = match;
-    const choiceNode: SceneNode = { type: 'choice', text, nextSceneId };
-
-    if (clausesStr) {
-      const ifMatch = clausesStr.match(IF_REGEX);
-      const setMatch = clausesStr.match(SET_REGEX);
-      const audioMatch = clausesStr.match(AUDIO_REGEX);
-
-      if (ifMatch) choiceNode.condition = ifMatch[1].trim();
-      if (setMatch) choiceNode.set = setMatch[1].trim();
-      if (audioMatch) choiceNode.audio_url = audioMatch[1].trim();
-    }
-    nodes.push(choiceNode);
-  }
-  return nodes;
-}
-
-/**
- * 归一化 minigame.variables：作者（尤其 AI 生成）常把 "变量名: 说明" 的映射误写成
- * YAML 列表形式（`- 变量名: 说明`），yaml.load 会产出 Array<Record<string, string>>
- * 而非类型声明的 Record<string, string>。parser 是唯一数据入口，这里统一收敛两种写法。
- */
-function normalizeMiniGameVariables(raw: unknown): Record<string, string> | undefined {
-  if (raw == null) return undefined;
-
-  const items = Array.isArray(raw) ? raw : [raw];
-  const variables: Record<string, string> = {};
-  for (const item of items) {
-    if (!item || typeof item !== 'object') continue;
-    for (const [key, value] of Object.entries(item)) {
-      variables[key] = String(value);
-    }
-  }
-  return Object.keys(variables).length > 0 ? variables : undefined;
-}
-
-function parseSceneNodes(nodes: RootContent[]): SceneNode[] {
-  const sceneNodes: SceneNode[] = [];
-
-  for (const node of nodes) {
-    if (node.type === 'paragraph') {
-      let paragraphContent: string[] = [];
-      let pendingAudioUrl: string | undefined;
-
-      const flushText = () => {
-        if (paragraphContent.length > 0) {
-          const textToken = paragraphContent.join('').trim();
-          if (textToken) {
-            const textNode: SceneNode = { type: 'text', content: textToken };
-            if (pendingAudioUrl) {
-              textNode.audio_url = pendingAudioUrl;
-              pendingAudioUrl = undefined;
-            }
-            sceneNodes.push(textNode);
-          }
-          paragraphContent = [];
-        }
-      };
-
-      // node.children is PhrasingContent[]
-      for (const child of node.children) {
-        if (child.type === 'image') {
-          flushText();
-          sceneNodes.push({
-            type: 'static_image',
-            alt: child.alt || '',
-            url: child.url,
-          });
-        } else if (child.type === 'text') {
-          paragraphContent.push(child.value);
-        } else if (child.type === 'link') {
-          const linkText = toString(child);
-          if (linkText === 'audio') {
-            flushText();
-            sceneNodes.push({ type: 'static_audio', url: child.url });
-          } else if (linkText === 'video') {
-            flushText();
-            sceneNodes.push({ type: 'static_video', url: child.url });
-          } else {
-            // Regular link, treat as text
-            paragraphContent.push(toString(child));
-          }
-        } else if (child.type === 'html') {
-          const commentMatch = child.value.match(/^<!--\s*audio:\s*(.*?)\s*-->$/);
-          if (commentMatch) {
-            // If there is existing text, maybe the audio belongs to it?
-            // Or belongs to next? Usually audio comment tags prompt for audio of that text.
-            // Original logic applied it to the *entire* paragraph text node.
-            // If we are streaming, we assume it applies to the *next* flushed text segment.
-            pendingAudioUrl = commentMatch[1];
-          }
-        } else if (child.type === 'strong' || child.type === 'emphasis' || child.type === 'inlineCode') {
-          // Handle other formatting as text
-          paragraphContent.push(toString(child));
-        }
-      }
-
-      flushText();
-    } else if (node.type === 'html') {
-      // 独占一行的 <!-- audio: URL --> 会被 CommonMark 解析成块级 html 节点（HTML block type 2），
-      // 而不是 paragraph 的行内子节点，所以要在这里处理
-      const commentMatch = node.value.match(AUDIO_COMMENT_REGEX);
-      if (commentMatch) {
-        const [, audioUrl, trailing] = commentMatch;
-        const trailingText = trailing.trim();
-        if (trailingText) {
-          // 旧版 stringify 产出的同行格式：<!-- audio: URL -->文本，整行被吞进一个 html 节点，
-          // 这里还原成带语音的 text 节点，兼容已存盘的历史内容
-          sceneNodes.push({ type: 'text', content: trailingText, audio_url: audioUrl });
-        } else {
-          // 规范格式（DSL_SPEC §4.3.1）：注释紧跟在文本之后，附加到前一个 text 节点
-          const lastNode = sceneNodes[sceneNodes.length - 1];
-          if (lastNode && lastNode.type === 'text') {
-            lastNode.audio_url = audioUrl;
-          }
-        }
-      }
-    } else if (node.type === 'list') {
-      const choices = parseChoices(node);
-      if (choices.length > 0) {
-        sceneNodes.push(...choices);
-      }
-    } else if (node.type === 'code' && node.lang === 'yaml') {
-      try {
-        const parsed = yaml.load(node.value) as any;
-        if (parsed) {
-          if (parsed.minigame) {
-            sceneNodes.push({
-              type: 'minigame',
-              ...parsed.minigame,
-              variables: normalizeMiniGameVariables(parsed.minigame.variables),
-            });
-          }
-          if (parsed.image) {
-            sceneNodes.push({
-              type: 'ai_image',
-              ...parsed.image,
-            });
-          }
-          if (parsed.audio) {
-            sceneNodes.push({
-              type: 'ai_audio',
-              ...parsed.audio,
-            });
-          }
-          if (parsed.video) {
-            sceneNodes.push({
-              type: 'ai_video',
-              ...parsed.video,
-            });
-          }
-        }
-      } catch (e) {
-        // Ignore invalid yaml in body, or maybe warn?
-      }
-    }
-  }
-
-  return sceneNodes;
-}
+/** 场景元数据块中的已知顶层键（出节点），其余键进 scene.extra 透传 */
+const KNOWN_SCENE_META_KEYS = new Set(['image', 'audio', 'video', 'minigame']);
 
 export function parse(source: string): ParseResult {
   if (typeof source !== 'string') {
@@ -224,6 +47,13 @@ export function parse(source: string): ParseResult {
 
   const scenes: Record<string, Scene> = {};
   const warnings: string[] = [];
+  const diagnostics: Diagnostic[] = [];
+
+  // 诊断同时落两处：结构化 diagnostics（新）与字符串 warnings（兼容既有消费方）
+  const report = (diagnostic: Diagnostic) => {
+    diagnostics.push(diagnostic);
+    warnings.push(diagnostic.message);
+  };
 
   let currentSceneId: string | null = null;
   let currentSceneNodes: RootContent[] = [];
@@ -232,81 +62,57 @@ export function parse(source: string): ParseResult {
     if (!currentSceneId) return;
 
     if (scenes[currentSceneId]) {
-      warnings.push(`Duplicate scene ID found: "${currentSceneId}". The latter one will overwrite the previous.`);
+      report({
+        severity: 'warning',
+        code: 'duplicate-scene-id',
+        message: `Duplicate scene ID found: "${currentSceneId}". The latter one will overwrite the previous.`,
+        sceneId: currentSceneId,
+      });
     }
 
-    let metadata: any = null;
     let contentNodes = currentSceneNodes;
+    const assetNodes: SceneNode[] = [];
+    let extra: Record<string, unknown> | undefined;
 
-    // Strategy 1: Parsed as 'yaml' node (e.g. by remark-frontmatter if supported or at root)
-    if (currentSceneNodes.length > 0 && currentSceneNodes[0].type === 'yaml') {
+    // 场景元数据：紧跟标题的第一个 ```yaml 代码块一律视为元数据——
+    // 已知键（image/audio/video/minigame）出素材节点，未知键进 scene.extra 原样透传
+    const firstBlock = currentSceneNodes[0];
+    if (firstBlock && firstBlock.type === 'code' && firstBlock.lang === 'yaml') {
       try {
-        metadata = yaml.load(currentSceneNodes[0].value);
-        contentNodes = currentSceneNodes.slice(1);
-      } catch (e: any) {
-        warnings.push(`Failed to parse metadata for scene "${currentSceneId}": ${e.message}`);
-      }
-    }
-    // Strategy 2: Code block with lang='yaml'
-    else if (
-      currentSceneNodes.length > 0 &&
-      currentSceneNodes[0].type === 'code' &&
-      currentSceneNodes[0].lang === 'yaml'
-    ) {
-      try {
-        const parsed = yaml.load(currentSceneNodes[0].value);
-        // Verify it has expected keys to be considered metadata
-        if (
-          parsed &&
-          typeof parsed === 'object' &&
-          ('image' in parsed || 'audio' in parsed || 'video' in parsed || 'minigame' in parsed)
-        ) {
-          metadata = parsed;
+        const parsed = yaml.load(firstBlock.value);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
           contentNodes = currentSceneNodes.slice(1);
+
+          const assets = buildAssetNodes(parsed as Record<string, unknown>);
+          // 保持既有的场景头部顺序：image → audio → video → minigame
+          if (assets.image) assetNodes.push(assets.image);
+          if (assets.audio) assetNodes.push(assets.audio);
+          if (assets.video) assetNodes.push(assets.video);
+          if (assets.minigame) assetNodes.push(assets.minigame);
+
+          for (const [key, value] of Object.entries(parsed as Record<string, unknown>)) {
+            if (!KNOWN_SCENE_META_KEYS.has(key)) {
+              extra = extra ?? {};
+              extra[key] = value;
+            }
+          }
         }
       } catch (e) {
-        // If generic YAML parsing fails, just treat as code block
-        warnings.push(`Failed to parse YAML code block in scene "${currentSceneId}": ${e}`);
+        report({
+          severity: 'warning',
+          code: 'invalid-yaml',
+          message: `Failed to parse YAML code block in scene "${currentSceneId}": ${e}`,
+          sceneId: currentSceneId,
+          line: firstBlock.position?.start.line,
+        });
       }
     }
 
-    const nodes = parseSceneNodes(contentNodes);
+    const nodes = [...assetNodes, ...parseSceneNodes(contentNodes, report, currentSceneId)];
 
-    if (metadata && typeof metadata === 'object') {
-      const { image, audio, video, minigame } = metadata;
-
-      if (minigame)
-        nodes.unshift({
-          type: 'minigame',
-          prompt: minigame.prompt,
-          variables: normalizeMiniGameVariables(minigame.variables),
-          url: minigame.url,
-        });
-      if (video)
-        nodes.unshift({
-          type: 'ai_video',
-          prompt: video.prompt,
-          url: video.url,
-        });
-      if (audio)
-        nodes.unshift({
-          type: 'ai_audio',
-          audioType: audio.type || 'bgm',
-          prompt: audio.prompt,
-          url: audio.url,
-        });
-      if (image)
-        nodes.unshift({
-          type: 'ai_image',
-          prompt: image.prompt,
-          character: image.character,
-          characters: image.characters,
-          url: image.url,
-          aspectRatio: image.aspectRatio,
-        });
-    }
-
-    scenes[currentSceneId] = { id: currentSceneId, nodes };
+    const scene: Scene = { id: currentSceneId, nodes };
+    if (extra) scene.extra = extra;
+    scenes[currentSceneId] = scene;
   };
 
   for (let i = 0; i < tree.children.length; i++) {
@@ -317,10 +123,16 @@ export function parse(source: string): ParseResult {
       commitScene();
       currentSceneId = toString(node).trim();
       currentSceneNodes = [];
-    } else {
-      if (currentSceneId) {
-        currentSceneNodes.push(node);
-      }
+    } else if (currentSceneId) {
+      currentSceneNodes.push(node);
+    } else if (node.type !== 'thematicBreak') {
+      // front matter 与第一个场景标题之间的游离内容会被丢弃，必须可见（P1）
+      report({
+        severity: 'warning',
+        code: 'stray-content',
+        message: `Content before the first scene heading will be dropped: "${toString(node).slice(0, 40)}"`,
+        line: node.position?.start.line,
+      });
     }
   }
   commitScene();
@@ -343,6 +155,7 @@ export function parse(source: string): ParseResult {
     subdomain,
     state = {},
     ai = {},
+    ...extraGlobals
   } = globalConfig;
 
   if (!scenes['start']) {
@@ -350,7 +163,11 @@ export function parse(source: string): ParseResult {
   }
 
   if (dsl_version !== undefined && typeof dsl_version !== 'number') {
-    warnings.push(`dsl_version must be a number, got: ${JSON.stringify(dsl_version)}. Field ignored.`);
+    report({
+      severity: 'warning',
+      code: 'invalid-dsl-version',
+      message: `dsl_version must be a number, got: ${JSON.stringify(dsl_version)}. Field ignored.`,
+    });
   }
 
   const game: Game = {
@@ -377,5 +194,10 @@ export function parse(source: string): ParseResult {
     scenes,
   };
 
-  return { success: true, data: game, warnings };
+  // 全局 front matter 未知键原样透传（stringify 写回，消灭白名单抹除）
+  if (Object.keys(extraGlobals).length > 0) {
+    game.extra = extraGlobals;
+  }
+
+  return { success: true, data: game, warnings, diagnostics };
 }
