@@ -22,8 +22,8 @@ export function replaceCharacterMentions(text: string, characters?: Record<strin
     return text;
   }
 
-  // 匹配 @角色ID（字母、数字、下划线）
-  return text.replace(/@(\w+)/g, (match, id) => {
+  // 匹配 @角色ID（Unicode 字母、数字、下划线，支持中文角色 ID）
+  return text.replace(/@([\p{L}\p{N}_]+)/gu, (match, id) => {
     const char = characters[id];
     return char ? char.name : match; // 如果找不到角色，保留原文
   });

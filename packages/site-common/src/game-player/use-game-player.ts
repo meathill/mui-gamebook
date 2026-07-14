@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { PlayableGame, PlayableScene, PlayableSceneNode, RuntimeState } from '@mui-gamebook/parser/src/types';
 import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
+import { normalizeTriggerCondition } from '@mui-gamebook/parser/src/expression';
 import { evaluateCondition, executeSet, interpolateVariables } from '../utils/evaluator';
 
 export interface GamePlayerState {
@@ -32,6 +33,11 @@ export interface GamePlayerActions {
    * 触发跳转时返回目标场景 id，否则返回 null，调用方可据此决定自身的 UI 副作用。
    */
   applyStateUpdate: (updates: Partial<RuntimeState>) => string | null;
+  /**
+   * 从存档数据恢复：场景 + 变量状态（以初始状态为底座合并）。
+   * 供多存档系统（save-manager）读档使用；场景不存在时返回 false。
+   */
+  restoreSave: (sceneId: string, savedState: RuntimeState) => boolean;
   setImageLoading: (loading: boolean) => void;
   getSceneImage: (nodes: PlayableSceneNode[]) => string | undefined;
   getSceneAudioUrl: (nodes: PlayableSceneNode[]) => string | undefined;
@@ -112,9 +118,10 @@ export function useGamePlayer(
     (state: RuntimeState): string | null => {
       for (const [key, val] of Object.entries(game.initialState)) {
         if (isVariableMeta(val) && val.trigger) {
-          const currentValue = state[key];
-          const condition = `${currentValue} ${val.trigger.condition}`;
-          if (evaluateCondition(condition, {})) {
+          // 前缀式条件（如 "<= 0"）补全 LHS 后带完整 state 求值；
+          // 旧做法是把当前值拼进字符串再用空 state 求值，字符串变量会失效
+          const condition = normalizeTriggerCondition(val.trigger.condition, key);
+          if (evaluateCondition(condition, state)) {
             return val.trigger.scene;
           }
         }
@@ -134,7 +141,9 @@ export function useGamePlayer(
           setCurrentSceneId(sceneId);
           setIsGameStarted(true);
         }
-        setRuntimeState(state);
+        // 以初始状态为底座合并：游戏更新新增变量后，老玩家存档不再缺字段
+        // （否则新变量为 undefined：条件恒假、插值裸露 {{var}}）
+        setRuntimeState({ ...extractRuntimeState(game.initialState), ...state });
         if (imageUrl) setCurrentImageUrl(imageUrl);
         if (startTime) setGameStartTime(startTime);
         if (scenes) recordedScenesRef.current = new Set(scenes);
@@ -149,7 +158,7 @@ export function useGamePlayer(
       }
     }
     setIsLoaded(true);
-  }, [storageKey, game.scenes, game.startSceneId]);
+  }, [storageKey, game.scenes, game.startSceneId, game.initialState]);
 
   const currentScene = game.scenes[currentSceneId];
 
@@ -246,6 +255,19 @@ export function useGamePlayer(
     [runtimeState, checkTriggers, game.scenes, notifySceneVisit],
   );
 
+  const restoreSave = useCallback(
+    (sceneId: string, savedState: RuntimeState): boolean => {
+      if (!game.scenes[sceneId]) return false;
+      setCurrentSceneId(sceneId);
+      // 与单存档路径一致：初始状态为底座合并，游戏更新后老存档不缺新变量
+      setRuntimeState({ ...extractRuntimeState(game.initialState), ...savedState });
+      setIsGameStarted(true);
+      notifySceneVisit(sceneId);
+      return true;
+    },
+    [game.scenes, game.initialState, notifySceneVisit],
+  );
+
   const hasConfiguredChoices = currentScene?.nodes.some((node) => node.type === 'choice') ?? false;
   const showEndScreen = !hasConfiguredChoices;
 
@@ -266,6 +288,7 @@ export function useGamePlayer(
     handleRestart,
     handleChoice,
     applyStateUpdate,
+    restoreSave,
     setImageLoading,
     getSceneImage,
     getSceneAudioUrl,

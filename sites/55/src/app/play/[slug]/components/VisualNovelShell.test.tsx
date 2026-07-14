@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => {
     handleRestart: vi.fn(),
     handleChoice: vi.fn(),
     applyStateUpdate: vi.fn(),
+    restoreSave: vi.fn(),
     setImageLoading: vi.fn(),
     getSceneImage: vi.fn(),
     getSceneAudioUrl: vi.fn(),
@@ -313,8 +314,13 @@ describe('VisualNovelShell', () => {
     expect(mocks.gamePlayerState.handleStartGame).not.toHaveBeenCalled();
   });
 
-  it('存档非空时读取会开始游戏并重置状态', () => {
-    mocks.saveSystemState.load.mockReturnValue({ sceneId: 'scene2', runtimeState: {}, timestamp: Date.now() });
+  it('存档非空时读取会恢复场景与变量状态（restoreSave）', () => {
+    mocks.saveSystemState.load.mockReturnValue({
+      sceneId: 'scene2',
+      runtimeState: { gold: 7 },
+      timestamp: Date.now(),
+    });
+    mocks.gamePlayerState.restoreSave.mockReturnValue(true);
     render(
       <VisualNovelShell
         game={game}
@@ -327,7 +333,7 @@ describe('VisualNovelShell', () => {
     fireEvent.click(screen.getByText('读取存档1'));
 
     expect(mocks.saveSystemState.load).toHaveBeenCalledWith('slot1');
-    expect(mocks.gamePlayerState.handleRestart).toHaveBeenCalledWith(true);
+    expect(mocks.gamePlayerState.restoreSave).toHaveBeenCalledWith('scene2', { gold: 7 });
   });
 
   it('从路线图选择非起始场景会调用 handleChoice 跳转', () => {

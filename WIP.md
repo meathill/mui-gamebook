@@ -26,10 +26,10 @@ Phase 0 已完成（除 D1 清洗，见 TODO.md）。
 
 ### 批次 3：运行时切换
 
-- [ ] `packages/site-common/src/utils/evaluator.ts` 降级为薄适配层：保留 `evaluateCondition`/`executeSet`/`interpolateVariables` 导出签名（9 个文件在引用），内部委托新引擎
-- [ ] `{{var}}` 插值升级：支持 Unicode 变量名与空格（`{{ gold }}`）——**Unicode 一次改齐五处**：表达式 lexer、`{{var}}` 插值、`{{if}}` 条件提取、validator、`replace-character-mentions.ts` 的 `@id`（场景 ID 维持 ASCII，见 Non-goals）
-- [ ] trigger 归一：parser 解析期把前缀式 `"<= 0"` 补全 LHS；`use-game-player.ts` 的 `checkTriggers` 直接 `evaluate(condition, state)`——顺带修字符串变量 trigger 永不触发的 bug，补测试
-- [ ] 存档底座合并：`use-game-player.ts` 与 `save-manager.ts` 加载时 `{...extractRuntimeState(initialState), ...saved}`——修游戏更新后老存档缺新变量的 bug，补测试
+- [x] `packages/site-common/src/utils/evaluator.ts` 降级为薄适配层：`evaluateCondition`/`executeSet` 直接 re-export 新引擎，`interpolateVariables` 留守负责模板扫描，导出签名不变
+- [x] `{{var}}` 插值升级：支持 Unicode 变量名与空格（`{{ gold }}`）——Unicode 已改齐五处：表达式 lexer、`{{var}}` 插值、`{{if}}` 条件提取、validator 两处正则、`replace-character-mentions.ts` 的 `@id`（场景 ID 维持 ASCII）
+- [x] trigger 归一（偏差说明：改为**运行时**归一而非 parse 期——`checkTriggers` 调 `normalizeTriggerCondition` 后带完整 state 求值，`trigger.condition` 原文保持往返不变）；字符串变量 trigger bug 已修，测试锁定
+- [x] 存档底座合并：单存档路径在 `use-game-player` load 时合并；多存档路径（偏差说明）没有改 `save-manager.load`（它不持有 initialState），而是给 `useGamePlayer` 新增 `restoreSave(sceneId, savedState)` action 内做底座合并——**顺带修复 55 站读档丢弃变量状态的存量 bug**（`VisualNovelShell.handleLoadSave` 原来 restart+跳场景的 hack 根本没恢复 `runtimeState`）
 
 ### 批次 4：parser 防丢失 + 透传 + 选项健壮化
 

@@ -316,4 +316,54 @@ describe('useGamePlayer', () => {
     expect(result.current.currentSceneId).toBe('gameover');
     expect(result.current.runtimeState.danger).toBe(5);
   });
+
+  it('字符串变量的 trigger 能正确触发（DSL v2 Phase 1 修复：旧实现拼字符串+空 state 恒为假）', async () => {
+    const game = makeGame();
+    game.initialState.partner = { value: '', trigger: { condition: '== "Alice"', scene: 'gameover' } };
+    const { result } = renderHook(() => useGamePlayer(game, 'slug-trigger-str'));
+    await waitFor(() => expect(result.current.isLoaded).toBe(true));
+    act(() => result.current.handleStartGame());
+
+    act(() => result.current.handleChoice('forest', 'partner = "Alice"'));
+
+    expect(result.current.currentSceneId).toBe('gameover');
+  });
+
+  it('加载存档时以初始状态为底座合并：游戏更新新增的变量不缺失', async () => {
+    const game = makeGame();
+    // 模拟旧版本游戏产生的存档：当时还没有 danger 变量
+    localStorage.setItem(
+      'test-merge_slug-merge',
+      JSON.stringify({ sceneId: 'forest', state: { gold: 7 }, startTime: 123, scenes: ['start', 'forest'] }),
+    );
+
+    const { result } = renderHook(() => useGamePlayer(game, 'slug-merge', { storagePrefix: 'test-merge' }));
+    await waitFor(() => expect(result.current.isLoaded).toBe(true));
+
+    expect(result.current.runtimeState.gold).toBe(7);
+    expect(result.current.runtimeState.danger).toBe(0); // 底座补齐，而非 undefined
+  });
+
+  it('restoreSave 恢复场景与变量状态（多存档读档路径），场景不存在时返回 false', async () => {
+    const game = makeGame();
+    const { result } = renderHook(() => useGamePlayer(game, 'slug-restore'));
+    await waitFor(() => expect(result.current.isLoaded).toBe(true));
+
+    let ok = false;
+    act(() => {
+      ok = result.current.restoreSave('forest', { gold: 42 });
+    });
+
+    expect(ok).toBe(true);
+    expect(result.current.currentSceneId).toBe('forest');
+    expect(result.current.isGameStarted).toBe(true);
+    expect(result.current.runtimeState.gold).toBe(42);
+    expect(result.current.runtimeState.danger).toBe(0); // 底座合并
+
+    let missing = true;
+    act(() => {
+      missing = result.current.restoreSave('no_such_scene', {});
+    });
+    expect(missing).toBe(false);
+  });
 });

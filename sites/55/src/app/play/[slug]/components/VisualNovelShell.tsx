@@ -90,28 +90,17 @@ export default function VisualNovelShell({ game, gameId, slug }: Props) {
     setScreen('save-load');
   }
 
-  // 读取存档
+  // 读取存档：恢复场景与变量状态（restoreSave 内部以初始状态为底座合并）
   const handleLoadSave = useCallback(
     (slotId: Parameters<typeof saveSystem.load>[0]) => {
       const data = saveSystem.load(slotId);
       if (!data) return;
 
-      // 恢复游戏状态
-      gamePlayer.handleStartGame();
-      // 通过 handleChoice 跳转到存档的场景（无 set 指令）
-      // 这里需要直接设置状态，所以我们利用 handleRestart 后再跳转
-      gamePlayer.handleRestart(true);
-      // 使用 setTimeout 确保状态重置后再恢复
-      setTimeout(() => {
-        gamePlayer.handleStartGame();
-        // 恢复到存档的场景 — 通过 handleChoice 跳转
-        if (data.sceneId !== (game.startSceneId || 'start')) {
-          gamePlayer.handleChoice(data.sceneId);
-        }
-      }, 0);
-      setScreen('playing');
+      if (gamePlayer.restoreSave(data.sceneId, data.runtimeState)) {
+        setScreen('playing');
+      }
     },
-    [saveSystem, gamePlayer, game.startSceneId],
+    [saveSystem, gamePlayer],
   );
 
   // 手动存档

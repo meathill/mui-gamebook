@@ -34,8 +34,8 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
       if (keywords.has(token.toLowerCase())) continue;
       // 跳过字符串字面量
       if (/^['"]/.test(token)) continue;
-      // 这是一个变量名
-      if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(token)) {
+      // 这是一个变量名（Unicode 标识符，支持中文变量名）
+      if (/^[\p{L}_][\p{L}\p{N}_]*$/u.test(token)) {
         variables.push(token);
       }
     }
@@ -115,7 +115,7 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
         }
 
         // 检查 {{ variable }} 插值中的变量
-        const interpolationMatches = node.content.matchAll(/\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}/g);
+        const interpolationMatches = node.content.matchAll(/\{\{\s*([\p{L}_][\p{L}\p{N}_]*)\s*\}\}/gu);
         for (const match of interpolationMatches) {
           const varName = match[1];
           // 跳过条件语法的关键字

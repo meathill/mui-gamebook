@@ -120,5 +120,30 @@ describe('evaluator', () => {
       const state = { weapon: '魔剑' };
       expect(interpolateVariables('你装备了{{weapon}}', state)).toBe('你装备了魔剑');
     });
+
+    it('应支持变量名两侧空格与中文变量名（DSL v2 Phase 1）', () => {
+      expect(interpolateVariables('你有 {{ gold }} 金币', { gold: 100 })).toBe('你有 100 金币');
+      expect(interpolateVariables('生命：{{生命值}}', { 生命值: 80 })).toBe('生命：80');
+      expect(interpolateVariables('生命：{{ 生命值 }}', { 生命值: 80 })).toBe('生命：80');
+    });
+
+    it('条件文本内的孤儿标签不被变量插值误吞', () => {
+      // 不存在的变量保留原样；`{{ else }}` 形态不匹配任何 state 变量时也保留
+      expect(interpolateVariables('{{ else }}', {})).toBe('{{ else }}');
+    });
+  });
+
+  describe('v2 新表达式能力经适配层可用', () => {
+    it('or / 括号 / 乘除在条件与赋值中可用', () => {
+      expect(evaluateCondition('a == 1 or b == 1', { a: 0, b: 1 })).toBe(true);
+      expect(evaluateCondition('(a or b) and c', { a: 0, b: 1, c: 1 })).toBe(true);
+      expect(executeSet('gold = gold * 2', { gold: 10 })).toEqual({ gold: 20 });
+    });
+
+    it('{{ if }} 条件文本支持 or 表达式', () => {
+      const text = '{{ if partner == "alice" or partner == "luna" }}有伴{{ else }}独行{{ /if }}';
+      expect(interpolateVariables(text, { partner: 'luna' })).toBe('有伴');
+      expect(interpolateVariables(text, { partner: 'none' })).toBe('独行');
+    });
   });
 });
