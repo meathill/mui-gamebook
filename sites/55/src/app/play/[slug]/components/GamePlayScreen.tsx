@@ -17,6 +17,7 @@ import {
   useSfx,
   useGameSettings,
 } from '@mui-gamebook/site-common/game-player';
+import { formatDialogueLine, resolveSpeakerName } from '@mui-gamebook/site-common/utils';
 import { useTypewriter } from '@mui-gamebook/app/components/game-player/hooks/useTypewriter';
 import type { getVisibleVariables } from '@mui-gamebook/parser/src/utils';
 
@@ -82,10 +83,22 @@ export default function GamePlayScreen({
   const imageNode = currentScene.nodes.find((n) => n.type === 'static_image' || n.type === 'ai_image');
   const imageUrl = imageNode && 'url' in imageNode ? imageNode.url : undefined;
 
-  // 提取当前场景的文本节点
+  // 提取当前场景的正文流（旁白 + 对话）
   const textNodes = useMemo(() => {
-    return currentScene.nodes.filter((node) => node.type === 'text');
+    return currentScene.nodes.filter((node) => node.type === 'text' || node.type === 'dialogue');
   }, [currentScene.nodes]);
+
+  // 正文节点 → 展示文本：对话行带说话人名（`名字：台词`），姓名框式 UI 后续打磨
+  const proseToLine = useCallback(
+    (node: (typeof textNodes)[number]) => {
+      const content = interpolateVariables(node.content, runtimeState);
+      if (node.type === 'dialogue') {
+        return formatDialogueLine(resolveSpeakerName(node.speaker, game.characters), content);
+      }
+      return content;
+    },
+    [game.characters, runtimeState],
+  );
 
   const [visibleTextCount, setVisibleTextCount] = useState(1);
 
@@ -94,11 +107,11 @@ export default function GamePlayScreen({
     setVisibleTextCount(1);
   }, [currentScene.id]);
 
-  // 当前正在打字的这一行内容（已做变量插值）
+  // 当前正在打字的这一行内容（已做变量插值，对话行带说话人名）
   const currentLineText = useMemo(() => {
     const node = textNodes[visibleTextCount - 1];
-    return node ? interpolateVariables(node.content, runtimeState) : '';
-  }, [textNodes, visibleTextCount, runtimeState]);
+    return node ? proseToLine(node) : '';
+  }, [textNodes, visibleTextCount, proseToLine]);
 
   const { displayed, isComplete, complete } = useTypewriter(currentLineText, game.typewriter_speed ?? 40, sfx.playTick);
 
@@ -214,7 +227,7 @@ export default function GamePlayScreen({
               <p
                 key={index}
                 className="game-text">
-                <span>{interpolateVariables(node.content, runtimeState)}</span>
+                <span>{proseToLine(node)}</span>
               </p>
             ))}
             {textNodes[visibleTextCount - 1] && (

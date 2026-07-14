@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { useAudioPlayer } from '@mui-gamebook/app/hooks/useAudioPlayer';
-import { evaluateCondition, interpolateVariables } from '@mui-gamebook/site-common/utils';
+import { evaluateCondition, interpolateVariables, resolveSpeakerName } from '@mui-gamebook/site-common/utils';
 import { useGameState } from './hooks/useGameState';
 import SceneImage from './components/SceneImage';
 import AudioControls from './components/AudioControls';
@@ -168,7 +168,9 @@ export default function GamePlayerWrapper({ game, gameId, slug }: Props) {
 
   const hasConfiguredChoices = currentScene.nodes.some((node) => node.type === 'choice');
   const showEndScreen = !hasConfiguredChoices;
-  const hasTextAudio = currentScene.nodes.some((n) => n.type === 'text' && 'audio_url' in n && n.audio_url);
+  const hasTextAudio = currentScene.nodes.some(
+    (n) => (n.type === 'text' || n.type === 'dialogue') && 'audio_url' in n && n.audio_url,
+  );
 
   return (
     <div className="flex flex-col min-h-[60vh]">
@@ -225,6 +227,17 @@ export default function GamePlayerWrapper({ game, gameId, slug }: Props) {
                     key={index}
                     className="game-text animate-bounce-in"
                     style={{ animationDelay: `${index * 0.1}s` }}>
+                    {interpolateVariables(node.content, runtimeState)}
+                  </p>
+                );
+
+              case 'dialogue':
+                return (
+                  <p
+                    key={index}
+                    className="game-text animate-bounce-in"
+                    style={{ animationDelay: `${index * 0.1}s` }}>
+                    <strong>{resolveSpeakerName(node.speaker, game.characters)}：</strong>
                     {interpolateVariables(node.content, runtimeState)}
                   </p>
                 );

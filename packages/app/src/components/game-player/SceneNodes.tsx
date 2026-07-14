@@ -1,8 +1,8 @@
 'use client';
 
 import ReactMarkdown from 'react-markdown';
-import type { PlayableSceneNode, RuntimeState } from '@mui-gamebook/parser/src/types';
-import { evaluateCondition, interpolateVariables } from '@mui-gamebook/site-common/utils';
+import type { PlayableCharacter, PlayableSceneNode, RuntimeState } from '@mui-gamebook/parser/src/types';
+import { evaluateCondition, interpolateVariables, resolveSpeakerName } from '@mui-gamebook/site-common/utils';
 import { SpeakerHighIcon } from '@phosphor-icons/react';
 import AudioControls from './AudioControls';
 import MiniGamePlayer from './MiniGamePlayer';
@@ -10,6 +10,7 @@ import type { UseAudioPlayerReturn } from './useAudioPlayer';
 
 interface SceneNodesProps {
   nodes: PlayableSceneNode[];
+  characters?: Record<string, PlayableCharacter>;
   runtimeState: RuntimeState;
   hasMinigame: boolean;
   minigameCompleted: boolean;
@@ -25,6 +26,7 @@ interface SceneNodesProps {
  */
 export default function SceneNodes({
   nodes,
+  characters,
   runtimeState,
   hasMinigame,
   minigameCompleted,
@@ -53,6 +55,42 @@ export default function SceneNodes({
                     hasAudio={hasTextAudio}
                   />
                 )}
+              </div>
+            );
+          }
+
+          case 'dialogue': {
+            const character = characters?.[node.speaker];
+            const speakerName = resolveSpeakerName(node.speaker, characters);
+            const hasDialogueAudio = 'audio_url' in node && !!node.audio_url;
+            return (
+              <div
+                key={index}
+                className="flex items-start gap-3">
+                {character?.image_url && (
+                  <img
+                    src={character.image_url}
+                    alt={speakerName}
+                    className="w-10 h-10 rounded-full object-cover flex-shrink-0 border border-amber-200"
+                  />
+                )}
+                <div className="flex-1 sm:space-y-1">
+                  <div
+                    className={`text-sm font-semibold ${hasImage ? 'text-orange-200 sm:text-orange-700' : 'text-orange-700'}`}>
+                    {speakerName}
+                    {node.emotion && <span className="ml-2 text-xs font-normal opacity-70">（{node.emotion}）</span>}
+                  </div>
+                  <div
+                    className={`prose prose-lg max-w-none ${hasImage ? 'prose-invert sm:prose-gray' : 'prose-gray'}`}>
+                    <ReactMarkdown>{interpolateVariables(node.content, runtimeState)}</ReactMarkdown>
+                  </div>
+                  {hasDialogueAudio && (
+                    <AudioControls
+                      audioPlayer={audioPlayer}
+                      hasAudio={hasDialogueAudio}
+                    />
+                  )}
+                </div>
               </div>
             );
           }

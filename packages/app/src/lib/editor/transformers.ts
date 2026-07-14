@@ -1,4 +1,6 @@
 import { Node, Edge } from '@xyflow/react';
+import { parseProseBlock } from '@mui-gamebook/parser/src/parse-scene';
+import { proseNodeToLine } from '@mui-gamebook/parser/src/serialize';
 import { Game, Scene, SceneNode } from '@mui-gamebook/parser/src/types';
 
 export interface EditorSceneAsset {
@@ -32,7 +34,8 @@ export function replaceEditorSceneAssetUrl(
 // Type definitions for our custom Node data
 export interface SceneNodeData extends Record<string, unknown> {
   label: string; // Scene ID
-  content: string; // Concatenated text content
+  /** prose 流的可编辑文本：旁白原文与对话行（`@角色ID (表情): 台词`）按段落拼接 */
+  content: string;
   audio_url?: string; // TTS audio URL for the text content
   assets: EditorSceneAsset[]; // 编辑器内部素材，editorId 不进入 DSL
 }
@@ -44,13 +47,16 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
   let y = 0;
 
   Object.entries(game.scenes).forEach(([id, scene]) => {
-    const textNodes = scene.nodes.filter((n) => n.type === 'text');
-    const assetNodes = scene.nodes.filter((n) => n.type !== 'text' && n.type !== 'choice');
+    // prose 流 = 旁白 + 对话，保序转为可编辑文本；对话行绝不能落进 assets（会被当素材卡渲染并在保存时错位）
+    const proseNodes = scene.nodes.filter((n) => n.type === 'text' || n.type === 'dialogue');
+    const assetNodes = scene.nodes.filter((n) => n.type !== 'text' && n.type !== 'dialogue' && n.type !== 'choice');
     const choiceNodes = scene.nodes.filter((n) => n.type === 'choice');
 
-    const content = textNodes.map((n) => n.content).join('\n\n');
-    // 获取第一个文本节点的 audio_url（如果有多个文本节点，只保留第一个的音频）
-    const audio_url = textNodes.find((n) => 'audio_url' in n && n.audio_url)?.audio_url as string | undefined;
+    const content = proseNodes
+      .map((n) => proseNodeToLine(n as { type: 'text' | 'dialogue'; content: string }))
+      .join('\n\n');
+    // 获取第一个带语音的 prose 节点的 audio_url（多节点时只保留第一个的音频，既有限制）
+    const audio_url = proseNodes.find((n) => 'audio_url' in n && n.audio_url)?.audio_url as string | undefined;
 
     nodes.push({
       id: id,
@@ -92,26 +98,28 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
   const newGame: Game = { ...originalGame };
   const scenes: Record<string, Scene> = {};
 
+  // 对话行识别与 parser 同源：只有已注册角色的 @id: 行才是对话
+  const characterIds: ReadonlySet<string> = new Set(Object.keys(originalGame.ai?.characters ?? {}));
+
   nodes.forEach((node) => {
     const sceneId = node.id;
     const sceneNodes: SceneNode[] = [];
 
-    // 1. Add Assets (Images, etc.) - Prepend or Append?
-    // Convention: Assets first (like cover image), then text.
-    // But wait, Markdown usually has text then options.
-    // Let's preserve the order from data.assets if possible, or put images top.
-    // For simplicity: Assets -> Text -> Choices
+    // 顺序约定：Assets（素材，序列化时进场景头元数据块）→ prose 流 → Choices
     if (node.data.assets) {
       sceneNodes.push(...node.data.assets.map((entry) => entry.asset));
     }
 
-    // 2. Add Text (with optional audio_url)
+    // prose 流：按空行拆段，每段经 parseProseBlock 还原为 text/dialogue 节点
     if (node.data.content) {
-      const textNode: SceneNode = { type: 'text', content: node.data.content };
-      if (node.data.audio_url) {
-        textNode.audio_url = node.data.audio_url;
+      const proseNodes = node.data.content.split(/\n{2,}/).flatMap((block) => parseProseBlock(block, characterIds));
+      if (node.data.audio_url && proseNodes.length > 0) {
+        const first = proseNodes[0];
+        if (first.type === 'text' || first.type === 'dialogue') {
+          first.audio_url = node.data.audio_url;
+        }
       }
-      sceneNodes.push(textNode);
+      sceneNodes.push(...proseNodes);
     }
 
     // 3. Add Choices (Edges)

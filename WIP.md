@@ -27,28 +27,26 @@ Phase 1 达成的关键能力：
   - `stringify.ts` 降级为 re-export，导入路径不变
 - [ ] 验收：13 demo roundtrip 幂等 + 结构等价（现成测试）；stringify/assets/template-escape 等既有测试全绿
 
-### 批次 2：对话行语法（parser 层）
+### 批次 2：对话行语法（parser 层）——已完成
 
-- [ ] `types.ts`：`SceneDialogueNode {speaker, emotion?, content, audio_url?}` + PlayableSceneNode 对应项
-- [ ] `parse-scene.ts`：段落 `break` 节点补 `\n`（修英文粘词）；flushText 后按行扫描
-  `@id[(表情)][:：]`（全角/半角冒号与括号），speaker 必须在 `ai.characters` 注册，
-  未注册整行按普通文本 + `unregistered-speaker` 警告；连续对话行逐行出节点
-- [ ] `serialize.ts`：dialogue → `@id: 内容` / `@id (表情): 内容`（内容走正文转义器）
-- [ ] `utils.ts` toPlayableGame：dialogue 透传（content 过 @mention 替换？——不，speaker 由前端查角色名，content 照常替换）
-- [ ] 测试：对话解析/序列化/roundtrip/全角标点/未注册降级/表情自由文本
+- [x] `SceneDialogueNode` + PlayableSceneNode；行级扫描 `@id[(表情)][:：]`（全角/半角），
+  未注册 speaker 按普通文本 + `unregistered-speaker` 警告；break 节点补 `\n`（修英文粘词）；
+  序列化 `@id (表情): 内容`；toPlayableGame 透传并替换台词 @mention；11 个测试
 
-### 批次 3：编辑器保序（transformers.ts）
+### 批次 3：编辑器保序（transformers.ts）——已完成
 
-- [ ] `gameToFlow`：assets 过滤条件排除 dialogue（现条件 `type !== 'text' && type !== 'choice'` 会把对话当素材卡）
-- [ ] 保序 nodes 模型：flowToGame 不再合并多 text 节点、不再强制 Assets→Text→Choices 重排、不再丢首个之外的 audio_url
-- [ ] 验收：打开 HP4 → 保存 → diff 仅含已知规范化差异
+- [x] dialogue 不落 assets；编辑文本 = prose 流 DSL 原文（`proseNodeToLine` / `parseProseBlock`
+  与 parser 同源互逆）；flowToGame 按空行拆段还原多 text/dialogue 节点——**多文本节点不再被合并**
+  （DEV_NOTE 记录的有声书 sidecar 根因之一就此解除）；audio_url 仍只保留首个（既有限制）
 
 ### 批次 4：渲染 + 有声书
 
-- [ ] `SceneNodes.tsx` / `GamePlayerImmersive.tsx` / sites/55 / sites/jianjian：dialogue 渲染（姓名框/头像，emotion 由站点模板自行解释）
-- [ ] `segmentation.ts`（core 与 asset-generator 两份副本）：dialogue 节点直接产出 segment 短路 LLM，旁白继续走 LLM
-- [ ] `DSL_SPEC.md` 增补对话行章节（实现落地后才写规范，保持规范=现实）
-- [ ] 两站点手测视觉小说流程
+- [x] 四个播放器接入 dialogue 渲染：经典 SceneNodes（角色名+头像+表情标注）、沉浸模式与
+  55 站打字机流（`名字：台词`）、jianjian（加粗名字前缀）；姓名框式 VN UI 属后续打磨
+- [x] `DSL_SPEC.md` §4.2.3 对话行章节（实现落地后写规范，保持规范=现实）
+- [ ] `segmentation.ts`（core 与 asset-generator 两份副本）：dialogue 节点直接产出 segment
+  短路 LLM，旁白继续走 LLM
+- [ ] 两站点手测视觉小说流程（含含对话行的临时剧本）
 
 遗留（非阻塞）：
 - D1 生产数据清洗（需 `MUI_ADMIN_PASSWORD`，见 TODO.md）

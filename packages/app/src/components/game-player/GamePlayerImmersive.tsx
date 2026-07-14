@@ -4,7 +4,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { PlayableGame, PlayableScene, TextBoxPosition } from '@mui-gamebook/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
-import { evaluateCondition, interpolateVariables } from '@mui-gamebook/site-common/utils';
+import {
+  evaluateCondition,
+  formatDialogueLine,
+  interpolateVariables,
+  resolveSpeakerName,
+} from '@mui-gamebook/site-common/utils';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
@@ -33,10 +38,10 @@ function isImageNode(
   return node.type === 'static_image' || node.type === 'ai_image';
 }
 
-function isTextNode(
+function isProseNode(
   node: PlayableScene['nodes'][number],
-): node is Extract<PlayableScene['nodes'][number], { type: 'text' }> {
-  return node.type === 'text';
+): node is Extract<PlayableScene['nodes'][number], { type: 'text' } | { type: 'dialogue' }> {
+  return node.type === 'text' || node.type === 'dialogue';
 }
 
 export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame & { id?: number }; slug: string }) {
@@ -99,7 +104,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   // 当前场景的有序文本节点
   const textNodes = useMemo(() => {
     if (!currentScene) return [];
-    return currentScene.nodes.filter(isTextNode);
+    return currentScene.nodes.filter(isProseNode);
   }, [currentScene]);
 
   // 当前文字节点对应的背景图：取当前位置之前出现的最近一张图，找不到则回退到 gamePlayer 追踪的场景基线图
@@ -112,7 +117,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
       if (isImageNode(node) && 'url' in node && node.url) {
         lastImg = node.url;
       }
-      if (isTextNode(node)) {
+      if (isProseNode(node)) {
         if (textCount === textIndex) {
           return lastImg || currentImageUrl;
         }
@@ -307,7 +312,16 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
 
       {!showEndScreen && currentText && (
         <ImmersiveTextBox
-          paragraphs={textNodes.slice(0, textIndex + 1).map((n) => interpolateVariables(n.content, runtimeState))}
+          paragraphs={textNodes
+            .slice(0, textIndex + 1)
+            .map((n) =>
+              n.type === 'dialogue'
+                ? formatDialogueLine(
+                    resolveSpeakerName(n.speaker, game.characters),
+                    interpolateVariables(n.content, runtimeState),
+                  )
+                : interpolateVariables(n.content, runtimeState),
+            )}
           position={textPosition}
           speed={game.typewriter_speed}
           showContinueHint={!isLastText || (choices.length > 0 && !choicesRevealed)}

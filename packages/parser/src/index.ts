@@ -13,8 +13,9 @@ export type { Game, SceneNode };
 export * from './types';
 export * from './utils';
 export { stringify } from './stringify';
+export { proseNodeToLine } from './serialize';
 export { scanClauses } from './parse-choice';
-export { normalizeMiniGameVariables } from './parse-scene';
+export { normalizeMiniGameVariables, parseProseBlock } from './parse-scene';
 
 /** 场景元数据块中的已知顶层键（出节点），其余键进 scene.extra 透传 */
 const KNOWN_SCENE_META_KEYS = new Set(['image', 'audio', 'video', 'minigame']);

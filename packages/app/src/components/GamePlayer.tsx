@@ -346,6 +346,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
           <div className="mt-auto space-y-2 sm:mt-0 sm:space-y-6">
             <SceneNodes
               nodes={currentScene.nodes}
+              characters={game.characters}
               runtimeState={runtimeState}
               hasMinigame={hasMinigame}
               minigameCompleted={minigameCompleted}

@@ -164,6 +164,23 @@ export function escapeProse(text: string): string {
   return escaped.replace(/\u0000(\d+)\u0000/g, (_, i: string) => spans[Number(i)]);
 }
 
+/**
+ * text/dialogue 节点 → DSL 原文行（不含转义）。
+ * 与 parseProseBlock 互逆，编辑器把 prose 流展示为可编辑文本时也用它。
+ */
+export function proseNodeToLine(node: {
+  type: 'text' | 'dialogue';
+  content: string;
+  speaker?: string;
+  emotion?: string;
+}): string {
+  if (node.type === 'dialogue') {
+    const emotion = node.emotion ? ` (${node.emotion})` : '';
+    return `@${node.speaker}${emotion}: ${node.content}`;
+  }
+  return node.content;
+}
+
 // —— 文档拼装 ——
 
 export function stringify(game: Game): string {
@@ -198,8 +215,7 @@ export function stringify(game: Game): string {
           if (node.audio_url) blocks.push(`<!-- audio: ${node.audio_url} -->`);
           break;
         case 'dialogue': {
-          const emotion = node.emotion ? ` (${node.emotion})` : '';
-          blocks.push(escapeProse(`@${node.speaker}${emotion}: ${node.content}`));
+          blocks.push(escapeProse(proseNodeToLine(node)));
           if (node.audio_url) blocks.push(`<!-- audio: ${node.audio_url} -->`);
           break;
         }

@@ -135,6 +135,14 @@ function extractProseNodes(
   return nodes;
 }
 
+/**
+ * 公开入口：把一段正文文本解析为 text/dialogue 节点序列。
+ * 供编辑器（flowToGame）等场景复用同一套对话行识别逻辑。
+ */
+export function parseProseBlock(text: string, characterIds?: ReadonlySet<string>): SceneNode[] {
+  return extractProseNodes(text, characterIds, undefined, undefined, undefined);
+}
+
 export function parseSceneNodes(
   nodes: RootContent[],
   report?: DiagnosticReporter,

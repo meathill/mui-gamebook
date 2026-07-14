@@ -155,6 +155,50 @@ describe('Editor Transformers', () => {
     expect(JSON.stringify(roundTripped)).not.toContain('editorId');
   });
 
+  it('dialogue 节点不落 assets，编辑文本与节点互逆（DSL v2 Phase 2 保序）', () => {
+    const gameWithDialogue: Game = {
+      slug: 'test-dialogue',
+      title: 'Test Dialogue',
+      initialState: {},
+      ai: { characters: { zhang: { name: '张大侠' } } },
+      published: false,
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            { type: 'text', content: '森林深处传来脚步声。' },
+            { type: 'dialogue', speaker: 'zhang', emotion: 'angry', content: '谁在那里？' },
+            { type: 'text', content: '没有人回答。' },
+          ],
+        },
+      },
+    };
+
+    const { nodes, edges } = gameToFlow(gameWithDialogue);
+
+    // 对话在可编辑文本里以 DSL 原文行呈现，而不是素材卡
+    expect(nodes[0].data.assets).toHaveLength(0);
+    expect(nodes[0].data.content).toBe('森林深处传来脚步声。\n\n@zhang (angry): 谁在那里？\n\n没有人回答。');
+
+    // 往返还原：多段落不再被合并成单个 text 节点，对话结构完整
+    const roundTripped = flowToGame(nodes, edges, gameWithDialogue);
+    expect(roundTripped.scenes.start.nodes).toEqual(gameWithDialogue.scenes.start.nodes);
+  });
+
+  it('未注册角色的 @xx: 行保存后仍是普通文本', () => {
+    const game: Game = {
+      slug: 't',
+      title: 'T',
+      initialState: {},
+      ai: {},
+      published: false,
+      scenes: { start: { id: 'start', nodes: [{ type: 'text', content: '@stranger: 你好' }] } },
+    };
+    const { nodes, edges } = gameToFlow(game);
+    const roundTripped = flowToGame(nodes, edges, game);
+    expect(roundTripped.scenes.start.nodes).toEqual([{ type: 'text', content: '@stranger: 你好' }]);
+  });
+
   it('异步 URL 回填应该保留素材 UI ID', () => {
     const pending = createEditorSceneAsset({
       type: 'ai_video',
