@@ -141,12 +141,15 @@ export function stringify(game: Game): string {
       if (['ai_image', 'ai_audio', 'ai_video', 'minigame'].includes(node.type)) continue;
 
       if (node.type === 'text') {
-        const children: any[] = [];
+        rootChildren.push({
+          type: 'paragraph',
+          children: [{ type: 'text', value: node.content }],
+        } as Paragraph);
+        // 语音注释独占一行、紧跟在文本之后（DSL_SPEC §4.3.1）；
+        // 放在文本前面同一行会被 CommonMark 当作 HTML block 吞掉整行，导致往返解析丢失文本
         if (node.audio_url) {
-          children.push({ type: 'html', value: `<!-- audio: ${node.audio_url} -->` });
+          rootChildren.push({ type: 'html', value: `<!-- audio: ${node.audio_url} -->` } as any);
         }
-        children.push({ type: 'text', value: node.content });
-        rootChildren.push({ type: 'paragraph', children } as Paragraph);
       } else if (node.type === 'static_image') {
         rootChildren.push({
           type: 'paragraph',

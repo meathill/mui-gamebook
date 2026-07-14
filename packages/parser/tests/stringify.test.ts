@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Game, SceneNode } from '../src/types';
-import { stringify } from '../src/index'; // stringify will be added to index.ts
+import { parse, stringify } from '../src/index';
 
 describe('stringify', () => {
   it('should correctly stringify a minimal Game object', () => {
@@ -179,7 +179,7 @@ minigame:
     expect(result.trim()).toBe(expected.trim());
   });
 
-  it('should correctly stringify text nodes with audio_url before the content', () => {
+  it('should stringify text audio_url as a standalone comment after the content', () => {
     const game: Game = {
       slug: 'audio-test',
       title: 'Audio Test',
@@ -196,18 +196,46 @@ minigame:
       },
     };
 
+    // 注释独占一行、紧跟在文本之后（DSL_SPEC §4.3.1），放在文本前同一行会导致再次解析时丢文本
     const expected = `---
 title: Audio Test
 ---
 
 # start
 
-<!-- audio: https://example.com/audio.wav -->妈妈说了一些话。
+妈妈说了一些话。
+
+<!-- audio: https://example.com/audio.wav -->
 
 没有语音的文本。`;
 
     const result = stringify(game);
     expect(result.trim()).toBe(expected.trim());
+  });
+
+  it('should round-trip text audio_url through stringify and parse (issue #6)', () => {
+    const game: Game = {
+      slug: 'audio-roundtrip',
+      title: 'Audio Roundtrip',
+      initialState: {},
+      ai: {},
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            { type: 'text', content: '妈妈说了一些话。', audio_url: 'https://example.com/audio.wav' },
+            { type: 'text', content: '没有语音的文本。' },
+            { type: 'choice', text: '继续', nextSceneId: 'start', audio_url: 'https://example.com/choice.wav' },
+          ],
+        },
+      },
+    };
+
+    const result = parse(stringify(game));
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    expect(result.data.scenes['start'].nodes).toEqual(game.scenes['start'].nodes);
   });
 
   it('should correctly stringify choice nodes with audio_url', () => {

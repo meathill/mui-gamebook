@@ -17,6 +17,8 @@ export { stringify } from './stringify';
 const IF_REGEX = /\(if:\s*(.*?)\)/;
 const SET_REGEX = /\(set:\s*(.*?)\)/;
 const AUDIO_REGEX = /\(audio:\s*(.*?)\)/;
+// 块级 HTML 注释形式的文本语音：<!-- audio: URL -->，可能带同行尾随文本（旧版 stringify 产物）
+const AUDIO_COMMENT_REGEX = /^<!--\s*audio:\s*(.*?)\s*-->[ \t]*(.*)$/;
 
 function parseChoices(list: List): SceneNode[] {
   const nodes: SceneNode[] = [];
@@ -112,6 +114,25 @@ function parseSceneNodes(nodes: RootContent[]): SceneNode[] {
       }
 
       flushText();
+    } else if (node.type === 'html') {
+      // 独占一行的 <!-- audio: URL --> 会被 CommonMark 解析成块级 html 节点（HTML block type 2），
+      // 而不是 paragraph 的行内子节点，所以要在这里处理
+      const commentMatch = node.value.match(AUDIO_COMMENT_REGEX);
+      if (commentMatch) {
+        const [, audioUrl, trailing] = commentMatch;
+        const trailingText = trailing.trim();
+        if (trailingText) {
+          // 旧版 stringify 产出的同行格式：<!-- audio: URL -->文本，整行被吞进一个 html 节点，
+          // 这里还原成带语音的 text 节点，兼容已存盘的历史内容
+          sceneNodes.push({ type: 'text', content: trailingText, audio_url: audioUrl });
+        } else {
+          // 规范格式（DSL_SPEC §4.3.1）：注释紧跟在文本之后，附加到前一个 text 节点
+          const lastNode = sceneNodes[sceneNodes.length - 1];
+          if (lastNode && lastNode.type === 'text') {
+            lastNode.audio_url = audioUrl;
+          }
+        }
+      }
     } else if (node.type === 'list') {
       const choices = parseChoices(node);
       if (choices.length > 0) {

@@ -121,6 +121,126 @@ Welcome to the scene.
     expect(nodes?.[3].type).toBe('choice');
   });
 
+  it('should attach audio comment on its own line to the preceding text node (issue #6)', () => {
+    const source = `---
+title: "Text Audio"
+published: true
+---
+
+# start
+欢迎，这段话带有旁白语音。
+<!-- audio: https://example.com/a.mp3 -->
+* [继续] -> next
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const node = result.data.scenes['start']?.nodes[0] as SceneNode;
+    expect(node).toEqual({
+      type: 'text',
+      content: '欢迎，这段话带有旁白语音。',
+      audio_url: 'https://example.com/a.mp3',
+    });
+  });
+
+  it('should attach audio comment separated by a blank line to the preceding text node', () => {
+    const source = `---
+title: "Text Audio"
+---
+# start
+这是场景的描述性文本。
+
+<!-- audio: https://assets.example.com/audio/scene-text.wav -->
+
+第二段没有语音。
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const nodes = result.data.scenes['start']?.nodes;
+    expect(nodes?.[0]).toEqual({
+      type: 'text',
+      content: '这是场景的描述性文本。',
+      audio_url: 'https://assets.example.com/audio/scene-text.wav',
+    });
+    expect(nodes?.[1]).toEqual({ type: 'text', content: '第二段没有语音。' });
+  });
+
+  it('should recover legacy same-line format <!-- audio: URL -->text without losing content', () => {
+    // 旧版 stringify 把注释放在文本前面同一行，整行会被 CommonMark 吞成一个 html 块，
+    // 解析时必须还原出文本内容和 audio_url，兼容已存盘的历史内容
+    const source = `---
+title: "Legacy Audio"
+---
+# start
+<!-- audio: https://example.com/audio.wav -->妈妈说了一些话。
+
+没有语音的文本。
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const nodes = result.data.scenes['start']?.nodes;
+    expect(nodes?.[0]).toEqual({
+      type: 'text',
+      content: '妈妈说了一些话。',
+      audio_url: 'https://example.com/audio.wav',
+    });
+    expect(nodes?.[1]).toEqual({ type: 'text', content: '没有语音的文本。' });
+  });
+
+  it('should ignore an audio comment with no preceding text node', () => {
+    const source = `---
+title: "Orphan Audio"
+---
+# start
+<!-- audio: https://example.com/orphan.mp3 -->
+
+正文在注释之后。
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const nodes = result.data.scenes['start']?.nodes;
+    expect(nodes?.length).toBe(1);
+    expect(nodes?.[0]).toEqual({ type: 'text', content: '正文在注释之后。' });
+  });
+
+  it('should parse choice (audio: URL) clause, also combined with if/set', () => {
+    const source = `---
+title: "Choice Audio"
+---
+# start
+选择一个选项。
+
+* [继续冒险] -> next_scene (audio: https://example.com/choice.wav)
+* [购买药水] -> shop (if: gold > 10) (set: gold = gold - 10) (audio: https://example.com/buy.wav)
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+
+    const nodes = result.data.scenes['start']?.nodes;
+    expect(nodes?.[1]).toEqual({
+      type: 'choice',
+      text: '继续冒险',
+      nextSceneId: 'next_scene',
+      audio_url: 'https://example.com/choice.wav',
+    });
+    expect(nodes?.[2]).toEqual({
+      type: 'choice',
+      text: '购买药水',
+      nextSceneId: 'shop',
+      condition: 'gold > 10',
+      set: 'gold = gold - 10',
+      audio_url: 'https://example.com/buy.wav',
+    });
+  });
+
   it('should parse a minigame from metadata', () => {
     const source = `---
 title: "Minigame Test"
