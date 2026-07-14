@@ -306,6 +306,7 @@ export function parse(source: string): ParseResult {
   commitScene();
 
   const {
+    dsl_version,
     title,
     description,
     cover_image,
@@ -328,7 +329,12 @@ export function parse(source: string): ParseResult {
     return { success: false, error: "Game must contain a 'start' scene." };
   }
 
+  if (dsl_version !== undefined && typeof dsl_version !== 'number') {
+    warnings.push(`dsl_version must be a number, got: ${JSON.stringify(dsl_version)}. Field ignored.`);
+  }
+
   const game: Game = {
+    dsl_version: typeof dsl_version === 'number' ? dsl_version : undefined,
     slug: slugify(title),
     title,
     description,

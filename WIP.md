@@ -9,20 +9,20 @@ Phase 0 已完成（除 D1 清洗，见 TODO.md）。
 
 ### 批次 1：表达式引擎本体（纯新增，无存量风险）
 
-- [ ] `packages/parser/src/expression/lexer.ts`：tokenizer——数字、字符串（单/双引号）、标识符（`\p{L}\p{N}_`，首字符非数字，支持中文）、运算符 `|| && ! == != >= <= > < + - * / % ( ) ,` 与关键字 `or and not true false`
-- [ ] `packages/parser/src/expression/parse.ts`：递归下降 → 表达式 AST，深度上限（防恶意输入炸栈）；两个入口：
+- [x] `packages/parser/src/expression/lexer.ts`：tokenizer——数字、字符串（单/双引号）、标识符（`\p{L}\p{N}_`，首字符非数字，支持中文）、运算符 `|| && ! == != >= <= > < + - * / % ( ) ,` 与关键字 `or and not true false`
+- [x] `packages/parser/src/expression/parse.ts`：递归下降 → 表达式 AST，深度上限（防恶意输入炸栈）；两个入口：
   - `parseExpression`：if/trigger/条件文本用，顶层 `,` = 最低优先级 AND
   - `parseStatementList`：set 用，`,` 分隔赋值语句
   - 优先级（低→高）：`,` < `or`/`||` < `and`/`&&` < `not`/`!` < 比较 < `+ -` < `* / %` < 一元负号/括号
-- [ ] `packages/parser/src/expression/evaluate.ts`：求值——`==` 同类型严格 + 数字形字符串数值提升；未定义变量 falsy + `console.warn`（不 throw）；禁用 eval/new Function
-- [ ] `packages/parser/src/expression/index.ts`：门面 `evaluateCondition` / `executeSet` / `validateExpression`（供 lint 用：返回标识符表 + 诊断）
-- [ ] `packages/parser/tests/expression.test.ts`：文法全覆盖 + 存量形态兼容用例（单 token 真值、逗号 AND、`&&`、宽松 `==` 的数字/字符串场景、trigger 前缀式补全）
+- [x] `packages/parser/src/expression/evaluate.ts`：求值——`==` 同类型严格 + 数字形字符串数值提升；未定义变量 falsy + `console.warn`（不 throw）；禁用 eval/new Function
+- [x] `packages/parser/src/expression/index.ts`：门面 `evaluateCondition` / `executeSet` / `validateExpression`（供 lint 用：返回标识符表 + 诊断）
+- [x] `packages/parser/tests/expression.test.ts`：文法全覆盖 + 存量形态兼容用例（单 token 真值、逗号 AND、`&&`、宽松 `==` 的数字/字符串场景、trigger 前缀式补全）
 - 每个文件 ≤400 行
 
 ### 批次 2：新旧引擎对拍（合入批次 1 的验收门槛）
 
-- [ ] 一次性脚本（scratchpad，不入库）：扫 13 个 demo 提取全部 `(if:)`/`(set:)`/trigger/`{{if}}` 子句（989 选项/92 if/261 set），旧 `evaluator.ts` 与新引擎在多组随机 state 下双跑 diff
-- [ ] 预期 diff = 0；已知例外（旧引擎自身 bug，如字符串变量 trigger）单列白名单并记录进 `DSL_V2_DESIGN.md`
+- [x] 一次性脚本（scratchpad，不入库）：扫 13 个 demo 提取全部 `(if:)`/`(set:)`/trigger/`{{if}}` 子句，旧 `evaluator.ts` 与新引擎在 4 组确定性状态变体下双跑 diff
+- [x] **结果：112 条条件 + 261 条 set + 2 个 trigger，diff = 0**——demo 的 trigger 均为数字型，未触发旧引擎字符串 bug，无需白名单
 
 ### 批次 3：运行时切换
 
@@ -42,7 +42,8 @@ Phase 0 已完成（除 D1 清洗，见 TODO.md）。
   - 选项行平衡扫描：文本可含 `]`、子句可含 `)`；未知 `(key: value)` 子句 → `choice.clauses` 透传
   - 按 ≤400 行拆出 `parse-scene.ts` / `parse-choice.ts`
 - [ ] `stringify.ts`：extra 写回；同类多 AI 节点报错而非静默丢第二个
-- [ ] 一致性收尾：`audio.type` 缺省值改 `background_music`（`bgm` 作解析别名）；`dsl_version: 2` 字段落地（仅调 lint 严格度）
+- [ ] 一致性收尾：`audio.type` 缺省值改 `background_music`（`bgm` 作解析别名）
+- [x] `dsl_version` 字段已前置落地（一等公民字段，parse/stringify/测试齐备；语义=兼容性标注与 lint 严格度，不分叉解析）
 - [ ] 测试：`tests/golden/`（13 demo → AST JSON 快照）+ `tests/roundtrip.test.ts`（parse→stringify→parse 深比对）+ 新语法用例
 
 ### 批次 5：validator 收敛 + 文档同步

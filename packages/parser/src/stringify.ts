@@ -12,9 +12,10 @@ export function stringify(game: Game): string {
   const rootChildren: RootContent[] = [];
 
   // 1. Global Front Matter
-  const frontMatter: Partial<Game> = {
-    title: game.title,
-  };
+  const frontMatter: Partial<Game> = {};
+  // 版本号放最前，一眼可见
+  if (game.dsl_version !== undefined) frontMatter.dsl_version = game.dsl_version;
+  frontMatter.title = game.title;
   if (game.description) frontMatter.description = game.description;
   if (game.backgroundStory) frontMatter.backgroundStory = game.backgroundStory;
   if (game.cover_image) frontMatter.cover_image = game.cover_image;

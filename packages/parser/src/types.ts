@@ -135,6 +135,10 @@ export type SiteTemplate = 'default' | 'visual-novel';
  * 代表整个游戏的数据结构。
  */
 export interface Game {
+  // DSL 版本号：缺省视为 1。仅用于兼容性判断与 lint 严格度，
+  // 解析行为不分叉——v2 语法是 v1 的严格超集（DSL_V2_DESIGN 设计原则 P5）
+  dsl_version?: number;
+
   // 元数据
   slug: string;
   title: string;
