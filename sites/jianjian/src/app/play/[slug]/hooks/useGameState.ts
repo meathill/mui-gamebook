@@ -38,6 +38,7 @@ interface UseGameStateReturn extends GamePlayerState {
   setImageLoading: GamePlayerActions['setImageLoading'];
   getSceneImage: GamePlayerActions['getSceneImage'];
   getSceneAudioUrl: GamePlayerActions['getSceneAudioUrl'];
+  handleContinue: GamePlayerActions['handleContinue'];
 }
 
 /**

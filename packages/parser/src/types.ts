@@ -99,6 +99,20 @@ export type SceneMiniGameNode = {
   variables?: Record<string, string>; // 变量名 -> 用途说明
   url?: string; // 生成后的 JS 链接，或 pending:operationId
 };
+/**
+ * 块级重定向（DSL v2）：`-> target_scene (if: expr) (set: ...)`。
+ * 场景内按序求值，首个条件命中者生效：纯路由场景（无正文/选项/小游戏）进入即跳，
+ * 有正文的场景在玩家「继续」时求值——替代同名选项伪 switch 与 `[继续] ->` 单选项膨胀。
+ */
+export type SceneRedirectNode = {
+  type: 'redirect';
+  nextSceneId: string;
+  condition?: string;
+  set?: string;
+  /** 未知 (key: value) 子句原文透传 */
+  clauses?: Record<string, string>;
+};
+
 export type SceneChoiceNode = {
   type: 'choice';
   text: string;
@@ -119,6 +133,7 @@ export type SceneNode =
   | SceneAiAudioNode
   | SceneAiVideoNode
   | SceneMiniGameNode
+  | SceneRedirectNode
   | SceneChoiceNode;
 
 /**
@@ -219,6 +234,7 @@ export type PlayableSceneNode =
   | { type: 'ai_audio'; audioType: 'sfx' | 'background_music'; url?: string }
   | { type: 'ai_video'; url?: string }
   | { type: 'minigame'; url?: string; variables?: string[] } // 只保留 url 和变量名列表
+  | SceneRedirectNode
   | SceneChoiceNode;
 
 /**

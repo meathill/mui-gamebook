@@ -122,6 +122,9 @@ export function toPlayableGame(game: Game): PlayableGame {
             url: node.url,
             variables: node.variables ? Object.keys(node.variables) : undefined,
           };
+        case 'redirect':
+          // 重定向是运行时路由指令，原样透传给播放器
+          return node;
         default:
           return node;
       }

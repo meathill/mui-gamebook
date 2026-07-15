@@ -50,6 +50,30 @@ Phase 1 达成的关键能力：
   帮助相邻旁白分段；dry-run 统计同步；新增短路测试
 - [ ] 两站点手测视觉小说流程（含对话行的临时剧本；需本地 D1 种子数据与 dev server）
 
+## Phase 3：流控 + AI 链路 + 规范定稿（进行中）
+
+### 批次 1：块级重定向 `-> target (if:) (set:)`
+
+- [ ] `types.ts`：`SceneRedirectNode {nextSceneId, condition?, set?, clauses?}` + Playable 透传
+- [ ] 解析：prose 行级扫描 `^-> 场景ID (子句)`（与对话行同层）；序列化原文行；validator 计入引用图并校验表达式（删除旧的 `^->` 文本化石逻辑）
+- [ ] 运行时（use-game-player）：`redirectTarget`（首个条件命中者）+ `handleContinue`（≡ handleChoice(target, set)，triggers 照常生效）；纯路由场景（无 prose/choice/minigame）进入即自动跳，带跳数上限防环；`showEndScreen` 计入 redirect
+- [ ] 四个播放器：无选项但有 redirect 时渲染「继续」按钮（沉浸模式并入点按推进流）
+- [ ] 测试：解析/序列化/roundtrip/运行时路由（首个命中、兜底、自动跳、防环）
+
+### 批次 2：Chatbot 操作集
+
+- [ ] chat-declarations + handlers：新增 addDialogueLine / addRedirect（最小集，编辑走既有 updateSceneText）
+
+### 批次 3：AI 链路与规范定稿
+
+- [ ] `EXAMPLE_SCRIPT` 示范 v2：对话行 + or 表达式（守护测试保持绿）；系统提示词补对话/重定向规则
+- [ ] `DSL_SPEC.md`：§5.4 块级重定向章节
+- [ ] `DSL_V2_DESIGN.md`：Phase 1-3 勾选收尾 + 「后续方向」一节（素材 sidecar、i18n 的方向性设计）
+
+### 批次 4：收尾
+
+- [ ] WIP 清理（按 CLAUDE.md：完成后并入常规文档），TODO.md 更新（MBTI demo 重写为 redirect 示范列为可选项）
+
 遗留（非阻塞）：
 - D1 生产数据清洗（需 `MUI_ADMIN_PASSWORD`，见 TODO.md）
 - 编辑器场景元数据表单（`lib/editor/extensions/matchers.ts`）尚不认识未知键透传，

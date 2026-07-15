@@ -168,9 +168,11 @@ export default function VisualNovelShell({ game, gameId, slug }: Props) {
           runtimeState={gamePlayer.runtimeState}
           visibleVariables={gamePlayer.visibleVariables}
           showEndScreen={gamePlayer.showEndScreen}
+          redirectTarget={gamePlayer.redirectTarget}
           isAutoPlaying={gameControls.isAutoPlaying}
           isSkipping={gameControls.isSkipping}
           onChoice={gamePlayer.handleChoice}
+          onContinue={gamePlayer.handleContinue}
           onToggleAutoPlay={gameControls.toggleAutoPlay}
           onToggleSkip={gameControls.toggleSkip}
           onOpenSave={() => handleOpenSaveLoad('save')}

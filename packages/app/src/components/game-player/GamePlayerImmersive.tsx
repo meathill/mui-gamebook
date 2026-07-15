@@ -75,9 +75,11 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     currentImageUrl,
     visibleVariables,
     hasConfiguredChoices,
+    redirectTarget,
     handleStartGame,
     handleRestart,
     handleChoice,
+    handleContinue,
   } = gamePlayer;
 
   // 加载保存的阅读器位置偏好
@@ -141,7 +143,8 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     if (!isGameStarted) setTextIndex(0);
   }, [isGameStarted]);
 
-  const showEndScreen = !hasConfiguredChoices && textNodes.length > 0 && textIndex >= textNodes.length - 1;
+  const showEndScreen =
+    !hasConfiguredChoices && !redirectTarget && textNodes.length > 0 && textIndex >= textNodes.length - 1;
   const isLastText = textNodes.length === 0 || textIndex >= textNodes.length - 1;
 
   function handleStart() {
@@ -152,6 +155,11 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   function handleAdvance() {
     if (textIndex < textNodes.length - 1) {
       setTextIndex(textIndex + 1);
+      return;
+    }
+    // 读完全部文本：有块级重定向时点按直接路由（DSL v2），否则揭示选项
+    if (!hasConfiguredChoices && redirectTarget) {
+      handleContinue();
       return;
     }
     if (!choicesRevealed) {
@@ -324,7 +332,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
             )}
           position={textPosition}
           speed={game.typewriter_speed}
-          showContinueHint={!isLastText || (choices.length > 0 && !choicesRevealed)}
+          showContinueHint={!isLastText || (choices.length > 0 && !choicesRevealed) || !!redirectTarget}
           onAdvance={handleAdvance}>
           {isLastText && choicesRevealed && choices.length > 0 && (
             <div className="mt-5 space-y-2">

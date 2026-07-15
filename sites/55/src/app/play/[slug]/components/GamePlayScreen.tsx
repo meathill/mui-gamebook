@@ -27,9 +27,13 @@ interface Props {
   runtimeState: RuntimeState;
   visibleVariables: ReturnType<typeof getVisibleVariables>;
   showEndScreen: boolean;
+  /** 当前命中的块级重定向目标（DSL v2），有值且无选项时显示「继续」 */
+  redirectTarget?: string | null;
   isAutoPlaying: boolean;
   isSkipping: boolean;
   onChoice: (nextSceneId: string, setInstruction?: string) => void;
+  /** 执行块级重定向 */
+  onContinue?: () => void;
   onToggleAutoPlay: () => void;
   onToggleSkip: () => void;
   onOpenSave: () => void;
@@ -50,9 +54,11 @@ export default function GamePlayScreen({
   runtimeState,
   visibleVariables,
   showEndScreen,
+  redirectTarget,
   isAutoPlaying,
   isSkipping,
   onChoice,
+  onContinue,
   onToggleAutoPlay,
   onToggleSkip,
   onOpenSave,
@@ -261,6 +267,19 @@ export default function GamePlayScreen({
                   </button>
                 );
               })}
+              {/* 块级重定向：无选项时显示「继续」，按当前状态路由（DSL v2） */}
+              {redirectTarget && !currentScene.nodes.some((n) => n.type === 'choice') && (
+                <button
+                  className="choice-btn animate-fade-in"
+                  onMouseEnter={sfx.playHover}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    sfx.playClick();
+                    onContinue?.();
+                  }}>
+                  继续
+                </button>
+              )}
             </div>
           )}
 

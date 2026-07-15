@@ -15,6 +15,8 @@ export interface GamePlayerState {
   visibleVariables: ReturnType<typeof getVisibleVariables>;
   currentScene: PlayableScene | undefined;
   hasConfiguredChoices: boolean;
+  /** 当前状态下命中的块级重定向目标（首个条件通过者），无则为 null */
+  redirectTarget: string | null;
   showEndScreen: boolean;
   /** 当前场景的图片 URL（如果有） */
   currentImageUrl: string | undefined;
@@ -38,6 +40,8 @@ export interface GamePlayerActions {
    * 供多存档系统（save-manager）读档使用；场景不存在时返回 false。
    */
   restoreSave: (sceneId: string, savedState: RuntimeState) => boolean;
+  /** 执行当前命中的块级重定向（应用其 set、触发器照常生效）；无命中时为空操作 */
+  handleContinue: () => void;
   setImageLoading: (loading: boolean) => void;
   getSceneImage: (nodes: PlayableSceneNode[]) => string | undefined;
   getSceneAudioUrl: (nodes: PlayableSceneNode[]) => string | undefined;
@@ -269,7 +273,48 @@ export function useGamePlayer(
   );
 
   const hasConfiguredChoices = currentScene?.nodes.some((node) => node.type === 'choice') ?? false;
-  const showEndScreen = !hasConfiguredChoices;
+
+  // 块级重定向：按序求值，首个条件命中且目标场景存在者生效（DSL_V2_DESIGN §4.6）
+  let activeRedirect: Extract<PlayableSceneNode, { type: 'redirect' }> | null = null;
+  for (const node of currentScene?.nodes ?? []) {
+    if (node.type === 'redirect' && game.scenes[node.nextSceneId] && evaluateCondition(node.condition, runtimeState)) {
+      activeRedirect = node;
+      break;
+    }
+  }
+  const redirectTarget = activeRedirect?.nextSceneId ?? null;
+  const activeRedirectRef = useRef(activeRedirect);
+  activeRedirectRef.current = activeRedirect;
+
+  const handleContinue = useCallback(() => {
+    const redirect = activeRedirectRef.current;
+    if (redirect) {
+      handleChoice(redirect.nextSceneId, redirect.set);
+    }
+  }, [handleChoice]);
+
+  // 纯路由场景（只有重定向，无正文/选项/小游戏）进入即自动跳转；连续跳数上限防环
+  const autoJumpCountRef = useRef(0);
+  useEffect(() => {
+    if (!isLoaded || !isGameStarted || !currentScene) return;
+    const redirect = activeRedirectRef.current;
+    const hasVisibleContent = currentScene.nodes.some(
+      (n) => n.type === 'text' || n.type === 'dialogue' || n.type === 'choice' || n.type === 'minigame',
+    );
+    if (!redirect || hasVisibleContent) {
+      autoJumpCountRef.current = 0;
+      return;
+    }
+    if (autoJumpCountRef.current >= 10) {
+      console.warn(`Redirect chain exceeded 10 hops at scene "${currentSceneId}", stopping auto-jump`);
+      return;
+    }
+    autoJumpCountRef.current += 1;
+    handleChoice(redirect.nextSceneId, redirect.set);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, isGameStarted, currentSceneId, currentScene, runtimeState, handleChoice]);
+
+  const showEndScreen = !hasConfiguredChoices && !redirectTarget;
 
   return {
     game,
@@ -280,6 +325,7 @@ export function useGamePlayer(
     visibleVariables,
     currentScene,
     hasConfiguredChoices,
+    redirectTarget,
     showEndScreen,
     currentImageUrl,
     imageLoading,
@@ -289,6 +335,7 @@ export function useGamePlayer(
     handleChoice,
     applyStateUpdate,
     restoreSave,
+    handleContinue,
     setImageLoading,
     getSceneImage,
     getSceneAudioUrl,

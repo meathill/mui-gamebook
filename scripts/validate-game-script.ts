@@ -86,16 +86,18 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
         }
       }
 
-      // Check for redirect nodes (text starting with "-> ")
-      if (node.type === 'text') {
-        // Handle both normal underscores and escaped underscores (\_)
-        const redirectMatch = node.content.match(/^->\s*([a-z_\\][a-z0-9_\\]*)/i);
-        if (redirectMatch) {
-          // Remove backslash escapes from scene ID
-          const sceneIdRef = redirectMatch[1].replace(/\\/g, '');
-          referencedScenes.add(sceneIdRef);
+      // 块级重定向节点（DSL v2）：计入引用图并校验表达式
+      if (node.type === 'redirect') {
+        referencedScenes.add(node.nextSceneId);
+        if (node.condition) {
+          checkExpression(node.condition, 'condition', '(if:) condition', sceneId);
         }
+        if (node.set) {
+          checkExpression(node.set, 'statements', '(set:)', sceneId);
+        }
+      }
 
+      if (node.type === 'text' || node.type === 'dialogue') {
         // 检查 {{ variable }} 插值中的变量
         const interpolationMatches = node.content.matchAll(/\{\{\s*([\p{L}_][\p{L}\p{N}_]*)\s*\}\}/gu);
         for (const match of interpolationMatches) {

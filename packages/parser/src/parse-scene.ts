@@ -5,7 +5,7 @@
 import * as yaml from 'js-yaml';
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
-import { parseChoices } from './parse-choice';
+import { parseChoices, scanClauses } from './parse-choice';
 import type {
   DiagnosticReporter,
   SceneAiAudioNode,
@@ -20,6 +20,9 @@ const AUDIO_COMMENT_REGEX = /^<!--\s*audio:\s*(.*?)\s*-->[ \t]*(.*)$/;
 
 // 对话行：`@角色ID: 台词` / `@角色ID (表情): 台词`——冒号与括号支持全角/半角（中文作者与 LLM 常写全角）
 const DIALOGUE_LINE_REGEX = /^@([\p{L}\p{N}_]+)\s*(?:[(（]([^)）]*)[)）])?\s*[:：]\s*(.*)$/u;
+
+// 块级重定向行：`-> target_scene (if: expr) (set: ...)`（`->` 行首不构成 CommonMark 列表项）
+const REDIRECT_LINE_REGEX = /^->\s*([\w-]+)\s*(.*)$/;
 
 /** 已废弃的代码围栏语言（现 parser 不再解析，检出必须报 error 提示迁移） */
 const LEGACY_FENCE_LANGS = new Set(['minigame-gen', 'image-gen', 'audio-gen', 'video-gen']);
@@ -111,6 +114,24 @@ function extractProseNodes(
   };
 
   for (const rawLine of textToken.split('\n')) {
+    // 块级重定向行（DSL_V2_DESIGN §4.6）
+    const redirectMatch = rawLine.trim().match(REDIRECT_LINE_REGEX);
+    if (redirectMatch) {
+      flushBuffer();
+      const [, nextSceneId, clausesStr] = redirectMatch;
+      const node: SceneNode = { type: 'redirect', nextSceneId };
+      for (const { key, value } of scanClauses(clausesStr)) {
+        if (key === 'if' && node.condition === undefined) node.condition = value;
+        else if (key === 'set' && node.set === undefined) node.set = value;
+        else if (key !== 'if' && key !== 'set') {
+          node.clauses = node.clauses ?? {};
+          if (!(key in node.clauses)) node.clauses[key] = value;
+        }
+      }
+      nodes.push(node);
+      continue;
+    }
+
     const match = rawLine.trim().match(DIALOGUE_LINE_REGEX);
     if (match) {
       const [, speaker, emotion, content] = match;

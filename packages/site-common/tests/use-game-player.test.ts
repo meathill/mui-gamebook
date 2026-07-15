@@ -344,6 +344,66 @@ describe('useGamePlayer', () => {
     expect(result.current.runtimeState.danger).toBe(0); // 底座补齐，而非 undefined
   });
 
+  it('块级重定向：纯路由场景自动跳转到首个条件命中的目标', async () => {
+    const game = makeGame();
+    game.scenes.router = {
+      id: 'router',
+      nodes: [
+        { type: 'redirect', nextSceneId: 'end', condition: 'gold >= 5' },
+        { type: 'redirect', nextSceneId: 'forest' },
+      ],
+    };
+    game.scenes.start.nodes.push({ type: 'choice', text: '去路由', nextSceneId: 'router' });
+    const { result } = renderHook(() => useGamePlayer(game, 'slug-redirect-a'));
+    await waitFor(() => expect(result.current.isLoaded).toBe(true));
+    act(() => result.current.handleStartGame());
+
+    // gold=0 → 第一条不命中，兜底跳 forest
+    act(() => result.current.handleChoice('router'));
+    await waitFor(() => expect(result.current.currentSceneId).toBe('forest'));
+  });
+
+  it('块级重定向：有正文的场景不自动跳，redirectTarget 暴露给播放器由「继续」触发', async () => {
+    const game = makeGame();
+    game.scenes.reading = {
+      id: 'reading',
+      nodes: [
+        { type: 'text', content: '一段正文。' },
+        { type: 'redirect', nextSceneId: 'end', set: 'gold = gold + 1' },
+      ],
+    };
+    game.scenes.start.nodes.push({ type: 'choice', text: '去阅读', nextSceneId: 'reading' });
+    const { result } = renderHook(() => useGamePlayer(game, 'slug-redirect-b'));
+    await waitFor(() => expect(result.current.isLoaded).toBe(true));
+    act(() => result.current.handleStartGame());
+    act(() => result.current.handleChoice('reading'));
+
+    expect(result.current.currentSceneId).toBe('reading');
+    expect(result.current.redirectTarget).toBe('end');
+    expect(result.current.showEndScreen).toBe(false);
+
+    act(() => result.current.handleContinue());
+    expect(result.current.currentSceneId).toBe('end');
+    expect(result.current.runtimeState.gold).toBe(1);
+  });
+
+  it('块级重定向：自动跳转链有防环上限，不会死循环', async () => {
+    const game = makeGame();
+    game.scenes.loop_a = { id: 'loop_a', nodes: [{ type: 'redirect', nextSceneId: 'loop_b' }] };
+    game.scenes.loop_b = { id: 'loop_b', nodes: [{ type: 'redirect', nextSceneId: 'loop_a' }] };
+    game.scenes.start.nodes.push({ type: 'choice', text: '入环', nextSceneId: 'loop_a' });
+    const { result } = renderHook(() => useGamePlayer(game, 'slug-redirect-c'));
+    await waitFor(() => expect(result.current.isLoaded).toBe(true));
+    act(() => result.current.handleStartGame());
+
+    await act(async () => {
+      result.current.handleChoice('loop_a');
+    });
+
+    // 到达上限后停在环内某个场景，而不是无限渲染
+    await waitFor(() => expect(['loop_a', 'loop_b']).toContain(result.current.currentSceneId));
+  });
+
   it('restoreSave 恢复场景与变量状态（多存档读档路径），场景不存在时返回 false', async () => {
     const game = makeGame();
     const { result } = renderHook(() => useGamePlayer(game, 'slug-restore'));

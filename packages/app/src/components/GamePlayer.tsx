@@ -64,9 +64,11 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     imageLoading,
     visibleVariables,
     hasConfiguredChoices,
+    redirectTarget,
     handleStartGame,
     handleRestart,
     handleChoice: gamePlayerHandleChoice,
+    handleContinue,
     applyStateUpdate,
     setImageLoading,
   } = gamePlayer;
@@ -83,7 +85,9 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   }, []);
 
   const hasMinigame = currentScene ? currentScene.nodes.some((node) => node.type === 'minigame' && node.url) : false;
-  const showEndScreen = !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
+  // 有块级重定向（redirectTarget）时不算结束，改为显示「继续」按钮
+  const canContinue = !!redirectTarget && !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
+  const showEndScreen = !hasConfiguredChoices && !redirectTarget && (!hasMinigame || minigameCompleted);
 
   useEffect(() => {
     if (showEndScreen && game.id) {
@@ -356,6 +360,15 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
               onChoice={handleChoice}
               onMiniGameComplete={handleMiniGameComplete}
             />
+
+            {/* 块级重定向：读完点「继续」按当前状态路由（DSL v2） */}
+            {canContinue && (
+              <button
+                className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md flex items-center gap-3 ${currentImageUrl ? 'bg-white/90 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100'} hover:border-orange-400 hover:bg-orange-50`}
+                onClick={handleContinue}>
+                <span className="font-medium text-amber-800 group-hover:text-orange-700 text-lg flex-1">继续</span>
+              </button>
+            )}
 
             {/* End Screen */}
             {showEndScreen && (

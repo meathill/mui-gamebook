@@ -219,6 +219,18 @@ export function stringify(game: Game): string {
           if (node.audio_url) blocks.push(`<!-- audio: ${node.audio_url} -->`);
           break;
         }
+        case 'redirect': {
+          let line = `-> ${node.nextSceneId}`;
+          const clauses: string[] = [];
+          if (node.condition) clauses.push(`(if: ${node.condition})`);
+          if (node.set) clauses.push(`(set: ${node.set})`);
+          for (const [key, value] of Object.entries(node.clauses ?? {})) {
+            clauses.push(`(${key}: ${value})`);
+          }
+          if (clauses.length > 0) line += ` ${clauses.join(' ')}`;
+          blocks.push(line);
+          break;
+        }
         case 'static_image':
           blocks.push(`![${node.alt || ''}](${node.url})`);
           break;

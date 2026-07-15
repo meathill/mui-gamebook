@@ -37,6 +37,8 @@ export default function GamePlayerWrapper({ game, gameId, slug }: Props) {
     handleStartGame,
     handleRestart,
     handleChoice,
+    handleContinue,
+    redirectTarget,
     getSceneImage,
     getSceneAudioUrl,
   } = useGameState({ game, gameId, slug });
@@ -167,7 +169,9 @@ export default function GamePlayerWrapper({ game, gameId, slug }: Props) {
   }
 
   const hasConfiguredChoices = currentScene.nodes.some((node) => node.type === 'choice');
-  const showEndScreen = !hasConfiguredChoices;
+  // 有块级重定向时不算结束，显示「继续」按钮（DSL v2）
+  const canContinue = !!redirectTarget && !hasConfiguredChoices;
+  const showEndScreen = !hasConfiguredChoices && !redirectTarget;
   const hasTextAudio = currentScene.nodes.some(
     (n) => (n.type === 'text' || n.type === 'dialogue') && 'audio_url' in n && n.audio_url,
   );
@@ -282,6 +286,15 @@ export default function GamePlayerWrapper({ game, gameId, slug }: Props) {
                 return null;
             }
           })}
+
+          {/* 块级重定向：读完点「继续」按当前状态路由（DSL v2） */}
+          {canContinue && (
+            <button
+              onClick={handleContinue}
+              className="btn btn-primary animate-bounce-in">
+              继续
+            </button>
+          )}
 
           {/* 结局画面 */}
           {showEndScreen && (
