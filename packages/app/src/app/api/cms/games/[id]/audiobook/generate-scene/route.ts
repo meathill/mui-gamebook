@@ -152,6 +152,17 @@ export async function POST(req: Request, { params }: Params) {
         continue;
       }
 
+      if (node.type === 'dialogue') {
+        if (hasDynamicContent(node.content)) continue;
+
+        // 对话节点自带结构化说话人（DSL v2 `@角色ID: 台词`），直接分段，零 LLM 成本
+        for (const sentence of explodeSegmentsToSentences([{ speaker: node.speaker, text: node.content }])) {
+          const voice = resolveVoice(sentence.speaker);
+          clips.push(await synthesizeClip(sentence.speaker, voice, sentence.text));
+        }
+        continue;
+      }
+
       if (node.type === 'choice') {
         if (hasDynamicContent(node.text)) continue;
         const voice = resolveVoice(NARRATOR_SPEAKER_ID);

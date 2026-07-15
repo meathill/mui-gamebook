@@ -146,6 +146,20 @@ describe('generateAudiobook (no ffmpeg required: dry-run / segments-only)', () =
     expect(Object.keys(result.manifest.voices).length).toBeGreaterThan(0);
   });
 
+  it('dialogue 节点直接产出分段，不调用 segmentText（DSL v2 结构化说话人短路）', async () => {
+    const game = makeGame();
+    game.scenes.start.nodes.unshift({ type: 'dialogue', speaker: 'mom', content: '外婆生病了，把这个带给她。' });
+
+    const result = await generateAudiobook(game, runOptions({ segmentsOnly: true }));
+
+    // 对话内容不经 LLM 分段（零成本、零误判）
+    for (const call of mockSegmentText.mock.calls) {
+      expect(call[0] as string).not.toContain('外婆生病了');
+    }
+    // 说话人音色已按角色 ID 登记
+    expect(Object.keys(result.manifest.voices)).toContain('mom');
+  });
+
   it('skips nodes containing {{...}} and never calls segmentText for them', async () => {
     const game = makeGame();
     const result = await generateAudiobook(game, runOptions({ segmentsOnly: true }));

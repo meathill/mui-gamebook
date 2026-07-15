@@ -146,6 +146,35 @@ async function planScene(
       continue;
     }
 
+    if (node.type === 'dialogue') {
+      stats.textNodes++;
+      if (hasDynamicContent(node.content)) {
+        stats.skippedDynamic++;
+        continue;
+      }
+
+      // 对话节点自带结构化说话人（DSL v2 `@角色ID: 台词`），直接分段，零 LLM 成本；
+      // 滚动上下文带上说话人 ID，帮助相邻旁白节点的 LLM 分段判断
+      const segments = [{ speaker: node.speaker, text: node.content }];
+      rollingContext = appendToRollingBuffer(rollingContext, `${node.speaker}: ${node.content}`);
+
+      recordVoice(node.speaker);
+      stats.singleSegmentNodes++;
+      previewEntries.push({ sceneId: scene.id, nodeIndex, segments });
+
+      explodeSegmentsToSentences(segments).forEach((sentence, sentenceIndexInNode) => {
+        stats.totalSentences++;
+        sentences.push({
+          nodeIndex,
+          nodeType: 'text',
+          sentenceIndexInNode,
+          speaker: sentence.speaker,
+          text: sentence.text,
+        });
+      });
+      continue;
+    }
+
     if (node.type === 'choice') {
       stats.choiceNodes++;
       if (hasDynamicContent(node.text)) {
@@ -251,7 +280,7 @@ export async function generateAudiobook(
     for (const scene of Object.values(game.scenes)) {
       for (const node of scene.nodes) {
         stats.totalNodes++;
-        if (node.type === 'text') {
+        if (node.type === 'text' || node.type === 'dialogue') {
           stats.textNodes++;
           if (hasDynamicContent(node.content)) stats.skippedDynamic++;
         } else if (node.type === 'choice') {

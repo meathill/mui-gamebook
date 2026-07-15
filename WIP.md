@@ -44,9 +44,11 @@ Phase 1 达成的关键能力：
 - [x] 四个播放器接入 dialogue 渲染：经典 SceneNodes（角色名+头像+表情标注）、沉浸模式与
   55 站打字机流（`名字：台词`）、jianjian（加粗名字前缀）；姓名框式 VN UI 属后续打磨
 - [x] `DSL_SPEC.md` §4.2.3 对话行章节（实现落地后写规范，保持规范=现实）
-- [ ] `segmentation.ts`（core 与 asset-generator 两份副本）：dialogue 节点直接产出 segment
-  短路 LLM，旁白继续走 LLM
-- [ ] 两站点手测视觉小说流程（含含对话行的临时剧本）
+- [x] 有声书对话短路（两条管线的调用方，segmentation 纯函数本身不动）：
+  App 路由 `generate-scene/route.ts` 与 CLI `manifest-generator.ts` 的 dialogue 节点
+  直接产出 `{speaker, text}` 分段，零 LLM 成本零误判；CLI 滚动上下文带上说话人 ID
+  帮助相邻旁白分段；dry-run 统计同步；新增短路测试
+- [ ] 两站点手测视觉小说流程（含对话行的临时剧本；需本地 D1 种子数据与 dev server）
 
 遗留（非阻塞）：
 - D1 生产数据清洗（需 `MUI_ADMIN_PASSWORD`，见 TODO.md）
