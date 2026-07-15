@@ -19,6 +19,8 @@ import type {
   DeleteCharacterArgs,
   UpdateSceneTextArgs,
   UpdateSceneImagePromptArgs,
+  AddDialogueLineArgs,
+  AddRedirectArgs,
   UpdateChoiceTextArgs,
   UpdateChoiceTargetArgs,
   UpdateChoiceConditionArgs,
@@ -30,6 +32,8 @@ import {
   handleRenameScene,
   handleUpdateSceneText,
   handleUpdateSceneImagePrompt,
+  handleAddDialogueLine,
+  handleAddRedirect,
 } from './handlers/sceneHandlers';
 import {
   handleAddChoice,
@@ -72,6 +76,9 @@ const OPERATION_PRIORITY: Record<string, number> = {
   updateChoiceCondition: 3,
   updateVariable: 3,
   updateCharacter: 3,
+  // 追加类内容操作最后执行（依赖场景与角色已存在）
+  addDialogueLine: 3,
+  addRedirect: 3,
 };
 
 /**
@@ -132,6 +139,12 @@ export function handleChatFunctionCall(name: string, args: Record<string, unknow
       return handleDeleteScene(args as unknown as DeleteSceneArgs, ctx);
     case 'renameScene':
       return handleRenameScene(args as unknown as RenameSceneArgs, ctx);
+
+    // 对话与重定向（DSL v2）
+    case 'addDialogueLine':
+      return handleAddDialogueLine(args as unknown as AddDialogueLineArgs, ctx);
+    case 'addRedirect':
+      return handleAddRedirect(args as unknown as AddRedirectArgs, ctx);
 
     // 选项操作
     case 'addChoice':

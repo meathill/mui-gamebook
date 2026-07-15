@@ -1,12 +1,12 @@
 TODO
 ====
 
-- **DSL v2**（评审与完整设计见 `docs/DSL_V2_DESIGN.md`，Phase 0 除 D1 清洗外已全部完成）：
-  - Phase 0 余项：D1 生产数据摸底与清洗——逐游戏 `npx tsx scripts/migrate-game-script.ts --slug <slug> --dry-run`（需 `MUI_ADMIN_PASSWORD`），确认 diff 后落库
-  - Phase 1：统一表达式引擎（or/括号/四则/中文变量名）+ 未知键透传 + 选项行平衡扫描 + trigger 归一 + 存档底座合并 + conformance/对拍
-  - Phase 2：对话行 `@角色ID: 台词` + 手写序列化器（替换 remark-stringify）+ 编辑器保序往返 + 有声书短路 LLM 分段
-  - Phase 3：块级 `->` 重定向 + chatbot 增 dialogue/redirect 操作 + 规范定稿 + demo 迁移
-- 选项倒计时（应基于 DSL v2 Phase 1 的未知子句透传机制实现，避免再发明一次性语法）
+- **DSL v2 收尾项**（Phase 0-3 已全部实施完成，见 `docs/DSL_V2_DESIGN.md`）：
+  - D1 生产数据摸底与清洗——逐游戏 `npx tsx scripts/migrate-game-script.ts --slug <slug> --dry-run`（需 `MUI_ADMIN_PASSWORD`），确认 diff 后落库
+  - （可选）dream-of-modern-city 的 MBTI 分流场景改写为块级重定向，作为 `->` 语法的官方示范
+  - 视觉小说姓名框/立绘 UI 打磨（sites/55，对话行结构化数据已就位）
+  - 素材产物 sidecar 化与 i18n：方向设计见 `docs/DSL_V2_DESIGN.md` §8，未排期
+- 选项倒计时（基于 DSL v2 的未知子句透传机制实现——`(timer: 10)` 已能原样透传，只需运行时消费）
 - 许愿墙
 - 游戏地图推广到 `packages/app`（主站）和 `sites/jianjian`：功能本体（`use-route-map.ts`）已在 `site-common` 实现，目前只有 `sites/55`（`RouteMapScreen.tsx`）接了 UI，另外两个站点还没有对应入口
 - 修复国际化支持

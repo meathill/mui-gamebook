@@ -192,6 +192,43 @@ describe('chatFunctionHandlers', () => {
     });
   });
 
+  describe('对话与重定向操作（DSL v2）', () => {
+    it('addDialogueLine 追加对话行到场景 content', () => {
+      const ctx = createMockContext();
+      const result = handleChatFunctionCall(
+        'addDialogueLine',
+        { sceneId: 'start', speaker: 'hero', content: '我们出发吧！', emotion: '坚定' },
+        ctx,
+      );
+
+      expect(result).toContain('hero');
+      expect(ctx.nodes[0].data.content).toBe('这是开始场景\n\n@hero (坚定): 我们出发吧！');
+    });
+
+    it('addDialogueLine 拒绝未注册角色并提示先创建', () => {
+      const ctx = createMockContext();
+      const result = handleChatFunctionCall(
+        'addDialogueLine',
+        { sceneId: 'start', speaker: 'ghost', content: '……' },
+        ctx,
+      );
+
+      expect(result).toContain('未在角色列表注册');
+      expect(ctx.nodes[0].data.content).toBe('这是开始场景');
+    });
+
+    it('addRedirect 追加块级重定向行', () => {
+      const ctx = createMockContext();
+      handleChatFunctionCall(
+        'addRedirect',
+        { sceneId: 'scene_1', targetSceneId: 'start', condition: 'gold >= 10', stateChange: 'gold = gold - 10' },
+        ctx,
+      );
+
+      expect(ctx.nodes[1].data.content).toBe('这是场景1\n\n-> start (if: gold >= 10) (set: gold = gold - 10)');
+    });
+  });
+
   describe('选项操作', () => {
     it('addChoice 应该添加新选项', () => {
       const ctx = createMockContext();

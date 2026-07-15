@@ -1,6 +1,6 @@
 # Gamebook DSL v2：评审报告与设计方案
 
-> 状态：**设计定稿，分阶段实施中**（进度见 §6 与 TODO.md）
+> 状态：**Phase 0-3 已全部实施完成**（2026-07-15）。本文档保留为设计决策记录；现行语法规范见 [DSL_SPEC.md](./DSL_SPEC.md)（规范=现实）。
 >
 > 重要约束：`docs/DSL_SPEC.md` 会被嵌入 AI 生成剧本的提示词（`packages/app/src/lib/editor/generate-script.ts`）。因此**未实现的 v2 语法只能写在本文档，不得写入 DSL_SPEC.md**，否则 AI 会立即开始产出 parser 无法解析的剧本。各阶段实现落地后，再把对应语法合入正式规范。
 
@@ -276,7 +276,9 @@ not  !
 
 风险：中。靠对拍量化兼容性；`==` 语义用 conformance 锁定。
 
-### Phase 2：对话行 + 手写序列化器 + 编辑器保序（风险最高）
+### Phase 2：对话行 + 手写序列化器 + 编辑器保序（风险最高）—— ✅ 已完成
+
+> 手写序列化器替换 remark-stringify（转义污染 bug 类根除）；对话行全链路（解析/序列化/编辑器保序/四播放器渲染/有声书短路 LLM 分段）；多 text 节点不再被编辑器合并。
 
 - `types.ts`：`SceneDialogueNode`
 - `parse-dialogue.ts`：行级扫描（全角标点、`break` 补 `\n`、注册角色门槛）
@@ -287,7 +289,9 @@ not  !
 
 验收：对话黄金样例；13 demo round-trip；**打开 HP4 → 保存 → diff 仅含已知规范化差异**；两站点手测。
 
-### Phase 3：流控 + AI 链路 + 规范定稿
+### Phase 3：流控 + AI 链路 + 规范定稿 —— ✅ 已完成
+
+> 块级重定向 `-> target (if:) (set:)` 全链路（解析/运行时路由/四播放器「继续」/自动跳防环）；chatbot 新增 addDialogueLine/addRedirect；EXAMPLE_SCRIPT 示范 v2；DSL_SPEC 全量对齐现实（含 §4.2.3 对话行、§5.4 重定向、透传说明翻新）。sidecar 与 i18n 见下方「后续方向」。
 
 - 块级 `->` 重定向节点与路由语义（`use-game-player.ts`）
 - Chatbot 增 dialogue/redirect 操作（`chat-declarations.ts` + handlers）
@@ -301,3 +305,17 @@ not  !
 - **round-trip**：13 demo 全量 parse → stringify → parse 深比对
 - **对拍**：新旧表达式引擎对全量存量子句双跑 diff（一次性脚本，只读）
 - **守护测试**：`generate-script.test.ts` 已锁定 EXAMPLE_SCRIPT 与 parser 不漂移，延续该模式覆盖 DSL_SPEC 中的示例
+
+## 8. 后续方向（未排期）
+
+### 素材产物 sidecar 化
+
+DSL 单文件混装「生成产物缓存」（url 回填、`pending://` 占位）仍是往返噪音的最后来源。方向：给可生成节点引入稳定 ID（显式 `id:` 键，透传机制已可承载），产物 URL 移入 R2 sidecar manifest——有声书已是事实上的 sidecar，规范化为通用机制即可。代价是节点寻址语法与存量迁移，收益是「创作声明」与「生成产物」彻底解耦。待素材形态稳定后再评估。
+
+### i18n
+
+不进核心语法（Non-goals 已定）。推荐 per-locale 文件（`game.zh.md` / `game.en.md`），配套 lint 做场景图同构比对（场景 ID 集合、选项出边一致性），翻译工作流可由 AI 按场景批量生成再人工校对。
+
+### 视觉小说 UI 打磨
+
+对话行已提供结构化数据（speaker/emotion）；姓名框、立绘定位、表情差分渲染属站点模板设计任务（sites/55），与 DSL 无关。

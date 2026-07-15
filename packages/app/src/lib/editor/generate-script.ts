@@ -48,8 +48,10 @@ ai:
 
 密林深处传来若隐若现的呼唤声，一位披蓑衣的老人出现在雾中。
 
+@shou_lin_ren (低声): 孩子，这么晚了，雾里可不安全。
+
 * [向守林人求助] -> ask_keeper
-* [绕开老人继续前进] -> lost_in_mist (if: courage >= 60)
+* [绕开老人继续前进] -> lost_in_mist (if: courage >= 60 or has_lantern)
 
 # forest_edge
 
@@ -59,7 +61,16 @@ ai:
 
 # ask_keeper
 
-守林人指向雾最浓的方向："你要找的人，在雾的尽头。"
+@shou_lin_ren: 你要找的人，在雾的尽头。
+
+@lin_xiaoyu (坚定): 请告诉我怎么走。
+
+-> mist_end (if: courage >= 60 or has_lantern)
+-> lost_in_mist
+
+# mist_end
+
+雾气渐渐散开，弟弟的身影出现在小路尽头。
 
 # lost_in_mist
 
@@ -82,6 +93,9 @@ ${EXAMPLE_SCRIPT}
 
 - IMPORTANT: Scene assets use a \`\`\`yaml code block right after the scene heading, with top-level keys \`image:\` / \`audio:\` / \`minigame:\` (legacy \`minigame-gen\`/\`image-gen\` fences are NOT supported). If a field (like \`prompt\`) contains multi-line text, you MUST use the YAML block scalar syntax (e.g. \`prompt: |\`). Do NOT put a list structure directly under a scalar key without the block scalar indicator.
 - Every \`(set: ...)\` assignment MUST contain \`=\` (e.g. \`(set: courage = courage + 10)\`); \`(set: courage + 10)\` is INVALID and will be silently ignored at runtime.
+- Character dialogue SHOULD use dialogue lines: \`@character_id: 台词\` or \`@character_id (表情): 台词\` at line start. The id MUST be registered in \`ai.characters\`. Narration stays as plain paragraphs.
+- For state-based routing use block redirects instead of duplicated choices: a line \`-> target_scene (if: condition)\` at scene end. Multiple redirects are evaluated in order, first match wins; a redirect without \`(if:)\` is the fallback. A scene with only redirects jumps immediately.
+- Conditions support \`or\` / \`and\` / \`not\`, parentheses and arithmetic (e.g. \`(if: courage >= 60 or has_lantern)\`).
 - The first scene MUST be \`# start\`.
 - Write the story content in the same language as the user's story (通常是中文).
 - Output ONLY the raw Markdown content, no extra conversational text.

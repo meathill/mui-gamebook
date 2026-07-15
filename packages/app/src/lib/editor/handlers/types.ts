@@ -103,6 +103,21 @@ export interface UpdateSceneTextArgs {
   text: string;
 }
 
+// 对话与重定向操作参数（DSL v2）
+export interface AddDialogueLineArgs {
+  sceneId: string;
+  speaker: string;
+  content: string;
+  emotion?: string;
+}
+
+export interface AddRedirectArgs {
+  sceneId: string;
+  targetSceneId: string;
+  condition?: string;
+  stateChange?: string;
+}
+
 export interface UpdateSceneImagePromptArgs {
   sceneId: string;
   imagePrompt: string;

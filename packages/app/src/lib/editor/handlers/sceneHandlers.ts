@@ -11,6 +11,8 @@ import type {
   HandlerContext,
   UpdateSceneArgs,
   AddSceneArgs,
+  AddDialogueLineArgs,
+  AddRedirectArgs,
   DeleteSceneArgs,
   RenameSceneArgs,
   UpdateSceneTextArgs,
@@ -161,4 +163,55 @@ export function handleUpdateSceneImagePrompt(args: UpdateSceneImagePromptArgs, c
   });
 
   return `已更新场景 "${sceneId}" 的图片 prompt`;
+}
+
+/** 向场景 content 追加一行 DSL 原文（对话/重定向共用；对话与重定向行是 content 的一等语法） */
+function appendLineToSceneContent(ctx: HandlerContext, sceneId: string, line: string): void {
+  ctx.setNodes((nds) => {
+    if (!nds.some((n) => n.id === sceneId)) {
+      console.warn(`场景 "${sceneId}" 不存在，跳过追加内容`);
+      return nds;
+    }
+    return nds.map((node) =>
+      node.id === sceneId
+        ? {
+            ...node,
+            data: {
+              ...node.data,
+              content: node.data.content ? `${node.data.content}\n\n${line}` : line,
+            },
+          }
+        : node,
+    );
+  });
+}
+
+/**
+ * 追加一行角色对话（DSL v2 `@角色ID: 台词`）
+ */
+export function handleAddDialogueLine(args: AddDialogueLineArgs, ctx: HandlerContext): string {
+  const { sceneId, speaker, content, emotion } = args;
+
+  if (!ctx.originalGame?.ai?.characters?.[speaker]) {
+    return `角色 "${speaker}" 未在角色列表注册，对话行会被当作普通文本。请先用 addCharacter 创建该角色`;
+  }
+
+  const line = `@${speaker}${emotion ? ` (${emotion})` : ''}: ${content}`;
+  appendLineToSceneContent(ctx, sceneId, line);
+  return `已向场景 "${sceneId}" 追加 ${speaker} 的对话`;
+}
+
+/**
+ * 追加一条块级重定向（DSL v2 `-> target (if:) (set:)`）
+ */
+export function handleAddRedirect(args: AddRedirectArgs, ctx: HandlerContext): string {
+  const { sceneId, targetSceneId, condition, stateChange } = args;
+
+  const clauses: string[] = [];
+  if (condition) clauses.push(`(if: ${condition})`);
+  if (stateChange) clauses.push(`(set: ${stateChange})`);
+  const line = [`-> ${targetSceneId}`, ...clauses].join(' ');
+
+  appendLineToSceneContent(ctx, sceneId, line);
+  return `已向场景 "${sceneId}" 追加重定向 -> ${targetSceneId}`;
 }

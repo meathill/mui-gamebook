@@ -2,7 +2,7 @@
 
 本文档概述了用于创建互动文字冒险游戏的领域特定语言（DSL）的设计，该语言利用类似 Markdown 的语法以简化创作过程。
 
-> 本文档只描述**当前已实现**的语法（与 `packages/parser` 及运行时实现对齐）。下一代语法设计（统一表达式语言、对话行、块级重定向等）见 [DSL_V2_DESIGN.md](./DSL_V2_DESIGN.md)——未实现的语法不写入本规范，因为本文档会被嵌入 AI 生成剧本的提示词。
+> 本文档只描述**当前已实现**的语法（与 `packages/parser` 及运行时实现对齐），会被嵌入 AI 生成剧本的提示词。DSL v2 的统一表达式语言、对话行、块级重定向、未知键透传均已实现并收录于本文；设计背景与决策记录见 [DSL_V2_DESIGN.md](./DSL_V2_DESIGN.md)。
 
 ## 1. 文件格式
 
@@ -31,7 +31,7 @@
 - **`site_template`** (可选): 站点模版，`default`（默认）或 `visual-novel`（视觉小说模版，带路线图、多存档、设置界面）。
 - **`subdomain`** (可选): 绑定的二级域名前缀（如 `55`），主站访问该游戏时会重定向到对应子域名。
 
-> 注意：这些 front matter 的未知键**不会被保留**——编辑器保存（parse → stringify）会按白名单重建 front matter，白名单之外的自定义键会被抹掉。透传机制见 [DSL_V2_DESIGN.md](./DSL_V2_DESIGN.md) §4.3。
+> 未知顶层键会被**原样保留**（parse → stringify 往返透传），可以放心存放自定义配置——新功能不需要等解析器升级。
 
 **示例：**
 ```yaml
@@ -225,7 +225,7 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 
 编辑器使用紧跟在场景标题后的 ```` ```yaml ```` 代码块来指示引擎调用 AI 模型。**在素材生成后，游戏引擎或编辑器会将生成的 `url` 写回到代码块中，用于缓存和预览，确保 Markdown 文件本身始终是唯一的数据源。**
 
-元数据块的识别规则：必须是场景标题后的**第一个块**，且是 ```` ```yaml ```` 代码块，顶层包含 `image` / `audio` / `video` / `minigame` 中至少一个键。其他未知顶层键当前会被忽略（不会保留）。这是唯一受支持的场景元数据写法——**不支持**用 `---` 包裹的场景级 front matter。
+元数据块的识别规则：场景标题后的**第一个** ```` ```yaml ```` 代码块一律视为元数据。已知键 `image` / `audio` / `video` / `minigame` 产出素材节点，未知顶层键**原样透传保留**（可存放自定义配置）。这是唯一受支持的场景元数据写法——**不支持**用 `---` 包裹的场景级 front matter。
 
 - **`prompt`**: (必须) 用于指导 AI 生成的提示词。
 - **`characters`**: (可选) 引用在 `ai.characters` 中定义的角色 ID 列表，用于多人场景。
@@ -511,3 +511,26 @@ minigame:
 * [用力推门] -> door_does_not_budge (if: has_key == false, health > 50)
 * [多重身份都能看到] -> corner_scene (if: current_role == "baoyu" or current_role == "daiyu")
 ```
+
+### 5.4 块级重定向（Redirect）
+
+在场景顶层（非列表项）以 `->` 开头的一行是块级重定向，用于按状态自动分流或线性推进。
+
+**语法：** `-> NextSceneID (if: condition) (set: key = value)`
+
+**示例（按状态分流，替代一堆同名选项）：**
+
+```markdown
+# check_result
+
+-> role_a (if: score_i > score_e and score_f > score_t)
+-> role_b (if: score_e > score_i or score_s > 10)
+-> role_c
+```
+
+**语义：**
+
+- 场景内多条重定向**按序求值，首个条件命中且目标场景存在者生效**；不带 `(if:)` 的作无条件兜底
+- **纯路由场景**（只有重定向，无正文/选项/小游戏）进入时立即跳转；连续自动跳转有 10 跳上限防止死循环
+- **有正文的场景**：玩家读完后点「继续」按钮时求值路由（替代 `* [继续] -> next` 单选项场景）
+- `(set:)` 在跳转时执行，变量触发器照常生效；未知 `(key: value)` 子句与选项一样原样透传

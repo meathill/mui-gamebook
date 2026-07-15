@@ -78,6 +78,36 @@ export const CHAT_FUNCTION_DECLARATIONS: FunctionDeclaration[] = [
       required: ['oldId', 'newId'],
     },
   },
+  // 对话与重定向（DSL v2）
+  {
+    name: 'addDialogueLine',
+    description: '向场景文案末尾追加一行角色对话（`@角色ID: 台词`）。speaker 必须是已注册的角色 ID',
+    parameters: {
+      type: 'object',
+      properties: {
+        sceneId: { type: 'string', description: '场景 ID' },
+        speaker: { type: 'string', description: '说话角色的 ID（必须已在角色列表注册）' },
+        content: { type: 'string', description: '台词内容' },
+        emotion: { type: 'string', description: '表情/舞台指示（可选，如 angry、低声）' },
+      },
+      required: ['sceneId', 'speaker', 'content'],
+    },
+  },
+  {
+    name: 'addRedirect',
+    description:
+      '向场景末尾追加一条块级重定向 `-> 目标场景 (if: 条件)`。场景内多条重定向按序求值、首个条件命中者生效；无正文的纯路由场景会立即跳转，可替代一堆同名"继续"选项',
+    parameters: {
+      type: 'object',
+      properties: {
+        sceneId: { type: 'string', description: '场景 ID' },
+        targetSceneId: { type: 'string', description: '目标场景 ID' },
+        condition: { type: 'string', description: '条件表达式（可选，省略即无条件兜底）' },
+        stateChange: { type: 'string', description: '状态变更表达式（可选）' },
+      },
+      required: ['sceneId', 'targetSceneId'],
+    },
+  },
   // 选项操作
   {
     name: 'addChoice',
