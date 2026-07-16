@@ -1,8 +1,7 @@
 TODO
 ====
 
-- **DSL v2 收尾项**（Phase 0-3 已全部实施完成，见 `docs/DSL_V2_DESIGN.md`）：
-  - D1 生产数据摸底与清洗——逐游戏 `npx tsx scripts/migrate-game-script.ts --slug <slug> --dry-run`（需 `MUI_ADMIN_PASSWORD`），确认 diff 后落库
+- **DSL v2 可选跟进**（Phase 0-3 与 D1 清洗均已完成，见 `docs/DSL_V2_DESIGN.md` 与 WIP.md 归档）：
   - （可选）dream-of-modern-city 的 MBTI 分流场景改写为块级重定向，作为 `->` 语法的官方示范
   - 视觉小说姓名框/立绘 UI 打磨（sites/55，对话行结构化数据已就位）
   - 素材产物 sidecar 化与 i18n：方向设计见 `docs/DSL_V2_DESIGN.md` §8，未排期
