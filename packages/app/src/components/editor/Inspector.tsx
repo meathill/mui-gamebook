@@ -6,6 +6,7 @@ import type { GameState } from '@mui-gamebook/parser/src/types';
 import { extractRuntimeState } from '@mui-gamebook/parser/src/utils';
 import { interpolateVariables } from '@mui-gamebook/site-common/utils';
 import { useDialog } from '@/components/Dialog';
+import { getPrimaryAudioUrl, setPrimaryAudioUrl, stripAudioComments } from '@/lib/editor/prose-audio';
 import { useEditorStore } from '@/lib/editor/store';
 import AssetEditor from './AssetEditor';
 import CharacterMentionTextarea from './CharacterMentionTextarea';
@@ -34,6 +35,8 @@ export default function Inspector({
   const dialog = useDialog();
 
   const nodeData = selectedNode ? (selectedNode.data as unknown as SceneNodeData) : null;
+  // 场景语音以 <!-- audio --> 注释内联在 content 里，预览取第一条
+  const primaryAudioUrl = nodeData?.content ? getPrimaryAudioUrl(nodeData.content) : undefined;
 
   if (!selectedNode && !selectedEdge) {
     return (
@@ -52,9 +55,9 @@ export default function Inspector({
     if (!nodeData?.content || !id || !selectedNode) return;
     setGeneratingTTS(true);
     try {
-      // 使用初始状态替换变量，避免 TTS 朗读变量名
+      // 使用初始状态替换变量，避免 TTS 朗读变量名；语音注释行不进朗读文本
       const runtimeState = initialState ? extractRuntimeState(initialState) : {};
-      const processedText = interpolateVariables(nodeData.content, runtimeState);
+      const processedText = interpolateVariables(stripAudioComments(nodeData.content), runtimeState);
 
       const res = await fetch('/api/cms/assets/generate-tts', {
         method: 'POST',
@@ -67,7 +70,8 @@ export default function Inspector({
         return;
       }
       const data = (await res.json()) as { url: string };
-      onNodeChange(selectedNode.id, { audio_url: data.url });
+      // 整段语音以 <!-- audio --> 注释内联进 content（清掉旧注释，挂到第一个 prose 节点）
+      onNodeChange(selectedNode.id, { content: setPrimaryAudioUrl(nodeData.content, data.url) });
       await dialog.alert('语音生成成功！');
     } catch (e) {
       await dialog.error(`错误：${(e as Error).message}`);
@@ -131,6 +135,7 @@ export default function Inspector({
                 characters={aiConfig?.characters}
                 className="w-full h-32 p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
                 placeholder="场景描述..."
+                disabled={generatingTTS}
               />
               {nodeData.content && (
                 <div className="mt-2 flex items-center gap-2">
@@ -149,9 +154,9 @@ export default function Inspector({
                     )}
                     <span>生成语音</span>
                   </button>
-                  {(nodeData.audio_url as string | undefined) && (
+                  {primaryAudioUrl && (
                     <audio
-                      src={nodeData.audio_url as string}
+                      src={primaryAudioUrl}
                       controls
                       className="h-8 flex-1"
                     />

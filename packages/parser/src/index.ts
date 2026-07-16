@@ -14,7 +14,7 @@ export type { Game, SceneNode };
 export * from './types';
 export * from './utils';
 export { stringify } from './stringify';
-export { proseNodeToLine } from './serialize';
+export { proseNodeToLine, redirectNodeToLine } from './serialize';
 export { scanClauses } from './parse-choice';
 export { normalizeMiniGameVariables, parseProseBlock } from './parse-scene';
 

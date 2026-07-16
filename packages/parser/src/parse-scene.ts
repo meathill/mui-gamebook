@@ -95,6 +95,11 @@ export function buildAssetNodes(parsed: Record<string, unknown>): AssetNodes {
  * 把一段正文文本按行拆出对话节点（DSL v2 对话行语法）。
  * 只有 speaker 在 ai.characters 注册时才成为 dialogue 节点，
  * 未注册的 `@xx:` 行按普通文本处理并发 unregistered-speaker 警告。
+ *
+ * 空行按段落分隔 flush，`<!-- audio: URL -->` 行与 mdast 块级注释同语义
+ * （附着前一节点 / legacy 同行尾随文本成新节点 / 孤儿丢弃），
+ * 因此编辑器可把整段多段落 content 一次传入（issue #9）。
+ * mdast 路径传入的段落 textToken 不含空行与注释行，不受这两个分支影响。
  */
 function extractProseNodes(
   textToken: string,
@@ -115,8 +120,42 @@ function extractProseNodes(
   };
 
   for (const rawLine of textToken.split('\n')) {
+    const trimmedLine = rawLine.trim();
+
+    // 空白行 = 段落分隔
+    if (trimmedLine === '') {
+      flushBuffer();
+      continue;
+    }
+
+    // 语音注释行（与 parseSceneNodes 的块级 html 分支同语义）
+    const audioMatch = trimmedLine.match(AUDIO_COMMENT_REGEX);
+    if (audioMatch) {
+      flushBuffer();
+      const [, audioUrl, trailing] = audioMatch;
+      const trailingText = trailing.trim();
+      if (trailingText) {
+        // 旧版 stringify 的同行格式：<!-- audio: URL -->文本
+        nodes.push({ type: 'text', content: trailingText, audio_url: audioUrl });
+      } else {
+        const lastNode = nodes[nodes.length - 1];
+        if (lastNode && (lastNode.type === 'text' || lastNode.type === 'dialogue')) {
+          lastNode.audio_url = audioUrl;
+        } else {
+          report?.({
+            severity: 'warning',
+            code: 'orphan-audio',
+            message: 'Audio comment has no preceding text node and will be dropped',
+            sceneId,
+            line,
+          });
+        }
+      }
+      continue;
+    }
+
     // 块级重定向行（DSL_V2_DESIGN §4.6）
-    const redirectMatch = rawLine.trim().match(REDIRECT_LINE_REGEX);
+    const redirectMatch = trimmedLine.match(REDIRECT_LINE_REGEX);
     if (redirectMatch) {
       flushBuffer();
       const [, nextSceneId, clausesStr] = redirectMatch;
@@ -133,7 +172,7 @@ function extractProseNodes(
       continue;
     }
 
-    const match = rawLine.trim().match(DIALOGUE_LINE_REGEX);
+    const match = trimmedLine.match(DIALOGUE_LINE_REGEX);
     if (match) {
       const [, speaker, emotion, content] = match;
       if (characterIds?.has(speaker)) {
@@ -160,9 +199,15 @@ function extractProseNodes(
 /**
  * 公开入口：把一段正文文本解析为 text/dialogue 节点序列。
  * 供编辑器（flowToGame）等场景复用同一套对话行识别逻辑。
+ * 支持多段落文本（空行分段）与 `<!-- audio: URL -->` 语音注释行；
+ * 孤儿注释会被丢弃，传入 report 可收到 orphan-audio 警告。
  */
-export function parseProseBlock(text: string, characterIds?: ReadonlySet<string>): SceneNode[] {
-  return extractProseNodes(text, characterIds, undefined, undefined, undefined);
+export function parseProseBlock(
+  text: string,
+  characterIds?: ReadonlySet<string>,
+  report?: DiagnosticReporter,
+): SceneNode[] {
+  return extractProseNodes(text, characterIds, report, undefined, undefined);
 }
 
 export function parseSceneNodes(

@@ -1,7 +1,7 @@
 import { Node, Edge } from '@xyflow/react';
 import { parseProseBlock } from '@mui-gamebook/parser/src/parse-scene';
-import { proseNodeToLine } from '@mui-gamebook/parser/src/serialize';
 import { Game, Scene, SceneNode } from '@mui-gamebook/parser/src/types';
+import { proseNodesToContent } from './prose-audio';
 
 export interface EditorSceneAsset {
   editorId: string;
@@ -34,9 +34,11 @@ export function replaceEditorSceneAssetUrl(
 // Type definitions for our custom Node data
 export interface SceneNodeData extends Record<string, unknown> {
   label: string; // Scene ID
-  /** prose 流的可编辑文本：旁白原文与对话行（`@角色ID (表情): 台词`）按段落拼接 */
+  /**
+   * prose 流的可编辑文本：旁白原文与对话行（`@角色ID (表情): 台词`）按段落拼接，
+   * 每个带语音的节点后内联 `<!-- audio: URL -->` 注释（与 DSL 落盘形态一致，issue #9）
+   */
   content: string;
-  audio_url?: string; // TTS audio URL for the text content
   assets: EditorSceneAsset[]; // 编辑器内部素材，editorId 不进入 DSL
 }
 
@@ -52,11 +54,7 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
     const assetNodes = scene.nodes.filter((n) => n.type !== 'text' && n.type !== 'dialogue' && n.type !== 'choice');
     const choiceNodes = scene.nodes.filter((n) => n.type === 'choice');
 
-    const content = proseNodes
-      .map((n) => proseNodeToLine(n as { type: 'text' | 'dialogue'; content: string }))
-      .join('\n\n');
-    // 获取第一个带语音的 prose 节点的 audio_url（多节点时只保留第一个的音频，既有限制）
-    const audio_url = proseNodes.find((n) => 'audio_url' in n && n.audio_url)?.audio_url as string | undefined;
+    const content = proseNodesToContent(proseNodes);
 
     nodes.push({
       id: id,
@@ -64,7 +62,6 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
       data: {
         label: id,
         content,
-        audio_url,
         assets: assetNodes.map(createEditorSceneAsset),
       },
       type: 'scene', // We will create a custom node type later
@@ -110,16 +107,9 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
       sceneNodes.push(...node.data.assets.map((entry) => entry.asset));
     }
 
-    // prose 流：按空行拆段，每段经 parseProseBlock 还原为 text/dialogue 节点
+    // prose 流：整段交给 parseProseBlock 还原（空行分段与语音注释归属都由 parser 处理）
     if (node.data.content) {
-      const proseNodes = node.data.content.split(/\n{2,}/).flatMap((block) => parseProseBlock(block, characterIds));
-      if (node.data.audio_url && proseNodes.length > 0) {
-        const first = proseNodes[0];
-        if (first.type === 'text' || first.type === 'dialogue') {
-          first.audio_url = node.data.audio_url;
-        }
-      }
-      sceneNodes.push(...proseNodes);
+      sceneNodes.push(...parseProseBlock(node.data.content, characterIds));
     }
 
     // 3. Add Choices (Edges)

@@ -95,46 +95,64 @@ describe('Editor Transformers', () => {
     expect((startScene?.nodes[1] as { nextSceneId: string }).nextSceneId).toBe('end');
   });
 
-  it('gameToFlow should preserve audio_url from text nodes', () => {
+  it('gameToFlow 把 audio_url 内联为 <!-- audio --> 注释行（与 DSL 落盘形态一致）', () => {
     const { nodes } = gameToFlow(mockGameWithAudio);
 
     const startNode = nodes.find((n) => n.id === 'start');
-    expect(startNode).toBeDefined();
-    expect(startNode?.data.audio_url).toBe('https://example.com/welcome.wav');
+    expect(startNode?.data.content).toBe('欢迎来到故事\n\n<!-- audio: https://example.com/welcome.wav -->');
+    expect(startNode?.data.audio_url).toBeUndefined();
 
     const endNode = nodes.find((n) => n.id === 'end');
-    expect(endNode).toBeDefined();
-    expect(endNode?.data.audio_url).toBe('https://example.com/end.wav');
+    expect(endNode?.data.content).toBe('故事结束\n\n<!-- audio: https://example.com/end.wav -->');
   });
 
-  it('flowToGame should preserve audio_url in text nodes', () => {
+  it('flowToGame 从内联注释还原 audio_url 到对应节点', () => {
     const { nodes, edges } = gameToFlow(mockGameWithAudio);
     const newGame = flowToGame(nodes, edges, mockGameWithAudio);
 
-    const startScene = newGame.scenes['start'];
-    expect(startScene).toBeDefined();
-    const textNode = startScene?.nodes.find((n) => n.type === 'text');
-    expect(textNode).toBeDefined();
-    expect(textNode?.audio_url).toBe('https://example.com/welcome.wav');
-
-    const endScene = newGame.scenes['end'];
-    expect(endScene).toBeDefined();
-    const endTextNode = endScene?.nodes.find((n) => n.type === 'text');
-    expect(endTextNode).toBeDefined();
-    expect(endTextNode?.audio_url).toBe('https://example.com/end.wav');
+    expect(newGame.scenes.start.nodes).toEqual(mockGameWithAudio.scenes.start.nodes);
+    expect(newGame.scenes.end.nodes).toEqual(mockGameWithAudio.scenes.end.nodes);
   });
 
-  it('audio_url should survive round-trip conversion (Game -> Flow -> Game)', () => {
-    // 这个测试确保 audio_url 在完整的转换往返中保持完整
-    const { nodes, edges } = gameToFlow(mockGameWithAudio);
-    const newGame = flowToGame(nodes, edges, mockGameWithAudio);
+  it('多节点各带语音的场景往返无损（issue #9 核心场景）', () => {
+    const gameWithMultiAudio: Game = {
+      slug: 'test-multi-audio',
+      title: 'Test Multi Audio',
+      initialState: {},
+      ai: { characters: { zhang: { name: '张大侠' } } },
+      published: false,
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            { type: 'text', content: '第一段旁白。', audio_url: 'https://cdn.x.com/1.mp3' },
+            { type: 'dialogue', speaker: 'zhang', content: '你终于来了。', audio_url: 'https://cdn.x.com/2.mp3' },
+            { type: 'text', content: '没有配音的段落。' },
+            { type: 'text', content: '最后一段。', audio_url: 'https://cdn.x.com/3.mp3' },
+          ],
+        },
+      },
+    };
 
-    // 再次转换回 Flow
-    const { nodes: nodes2 } = gameToFlow(newGame);
+    const { nodes, edges } = gameToFlow(gameWithMultiAudio);
+    expect(nodes[0].data.content).toBe(
+      [
+        '第一段旁白。',
+        '<!-- audio: https://cdn.x.com/1.mp3 -->',
+        '@zhang: 你终于来了。',
+        '<!-- audio: https://cdn.x.com/2.mp3 -->',
+        '没有配音的段落。',
+        '最后一段。',
+        '<!-- audio: https://cdn.x.com/3.mp3 -->',
+      ].join('\n\n'),
+    );
 
-    // 验证 audio_url 仍然存在
-    const startNode = nodes2.find((n) => n.id === 'start');
-    expect(startNode?.data.audio_url).toBe('https://example.com/welcome.wav');
+    const roundTripped = flowToGame(nodes, edges, gameWithMultiAudio);
+    expect(roundTripped.scenes.start.nodes).toEqual(gameWithMultiAudio.scenes.start.nodes);
+
+    // 二次往返稳定（Flow -> Game -> Flow）
+    const { nodes: nodes2 } = gameToFlow(roundTripped);
+    expect(nodes2[0].data.content).toBe(nodes[0].data.content);
   });
 
   it('应该为编辑器素材生成唯一 UI ID，并在保存时完全剥离', () => {

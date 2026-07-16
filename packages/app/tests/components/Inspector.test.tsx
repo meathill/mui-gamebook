@@ -119,10 +119,21 @@ describe('Inspector', () => {
       expect(screen.queryByTitle('为内容生成语音')).not.toBeInTheDocument();
     });
 
+    it('content 含语音注释时显示音频预览（取第一条）', () => {
+      selectNode({ content: '开始场景。\n\n<!-- audio: https://cdn.x.com/a.wav -->' });
+
+      render(<Inspector {...noopProps} />);
+
+      const audio = document.querySelector('audio');
+      expect(audio).not.toBeNull();
+      expect(audio?.getAttribute('src')).toBe('https://cdn.x.com/a.wav');
+    });
+
     describe('生成语音（节点内容）', () => {
-      it('成功后把 audio_url 写回节点，并提示成功', async () => {
-        vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ url: 'https://cdn.x.com/a.wav' })));
-        selectNode();
+      it('成功后把语音注释内联写回 content（清掉旧注释），朗读文本不含注释行', async () => {
+        const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ url: 'https://cdn.x.com/a.wav' }));
+        vi.stubGlobal('fetch', fetchMock);
+        selectNode({ content: '开始场景。\n\n<!-- audio: https://cdn.x.com/old.wav -->\n\n第二段。' });
         const onNodeChange = vi.fn();
         render(
           <Inspector
@@ -134,13 +145,17 @@ describe('Inspector', () => {
         fireEvent.click(screen.getByTitle('为内容生成语音'));
 
         await waitFor(() =>
-          expect(onNodeChange).toHaveBeenCalledWith('start', { audio_url: 'https://cdn.x.com/a.wav' }),
+          expect(onNodeChange).toHaveBeenCalledWith('start', {
+            content: '开始场景。\n\n<!-- audio: https://cdn.x.com/a.wav -->\n\n第二段。',
+          }),
         );
+        const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string) as { text: string };
+        expect(body.text).toBe('开始场景。\n\n第二段。');
         expect(dialog.alert).toHaveBeenCalledWith('语音生成成功！');
         vi.unstubAllGlobals();
       });
 
-      it('请求失败时弹出错误提示，不写回 audio_url', async () => {
+      it('请求失败时弹出错误提示，不写回 content', async () => {
         vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse({ error: '生成失败' }, false)));
         selectNode();
         const onNodeChange = vi.fn();

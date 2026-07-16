@@ -10,6 +10,7 @@ interface CharacterMentionTextareaProps {
   characters?: Record<string, AICharacter>;
   placeholder?: string;
   className?: string;
+  disabled?: boolean;
 }
 
 /**
@@ -25,6 +26,7 @@ export default function CharacterMentionTextarea({
   characters = {},
   placeholder,
   className,
+  disabled,
 }: CharacterMentionTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [showPopover, setShowPopover] = useState(false);
@@ -188,6 +190,7 @@ export default function CharacterMentionTextarea({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={className}
+        disabled={disabled}
       />
 
       {/* 自动完成弹窗 */}
