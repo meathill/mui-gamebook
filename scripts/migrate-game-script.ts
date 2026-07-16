@@ -24,7 +24,7 @@ function parseArgs() {
 // Regex to find scenes: Capture: 1=ID, 2=Content
 const SCENE_REGEX = /(^|\n)#\s*([\w-]+)\n([\s\S]*?)(?=(?:\n#\s*[\w-]+)|$)/g;
 
-function migrateContent(rawContent: string): string {
+export function migrateContent(rawContent: string): string {
   // 清洗 {{...}} 模板段内的转义污染（旧版 stringify 产出的 \_ 等），见 parser/src/utils.ts
   const content = unescapeTemplateSpans(rawContent);
 
@@ -175,6 +175,7 @@ async function main() {
     }
     const content = fs.readFileSync(filePath, 'utf-8');
     const migrated = migrateContent(content);
+    assertNoMassiveShrink(content, migrated);
 
     if (content === migrated) {
       console.log('No changes needed.');
@@ -225,6 +226,7 @@ async function main() {
       }
 
       const migrated = migrateContent(game.content);
+      assertNoMassiveShrink(game.content, migrated);
 
       if (game.content === migrated) {
         console.log('No changes needed.');
@@ -247,4 +249,22 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+/**
+ * 防缩水护栏：SCENE_REGEX 匹配不上旧版转义标题（如 `# forest\_path\_start`）时，
+ * 场景重建会吞掉大段内容（生产实测小红帽 4233→1095）。缩水超过 40% 视为脚本
+ * 不适用该内容，直接中止——这类老产物应改用 parse→stringify 规范化清洗。
+ */
+function assertNoMassiveShrink(before: string, after: string): void {
+  if (after.length < before.length * 0.6) {
+    console.error(
+      `中止：迁移结果缩水 ${before.length}→${after.length} 字符（>40%），疑似场景标题含转义无法被 SCENE_REGEX 识别。请改用 parse→stringify 规范化。`,
+    );
+    process.exit(1);
+  }
+}
+
+// 仅在直接运行时执行（被导入复用 migrateContent 时不触发）
+const isDirectRun = process.argv[1]?.includes('migrate-game-script');
+if (isDirectRun) {
+  main().catch(console.error);
+}
