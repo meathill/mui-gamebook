@@ -5,7 +5,7 @@ import {
   hasMetadataContent,
   serializeSceneMetadata,
   type SceneMetadata,
-} from '@/lib/editor/extensions/matchers';
+} from '@/lib/editor/scene-metadata-yaml';
 import type {
   SceneMetadataEditForm,
   SceneMetadataFieldKey,
@@ -34,8 +34,9 @@ export function useSceneMetadataEditor({ node, editor, getPos, gameId }: UseScen
     const pos = getPos();
     if (pos == null) return;
     const { tr, schema } = editor.view.state;
-    const newText = serializeSceneMetadata(newMeta);
-    tr.replaceWith(pos + 1, pos + node.nodeSize - 1, schema.text(newText));
+    const newText = serializeSceneMetadata(newMeta, node.textContent);
+    // ProseMirror 不允许空 text node，全清空时直接清空块内容
+    tr.replaceWith(pos + 1, pos + node.nodeSize - 1, newText ? schema.text(newText) : []);
     editor.view.dispatch(tr);
   }
 

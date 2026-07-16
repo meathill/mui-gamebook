@@ -8,7 +8,7 @@ import {
   UsersIcon,
   MagnifyingGlassPlusIcon,
 } from '@phosphor-icons/react';
-import type { SceneMetadata } from '@/lib/editor/extensions/matchers';
+import type { SceneMetadata } from '@/lib/editor/scene-metadata-yaml';
 import { FormActions, FormField } from './SceneMetadataForm';
 import {
   AudioEditForm,

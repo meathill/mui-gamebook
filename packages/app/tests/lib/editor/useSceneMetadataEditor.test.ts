@@ -96,7 +96,64 @@ describe('useSceneMetadataEditor', () => {
 
       const serialized = String((replaceWith.mock.calls[0] as unknown[])[2]);
       expect(serialized).toContain('prompt: 新描述');
-      expect(serialized).toContain('aspectRatio: 16:9');
+      // js-yaml 对含冒号的值加引号（旧手写 serialize 裸写会产出非法 yaml）
+      expect(serialized).toContain("aspectRatio: '16:9'");
+    });
+  });
+
+  describe('未知键透传（issue #7 回归）', () => {
+    const initialYaml = `image:
+  prompt: 旧描述
+minigame:
+  prompt: 小游戏
+  variables:
+    score: 分数
+meta:
+  chapter: 第一章`;
+
+    it('编辑 image 保存后保留 minigame.variables 与自定义顶层键', () => {
+      const { hook, replaceWith } = renderEditor(initialYaml);
+
+      act(() => hook.result.current.startEdit('image'));
+      act(() => hook.result.current.setField('prompt', '新描述'));
+      act(() => hook.result.current.saveEdit());
+
+      const serialized = String((replaceWith.mock.calls[0] as unknown[])[2]);
+      expect(serialized).toContain('新描述');
+      expect(serialized).not.toContain('旧描述');
+      expect(serialized).toContain('score: 分数');
+      expect(serialized).toContain('chapter: 第一章');
+    });
+
+    it('清空 url 后该键消失，未知键仍在', () => {
+      const { hook, replaceWith } = renderEditor(`image:
+  prompt: 描述
+  url: https://x.com/a.png
+meta:
+  chapter: 1`);
+
+      act(() => hook.result.current.startEdit('image'));
+      act(() => hook.result.current.setField('url', ''));
+      act(() => hook.result.current.saveEdit());
+
+      const serialized = String((replaceWith.mock.calls[0] as unknown[])[2]);
+      expect(serialized).not.toContain('https://x.com/a.png');
+      expect(serialized).toContain('prompt: 描述');
+      expect(serialized).toContain('chapter: 1');
+    });
+
+    it('addSection 不抹掉未知键', () => {
+      const { hook, replaceWith } = renderEditor(`image:
+  prompt: x
+meta:
+  chapter: 1`);
+
+      act(() => hook.result.current.addSection('video'));
+
+      const serialized = String((replaceWith.mock.calls[0] as unknown[])[2]);
+      expect(serialized).toContain('video:');
+      expect(serialized).toContain('prompt: x');
+      expect(serialized).toContain('chapter: 1');
     });
   });
 
