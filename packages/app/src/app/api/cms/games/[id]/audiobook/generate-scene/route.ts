@@ -132,7 +132,8 @@ export async function POST(req: Request, { params }: Params) {
       httpMetadata: { contentType: result.mimeType, cacheControl: 'public, max-age=31536000, immutable' },
     });
 
-    return { speaker, voice, text, url: `${publicDomain}/${fileName}`, mimeType: result.mimeType };
+    // R2 key 允许 UTF-8 原文（sceneId 可含中文），公开 URL 需 percent-encode；对纯 ASCII key 恒等
+    return { speaker, voice, text, url: `${publicDomain}/${encodeURI(fileName)}`, mimeType: result.mimeType };
   }
 
   try {

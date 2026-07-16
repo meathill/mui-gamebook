@@ -60,4 +60,13 @@ describe('findChoiceMatches', () => {
     expect(target).toBeDefined();
     expect(text.slice(target!.from, target!.to)).toBe('dark-castle');
   });
+
+  it('匹配中文场景 ID 目标（issue #8）', () => {
+    const text = '[走进舞会] -> 舞会大厅 (set: gold = gold - 1)';
+    const matches = findChoiceMatches(text);
+    const target = matches.find((m) => m.type === 'choice-target');
+    expect(target).toBeDefined();
+    expect(text.slice(target!.from, target!.to)).toBe('舞会大厅');
+    expect(matches.filter((m) => m.type === 'choice-clause')).toHaveLength(1);
+  });
 });

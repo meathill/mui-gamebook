@@ -10,9 +10,10 @@
 import type { List } from 'mdast';
 import { toString } from 'mdast-util-to-string';
 import type { Diagnostic, DiagnosticReporter, SceneChoiceNode, SceneNode } from './types';
+import { SCENE_ID_CHAR_CLASS } from './utils';
 
 // 选项文本贪婪匹配：允许文本内出现 ]，以最后一个 "] -> 场景ID" 为界
-const CHOICE_LINE_REGEX = /^\[([\s\S]*)\]\s*->\s*([\w-]+)\s*(.*)$/;
+const CHOICE_LINE_REGEX = new RegExp(String.raw`^\[([\s\S]*)\]\s*->\s*(${SCENE_ID_CHAR_CLASS}+)\s*(.*)$`, 'u');
 
 /** 已知子句 → 节点字段的映射，其余子句透传 */
 const KNOWN_CLAUSES = new Set(['if', 'set', 'audio']);

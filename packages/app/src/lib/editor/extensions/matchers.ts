@@ -3,8 +3,8 @@
  * 用于 Decoration 插件和单元测试
  */
 
-// 选项语法正则
-const CHOICE_RE = /\[(.*?)\]\s*->\s*([\w-]+)\s*(.*?)$/;
+// 选项语法正则（目标字符集与 parser 的 SCENE_ID_CHAR_CLASS 保持同口径，支持 Unicode 场景 ID）
+const CHOICE_RE = /\[(.*?)\]\s*->\s*([\p{L}\p{N}_-]+)\s*(.*?)$/u;
 const IF_CLAUSE_RE = /\(if:\s*(.*?)\)/g;
 const SET_CLAUSE_RE = /\(set:\s*(.*?)\)/g;
 const AUDIO_CLAUSE_RE = /\(audio:\s*(.*?)\)/g;

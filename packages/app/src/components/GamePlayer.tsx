@@ -128,7 +128,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
 
     async function loadAudiobook() {
       try {
-        const res = await fetch(`/api/games/${slug}/audiobook/${currentSceneId}`);
+        const res = await fetch(`/api/games/${slug}/audiobook/${encodeURIComponent(currentSceneId)}`);
         if (cancelled) return;
         if (res.ok) {
           const data = (await res.json()) as { clips: AudiobookClip[] };

@@ -24,6 +24,14 @@ export function stripTimestampPrefix(filename: string): string {
 }
 
 /**
+ * R2 key → 公开 URL。key 允许 UTF-8 原文（sceneId 可含中文），
+ * URL 层做 percent-encode（保留 `/`）；对存量纯 ASCII key 恒等，不影响已发布素材。
+ */
+export function buildPublicUrl(baseUrl: string, fileName: string): string {
+  return `${baseUrl}/${encodeURI(fileName)}`;
+}
+
+/**
  * 显示帮助信息
  */
 export function showHelp(): void {

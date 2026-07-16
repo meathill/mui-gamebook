@@ -12,7 +12,10 @@ interface Params {
  * 单条 audio_url 播放逻辑，而不是当作错误处理。
  */
 export async function GET(_req: Request, { params }: Params) {
-  const { slug, sceneId } = await params;
+  const { slug, sceneId: rawSceneId } = await params;
+  // Unicode 场景 ID 经 URL 到达时是 percent-encoded；场景 ID 字符集不含 `%`，
+  // 对已解码值 decode 是幂等的，可抹平 Next.js 版本间参数编码行为差异
+  const sceneId = decodeURIComponent(rawSceneId);
   const { env } = getCloudflareContext();
 
   const bucket = env.ASSETS_BUCKET;

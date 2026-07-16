@@ -58,5 +58,27 @@ describe('Upload Modules', () => {
     });
   });
 
+  describe('findAssets - Unicode 场景 ID（issue #8）', () => {
+    it('中文场景文件名可被正确反解析', () => {
+      const mockDir = '/assets';
+      (fs.existsSync as any).mockImplementation((p: string) => {
+        if (p === mockDir) return true;
+        if (p.endsWith('mapping.json')) return false;
+        return true;
+      });
+
+      (fs.readdirSync as any).mockReturnValue([
+        'hp4_舞会.webp', // ASCII slug 前缀 + 中文场景 ID
+        '舞会_开场.webp', // 纯中文（含下划线）场景 ID，无前缀可剥
+      ]);
+      (fs.statSync as any).mockReturnValue({ isDirectory: () => false });
+
+      const result = findAssets(mockDir);
+
+      expect(result.assets.get('舞会')).toBe(path.join(mockDir, 'hp4_舞会.webp'));
+      expect(result.assets.get('舞会_开场')).toBe(path.join(mockDir, '舞会_开场.webp'));
+    });
+  });
+
   // More tests can be added here
 });

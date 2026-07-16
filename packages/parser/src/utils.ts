@@ -14,6 +14,21 @@ import type {
 import { replaceCharacterMentions } from './replace-character-mentions';
 
 /**
+ * 场景 ID 的可引用字符集（选项/重定向目标的统一口径）。
+ * 与对话行角色 ID（`[\p{L}\p{N}_]`）对齐，额外保留 `-` 兼容存量 kebab-case 场景 ID。
+ * 该集合刻意排除空格与 `#?%/:` 等 URL 保留字符——场景 ID 会进 R2 key 与素材 URL，
+ * percent-encode 后即路径段安全，无需 slugify。
+ */
+export const SCENE_ID_CHAR_CLASS = String.raw`[\p{L}\p{N}_-]`;
+
+const REFERENCEABLE_SCENE_ID_REGEX = new RegExp(`^${SCENE_ID_CHAR_CLASS}+$`, 'u');
+
+/** 场景标题（即场景 ID）能否被选项/重定向的目标正则完整匹配 */
+export function isReferenceableSceneId(id: string): boolean {
+  return REFERENCEABLE_SCENE_ID_REGEX.test(id);
+}
+
+/**
  * 判断值是否为变量元数据对象
  */
 export function isVariableMeta(value: GameStateValue): value is VariableMeta {

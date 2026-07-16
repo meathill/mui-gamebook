@@ -192,10 +192,13 @@ A game is composed of multiple scenes. Each scene represents a specific moment o
 
 每个场景由一个 ATX 风格的一级 Markdown 标题（`#`）后跟一个唯一的 `SceneID` 来定义。
 
+`SceneID` 支持 Unicode：字符集为字母、数字、下划线与连字符（`[\p{L}\p{N}_-]`，中文可直接作场景 ID）。不允许空格与标点——含集合外字符的标题虽能定义场景，但无法被选项/重定向引用，解析时会收到 `unreferenceable-scene-id` 警告。
+
 **示例：**
 
 ```markdown
 # start
+# 舞会大厅
 ```
 
 ### 3.2 场景分隔

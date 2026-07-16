@@ -6,6 +6,7 @@ import * as yaml from 'js-yaml';
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
 import { parseChoices, scanClauses } from './parse-choice';
+import { SCENE_ID_CHAR_CLASS } from './utils';
 import type {
   DiagnosticReporter,
   SceneAiAudioNode,
@@ -22,7 +23,7 @@ const AUDIO_COMMENT_REGEX = /^<!--\s*audio:\s*(.*?)\s*-->[ \t]*(.*)$/;
 const DIALOGUE_LINE_REGEX = /^@([\p{L}\p{N}_]+)\s*(?:[(（]([^)）]*)[)）])?\s*[:：]\s*(.*)$/u;
 
 // 块级重定向行：`-> target_scene (if: expr) (set: ...)`（`->` 行首不构成 CommonMark 列表项）
-const REDIRECT_LINE_REGEX = /^->\s*([\w-]+)\s*(.*)$/;
+const REDIRECT_LINE_REGEX = new RegExp(String.raw`^->\s*(${SCENE_ID_CHAR_CLASS}+)\s*(.*)$`, 'u');
 
 /** 已废弃的代码围栏语言（现 parser 不再解析，检出必须报 error 提示迁移） */
 const LEGACY_FENCE_LANGS = new Set(['minigame-gen', 'image-gen', 'audio-gen', 'video-gen']);

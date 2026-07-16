@@ -4,7 +4,7 @@
  */
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { s3Client, R2_BUCKET, R2_PUBLIC_URL } from './config';
-import { retry } from './utils';
+import { buildPublicUrl, retry } from './utils';
 import { isUploaded, markAsUploaded } from './cache';
 
 /**
@@ -24,7 +24,7 @@ async function _uploadToR2(fileName: string, body: Buffer, type: string = 'image
       ContentType: type,
     }),
   );
-  return `${R2_PUBLIC_URL}/${fileName}`;
+  return buildPublicUrl(R2_PUBLIC_URL, fileName);
 }
 
 /**

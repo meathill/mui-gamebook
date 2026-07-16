@@ -7,6 +7,7 @@ import { toString } from 'mdast-util-to-string';
 import type { Root, RootContent } from 'mdast';
 import type { Diagnostic, Game, ParseResult, Scene, SceneNode } from './types';
 import { buildAssetNodes, parseSceneNodes } from './parse-scene';
+import { isReferenceableSceneId } from './utils';
 import slugify from 'slugify';
 
 export type { Game, SceneNode };
@@ -127,6 +128,17 @@ export function parse(source: string): ParseResult {
       commitScene();
       currentSceneId = toString(node).trim();
       currentSceneNodes = [];
+      // 定义端接受任意标题，但含引用字符集之外字符（空格、标点等）的场景
+      // 无法被选项/重定向的目标正则匹配到——「能定义、不能引用」必须可见（P1）
+      if (!isReferenceableSceneId(currentSceneId)) {
+        report({
+          severity: 'warning',
+          code: 'unreferenceable-scene-id',
+          message: `Scene ID "${currentSceneId}" contains characters that choices/redirects cannot reference (allowed: letters, numbers, "_", "-").`,
+          sceneId: currentSceneId,
+          line: node.position?.start.line,
+        });
+      }
     } else if (currentSceneId) {
       currentSceneNodes.push(node);
     } else if (node.type !== 'thematicBreak') {

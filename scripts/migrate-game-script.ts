@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { unescapeTemplateSpans } from '../packages/parser/src/utils';
+import { SCENE_ID_CHAR_CLASS, unescapeTemplateSpans } from '../packages/parser/src/utils';
 import { ApiService } from '../packages/asset-generator/src/lib/upload/api-service';
 
 function parseArgs() {
@@ -22,7 +22,11 @@ function parseArgs() {
 }
 
 // Regex to find scenes: Capture: 1=ID, 2=Content
-const SCENE_REGEX = /(^|\n)#\s*([\w-]+)\n([\s\S]*?)(?=(?:\n#\s*[\w-]+)|$)/g;
+// 场景 ID 字符集与 parser 引用端同口径（支持 Unicode），避免再跑清洗时吞中文场景
+const SCENE_REGEX = new RegExp(
+  String.raw`(^|\n)#\s*(${SCENE_ID_CHAR_CLASS}+)\n([\s\S]*?)(?=(?:\n#\s*${SCENE_ID_CHAR_CLASS}+)|$)`,
+  'gu',
+);
 
 export function migrateContent(rawContent: string): string {
   // 清洗 {{...}} 模板段内的转义污染（旧版 stringify 产出的 \_ 等），见 parser/src/utils.ts

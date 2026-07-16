@@ -147,7 +147,8 @@ not  !
 
 - **`==`**：同类型严格比较；数字与"数字形字符串"比较时做数值提升（锁定存量宽松行为中真正被依赖的部分），写成 conformance 用例
 - **未定义变量**：运行时按 falsy 处理 + `console.warn`，**不 throw**（线上剧本不能崩）；报错是 lint 的职责（validate 已有未声明变量检查）
-- **标识符**：`/[\p{L}\p{N}_]+/u` 且首字符非数字——**变量名与角色 ID 放开 Unicode（支持中文）**；场景 ID 维持 ASCII（进 R2 文件名与 URL 的链路未排查，见 Non-goals）
+- **标识符**：`/[\p{L}\p{N}_]+/u` 且首字符非数字——**变量名与角色 ID 放开 Unicode（支持中文）**
+- **场景 ID 引用端放开 Unicode**（issue #8，2026-07 落地）：选项/重定向目标字符集统一为 `[\p{L}\p{N}_-]`（parser `SCENE_ID_CHAR_CLASS` 单点定义，migrate 脚本与编辑器高亮同口径），在角色 ID 集合上保留 `-` 兼容存量 kebab-case。链路排查结论：AI 场景图/立绘/封面按 prompt hash 命名本就不含 sceneId；TTS 音频、有声书、批量图片的 R2 key 含 sceneId 原文——R2 key 原生支持 UTF-8 故 key 不清洗（保 asset-finder 手工命名体验与可读性），仅在公开 URL 出口 percent-encode（`encodeURI`，对存量 ASCII key 恒等）。该字符集刻意排除空格与 `#?%/:` 等 URL 保留字符，因此 encode 后即路径段安全，无需 slugify；含集合外字符的标题（空格、标点）依旧不可引用，由 `unreferenceable-scene-id` 诊断兜底
 - **trigger 归一**：旧前缀式 `condition: "<= 0"` 在解析期补全 LHS 为变量名，运行时统一走 `evaluate(expr, state)`——顺带修复字符串变量 trigger 永不触发的 bug（不再拼字符串求值）
 - **Unicode 一次改齐五处**：表达式词法器、`{{var}}` 插值、`{{if}}` 条件提取、validator、`@角色ID`，避免制造第四方言
 
@@ -238,7 +239,6 @@ not  !
 
 - **随机数/骰子不进表达式语言**：破坏存档确定性与 conformance 可测性；未来若做，以独立子句形式（如 `(roll: ...)`）引入并将结果落入 state
 - **战斗/商店/背包不进核心语法**：按 4.3 的扩展判据走 minigame 或 extra 透传
-- **场景 ID Unicode 化暂缓**：场景 ID 进 asset-generator 素材文件名与 R2 URL（如 `hp4_ball_dance`），放开前需排查该链路
 - **DSL 级 i18n 不做**：推荐 per-locale 文件（`game.zh.md`/`game.en.md`）+ lint 场景图同构比对，列 backlog
 - **不做双解析器分叉**（P5）
 - **素材产物 sidecar 化**（url 与内容分离、稳定节点寻址）：方向正确但语法成本大，Phase 3 出独立设计文档再决策
