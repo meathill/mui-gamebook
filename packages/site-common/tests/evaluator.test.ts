@@ -145,5 +145,19 @@ describe('evaluator', () => {
       expect(interpolateVariables(text, { partner: 'luna' })).toBe('有伴');
       expect(interpolateVariables(text, { partner: 'none' })).toBe('独行');
     });
+
+    it('{{ if }} 条件文本支持嵌套（issue #10，HP4:2059 原始形态）', () => {
+      const text =
+        '{{ if partner == "parvati" }}帕瓦蒂{{ else }}{{ if partner == "luna" }}卢娜{{ else }}你独自一人{{ /if }}{{ /if }}';
+      expect(interpolateVariables(text, { partner: 'parvati' })).toBe('帕瓦蒂');
+      expect(interpolateVariables(text, { partner: 'luna' })).toBe('卢娜');
+      expect(interpolateVariables(text, { partner: 'cho' })).toBe('你独自一人');
+    });
+
+    it('关键字大小写不敏感（沿用旧正则语义）', () => {
+      const text = '{{ IF gold > 1 }}富{{ Else }}穷{{ /IF }}';
+      expect(interpolateVariables(text, { gold: 5 })).toBe('富');
+      expect(interpolateVariables(text, { gold: 0 })).toBe('穷');
+    });
   });
 });

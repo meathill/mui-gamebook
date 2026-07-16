@@ -10,6 +10,7 @@ import * as fs from 'fs';
 import path from 'path';
 import { validateExpression } from '../packages/parser/src/expression';
 import { parse } from '../packages/parser/src/index';
+import { parseTemplate } from '../packages/parser/src/template';
 import type { Game, SceneNode } from '../packages/parser/src/types';
 
 export function validateGameLogic(game: Game, warnings: string[] = []): string[] {
@@ -47,21 +48,6 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
         issues.push(`Scene "${sceneId}": Variable "${v}" used in ${context} but not declared in state`);
       }
     }
-  }
-
-  // 检测嵌套的 {{ if }} 条件块：运行时是单趟非递归正则，嵌套会把裸模板标签渲染给玩家
-  function hasNestedConditionBlocks(content: string): boolean {
-    const tokenRegex = /\{\{\s*if\s+[^}]*\}\}|\{\{\s*\/if\s*\}\}/g;
-    let depth = 0;
-    for (const match of content.matchAll(tokenRegex)) {
-      if (/^\{\{\s*\/if/.test(match[0])) {
-        depth = Math.max(0, depth - 1);
-      } else {
-        if (depth > 0) return true;
-        depth++;
-      }
-    }
-    return false;
   }
 
   // 1. Check Start Scene
@@ -117,10 +103,11 @@ export function validateGameLogic(game: Game, warnings: string[] = []): string[]
           checkExpression(match[1], 'condition', '{{ if }} condition', sceneId);
         }
 
-        // 检查嵌套 {{ if }} 条件块
-        if (hasNestedConditionBlocks(node.content)) {
+        // 检查未配平的 {{ if }} 模板标签：未闭合/孤儿/重复标签会按字面渲染给玩家
+        // （嵌套已被运行时支持，issue #10；同一块必须在同一 text/dialogue 节点内，不能跨段落）
+        for (const d of parseTemplate(node.content).diagnostics) {
           issues.push(
-            `Scene "${sceneId}": Nested {{ if }} blocks are not supported by the runtime and will render raw template tags to players`,
+            `Scene "${sceneId}": Invalid {{ if }} template: ${d.code} at '${d.tag}' (raw tags will render to players)`,
           );
         }
       }
@@ -233,8 +220,7 @@ function main() {
     console.log();
 
     const hasErrors = logicIssues.some(
-      (i) =>
-        i.includes('not defined') || i.includes('Missing') || i.includes('Invalid') || i.includes('Nested {{ if }}'),
+      (i) => i.includes('not defined') || i.includes('Missing') || i.includes('Invalid'),
     );
     process.exit(hasErrors ? 1 : 0);
   } catch (e) {

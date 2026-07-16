@@ -52,7 +52,7 @@ parser 对无法识别的内容一律静默丢弃，已造成实际损失：
 | 选项 `(if:)` | `a > 1, b` | `evaluator.ts:8-54`，`,`/`&&` 拆分做 AND | 无 OR、无括号、字符串含逗号被切坏 |
 | 选项 `(set:)` | `k = k + 1` | `evaluator.ts:60-96` | 只支持单个 `+`/`-`，无 `* /`、无链式 |
 | 变量 trigger | `"<= 0"`（隐式 LHS） | `use-game-player.ts:116` 把当前值拼进字符串再用**空 state** 求值 | 字符串变量的 trigger 永不触发；含空格字符串破坏切分 |
-| `{{if}}` 条件文本 | `{{ if a > 1 }}` | `evaluator.ts:128` 单趟非贪婪正则 | 不可嵌套；HP4 实际写了嵌套（`harry_potter_4.md:2059`）→ 向玩家吐出裸 `{{ /if }}` 标签 |
+| `{{if}}` 条件文本 | `{{ if a > 1 }}` | ~~单趟非贪婪正则~~ → `parser/src/template.ts` 模板树解析（2026-07，#10） | ~~不可嵌套~~ 已支持嵌套（深度 ≤32）；HP4 曾写嵌套（`harry_potter_4.md:2059`）在旧实现下向玩家吐裸标签 |
 
 配套问题：
 
@@ -71,7 +71,7 @@ remark-stringify 会转义文本节点中的词内下划线：`{{ if ron_friends
 
 修复（Phase 0 已做）：`stringify` 输出后处理 `unescapeTemplateSpans`，`{{...}}` 模板段内不再产出转义；`migrate-game-script.ts` 同步清洗存量；根治（模板段外的转义）靠 Phase 2 手写序列化器。现有 stringify 靠把场景标题、选项行塞进 `html` 节点规避转义（`stringify.ts:76,182`），属于补丁摞补丁。
 
-另：HP4:2059 的嵌套 `{{if}}` 是**实锤的玩家可见 bug**——实测无论 `ball_partner` 取何值，都会把裸模板标签（`{{ if ball_partner == "luna" }}...` 之类）直接渲染给玩家。已拍平为三个并列条件块修复，并在校验器加了嵌套检测防复发。
+另：HP4:2059 的嵌套 `{{if}}` 是**实锤的玩家可见 bug**——实测无论 `ball_partner` 取何值，都会把裸模板标签（`{{ if ball_partner == "luna" }}...` 之类）直接渲染给玩家。已拍平为三个并列条件块修复，并在校验器加了嵌套检测防复发。（2026-07 勘注：#10 已用模板树解析器支持嵌套，校验器改报未配平标签，原始嵌套形态收入 `packages/parser/tests/template.test.ts` conformance。）
 
 ### 2.6 对话无结构（视觉小说方向的最大障碍）
 
@@ -250,7 +250,7 @@ not  !
 - [x] `generate-script.ts`：EXAMPLE_SCRIPT 补 `=`、删除旧围栏指引（随本次评审完成）
 - [x] `DSL_SPEC.md` 勘误：对齐 v1 现状（随本次评审完成）
 - [x] `stringify` 输出后处理：`{{...}}` 模板段内不再产出 `\_`（`parser/src/utils.ts` 的 `unescapeTemplateSpans`）
-- [x] `scripts/validate-game-script.ts`：运算符集与运行时对齐（`* / %` 报 error）+ 嵌套 `{{if}}` 检测
+- [x] `scripts/validate-game-script.ts`：运算符集与运行时对齐（`* / %` 报 error）+ 嵌套 `{{if}}` 检测（2026-07 #10 起嵌套合法，改查未配平模板标签）
 - [x] `scripts/migrate-game-script.ts`：内容清洗接入 `unescapeTemplateSpans`；HP4 的 `\_` 污染（11 处）已清洗、嵌套 `{{if}}` 已拍平（三个并列条件块，三种取值实测渲染正确）
 - [ ] D1 生产数据摸底与清洗：逐游戏跑 `npx tsx scripts/migrate-game-script.ts --slug <slug> --dry-run`（需 `MUI_ADMIN_PASSWORD`），确认后去掉 `--dry-run` 落库
 

@@ -360,8 +360,8 @@ describe('validateGameLogic - 表达式语法校验（与运行时同源，Phase
   });
 });
 
-describe('validateGameLogic - 嵌套 {{ if }} 检测', () => {
-  it('应该检测到嵌套条件块（HP4:2059 实锤模式，运行时会渲染裸模板标签）', () => {
+describe('validateGameLogic - {{ if }} 模板检查', () => {
+  it('嵌套条件块已被运行时支持，不再报错（issue #10，HP4:2059 原始形态）', () => {
     const game = createMinimalGame({
       initialState: { ball_partner: 'none' },
       scenes: {
@@ -378,8 +378,7 @@ describe('validateGameLogic - 嵌套 {{ if }} 检测', () => {
       },
     });
 
-    const issues = validateGameLogic(game);
-    expect(issues.some((i) => i.includes('Nested {{ if }}'))).toBe(true);
+    expect(validateGameLogic(game)).toEqual([]);
   });
 
   it('并列（非嵌套）条件块不应误报', () => {
@@ -399,7 +398,73 @@ describe('validateGameLogic - 嵌套 {{ if }} 检测', () => {
       },
     });
 
+    expect(validateGameLogic(game)).toEqual([]);
+  });
+
+  it('未闭合 {{ if }} 报 Invalid（裸标签会渲染给玩家）', () => {
+    const game = createMinimalGame({
+      initialState: { gold: 0 },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [{ type: 'text', content: '{{ if gold > 1 }}富有' }],
+        },
+      },
+    });
+
     const issues = validateGameLogic(game);
-    expect(issues.some((i) => i.includes('Nested {{ if }}'))).toBe(false);
+    expect(issues.some((i) => i.includes('Invalid {{ if }} template') && i.includes('unclosed-if'))).toBe(true);
+  });
+
+  it('孤儿 {{ /if }} 与孤儿 {{ else }} 报 Invalid', () => {
+    const game = createMinimalGame({
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            { type: 'text', content: '结尾多了{{ /if }}' },
+            { type: 'text', content: '凭空一个{{ else }}' },
+          ],
+        },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('orphan-endif'))).toBe(true);
+    expect(issues.some((i) => i.includes('orphan-else'))).toBe(true);
+  });
+
+  it('跨段落拆开的条件块两半各自报 Invalid（块必须在同一节点内）', () => {
+    const game = createMinimalGame({
+      initialState: { gold: 0 },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [
+            { type: 'text', content: '{{ if gold > 1 }}上半' },
+            { type: 'text', content: '下半{{ /if }}' },
+          ],
+        },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('unclosed-if'))).toBe(true);
+    expect(issues.some((i) => i.includes('orphan-endif'))).toBe(true);
+  });
+
+  it('嵌套块内层条件的未声明变量仍被捕获', () => {
+    const game = createMinimalGame({
+      initialState: { a: 1 },
+      scenes: {
+        start: {
+          id: 'start',
+          nodes: [{ type: 'text', content: '{{ if a }}{{ if 未声明 }}内{{ /if }}{{ /if }}' }],
+        },
+      },
+    });
+
+    const issues = validateGameLogic(game);
+    expect(issues.some((i) => i.includes('未声明') && i.includes('{{ if }} condition'))).toBe(true);
   });
 });
