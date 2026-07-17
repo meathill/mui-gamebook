@@ -71,5 +71,3 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 - 纯静态展示组件（无 props、无条件渲染、无状态），如 `components/home/*`、jianjian 的 `Header.tsx`/`Footer.tsx`/隐私政策与服务条款页
 - 已确认零引用的死代码（如曾经的 `packages/app/src/lib/auth.ts`，已删除）；`GameSettings.tsx` 已确认死代码但受权限限制未删除，暂时也未补测试
 
-已知但不修复、记入 `TODO.md` 的问题：
-- `usage-limit.ts` 的 `incrementUserDailyUsage` 并发下非原子读改写，计数可能丢失（需要 D1 原子 UPDATE 或 Durable Object，架构改动，测试只做了特征化测试锁定现状）

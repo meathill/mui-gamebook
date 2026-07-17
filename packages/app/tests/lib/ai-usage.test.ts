@@ -12,19 +12,14 @@ vi.mock('drizzle-orm/d1', () => ({
   })),
 }));
 
-vi.mock('@/lib/usage-limit', () => ({
-  incrementUserDailyUsage: vi.fn(),
-}));
-
 import { recordAiUsage } from '@/lib/ai-usage';
-import { incrementUserDailyUsage } from '@/lib/usage-limit';
 
 describe('recordAiUsage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('正常路径：写入 D1 并同步更新 KV 每日用量', async () => {
+  it('正常路径：写入 D1（这一行本身就是每日用量的权威数据，不再需要单独记账）', async () => {
     insertValuesMock.mockResolvedValue(undefined);
 
     await recordAiUsage({
@@ -46,10 +41,9 @@ describe('recordAiUsage', () => {
         gameId: 5,
       }),
     );
-    expect(incrementUserDailyUsage).toHaveBeenCalledWith('u1', 30);
   });
 
-  it('D1 写入失败时静默吞掉，且不会继续更新 KV（两个记账通道一起跳过）', async () => {
+  it('D1 写入失败时静默吞掉', async () => {
     insertValuesMock.mockRejectedValue(new Error('D1 down'));
 
     await expect(
@@ -60,7 +54,5 @@ describe('recordAiUsage', () => {
         usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
       }),
     ).resolves.toBeUndefined();
-
-    expect(incrementUserDailyUsage).not.toHaveBeenCalled();
   });
 });

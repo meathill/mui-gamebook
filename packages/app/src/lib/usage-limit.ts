@@ -1,12 +1,12 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { drizzle } from 'drizzle-orm/d1';
+import { and, eq, gte, sql } from 'drizzle-orm';
+import * as schema from '@/db/schema';
 import { getConfig } from './config';
 
-/**
- * 获取今日的 KV key
- */
-function getTodayKey(userId: string): string {
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  return `usage:daily:${userId}:${today}`;
+function startOfTodayUtc(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
 
 /**
@@ -18,45 +18,25 @@ export interface DailyUsage {
 }
 
 /**
- * 获取用户今日的 AI 用量
+ * 获取用户今日的 AI 用量：对 AiUsage 表做实时 SUM 聚合。
+ * recordAiUsage 写入的每一行本身就是权威数据，这里不再单独维护一份 KV 计数器——
+ * 旧版 KV 读-改-写不是原子操作，并发请求下会丢计数（见 usage-limit.test.ts 历史）。
+ * 只有 INSERT、没有共享可变状态可读改写，天然不会有这个问题。
  */
 export async function getUserDailyUsage(userId: string): Promise<DailyUsage> {
   try {
     const { env } = getCloudflareContext();
-    const kv = env.KV;
+    const db = drizzle(env.DB);
 
-    const key = getTodayKey(userId);
-    const usage = await kv.get<DailyUsage>(key, 'json');
+    const [row] = await db
+      .select({ total: sql<number>`coalesce(sum(${schema.aiUsage.totalTokens}), 0)` })
+      .from(schema.aiUsage)
+      .where(and(eq(schema.aiUsage.userId, userId), gte(schema.aiUsage.createdAt, startOfTodayUtc())));
 
-    return usage || { totalTokens: 0, lastUpdated: new Date().toISOString() };
+    return { totalTokens: row?.total ?? 0, lastUpdated: new Date().toISOString() };
   } catch (error) {
     console.error('[Usage Limit] 获取用户每日用量失败:', error);
     return { totalTokens: 0, lastUpdated: new Date().toISOString() };
-  }
-}
-
-/**
- * 增加用户今日的 AI 用量
- */
-export async function incrementUserDailyUsage(userId: string, tokens: number): Promise<void> {
-  try {
-    const { env } = getCloudflareContext();
-    const kv = env.KV;
-
-    const key = getTodayKey(userId);
-    const current = await getUserDailyUsage(userId);
-
-    const newUsage: DailyUsage = {
-      totalTokens: current.totalTokens + tokens,
-      lastUpdated: new Date().toISOString(),
-    };
-
-    // 设置 TTL 为 2 天，确保过期数据自动清理
-    await kv.put(key, JSON.stringify(newUsage), { expirationTtl: 2 * 24 * 60 * 60 });
-
-    console.log(`[Usage Limit] 用户 ${userId} 今日用量: ${newUsage.totalTokens} tokens`);
-  } catch (error) {
-    console.error('[Usage Limit] 更新用户每日用量失败:', error);
   }
 }
 

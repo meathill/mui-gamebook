@@ -1,52 +1,25 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const kv = {
-  get: vi.fn(),
-  put: vi.fn(),
-};
+const whereMock = vi.fn();
+const fromMock = vi.fn(() => ({ where: whereMock }));
+const selectMock = vi.fn(() => ({ from: fromMock }));
 
 vi.mock('@opennextjs/cloudflare', () => ({
-  getCloudflareContext: vi.fn(() => ({ env: { KV: kv } })),
+  getCloudflareContext: vi.fn(() => ({ env: { DB: {} } })),
+}));
+
+vi.mock('drizzle-orm/d1', () => ({
+  drizzle: vi.fn(() => ({ select: selectMock })),
 }));
 
 vi.mock('@/lib/config', () => ({
   getConfig: vi.fn(),
 }));
 
-import { checkUserUsageLimit, getUserDailyUsage, incrementUserDailyUsage } from '@/lib/usage-limit';
+import { checkUserUsageLimit, getUserDailyUsage } from '@/lib/usage-limit';
 import { getConfig } from '@/lib/config';
 
 describe('getUserDailyUsage', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('KV 有记录时返回解析后的值', async () => {
-    kv.get.mockResolvedValue({ totalTokens: 500, lastUpdated: '2026-07-01T00:00:00.000Z' });
-
-    const usage = await getUserDailyUsage('u1');
-
-    expect(usage).toEqual({ totalTokens: 500, lastUpdated: '2026-07-01T00:00:00.000Z' });
-  });
-
-  it('KV 无记录时返回默认值', async () => {
-    kv.get.mockResolvedValue(null);
-
-    const usage = await getUserDailyUsage('u1');
-
-    expect(usage.totalTokens).toBe(0);
-  });
-
-  it('KV 读取异常时 fail-open 返回默认值', async () => {
-    kv.get.mockRejectedValue(new Error('KV down'));
-
-    const usage = await getUserDailyUsage('u1');
-
-    expect(usage.totalTokens).toBe(0);
-  });
-});
-
-describe('incrementUserDailyUsage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
@@ -57,40 +30,41 @@ describe('incrementUserDailyUsage', () => {
     vi.useRealTimers();
   });
 
-  it('正常路径：key 按日期格式化、值累加、TTL 为两天', async () => {
-    kv.get.mockResolvedValue({ totalTokens: 100, lastUpdated: '2026-07-12T00:00:00.000Z' });
-    kv.put.mockResolvedValue(undefined);
+  it('对 AiUsage 表按用户 + 当日范围做 SUM 聚合', async () => {
+    whereMock.mockResolvedValue([{ total: 500 }]);
 
-    await incrementUserDailyUsage('u1', 50);
+    const usage = await getUserDailyUsage('u1');
 
-    expect(kv.put).toHaveBeenCalledTimes(1);
-    const [key, body, options] = kv.put.mock.calls[0];
-    expect(key).toBe('usage:daily:u1:2026-07-12');
-    expect(JSON.parse(body).totalTokens).toBe(150);
-    expect(options).toEqual({ expirationTtl: 172800 });
+    expect(usage.totalTokens).toBe(500);
+    expect(selectMock).toHaveBeenCalledTimes(1);
   });
 
-  it('KV 写入异常时静默吞掉，不 reject', async () => {
-    kv.get.mockResolvedValue({ totalTokens: 0, lastUpdated: '' });
-    kv.put.mockRejectedValue(new Error('KV down'));
+  it('当日没有记录时返回 0（coalesce 兜底）', async () => {
+    whereMock.mockResolvedValue([{ total: 0 }]);
 
-    await expect(incrementUserDailyUsage('u1', 10)).resolves.toBeUndefined();
+    const usage = await getUserDailyUsage('u1');
+
+    expect(usage.totalTokens).toBe(0);
   });
 
-  it('[已知问题，见 TODO.md] 并发调用下计数会丢失，因为读改写不是原子操作', async () => {
-    // 两次并发调用都读到同一个旧快照（100），不是互相累加的关系。
-    // 正确的原子行为应该是 110 后再 130（或反过来），但读改写非原子导致两次都只基于
-    // 同一个旧值各自计算。这条测试记录的是当前行为，不是期望行为——真正修复需要改成
-    // D1 原子 UPDATE 或 Durable Object 计数器，属于架构改动，不在补测试范畴内顺带做。
-    kv.get.mockResolvedValue({ totalTokens: 100, lastUpdated: '2026-07-12T00:00:00.000Z' });
-    kv.put.mockResolvedValue(undefined);
+  it('查询异常时 fail-open 返回默认值', async () => {
+    whereMock.mockRejectedValue(new Error('D1 down'));
 
-    await Promise.all([incrementUserDailyUsage('u1', 10), incrementUserDailyUsage('u1', 20)]);
+    const usage = await getUserDailyUsage('u1');
 
-    const writtenTotals = kv.put.mock.calls
-      .map(([, body]) => JSON.parse(body as string).totalTokens as number)
-      .sort((a, b) => a - b);
-    expect(writtenTotals).toEqual([110, 120]);
+    expect(usage.totalTokens).toBe(0);
+  });
+
+  it('回归测试：两次 recordAiUsage 各自独立 INSERT，SUM 读到的是二者之和，不会像旧版 KV 读改写那样丢更新', async () => {
+    // 旧版 bug：两次并发 incrementUserDailyUsage 都读到同一份旧快照，各自基于旧值计算，
+    // 后写入的一次会覆盖前一次，总量只体现其中一次增量。现在 recordAiUsage 只做 INSERT，
+    // 没有共享可变状态可读改写；这里用「SUM 已经等于两次增量之和」模拟两次 INSERT 都已落库，
+    // 验证读到的是完整总量而不是被覆盖后的单次增量。
+    whereMock.mockResolvedValue([{ total: 30 }]); // 10 + 20，两次都算上了
+
+    const usage = await getUserDailyUsage('u1');
+
+    expect(usage.totalTokens).toBe(30);
   });
 });
 
@@ -115,7 +89,7 @@ describe('checkUserUsageLimit', () => {
 
   it('普通用户未超限', async () => {
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
-    kv.get.mockResolvedValue({ totalTokens: 400, lastUpdated: '' });
+    whereMock.mockResolvedValue([{ total: 400 }]);
 
     const result = await checkUserUsageLimit('u1');
 
@@ -125,7 +99,7 @@ describe('checkUserUsageLimit', () => {
 
   it('用量恰好等于上限时判定为超限', async () => {
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
-    kv.get.mockResolvedValue({ totalTokens: 1000, lastUpdated: '' });
+    whereMock.mockResolvedValue([{ total: 1000 }]);
 
     const result = await checkUserUsageLimit('u1');
 

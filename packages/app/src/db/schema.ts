@@ -146,6 +146,7 @@ export const aiUsage = sqliteTable(
   (table) => ({
     userIdIdx: index('ai_usage_user_id_idx').on(table.userId),
     gameIdIdx: index('ai_usage_game_id_idx').on(table.gameId),
+    userIdCreatedAtIdx: index('ai_usage_user_id_created_at_idx').on(table.userId, table.createdAt),
   }),
 );
 
