@@ -4,10 +4,8 @@ import { useTranslations } from 'next-intl';
 import * as Accordion from '@radix-ui/react-accordion';
 import { CaretDownIcon } from '@phosphor-icons/react';
 
-export default function FaqSection() {
+export default function FaqSection({ faqKeys }: { faqKeys: string[] }) {
   const t = useTranslations('home');
-
-  const faqKeys = ['whatIs', 'howCreate', 'pricing', 'export', 'aiRole'];
 
   return (
     <section className="py-16 bg-gray-50 border-y border-gray-200">

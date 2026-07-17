@@ -38,6 +38,59 @@ export async function getPublishedGames(options?: { limit?: number; offset?: num
   }
 }
 
+/**
+ * 首页精选：置顶 slug 优先（按给定顺序），其余按 updated_at 补足到 limit
+ */
+export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: number }): Promise<ParsedGameRow[]> {
+  const { pinnedSlugs, limit } = options;
+  try {
+    const { env } = getCloudflareContext();
+    const DB = env.DB;
+
+    if (!DB) {
+      console.error("D1 database binding 'DB' not found.");
+      return [];
+    }
+
+    const columns = 'slug, title, description, cover_image, tags, created_at, updated_at';
+    let pinned: GameRow[] = [];
+    if (pinnedSlugs.length > 0) {
+      const placeholders = pinnedSlugs.map(() => '?').join(', ');
+      const { results } = (await DB.prepare(
+        `SELECT ${columns} FROM Games WHERE published = 1 AND slug IN (${placeholders})`,
+      )
+        .bind(...pinnedSlugs)
+        .all()) as { results: GameRow[] };
+      const bySlug = new Map(results.map((row) => [row.slug, row]));
+      pinned = pinnedSlugs.map((slug) => bySlug.get(slug)).filter((row): row is GameRow => !!row);
+    }
+
+    const { results: recent } = (await DB.prepare(
+      `SELECT ${columns} FROM Games WHERE published = 1 ORDER BY updated_at DESC LIMIT ?`,
+    )
+      .bind(limit)
+      .all()) as { results: GameRow[] };
+
+    const seen = new Set(pinned.map((row) => row.slug));
+    const merged = [...pinned];
+    for (const row of recent) {
+      if (merged.length >= limit) break;
+      if (!seen.has(row.slug)) {
+        seen.add(row.slug);
+        merged.push(row);
+      }
+    }
+
+    return merged.map((row) => ({
+      ...row,
+      tags: row.tags ? JSON.parse(row.tags) : [],
+    }));
+  } catch (e) {
+    console.error('Failed to fetch featured games:', e);
+    return [];
+  }
+}
+
 export async function getPublishedGamesCount(): Promise<number> {
   try {
     const { env } = getCloudflareContext();

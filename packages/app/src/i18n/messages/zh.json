@@ -86,13 +86,14 @@
   },
   "home": {
     "hero": {
-      "title": "每个人都能创作互动小说",
-      "subtitle": "用 Markdown 写故事，AI 帮你润色，添加分支选项和互动元素，一键发布到多个平台。",
+      "title": "在线互动小说，人人都能读、人人都能写",
+      "subtitle": "在姆伊游戏书阅读交互小说，或用 Markdown 写你自己的故事：AI 帮你润色，添加分支选项和互动元素，一键发布分享。",
       "startCreating": "开始创作",
-      "browseStories": "浏览作品"
+      "browseStories": "浏览互动小说"
     },
-    "recentGames": "精选作品",
-    "viewAll": "查看全部",
+    "recentGames": "精选互动小说",
+    "recentGamesSubtitle": "从悬疑驱魔到蒸汽朋克红楼，每一部都是可以做出选择的互动手札小说。",
+    "viewAll": "浏览全部互动小说",
     "features": {
       "title": "你需要的创作工具，都在这里",
       "subtitle": "专为互动小说作者打造的一站式创作平台",

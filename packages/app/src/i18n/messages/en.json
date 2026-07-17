@@ -86,13 +86,14 @@
   },
   "home": {
     "hero": {
-      "title": "Everyone Can Create Interactive Fiction",
-      "subtitle": "Write stories in Markdown, let AI polish your prose, add branching choices and interactive elements, publish to multiple platforms.",
+      "title": "Interactive Fiction Online — Everyone Can Read It, Everyone Can Write It",
+      "subtitle": "Read interactive stories on MuiStory, or write your own in Markdown: AI polishes your prose, add branching choices and interactive elements, publish and share in one click.",
       "startCreating": "Start Creating",
-      "browseStories": "Browse Stories"
+      "browseStories": "Browse Interactive Fiction"
     },
-    "recentGames": "Featured Stories",
-    "viewAll": "View All",
+    "recentGames": "Featured Interactive Fiction",
+    "recentGamesSubtitle": "From supernatural mysteries to steampunk retellings — every story is an interactive tale shaped by your choices.",
+    "viewAll": "Browse All Stories",
     "features": {
       "title": "Everything You Need to Create",
       "subtitle": "An all-in-one platform built for interactive fiction authors",

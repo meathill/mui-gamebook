@@ -23,6 +23,7 @@ const jetBrainsMono = JetBrains_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com'),
     title: {
       template: '%s | 姆伊游戏书',
       default: '姆伊游戏书 - 互动小说创作平台',

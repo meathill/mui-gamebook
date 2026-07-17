@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getPublishedGames, getAllTags } from '@/lib/games';
+import { getPublishedPosts } from '@/lib/blog';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +24,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${baseUrl}/minigames`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
@@ -85,5 +92,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...gamePages, ...tagPages];
+  // 博客文章（CMS 不可用时 getPublishedPosts 返回空列表）
+  const { docs: posts } = await getPublishedPosts({ limit: 100 });
+  const blogPages: MetadataRoute.Sitemap = posts.map((post) => ({
+    url: `${baseUrl}/blog/${post.slug}`,
+    lastModified: new Date(post.updatedAt),
+    changeFrequency: 'monthly' as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...gamePages, ...tagPages, ...blogPages];
 }
