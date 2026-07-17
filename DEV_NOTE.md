@@ -93,6 +93,16 @@
 - 使用 Radix Themes 作为基础 UI 库
 - 图标最初统一使用 lucide-react，2026-06-28 起改为统一使用 @phosphor-icons/react（packages/app 与 jianjian 已全量迁移；sites/55 在 2026-07 的全盘维护中补齐迁移，全仓库不再有 lucide-react 依赖）
 
+**Radix Themes 移除（2026-07-17，issue #5）**
+- 全站实际只用到 Theme/Button/IconButton/DropdownMenu 四种组件，却为此全量加载 812KB（未压缩）styles.css，是 PSI「unused CSS 71KiB」与首页渲染阻塞的主因
+- 决策：彻底移除 @radix-ui/themes，按钮统一走 `src/components/Button.tsx`（solid/soft/ghost × 六色 × sm/md/lg，含 iconOnly）；下拉/弹窗/手风琴继续用 @radix-ui/react-* primitives + Tailwind
+- 移除后线上 Lighthouse：桌面 56→95、移动 73→96、unused CSS 归零。**不要再引入组件级 CSS 框架**，新按钮场景优先复用共享 Button
+- 附带约定：@phosphor-icons/react 已列入 next.config 的 `experimental.optimizePackageImports`（不在 Next 默认清单内）
+
+**爬虫默认语言 = 中文（2026-07-17，issue #5）**
+- next-intl 的 locale 解析原本在「无 cookie 且无 Accept-Language」时 fallback 英文，导致 Bingbot 抓到英文正文、与中文 meta/关键词不一致
+- 现改为该场景回落 `defaultLocale`（zh），显式带 Accept-Language 的真实浏览器行为不变；改动在 `src/i18n/request.ts`
+
 **MediaAssetItem 统一组件**
 - 将封面编辑器和素材编辑器合并
 - 决策原因：两者逻辑高度重复（预览、生成、上传），统一后减少维护成本
