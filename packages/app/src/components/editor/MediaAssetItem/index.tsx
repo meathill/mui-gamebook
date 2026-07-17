@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { TrashIcon, SpinnerIcon, UploadSimpleIcon, SparkleIcon, ListIcon } from '@phosphor-icons/react';
 import type { SceneNode } from '@mui-gamebook/parser';
-import { IconButton, Button } from '@radix-ui/themes';
+import Button from '@/components/Button';
 import { useDialog } from '@/components/Dialog';
 import MiniGameSelector from '../MiniGameSelector';
 import { useCmsConfig, getAspectRatios } from '@/hooks/useCmsConfig';
@@ -169,10 +169,9 @@ export default function MediaAssetItem({
                 variant="featured"
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                <IconButton
-                  variant="solid"
+                <Button
+                  iconOnly
                   color="gray"
-                  highContrast
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}>
                   {isUploading ? (
@@ -183,11 +182,10 @@ export default function MediaAssetItem({
                   ) : (
                     <UploadSimpleIcon size={16} />
                   )}
-                </IconButton>
-                <IconButton
-                  variant="solid"
+                </Button>
+                <Button
+                  iconOnly
                   color="gray"
-                  highContrast
                   onClick={() => setShowGenerator(true)}
                   disabled={isGenerating}>
                   {isGenerating ? (
@@ -198,7 +196,7 @@ export default function MediaAssetItem({
                   ) : (
                     <SparkleIcon size={16} />
                   )}
-                </IconButton>
+                </Button>
               </div>
             </>
           ) : isPending ? (
@@ -220,7 +218,7 @@ export default function MediaAssetItem({
                 isMinigame={isMinigame}
                 size={40}
               />
-              <div className="flex flex-col gap-2 mt-2">
+              <div className="flex flex-col gap-2 mt-2 items-center">
                 <Button
                   variant="ghost"
                   color="blue"
@@ -280,19 +278,21 @@ export default function MediaAssetItem({
         <span className="font-bold uppercase text-xs">{asset.type.replace('ai_', '').replace('static_', '')}</span>
         <div className="flex gap-1 ms-auto">
           {isMinigame && (
-            <IconButton
+            <Button
+              iconOnly
               variant="ghost"
               color="blue"
-              size="1"
+              size="sm"
               onClick={() => setShowMinigameSelector(!showMinigameSelector)}
               title="选择已有小游戏">
               <ListIcon size={14} />
-            </IconButton>
+            </Button>
           )}
           {!isMinigame && (
-            <IconButton
+            <Button
+              iconOnly
               variant="ghost"
-              size="1"
+              size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
               title="上传素材">
@@ -304,26 +304,28 @@ export default function MediaAssetItem({
               ) : (
                 <UploadSimpleIcon size={14} />
               )}
-            </IconButton>
+            </Button>
           )}
-          <IconButton
+          <Button
+            iconOnly
             variant="ghost"
             color="violet"
-            size="1"
+            size="sm"
             disabled={isGenerating}
             onClick={() => setShowGenerator(!showGenerator)}
             title="AI 生成素材">
             <SparkleIcon size={14} />
-          </IconButton>
+          </Button>
           {showDelete && onAssetDelete && (
-            <IconButton
+            <Button
+              iconOnly
               variant="ghost"
               color="red"
-              size="1"
+              size="sm"
               onClick={onAssetDelete}
               title="删除素材">
               <TrashIcon size={14} />
-            </IconButton>
+            </Button>
           )}
         </div>
       </div>

@@ -1,6 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { Theme } from '@radix-ui/themes';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import GamePlayer from '@/components/GamePlayer';
@@ -38,13 +37,11 @@ const fetchMock = vi.fn<typeof fetch>();
 
 function renderWithProviders(component: React.ReactElement) {
   return render(
-    <Theme>
-      <NextIntlClientProvider
-        messages={messages}
-        locale="en">
-        <DialogProvider>{component}</DialogProvider>
-      </NextIntlClientProvider>
-    </Theme>,
+    <NextIntlClientProvider
+      messages={messages}
+      locale="en">
+      <DialogProvider>{component}</DialogProvider>
+    </NextIntlClientProvider>,
   );
 }
 

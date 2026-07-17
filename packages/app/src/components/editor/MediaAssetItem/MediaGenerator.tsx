@@ -1,5 +1,5 @@
 import { SpinnerIcon, SparkleIcon, CheckIcon } from '@phosphor-icons/react/dist/ssr';
-import { Button, IconButton } from '@radix-ui/themes';
+import Button from '@/components/Button';
 import type { MediaGeneratorProps } from './types';
 import MentionInput from '../MentionInput';
 
@@ -55,7 +55,6 @@ export default function MediaGenerator({
           </div>
         )}
         <Button
-          color="violet"
           onClick={onGenerate}
           disabled={isGenerating || !prompt}>
           {isGenerating ? (
@@ -108,8 +107,8 @@ export default function MediaGenerator({
             </select>
           </div>
         )}
-        <IconButton
-          color="violet"
+        <Button
+          iconOnly
           disabled={isGenerating || !prompt}
           onClick={onGenerate}
           title="生成素材">
@@ -121,7 +120,7 @@ export default function MediaGenerator({
           ) : (
             <CheckIcon size={16} />
           )}
-        </IconButton>
+        </Button>
       </footer>
     </div>
   );

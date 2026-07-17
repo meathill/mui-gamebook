@@ -8,7 +8,7 @@ import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import { useDialog } from '@/components/Dialog';
 import type { AudiobookClip } from '@/lib/audiobook-types';
 import ShareButton from '@/components/ShareButton';
-import { Button } from '@radix-ui/themes';
+import Button from '@/components/Button';
 import {
   TitleScreen,
   EndScreen,
@@ -261,6 +261,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
         <Button
           variant="soft"
           color="gray"
+          size="lg"
           onClick={() => handleRestart()}>
           {t('backToTitle')}
         </Button>

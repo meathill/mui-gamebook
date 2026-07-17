@@ -14,7 +14,7 @@ import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
 import Comment from '@/components/Comment';
-import { Button } from '@radix-ui/themes';
+import Button from '@/components/Button';
 import { CaretDownIcon, ChatIcon, XIcon } from '@phosphor-icons/react';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import TitleScreen from './TitleScreen';
@@ -192,6 +192,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
         <p>{t('cannotFindScene', { sceneId: currentSceneId })}</p>
         <Button
           variant="soft"
+          size="lg"
           onClick={() => handleRestart()}>
           {t('backToTitle')}
         </Button>
@@ -266,7 +267,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
                 <Button
                   variant="ghost"
                   color="red"
-                  size="1"
+                  size="sm"
                   onClick={() => handleRestart()}>
                   {t('exit')}
                 </Button>

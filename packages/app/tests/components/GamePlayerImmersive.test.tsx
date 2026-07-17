@@ -2,7 +2,6 @@ import '@testing-library/jest-dom';
 import { describe, it, expect } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { Theme } from '@radix-ui/themes';
 import GamePlayerImmersive from '../../src/components/game-player/GamePlayerImmersive';
 import { DialogProvider } from '@/components/Dialog';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
@@ -10,13 +9,11 @@ import messages from '../../src/i18n/messages/en.json';
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
-    <Theme>
-      <NextIntlClientProvider
-        messages={messages}
-        locale="en">
-        <DialogProvider>{component}</DialogProvider>
-      </NextIntlClientProvider>
-    </Theme>,
+    <NextIntlClientProvider
+      messages={messages}
+      locale="en">
+      <DialogProvider>{component}</DialogProvider>
+    </NextIntlClientProvider>,
   );
 };
 

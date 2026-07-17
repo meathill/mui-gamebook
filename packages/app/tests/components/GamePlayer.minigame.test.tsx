@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
-import { Theme } from '@radix-ui/themes';
 import GamePlayer from '../../src/components/GamePlayer';
 import { DialogProvider } from '@/components/Dialog';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
@@ -23,13 +22,11 @@ vi.mock('@/components/game-player/MiniGamePlayer', () => ({
 
 const renderWithProviders = (component: React.ReactElement) => {
   return render(
-    <Theme>
-      <NextIntlClientProvider
-        messages={messages}
-        locale="en">
-        <DialogProvider>{component}</DialogProvider>
-      </NextIntlClientProvider>
-    </Theme>,
+    <NextIntlClientProvider
+      messages={messages}
+      locale="en">
+      <DialogProvider>{component}</DialogProvider>
+    </NextIntlClientProvider>,
   );
 };
 

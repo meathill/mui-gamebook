@@ -47,11 +47,6 @@ html[data-immersive="true"] main {
   animation: mui-fade-in 0.4s ease-out;
 }
 
-.radix-themes {
-  display: flex;
-  flex-direction: column;
-}
-
 .game-editor {
   @media (max-width: 768px) {
     height: calc(100vh - 4rem);

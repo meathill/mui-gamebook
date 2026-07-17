@@ -1,7 +1,7 @@
 'use client';
 
 import { PaperPlaneRightIcon, RobotIcon, SpinnerIcon, SquareIcon, TrashIcon } from '@phosphor-icons/react';
-import { Button } from '@radix-ui/themes';
+import Button from '@/components/Button';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
 import { isImeComposing } from '@/lib/keyboard';
@@ -154,18 +154,16 @@ export default function ChatPanel({
           )}
           {loading ? (
             <Button
-              type="button"
               onClick={cancelRequest}
-              size="1"
-              variant="solid"
+              size="sm"
               color="red">
               <SquareIcon className="size-3" />
             </Button>
           ) : (
             <Button
+              type="submit"
               disabled={!input.trim()}
-              size="1"
-              variant="solid"
+              size="sm"
               color="orange">
               <PaperPlaneRightIcon className="size-3" />
             </Button>

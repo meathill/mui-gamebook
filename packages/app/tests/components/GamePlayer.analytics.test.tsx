@@ -1,6 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import GamePlayer from '../../src/components/GamePlayer';
-import { Theme } from '@radix-ui/themes';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { PlayableGame } from '@mui-gamebook/parser/src/types';
 
@@ -69,24 +68,20 @@ describe('GamePlayer Analytics', () => {
 
   it('tracks game open on mount', () => {
     render(
-      <Theme>
-        <GamePlayer
-          game={mockGame}
-          slug="test-game"
-        />
-      </Theme>,
+      <GamePlayer
+        game={mockGame}
+        slug="test-game"
+      />,
     );
     expect(mockTrackOpen).toHaveBeenCalledWith(123);
   });
 
   it('tracks scene visit on mount', async () => {
     render(
-      <Theme>
-        <GamePlayer
-          game={mockGame}
-          slug="test-game"
-        />
-      </Theme>,
+      <GamePlayer
+        game={mockGame}
+        slug="test-game"
+      />,
     );
 
     // Start the game
@@ -99,12 +94,10 @@ describe('GamePlayer Analytics', () => {
 
   it('tracks choice selection', async () => {
     render(
-      <Theme>
-        <GamePlayer
-          game={mockGame}
-          slug="test-game"
-        />
-      </Theme>,
+      <GamePlayer
+        game={mockGame}
+        slug="test-game"
+      />,
     );
 
     // Find and click the choice button
@@ -122,12 +115,10 @@ describe('GamePlayer Analytics', () => {
 
   it('tracks new scene visit after choice', async () => {
     render(
-      <Theme>
-        <GamePlayer
-          game={mockGame}
-          slug="test-game"
-        />
-      </Theme>,
+      <GamePlayer
+        game={mockGame}
+        slug="test-game"
+      />,
     );
 
     // Start the game
@@ -155,12 +146,10 @@ describe('GamePlayer Analytics', () => {
     };
 
     render(
-      <Theme>
-        <GamePlayer
-          game={endMockGame}
-          slug="test-game-complete"
-        />
-      </Theme>,
+      <GamePlayer
+        game={endMockGame}
+        slug="test-game-complete"
+      />,
     );
 
     // Start the game

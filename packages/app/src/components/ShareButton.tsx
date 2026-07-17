@@ -3,13 +3,17 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ShareNetworkIcon, CopyIcon, CheckIcon } from '@phosphor-icons/react';
-import { Button, DropdownMenu } from '@radix-ui/themes';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import Button from '@/components/Button';
 
 interface ShareButtonProps {
   title: string;
   url: string;
   className?: string;
 }
+
+const MENU_ITEM_CLASS =
+  'flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer outline-none rounded';
 
 export default function ShareButton({ title, url, className = '' }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
@@ -72,26 +76,36 @@ export default function ShareButton({ title, url, className = '' }: ShareButtonP
   return (
     <div className={className}>
       <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
+        <DropdownMenu.Trigger asChild>
           <Button variant="ghost">
             <ShareNetworkIcon className="w-4 h-4" />
             {t('share')}
           </Button>
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
-          <DropdownMenu.Item onClick={copyToClipboard}>
-            {copied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
-            {copied ? t('copied') : t('copyLink')}
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={shareToWeibo}>
-            <span className="w-4 h-4 flex items-center justify-center text-red-500 font-bold">微</span>
-            Weibo
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={shareToTwitter}>
-            <span className="w-4 h-4 flex items-center justify-center">𝕏</span>
-            TwitterLogoIcon
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            className="min-w-[160px] bg-white rounded-lg shadow-lg border border-gray-200 p-1 z-50"
+            sideOffset={5}
+            align="end">
+            <DropdownMenu.Item
+              className={MENU_ITEM_CLASS}
+              onClick={copyToClipboard}>
+              {copied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
+              {copied ? t('copied') : t('copyLink')}
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              className={MENU_ITEM_CLASS}
+              onClick={shareToWeibo}>
+              <span className="w-4 h-4 flex items-center justify-center text-red-500 font-bold">微</span>
+              Weibo
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              className={MENU_ITEM_CLASS}
+              onClick={shareToTwitter}>
+              <span className="w-4 h-4 flex items-center justify-center">𝕏</span>X / Twitter
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
       </DropdownMenu.Root>
     </div>
   );
