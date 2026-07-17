@@ -1,6 +1,7 @@
 'use client';
 
 import { KeyIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react';
+import { formatDate } from '@mui-gamebook/site-common/utils';
 import type { UserItem, UsersResponse } from '@/hooks/useUsersAdmin';
 
 interface UsersTableProps {
@@ -53,9 +54,7 @@ export default function UsersTable({
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.name}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{user.email}</td>
                   <td className="px-6 py-4 text-sm text-gray-900 text-right">{user.gameCount}</td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
-                    {new Date(user.createdAt).toLocaleDateString('zh-CN')}
-                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500">{formatDate(user.createdAt)}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button

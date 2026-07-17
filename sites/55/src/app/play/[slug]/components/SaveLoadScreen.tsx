@@ -2,6 +2,7 @@
 
 import { XIcon, TrashIcon } from '@phosphor-icons/react';
 import type { SaveSlot, SaveSlotId } from '@mui-gamebook/site-common/game-player';
+import { formatShortDateTime } from '@mui-gamebook/site-common/utils';
 
 interface Props {
   mode: 'save' | 'load';
@@ -10,16 +11,6 @@ interface Props {
   onSave: (slotId: SaveSlotId) => void;
   onDelete: (slotId: SaveSlotId) => void;
   onClose: () => void;
-}
-
-function formatTime(timestamp: number): string {
-  const date = new Date(timestamp);
-  return date.toLocaleString('zh-CN', {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
 }
 
 /**
@@ -83,7 +74,7 @@ export default function SaveLoadScreen({ mode, slots, onLoad, onSave, onDelete, 
                     <div className="text-sm text-muted">
                       <span>{slot.data.sceneLabel || slot.data.sceneId}</span>
                       <span className="mx-2">·</span>
-                      <span>{formatTime(slot.data.timestamp)}</span>
+                      <span>{formatShortDateTime(slot.data.timestamp)}</span>
                     </div>
                   ) : (
                     <div className="text-sm text-muted">空</div>

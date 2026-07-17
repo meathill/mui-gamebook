@@ -7,6 +7,7 @@ import { PlusIcon, TrashIcon, PencilSimpleIcon, EyeIcon, LockIcon, GlobeIcon } f
 import ImageIcon from 'next/image';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
+import { formatDate } from '@mui-gamebook/site-common/utils';
 
 interface GameListItem {
   id: string;
@@ -161,7 +162,7 @@ export default function GamesPage() {
               <h3 className="font-medium text-gray-900">{game.title}</h3>
               <p className="text-xs text-gray-500">
                 /{game.slug} • 更新于：
-                {new Date(game.updatedAt).toLocaleDateString('zh-CN')}
+                {formatDate(game.updatedAt)}
               </p>
             </div>
           </div>

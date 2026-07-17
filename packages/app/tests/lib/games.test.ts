@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getGamesByTag, getAllTags } from '@/lib/games';
+import { getGamesByTag, getAllTags, getFeaturedGames } from '@/lib/games';
 
 // Mock getCloudflareContext
 vi.mock('@opennextjs/cloudflare', () => ({
@@ -151,6 +151,84 @@ describe('games tag functions', () => {
 
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual({ tag: '修仙', count: 1 });
+    });
+  });
+
+  describe('getFeaturedGames', () => {
+    function mockRow(slug: string, updatedAt: number) {
+      return {
+        slug,
+        title: slug,
+        description: '',
+        cover_image: null,
+        tags: '[]',
+        created_at: updatedAt,
+        updated_at: updatedAt,
+      };
+    }
+
+    it('置顶游戏按 pinnedSlugs 给定顺序排在最前', async () => {
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          all: vi.fn().mockResolvedValue({ results: [mockRow('b', 20), mockRow('a', 10)] }),
+        }),
+      });
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          all: vi.fn().mockResolvedValue({ results: [] }),
+        }),
+      });
+
+      const result = await getFeaturedGames({ pinnedSlugs: ['a', 'b'], limit: 5 });
+
+      expect(result.map((row) => row.slug)).toEqual(['a', 'b']);
+    });
+
+    it('置顶数量不足 limit 时用最近更新的游戏补齐，且不重复', async () => {
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          all: vi.fn().mockResolvedValue({ results: [mockRow('a', 10)] }),
+        }),
+      });
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          all: vi.fn().mockResolvedValue({ results: [mockRow('a', 10), mockRow('c', 30), mockRow('d', 40)] }),
+        }),
+      });
+
+      const result = await getFeaturedGames({ pinnedSlugs: ['a'], limit: 3 });
+
+      expect(result.map((row) => row.slug)).toEqual(['a', 'c', 'd']);
+    });
+
+    it('没有置顶游戏时直接按最近更新排序', async () => {
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          all: vi.fn().mockResolvedValue({ results: [mockRow('c', 30), mockRow('d', 40)] }),
+        }),
+      });
+
+      const result = await getFeaturedGames({ pinnedSlugs: [], limit: 2 });
+
+      expect(result.map((row) => row.slug)).toEqual(['c', 'd']);
+    });
+
+    it('DB binding 不存在时返回空数组', async () => {
+      (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({ env: {} });
+
+      const result = await getFeaturedGames({ pinnedSlugs: [], limit: 5 });
+
+      expect(result).toEqual([]);
+    });
+
+    it('查询异常时 fail-open 返回空数组', async () => {
+      mockDB.prepare.mockImplementation(() => {
+        throw new Error('D1 down');
+      });
+
+      const result = await getFeaturedGames({ pinnedSlugs: [], limit: 5 });
+
+      expect(result).toEqual([]);
     });
   });
 });

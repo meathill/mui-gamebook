@@ -5,6 +5,7 @@ import { generateAndStoreMiniGame } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
+import { formatDateTime } from '@mui-gamebook/site-common/utils';
 
 interface MiniGameRecord {
   id: number;
@@ -91,7 +92,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
     }
 
-    const minigameName = name || `小游戏 ${new Date().toLocaleString('zh-CN')}`;
+    const minigameName = name || `小游戏 ${formatDateTime(new Date())}`;
 
     // 按用户权限解析文本提供者
     const permissions = await getUserAiPermissions(session.user);

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useDialog } from '@/components/Dialog';
+import { formatDateTime as formatDate } from '@mui-gamebook/site-common/utils';
 
 interface GameItem {
   id: number;
@@ -95,10 +96,6 @@ export default function AdminGamesPage() {
     );
     if (!confirmed) return;
     deleteMutation.mutate(game.slug);
-  }
-
-  function formatDate(value: string | number): string {
-    return new Date(value).toLocaleString('zh-CN', { dateStyle: 'short', timeStyle: 'short' });
   }
 
   return (

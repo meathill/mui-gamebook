@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { migrateContent } from '../../../scripts/migrate-game-script';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { assertNoMassiveShrink, migrateContent } from '../../../scripts/migrate-game-script';
 
 describe('migrateContent - Unicode 场景 ID（issue #8）', () => {
   it('中文标题的场景被正确切分，正文不被吞掉', () => {
@@ -53,5 +53,48 @@ describe('migrateContent - Unicode 场景 ID（issue #8）', () => {
     for (const fragment of ['# start', '正文一。', '# 场景-2', '正文二。', '# 第2章_序', '正文三。']) {
       expect(output).toContain(fragment);
     }
+  });
+});
+
+describe('assertNoMassiveShrink - 防缩水护栏（生产实测小红帽 4233→1095 字符事故的回归测试）', () => {
+  let exitSpy: ReturnType<typeof vi.spyOn>;
+  let errorSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    exitSpy.mockRestore();
+    errorSpy.mockRestore();
+  });
+
+  it('缩水超过 40% 时中止并报错', () => {
+    const before = 'x'.repeat(4233);
+    const after = 'x'.repeat(1095); // 与生产事故同等缩水幅度
+
+    assertNoMassiveShrink(before, after);
+
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('中止'));
+  });
+
+  it('缩水未超过 40% 时放行', () => {
+    const before = 'x'.repeat(1000);
+    const after = 'x'.repeat(650);
+
+    assertNoMassiveShrink(before, after);
+
+    expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it('内容增长（正常迁移场景）时放行', () => {
+    const before = 'x'.repeat(1000);
+    const after = 'x'.repeat(1200);
+
+    assertNoMassiveShrink(before, after);
+
+    expect(exitSpy).not.toHaveBeenCalled();
   });
 });

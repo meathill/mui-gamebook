@@ -289,6 +289,6 @@ export async function processNode(node: SceneNode, game: Game, force: boolean, g
     }
   }
 
-  // TODO: Add logic for 'ai_audio' and 'ai_video' here in the future
+  // ai_audio/ai_video 批量生成尚未实现，见 issue #12
   return false;
 }

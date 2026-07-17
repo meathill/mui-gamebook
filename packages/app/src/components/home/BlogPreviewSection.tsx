@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { getTranslations } from 'next-intl/server';
 import { ArrowRightIcon, CalendarIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublishedPosts, getCategoryLabel } from '@/lib/blog';
+import { formatDate } from '@mui-gamebook/site-common/utils';
 
 export default async function BlogPreviewSection() {
   const t = await getTranslations('home');
@@ -48,7 +49,7 @@ export default async function BlogPreviewSection() {
                 {post.publishedAt && (
                   <span className="flex items-center gap-1">
                     <CalendarIcon className="w-3 h-3" />
-                    {new Date(post.publishedAt).toLocaleDateString('zh-CN')}
+                    {formatDate(post.publishedAt)}
                   </span>
                 )}
                 {post.category && <span>{getCategoryLabel(post.category)}</span>}

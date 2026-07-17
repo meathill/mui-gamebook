@@ -1,15 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import {
-  MapTrifoldIcon,
-  GearIcon,
-  FloppyDiskIcon,
-  FolderOpenIcon,
-  PlayIcon,
-  FastForwardIcon,
-  ArrowLeftIcon,
-} from '@phosphor-icons/react';
 import type { PlayableGame, PlayableScene, RuntimeState } from '@mui-gamebook/parser/src/types';
 import {
   evaluateCondition,
@@ -20,6 +11,7 @@ import {
 import { formatDialogueLine, resolveSpeakerName } from '@mui-gamebook/site-common/utils';
 import { useTypewriter } from '@mui-gamebook/app/components/game-player/hooks/useTypewriter';
 import type { getVisibleVariables } from '@mui-gamebook/parser/src/utils';
+import GameHudBar from './GameHudBar';
 
 interface Props {
   game: PlayableGame;
@@ -315,91 +307,18 @@ export default function GamePlayScreen({
       </div>
 
       {/* 底部 HUD */}
-      <div className="hud-bar justify-between border-t border-border">
-        <div className="flex items-center gap-1">
-          <button
-            onMouseEnter={sfx.playHover}
-            onClick={() => {
-              sfx.playClick();
-              onReturnToTitle();
-            }}
-            className="hud-btn"
-            title="返回标题">
-            <ArrowLeftIcon size={16} />
-          </button>
-          <button
-            onMouseEnter={sfx.playHover}
-            onClick={() => {
-              sfx.playClick();
-              onOpenRouteMap();
-            }}
-            className="hud-btn"
-            title="路线图">
-            <MapTrifoldIcon size={16} />
-            <span className="hidden sm:inline">路线图</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <button
-            onMouseEnter={sfx.playHover}
-            onClick={() => {
-              sfx.playClick();
-              onToggleAutoPlay();
-            }}
-            className={`hud-btn ${isAutoPlaying ? 'hud-btn--active' : ''}`}
-            title="自动">
-            <PlayIcon size={16} />
-            <span className="hidden sm:inline">自动</span>
-          </button>
-          <button
-            onMouseEnter={sfx.playHover}
-            onClick={() => {
-              sfx.playClick();
-              onToggleSkip();
-            }}
-            className={`hud-btn ${isSkipping ? 'hud-btn--active' : ''}`}
-            title="跳过">
-            <FastForwardIcon size={16} />
-            <span className="hidden sm:inline">跳过</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <button
-            onMouseEnter={sfx.playHover}
-            onClick={() => {
-              sfx.playClick();
-              onOpenSave();
-            }}
-            className="hud-btn"
-            title="存档">
-            <FloppyDiskIcon size={16} />
-            <span className="hidden sm:inline">存档</span>
-          </button>
-          <button
-            onMouseEnter={sfx.playHover}
-            onClick={() => {
-              sfx.playClick();
-              onOpenLoad();
-            }}
-            className="hud-btn"
-            title="读档">
-            <FolderOpenIcon size={16} />
-            <span className="hidden sm:inline">读档</span>
-          </button>
-          <button
-            onMouseEnter={sfx.playHover}
-            onClick={() => {
-              sfx.playClick();
-              onOpenSettings();
-            }}
-            className="hud-btn"
-            title="设置">
-            <GearIcon size={16} />
-          </button>
-        </div>
-      </div>
+      <GameHudBar
+        sfx={sfx}
+        isAutoPlaying={isAutoPlaying}
+        isSkipping={isSkipping}
+        onToggleAutoPlay={onToggleAutoPlay}
+        onToggleSkip={onToggleSkip}
+        onOpenSave={onOpenSave}
+        onOpenLoad={onOpenLoad}
+        onOpenRouteMap={onOpenRouteMap}
+        onOpenSettings={onOpenSettings}
+        onReturnToTitle={onReturnToTitle}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ArrowLeftIcon, CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
+import { formatLongDate } from '@mui-gamebook/site-common/utils';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -49,11 +50,7 @@ export default async function BlogPostPage({ params }: Props) {
             {post.publishedAt && (
               <span className="flex items-center gap-1">
                 <CalendarIcon className="w-4 h-4" />
-                {new Date(post.publishedAt).toLocaleDateString('zh-CN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
+                {formatLongDate(post.publishedAt)}
               </span>
             )}
             {post.category && (

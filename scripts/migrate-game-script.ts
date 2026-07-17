@@ -258,7 +258,7 @@ async function main() {
  * 场景重建会吞掉大段内容（生产实测小红帽 4233→1095）。缩水超过 40% 视为脚本
  * 不适用该内容，直接中止——这类老产物应改用 parse→stringify 规范化清洗。
  */
-function assertNoMassiveShrink(before: string, after: string): void {
+export function assertNoMassiveShrink(before: string, after: string): void {
   if (after.length < before.length * 0.6) {
     console.error(
       `中止：迁移结果缩水 ${before.length}→${after.length} 字符（>40%），疑似场景标题含转义无法被 SCENE_REGEX 识别。请改用 parse→stringify 规范化。`,
