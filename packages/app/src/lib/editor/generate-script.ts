@@ -3,6 +3,7 @@
  * 核心目标：确保生成的剧本一定包含角色（ai.characters）与属性（state）
  */
 import { parse } from '@mui-gamebook/parser';
+import type { Game } from '@mui-gamebook/parser/src/types';
 
 /**
  * 内嵌于系统提示词的完整 frontmatter 示例
@@ -77,9 +78,14 @@ ai:
 雾越来越浓，小雨迷失了方向……
 `;
 
-export const GENERATE_SCRIPT_SYSTEM_PROMPT = `
-You are an expert game designer for "MUI Gamebook". Your task is to convert a raw story provided by the user into a specific Gamebook DSL (Markdown-based) format. Convert the user's story into a playable game with multiple scenes (at least 3-5), choices, and branching paths.
+/** 首次从零生成时的开场设定 */
+const GENERATE_SCRIPT_INTRO = `You are an expert game designer for "MUI Gamebook". Your task is to convert a raw story provided by the user into a specific Gamebook DSL (Markdown-based) format. Convert the user's story into a playable game with multiple scenes (at least 3-5), choices, and branching paths. The response streams to the user as it is generated, so there is no need to keep it short — favor a richer, more complete story with more scenes and branches over a minimal one.`;
 
+/** 在已有剧本基础上修改时的开场设定 */
+const REVISE_SCRIPT_INTRO = `You are an expert game designer for "MUI Gamebook". The user already has an existing Gamebook DSL script for this game (given below) and wants to revise it based on new story information or instructions they provide. Your task is to output a COMPLETE, REVISED version of the script that incorporates the new information — preserve existing scenes, characters, and variables where they still make sense, and only change what actually needs to change. The response streams to the user as it is generated, so there is no need to keep it short.`;
+
+/** 首次生成与修改共用的硬性规则，与开场设定拼接成完整系统提示词 */
+const SCRIPT_RULES = `
 ## MANDATORY frontmatter requirements (a script missing any of these is INVALID):
 
 1. \`state:\` — Define at least 2 game variables implied by the story (e.g. 勇气/生命值/好感度/金钱/关键道具). Give each meaningful variables metadata (value/visible/display/max/label). Scene choices MUST use \`(set: ...)\` and \`(if: ...)\` to change and check these variables so they actually matter to the story.
@@ -101,6 +107,20 @@ ${EXAMPLE_SCRIPT}
 - Output ONLY the raw Markdown content, no extra conversational text.
 `;
 
+export const GENERATE_SCRIPT_SYSTEM_PROMPT = `\n${GENERATE_SCRIPT_INTRO}\n${SCRIPT_RULES}`;
+
+export const REVISE_SCRIPT_SYSTEM_PROMPT = `\n${REVISE_SCRIPT_INTRO}\n${SCRIPT_RULES}`;
+
+/**
+ * 首轮生成用的精简版 DSL spec：过滤掉 DSL_SPEC.md 中标记为
+ * `<!-- first-pass:exclude:start/end -->` 的区间（图片/音频/视频/小游戏生成、TTS
+ * 等首轮文本生成用不到的媒体语法细节），降低首轮 prompt 体积。
+ * 纠错重生成与 chat 编辑场景仍使用完整版 spec，不受影响。
+ */
+export function trimDslSpecForFirstPass(dslSpec: string): string {
+  return dslSpec.replace(/<!-- first-pass:exclude:start -->[\s\S]*?<!-- first-pass:exclude:end -->\n?/g, '');
+}
+
 /**
  * 构建首次生成的完整提示词
  */
@@ -112,6 +132,38 @@ ${dslSpec}
 ## User Story:
 
 """${story}"""`;
+}
+
+/**
+ * 构建"在现有剧本基础上修改"的提示词：附上完整的现有剧本，让模型在此基础上
+ * 结合新信息输出修订后的完整剧本，而不是从零生成
+ */
+export function buildReviseScriptPrompt(dslSpec: string, existingScript: string, story: string): string {
+  return `${REVISE_SCRIPT_SYSTEM_PROMPT}
+
+${dslSpec}
+
+## Existing Script:
+
+${existingScript}
+
+## New Story Information / Instructions From The User:
+
+"""${story}"""`;
+}
+
+/**
+ * 判断一个已解析的游戏是否已经有"实质性"剧本内容，而不是新建游戏时的空白模板
+ * （只有一个 start 场景、没有角色、没有变量）。用于决定点击"生成游戏脚本"时
+ * 要不要先询问用户是重新生成还是在现有剧本基础上修改。
+ */
+export function hasSubstantialScript(game: Pick<Game, 'scenes' | 'ai' | 'initialState'> | null | undefined): boolean {
+  if (!game) return false;
+  return (
+    Object.keys(game.scenes ?? {}).length > 1 ||
+    Object.keys(game.ai?.characters ?? {}).length > 0 ||
+    Object.keys(game.initialState ?? {}).length > 0
+  );
 }
 
 /**

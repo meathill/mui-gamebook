@@ -49,7 +49,12 @@ vi.mock('@/components/editor/EditorLeftSidebar', () => ({
   default: () => <div data-testid="left-sidebar" />,
 }));
 vi.mock('@/components/editor/StoryImporter', () => ({
-  default: () => <div data-testid="story-importer" />,
+  default: (props: { existingScript?: string }) => (
+    <div
+      data-testid="story-importer"
+      data-existing-script={props.existingScript ?? ''}
+    />
+  ),
 }));
 vi.mock('@/components/editor/ChatPanel', () => ({ default: () => <div data-testid="chat-panel" /> }));
 vi.mock('@/components/editor/RichEditor', () => ({
@@ -182,6 +187,54 @@ describe('VisualEditor', () => {
     renderVisualEditor();
 
     expect(screen.getByTestId('story-importer')).toBeInTheDocument();
+  });
+
+  it('新建游戏（空白模板，无场景/角色/变量）时 StoryImporter 拿不到 existingScript', () => {
+    useEditorStore.setState({ showImporter: true });
+
+    renderVisualEditor();
+
+    expect(screen.getByTestId('story-importer').dataset.existingScript).toBe('');
+  });
+
+  it('已有实质性剧本内容（多场景）时 StoryImporter 拿到 existingScript', () => {
+    useEditorStore.setState({ showImporter: true });
+    (useEditorData as ReturnType<typeof vi.fn>).mockReturnValue(
+      makeEditorData({
+        originalGame: {
+          title: '测试游戏',
+          slug: 'test-game',
+          scenes: { start: {}, next: {} },
+          ai: { characters: {} },
+          initialState: {},
+        },
+        textContent: '# start\n真实剧本内容',
+      }),
+    );
+
+    renderVisualEditor();
+
+    expect(screen.getByTestId('story-importer').dataset.existingScript).toBe('# start\n真实剧本内容');
+  });
+
+  it('已有实质性剧本内容（有角色）时 StoryImporter 拿到 existingScript', () => {
+    useEditorStore.setState({ showImporter: true });
+    (useEditorData as ReturnType<typeof vi.fn>).mockReturnValue(
+      makeEditorData({
+        originalGame: {
+          title: '测试游戏',
+          slug: 'test-game',
+          scenes: { start: {} },
+          ai: { characters: { hero: { name: '英雄' } } },
+          initialState: {},
+        },
+        textContent: '# start\n真实剧本内容',
+      }),
+    );
+
+    renderVisualEditor();
+
+    expect(screen.getByTestId('story-importer').dataset.existingScript).toBe('# start\n真实剧本内容');
   });
 
   it('chatOpen 且游戏已加载时渲染 ChatPanel（story/flowchart tab 共用）', () => {

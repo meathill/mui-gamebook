@@ -17,6 +17,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { parse, stringify } from '@mui-gamebook/parser';
+import { hasSubstantialScript } from '@/lib/editor/generate-script';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
 import { useEditorData } from '@/lib/editor/useEditorData';
 import { useFlowNodeHandlers } from '@/lib/editor/useFlowNodeHandlers';
@@ -316,6 +317,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
         <StoryImporter
           id={id}
           initialStory={originalGame?.storyPrompt}
+          existingScript={hasSubstantialScript(originalGame) ? textContent : undefined}
           onImport={handleImport}
           onClose={() => setShowImporter(false)}
           onSaveStory={async (story) => {

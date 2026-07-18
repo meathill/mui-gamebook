@@ -69,6 +69,30 @@ function makeParams(id = '1') {
   return { params: Promise.resolve({ id }) };
 }
 
+/** 读取 SSE 响应体，解析出全部 data 事件（route 用这种格式替代一次性 JSON） */
+async function readSseEvents(res: Response): Promise<Record<string, unknown>[]> {
+  const reader = res.body?.getReader();
+  if (!reader) throw new Error('响应没有 body');
+
+  const decoder = new TextDecoder();
+  const events: Record<string, unknown>[] = [];
+  let buffer = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      events.push(JSON.parse(line.slice(6)));
+    }
+  }
+
+  return events;
+}
+
 describe('POST /api/cms/games/[id]/generate-script', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -120,9 +144,10 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     const res = await POST(makeReq({ story: '一个关于英雄的故事' }), makeParams());
 
     expect(res.status).toBe(200);
+    const events = await readSseEvents(res);
     expect(generateText).toHaveBeenCalledTimes(1);
-    const data = (await res.json()) as { script: string };
-    expect(data.script).toBe(VALID_SCRIPT);
+    const doneEvent = events.find((e) => e.type === 'done');
+    expect(doneEvent?.script).toBe(VALID_SCRIPT);
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'text_generation',
@@ -148,9 +173,11 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     const res = await POST(makeReq({ story: '一个关于英雄的故事' }), makeParams());
 
     expect(res.status).toBe(200);
+    const events = await readSseEvents(res);
     expect(generateText).toHaveBeenCalledTimes(2);
-    const data = (await res.json()) as { script: string };
-    expect(data.script).toBe(VALID_SCRIPT);
+    expect(events).toContainEqual({ type: 'phase', phase: 'correcting' });
+    const doneEvent = events.find((e) => e.type === 'done');
+    expect(doneEvent?.script).toBe(VALID_SCRIPT);
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'text_generation',
@@ -177,8 +204,9 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     const res = await POST(makeReq({ story: 's' }), makeParams());
 
     expect(res.status).toBe(200);
-    const data = (await res.json()) as { script: string };
-    expect(data.script).toBe(INCOMPLETE_SCRIPT);
+    const events = await readSseEvents(res);
+    const doneEvent = events.find((e) => e.type === 'done');
+    expect(doneEvent?.script).toBe(INCOMPLETE_SCRIPT);
   });
 
   it('provider 创建失败时返回 500', async () => {
@@ -188,5 +216,37 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
 
     expect(res.status).toBe(500);
     expect(recordAiUsage).not.toHaveBeenCalled();
+  });
+
+  it('带 existingScript 时走"修改剧本"提示词，附上现有剧本全文', async () => {
+    const generateText = vi.fn().mockResolvedValue({
+      text: VALID_SCRIPT,
+      usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
+    });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', generateText });
+
+    const existingScript = '# start\n这是现有剧本的场景内容';
+    const res = await POST(makeReq({ story: '想加一个新角色', existingScript }), makeParams());
+
+    expect(res.status).toBe(200);
+    await readSseEvents(res);
+    const [firstPassPrompt] = generateText.mock.calls[0];
+    expect(firstPassPrompt).toContain(existingScript);
+    expect(firstPassPrompt).toContain('REVISED');
+  });
+
+  it('不带 existingScript 时走"从零生成"提示词', async () => {
+    const generateText = vi.fn().mockResolvedValue({
+      text: VALID_SCRIPT,
+      usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
+    });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', generateText });
+
+    const res = await POST(makeReq({ story: '一个关于英雄的故事' }), makeParams());
+
+    expect(res.status).toBe(200);
+    await readSseEvents(res);
+    const [firstPassPrompt] = generateText.mock.calls[0];
+    expect(firstPassPrompt).not.toContain('REVISED');
   });
 });

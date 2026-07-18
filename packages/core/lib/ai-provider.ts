@@ -30,6 +30,16 @@ export interface TextGenerationResult {
 }
 
 /**
+ * 流式文本生成的增量片段
+ * - reasoning: 深度思考过程（如 MiMo 的 reasoning_content）
+ * - content: 最终正文内容
+ */
+export interface TextStreamChunk {
+  type: 'reasoning' | 'content';
+  delta: string;
+}
+
+/**
  * 视频生成启动结果（异步模式）
  */
 export interface VideoGenerationStartResult {
@@ -129,8 +139,24 @@ export interface AiProvider {
 
   /**
    * 生成文本
+   * @param options.maxOutputTokens 输出 token 上限；不传表示不限制，仅用于明确需要
+   *   限制输出的短调用（如追问/评估），正式内容生成不应传这个参数
+   * @param options.model 覆盖该 provider 默认使用的模型（如用更轻量的模型做快速判断）
    */
-  generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult>;
+  generateText(
+    prompt: string,
+    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string },
+  ): Promise<TextGenerationResult>;
+
+  /**
+   * 流式生成文本（可选实现）。逐块产出思考过程/正文增量，避免长耗时生成
+   * 因为无字节输出而被 Cloudflare 边缘判定为超时（524）。
+   * generator 结束时 return 完整文本与用量，供调用方在流结束后落库。
+   */
+  generateTextStream?(
+    prompt: string,
+    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string },
+  ): AsyncGenerator<TextStreamChunk, TextGenerationResult, void>;
 
   /**
    * 生成图片

@@ -18,8 +18,24 @@ import {
   MIMO_DEFAULT_BASE_URL,
   MIMO_DEFAULT_TEXT_MODEL,
   MIMO_DEFAULT_TTS_MODEL,
+  MIMO_FAST_TEXT_MODEL,
   MimoProvider,
 } from '../lib/mimo-provider';
+
+/** 构造一个假的 SSE Response，body 依次吐出给定的 data 行，最后附加 [DONE] */
+function makeSseResponse(dataLines: string[]): Response {
+  const encoder = new TextEncoder();
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const line of dataLines) {
+        controller.enqueue(encoder.encode(`data: ${line}\n\n`));
+      }
+      controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+      controller.close();
+    },
+  });
+  return { ok: true, body } as unknown as Response;
+}
 
 describe('MimoProvider', () => {
   beforeEach(() => {
@@ -47,22 +63,130 @@ describe('MimoProvider', () => {
     });
   });
 
-  it('generateText 使用默认模型且不发送 reasoning_effort', async () => {
-    const provider = new MimoProvider('tp-test-key');
-    const result = await provider.generateText('写一个故事', { thinking: true });
+  describe('generateText', () => {
+    const fetchMock = vi.fn();
 
-    expect(createMock).toHaveBeenCalledTimes(1);
-    const request = createMock.mock.calls[0][0];
-    expect(request.model).toBe(MIMO_DEFAULT_TEXT_MODEL);
-    expect(request).not.toHaveProperty('reasoning_effort');
-    expect(result.text).toBe('你好');
-    expect(result.usage).toEqual({ promptTokens: 10, completionTokens: 20, totalTokens: 30 });
+    beforeEach(() => {
+      vi.stubGlobal('fetch', fetchMock);
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          choices: [{ message: { content: '你好' } }],
+          usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
+        }),
+      });
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('走裸 fetch，不通过 OpenAI SDK，且不发送 reasoning_effort', async () => {
+      const provider = new MimoProvider('tp-test-key');
+      const result = await provider.generateText('写一个故事', { thinking: true });
+
+      expect(createMock).not.toHaveBeenCalled();
+      expect(fetchMock.mock.calls[0][0]).toBe(`${MIMO_DEFAULT_BASE_URL}/chat/completions`);
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe(MIMO_DEFAULT_TEXT_MODEL);
+      expect(body).not.toHaveProperty('reasoning_effort');
+      expect(result.text).toBe('你好');
+      expect(result.usage).toEqual({ promptTokens: 10, completionTokens: 20, totalTokens: 30 });
+    });
+
+    it('默认（或 thinking !== false）开启深度思考，且不设 max_completion_tokens 上限', async () => {
+      const provider = new MimoProvider('tp-test-key');
+      await provider.generateText('写一个故事');
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.thinking).toEqual({ type: 'enabled' });
+      expect(body).not.toHaveProperty('max_completion_tokens');
+    });
+
+    it('thinking: false 时显式关闭深度思考', async () => {
+      const provider = new MimoProvider('tp-test-key');
+      await provider.generateText('写一个故事', { thinking: false });
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.thinking).toEqual({ type: 'disabled' });
+    });
+
+    it('显式传 maxOutputTokens 时才携带 max_completion_tokens', async () => {
+      const provider = new MimoProvider('tp-test-key', { text: 'mimo-v3-pro' });
+      await provider.generateText('测试', { maxOutputTokens: 500 });
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe('mimo-v3-pro');
+      expect(body.max_completion_tokens).toBe(500);
+    });
+
+    it('options.model 覆盖构造函数配置的模型（用于评估等轻量调用换用更快的模型）', async () => {
+      const provider = new MimoProvider('tp-test-key', { text: 'mimo-v3-pro' });
+      await provider.generateText('测试', { model: MIMO_FAST_TEXT_MODEL });
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe(MIMO_FAST_TEXT_MODEL);
+    });
+
+    it('请求失败时抛出明确错误', async () => {
+      fetchMock.mockResolvedValue({ ok: false, status: 401, text: async () => 'unauthorized' });
+      const provider = new MimoProvider('tp-test-key');
+      await expect(provider.generateText('文本')).rejects.toThrow('MiMo 生成请求失败: 401 unauthorized');
+    });
   });
 
-  it('generateText 支持自定义模型', async () => {
-    const provider = new MimoProvider('tp-test-key', { text: 'mimo-v3-pro' });
-    await provider.generateText('测试');
-    expect(createMock.mock.calls[0][0].model).toBe('mimo-v3-pro');
+  describe('generateTextStream', () => {
+    const fetchMock = vi.fn();
+
+    beforeEach(() => {
+      vi.stubGlobal('fetch', fetchMock);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('依次产出 reasoning/content 增量，结束时返回完整文本与用量', async () => {
+      fetchMock.mockResolvedValue(
+        makeSseResponse([
+          JSON.stringify({ choices: [{ delta: { reasoning_content: '思考中' } }] }),
+          JSON.stringify({ choices: [{ delta: { content: '正文' } }] }),
+          JSON.stringify({ choices: [{ delta: { content: '继续' } }] }),
+          JSON.stringify({ choices: [], usage: { prompt_tokens: 5, completion_tokens: 6, total_tokens: 11 } }),
+        ]),
+      );
+
+      const provider = new MimoProvider('tp-test-key');
+      const gen = provider.generateTextStream('写故事');
+
+      const chunks: { type: string; delta: string }[] = [];
+      let result = await gen.next();
+      while (!result.done) {
+        chunks.push(result.value);
+        result = await gen.next();
+      }
+
+      expect(chunks).toEqual([
+        { type: 'reasoning', delta: '思考中' },
+        { type: 'content', delta: '正文' },
+        { type: 'content', delta: '继续' },
+      ]);
+      expect(result.value).toEqual({
+        text: '正文继续',
+        usage: { promptTokens: 5, completionTokens: 6, totalTokens: 11 },
+      });
+
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.stream).toBe(true);
+      expect(body.stream_options).toEqual({ include_usage: true });
+      expect(body).not.toHaveProperty('max_completion_tokens');
+    });
+
+    it('请求失败时抛出明确错误', async () => {
+      fetchMock.mockResolvedValue({ ok: false, status: 500, text: async () => 'server error' });
+      const provider = new MimoProvider('tp-test-key');
+      await expect(provider.generateTextStream('文本').next()).rejects.toThrow('MiMo 生成请求失败: 500 server error');
+    });
   });
 
   it('chatWithTools 继承 OpenAI 协议并解析 tool_calls', async () => {

@@ -251,6 +251,7 @@ audio:
 
 所有的 AI 生成指令（图片、音频、视频、小游戏）都定义在这个 YAML 块中。
 
+<!-- first-pass:exclude:start -->
 #### 4.1.1 图像生成 (`image`)
 
 **语法：**
@@ -342,6 +343,7 @@ minigame:
 ````
 
 > ⚠️ 已废弃：早期版本的 ```` ```minigame-gen ```` / ```` ```image-gen ```` / ```` ```audio-gen ```` 代码围栏语法**已不被解析器支持，会被静默忽略**（小游戏变量将永远不会被赋值）。旧游戏中的这类块必须迁移为上述 `minigame:` / `image:` / `audio:` 键写法。
+<!-- first-pass:exclude:end -->
 
 #### 4.1.5 静态媒体（非 AI 生成）
 
@@ -434,6 +436,7 @@ minigame:
 - 播放器显示角色名与头像（若配置了 `image_url`）；沉浸/打字机模式以「名字：台词」形式呈现
 - 对话行也可以在其后紧跟 `<!-- audio: URL -->` 附带语音
 
+<!-- first-pass:exclude:start -->
 ### 4.3 TTS 语音 (Text-to-Speech)
 
 场景文本和选项可以附带语音朗读，适合儿童阅读器等场景。
@@ -469,6 +472,7 @@ minigame:
 - `(audio: URL)` 子句可以与 `(if:)` 和 `(set:)` 子句一起使用
 - 播放器会在选项按钮上显示播放图标
 - 点击播放图标播放语音，点击按钮执行选项
+<!-- first-pass:exclude:end -->
 
 ## 5. 选项与互动
 

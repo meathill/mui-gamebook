@@ -1,7 +1,26 @@
 import { LightbulbIcon, SparkleIcon, SpinnerIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDialog } from '@/components/Dialog';
 import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
+
+type GenerationPhase = 'idle' | 'thinking' | 'writing' | 'correcting';
+
+const PHASE_LABELS: Record<GenerationPhase, string> = {
+  idle: '生成游戏脚本',
+  thinking: 'AI 思考中...',
+  writing: '正在编写剧本...',
+  correcting: '正在修正剧本...',
+};
+
+type SSEGenerateEvent =
+  | { type: 'phase'; phase: 'thinking' | 'correcting' }
+  | { type: 'reasoning'; delta: string }
+  | { type: 'content'; delta: string }
+  | { type: 'done'; script: string }
+  | { type: 'error'; content: string };
+
+// 追问最多进行几轮：每轮用轻量模型判断信息是否已经足够清晰，不够就再问 2-3 个问题
+const MAX_CLARIFY_ROUNDS = 5;
 
 // AI 故事创作引导提示
 const STORY_PROMPTS = [
@@ -45,15 +64,34 @@ const STORY_PROMPTS = [
 interface Props {
   id: string;
   initialStory?: string;
+  /** 当前游戏已有的剧本内容（DSL 全文）。有值时代表已经是"实质性"剧本，需要先确认生成方式 */
+  existingScript?: string;
   onImport: (script: string) => void;
   onClose: () => void;
   onSaveStory?: (story: string) => void;
 }
 
-export default function StoryImporter({ id, initialStory, onImport, onClose, onSaveStory }: Props) {
+type ScriptMode = 'unset' | 'regenerate' | 'revise';
+
+export default function StoryImporter({ id, initialStory, existingScript, onImport, onClose, onSaveStory }: Props) {
   const [story, setStory] = useState(initialStory || '');
-  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState<GenerationPhase>('idle');
+  const [reasoningText, setReasoningText] = useState('');
+  const loading = phase !== 'idle';
   const dialog = useDialog();
+  const reasoningBoxRef = useRef<HTMLDivElement>(null);
+
+  // 已有剧本时，点击生成前先让用户选择"重新生成"还是"在现有剧本基础上修改"
+  const [scriptMode, setScriptMode] = useState<ScriptMode>('unset');
+  const [showScriptModeChoice, setShowScriptModeChoice] = useState(false);
+
+  // 多轮追问：questions 非空时渲染追问表单，替代下方的生成按钮；qaHistory 累积历次问答，
+  // clarifyRound 记录已经问过几轮（上限 MAX_CLARIFY_ROUNDS）
+  const [clarifyQuestions, setClarifyQuestions] = useState<string[]>([]);
+  const [clarifyAnswers, setClarifyAnswers] = useState<string[]>([]);
+  const [clarifyLoading, setClarifyLoading] = useState(false);
+  const [qaHistory, setQaHistory] = useState('');
+  const [clarifyRound, setClarifyRound] = useState(0);
 
   // 用户被授权多个 AI 时可切换，默认第一项（用户默认提供者）
   const { providers } = useAiPermissions();
@@ -66,11 +104,121 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
     return STORY_PROMPTS[index];
   }, []);
 
-  async function handleGenerate() {
-    if (!story.trim()) return;
-    setLoading(true);
+  // 思考内容持续追加时自动滚动到底部，方便实时查看进度
+  useEffect(() => {
+    if (reasoningBoxRef.current) {
+      reasoningBoxRef.current.scrollTop = reasoningBoxRef.current.scrollHeight;
+    }
+  }, [reasoningText]);
+
+  function buildFullStory(qa: string): string {
+    return qa ? `${story}\n\n补充信息：\n${qa}` : story;
+  }
+
+  function buildRoundQa(): string {
+    return clarifyQuestions
+      .map((q, i) => (clarifyAnswers[i]?.trim() ? `Q: ${q}\nA: ${clarifyAnswers[i].trim()}` : ''))
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  function appendQa(base: string, addition: string): string {
+    if (!addition) return base;
+    return base ? `${base}\n${addition}` : addition;
+  }
+
+  // 用轻量模型快速判断当前信息是否够用；失败或解析不出结果都当作"已就绪"，
+  // 调用方据此直接跳过追问、不阻塞用户
+  async function fetchAssessment(fullStory: string): Promise<{ ready: boolean; questions: string[] }> {
     try {
-      // 先保存 storyPrompt，确保用户输入不丢失
+      const res = await fetch(`/api/cms/games/${id}/clarify-story`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ story: fullStory, provider: activeProvider }),
+      });
+      if (!res.ok) return { ready: true, questions: [] };
+      const data = (await res.json()) as { ready?: boolean; questions?: string[] };
+      return { ready: data.ready ?? true, questions: data.questions ?? [] };
+    } catch {
+      return { ready: true, questions: [] };
+    }
+  }
+
+  // 每轮的核心流程：评估当前信息是否足够；不够且未达轮次上限就展示新一轮追问，
+  // 否则（已就绪 / 没问出问题 / 达到上限）直接进入正式生成
+  // mode 显式传入而不是读闭包里的 scriptMode：handleChooseRevise/Regenerate 里
+  // setScriptMode 之后同一事件里立刻调用这条链路，state 更新还没反映到闭包，
+  // 直接读 scriptMode 会拿到更新前的旧值
+  async function assessAndProceed(qa: string, round: number, mode: ScriptMode) {
+    const fullStory = buildFullStory(qa);
+
+    if (round >= MAX_CLARIFY_ROUNDS) {
+      await runGeneration(fullStory, mode);
+      return;
+    }
+
+    setClarifyLoading(true);
+    const { ready, questions } = await fetchAssessment(fullStory);
+    setClarifyLoading(false);
+
+    if (ready || questions.length === 0) {
+      await runGeneration(fullStory, mode);
+      return;
+    }
+
+    setClarifyQuestions(questions);
+    setClarifyAnswers(questions.map(() => ''));
+    setClarifyRound(round + 1);
+  }
+
+  function proceedToGeneration(mode: ScriptMode) {
+    setQaHistory('');
+    setClarifyRound(0);
+    void assessAndProceed('', 0, mode);
+  }
+
+  async function handleGenerateClick() {
+    if (!story.trim()) return;
+    if (existingScript && scriptMode === 'unset') {
+      setShowScriptModeChoice(true);
+      return;
+    }
+    proceedToGeneration(scriptMode);
+  }
+
+  function handleChooseRegenerate() {
+    setScriptMode('regenerate');
+    setShowScriptModeChoice(false);
+    proceedToGeneration('regenerate');
+  }
+
+  function handleChooseRevise() {
+    setScriptMode('revise');
+    setShowScriptModeChoice(false);
+    proceedToGeneration('revise');
+  }
+
+  // 用户主动要求"别问了，直接生成"：把当前轮已经填的答案一并带上，但不再评估
+  function handleForceGenerate() {
+    const finalQaHistory = appendQa(qaHistory, buildRoundQa());
+    setClarifyQuestions([]);
+    setClarifyAnswers([]);
+    void runGeneration(buildFullStory(finalQaHistory), scriptMode);
+  }
+
+  function handleSubmitClarifyAnswers() {
+    const newQaHistory = appendQa(qaHistory, buildRoundQa());
+    setQaHistory(newQaHistory);
+    setClarifyQuestions([]);
+    setClarifyAnswers([]);
+    void assessAndProceed(newQaHistory, clarifyRound, scriptMode);
+  }
+
+  async function runGeneration(finalStory: string, mode: ScriptMode) {
+    setPhase('thinking');
+    setReasoningText('');
+    try {
+      // 先保存原始输入（不含追问拼接内容），确保用户输入不丢失
       if (onSaveStory) {
         onSaveStory(story);
       }
@@ -78,7 +226,11 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
       const res = await fetch(`/api/cms/games/${id}/generate-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ story, provider: activeProvider }),
+        body: JSON.stringify({
+          story: finalStory,
+          provider: activeProvider,
+          ...(mode === 'revise' && existingScript ? { existingScript } : {}),
+        }),
       });
 
       if (!res.ok) {
@@ -88,15 +240,61 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
         throw new Error(data.error || '生成失败');
       }
 
-      const data = (await res.json()) as {
-        script: string;
-      };
-      onImport(data.script);
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error('无法读取响应流');
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let script: string | null = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() ?? '';
+
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const jsonStr = line.slice(6).trim();
+          if (!jsonStr) continue;
+
+          let event: SSEGenerateEvent;
+          try {
+            event = JSON.parse(jsonStr) as SSEGenerateEvent;
+          } catch (parseError) {
+            console.error('解析生成流消息失败:', parseError, jsonStr);
+            continue;
+          }
+
+          switch (event.type) {
+            case 'phase':
+              setPhase(event.phase);
+              break;
+            case 'reasoning':
+              setReasoningText((prev) => prev + event.delta);
+              break;
+            case 'content':
+              setPhase('writing');
+              break;
+            case 'done':
+              script = event.script;
+              break;
+            case 'error':
+              throw new Error(event.content);
+          }
+        }
+      }
+
+      if (!script) throw new Error('未能生成剧本');
+
+      onImport(script);
       onClose();
     } catch (e: unknown) {
       await dialog.error((e as Error).message);
     } finally {
-      setLoading(false);
+      setPhase('idle');
     }
   }
 
@@ -149,31 +347,98 @@ export default function StoryImporter({ id, initialStory, onImport, onClose, onS
           placeholder="在这里输入你的故事..."
         />
 
-        <div className="flex justify-end items-center gap-3">
-          {providers.length > 1 && (
-            <select
-              value={activeProvider}
-              onChange={(e) => setSelectedProvider(e.target.value)}
-              className="text-sm text-gray-600 border border-gray-300 rounded-md px-2 py-2 outline-none focus:border-purple-500"
-              title="选择 AI 提供者">
-              {providers.map((provider) => (
-                <option
-                  key={provider}
-                  value={provider}>
-                  {AI_PROVIDER_LABELS[provider]}
-                </option>
+        {loading && reasoningText && (
+          <div
+            ref={reasoningBoxRef}
+            className="mb-4 max-h-32 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 whitespace-pre-wrap">
+            {reasoningText}
+          </div>
+        )}
+
+        {showScriptModeChoice ? (
+          <div className="mb-4 rounded-lg border border-purple-200 bg-purple-50 p-4">
+            <p className="text-sm text-purple-900 font-medium mb-3">这个游戏已经有剧本内容了，你想：</p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleChooseRevise}
+                className="text-left px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                type="button">
+                在现有剧本基础上修改（保留现有场景/角色，按新信息调整）
+              </button>
+              <button
+                onClick={handleChooseRegenerate}
+                className="text-left px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                type="button">
+                完全重新生成（不使用现有剧本）
+              </button>
+            </div>
+          </div>
+        ) : clarifyQuestions.length > 0 ? (
+          <div className="mb-4 rounded-lg border border-purple-200 bg-purple-50 p-4">
+            <p className="text-sm text-purple-900 font-medium mb-3">
+              故事信息还不太完整，回答几个小问题能帮 AI 生成更贴合的剧本（也可以跳过）
+              <span className="text-purple-400 font-normal">{`（第 ${clarifyRound}/${MAX_CLARIFY_ROUNDS} 轮）`}</span>：
+            </p>
+            <div className="space-y-3">
+              {clarifyQuestions.map((q, i) => (
+                <div key={q}>
+                  <label className="text-xs text-purple-700 mb-1 block">{q}</label>
+                  <input
+                    type="text"
+                    value={clarifyAnswers[i] ?? ''}
+                    onChange={(e) => {
+                      const next = [...clarifyAnswers];
+                      next[i] = e.target.value;
+                      setClarifyAnswers(next);
+                    }}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
+                    placeholder="可留空"
+                  />
+                </div>
               ))}
-            </select>
-          )}
-          <button
-            onClick={handleGenerate}
-            disabled={loading || !story.trim()}
-            className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
-            type="button">
-            {loading && <SpinnerIcon className="animate-spin size-4" />}
-            {loading ? '生成中...' : '生成游戏脚本'}
-          </button>
-        </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={handleForceGenerate}
+                className="text-sm text-gray-500 hover:text-gray-700"
+                type="button">
+                跳过，直接生成
+              </button>
+              <button
+                onClick={handleSubmitClarifyAnswers}
+                className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                type="button">
+                提交
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex justify-end items-center gap-3">
+            {providers.length > 1 && (
+              <select
+                value={activeProvider}
+                onChange={(e) => setSelectedProvider(e.target.value)}
+                className="text-sm text-gray-600 border border-gray-300 rounded-md px-2 py-2 outline-none focus:border-purple-500"
+                title="选择 AI 提供者">
+                {providers.map((provider) => (
+                  <option
+                    key={provider}
+                    value={provider}>
+                    {AI_PROVIDER_LABELS[provider]}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              onClick={handleGenerateClick}
+              disabled={loading || clarifyLoading || !story.trim()}
+              className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+              type="button">
+              {(loading || clarifyLoading) && <SpinnerIcon className="animate-spin size-4" />}
+              {clarifyLoading ? '正在分析故事...' : PHASE_LABELS[phase]}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
