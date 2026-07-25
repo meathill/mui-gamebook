@@ -24,6 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${minigame.name} | ${t('pageTitle')}`,
     description: minigame.description || t('defaultDescription'),
+    alternates: { canonical: `/minigames/${id}` },
   };
 }
 

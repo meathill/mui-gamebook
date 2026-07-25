@@ -18,8 +18,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!post) return { title: 'Not Found' };
 
   return {
-    title: `${post.title} - 姆伊游戏书博客`,
+    title: post.title,
     description: post.description,
+    alternates: { canonical: `/blog/${slug}` },
   };
 }
 

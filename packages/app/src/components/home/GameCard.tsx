@@ -37,7 +37,7 @@ export default function GameCard({ game }: GameCardProps) {
           </Link>
           <p className="text-gray-600 text-sm line-clamp-2 mb-3 flex-1">{game.description}</p>
           <div className="flex flex-wrap gap-1.5 mt-auto">
-            {game.tags?.slice(0, 3).map((tag: string) => (
+            {game.tags?.map((tag: string) => (
               <Link
                 key={tag}
                 href={`/tags/${encodeURIComponent(tag)}`}

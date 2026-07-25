@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getPublishedGames, getAllTags } from '@/lib/games';
 import { getPublishedPosts } from '@/lib/blog';
+import { getPublicMinigames } from '@/lib/minigames';
 
 export const dynamic = 'force-dynamic';
 
@@ -58,12 +59,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.3,
     },
-    {
-      url: `${baseUrl}/sign-in`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.3,
-    },
   ];
 
   // 动态游戏页面
@@ -80,6 +75,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified,
       changeFrequency: 'weekly' as const,
       priority: 0.8,
+    };
+  });
+
+  // 小游戏详情页
+  const minigames = await getPublicMinigames();
+  const minigamePages: MetadataRoute.Sitemap = minigames.map((minigame) => {
+    // created_at 可能是秒级时间戳，需要转换为毫秒级
+    const timestamp = Number(minigame.created_at);
+    const lastModified =
+      timestamp < 1e12
+        ? new Date(timestamp * 1000) // 秒级时间戳
+        : new Date(timestamp); // 已经是毫秒级
+    return {
+      url: `${baseUrl}/minigames/${minigame.id}`,
+      lastModified,
+      changeFrequency: 'weekly' as const,
+      priority: 0.5,
     };
   });
 
@@ -101,5 +113,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...gamePages, ...tagPages, ...blogPages];
+  return [...staticPages, ...gamePages, ...minigamePages, ...tagPages, ...blogPages];
 }

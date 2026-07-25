@@ -33,6 +33,14 @@ export async function generateMetadata(): Promise<Metadata> {
       type: 'website',
       locale: 'zh_CN',
       siteName: '姆伊游戏书',
+      url: '/',
+      images: [{ url: '/hero-bg.png', width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: '姆伊游戏书 - 互动小说创作平台',
+      description: '用 Markdown 写互动小说，AI 帮你润色，一键发布到多个平台。姆伊游戏书，每个人都能创作好故事。',
+      images: ['/hero-bg.png'],
     },
     robots: process.env.NEXT_PUBLIC_HEADLESS_MODE ? { index: false, follow: false } : undefined,
   };
@@ -49,11 +57,7 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <head>
-        <meta charSet="UTF-8" />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0"
-        />
+        {/* charSet/viewport 由 Next.js Metadata API 自动注入，这里手写会导致重复 meta 标签 */}
         <link
           rel="icon"
           href="/favicon.png"

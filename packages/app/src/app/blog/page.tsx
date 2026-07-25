@@ -8,18 +8,23 @@ import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata(): Promise<Metadata> {
+type SearchParams = Promise<{ category?: string; page?: string }>;
+
+export async function generateMetadata({ searchParams }: { searchParams: SearchParams }): Promise<Metadata> {
+  const { category, page } = await searchParams;
+  const query = new URLSearchParams();
+  if (category) query.set('category', category);
+  if (page && page !== '1') query.set('page', page);
+  const qs = query.toString();
+
   return {
-    title: '博客 - 姆伊游戏书',
+    title: '博客',
     description: '产品更新、创作教程、创作者故事和行业观察',
+    alternates: { canonical: qs ? `/blog?${qs}` : '/blog' },
   };
 }
 
-export default async function BlogPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ category?: string; page?: string }>;
-}) {
+export default async function BlogPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const category = params.category;
   const page = Number(params.page) || 1;

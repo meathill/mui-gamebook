@@ -12,11 +12,13 @@ type Props = {
   searchParams: Promise<{ page?: string }>;
 };
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const { page } = await searchParams;
   const t = await getTranslations('minigames');
   return {
     title: t('pageTitle'),
     description: t('pageDescription'),
+    alternates: { canonical: page && page !== '1' ? `/minigames?page=${page}` : '/minigames' },
   };
 }
 

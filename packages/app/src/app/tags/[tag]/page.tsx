@@ -15,14 +15,17 @@ type Props = {
   searchParams: Promise<{ page?: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { tag } = await params;
+  const { page } = await searchParams;
   const decodedTag = decodeURIComponent(tag);
   const t = await getTranslations('tags');
+  const basePath = `/tags/${tag}`;
 
   return {
     title: t('pageTitle', { tag: decodedTag }),
     description: t('pageDescription', { tag: decodedTag }),
+    alternates: { canonical: page && page !== '1' ? `${basePath}?page=${page}` : basePath },
   };
 }
 

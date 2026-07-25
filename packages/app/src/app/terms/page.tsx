@@ -4,6 +4,7 @@ import Terms from './terms.mdx';
 export const metadata: Metadata = {
   title: '服务条款',
   description: '姆伊游戏书服务条款 - 了解使用本平台的权利和责任。',
+  alternates: { canonical: '/terms' },
 };
 
 export default function TermsPage() {

@@ -54,6 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: game.title,
     description: game.description || `在姆伊游戏书体验《${game.title}》，开启你的互动冒险之旅。`,
+    alternates: { canonical: `/play/${slug}` },
     openGraph: {
       title: `${game.title} | 姆伊游戏书`,
       description: game.description || `在姆伊游戏书体验《${game.title}》，开启你的互动冒险之旅。`,

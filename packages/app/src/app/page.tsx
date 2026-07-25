@@ -32,6 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: { absolute: HOME_TITLE },
     description: HOME_DESCRIPTION,
+    alternates: { canonical: '/' },
     openGraph: {
       title: HOME_TITLE,
       description: HOME_DESCRIPTION,
@@ -39,6 +40,7 @@ export async function generateMetadata(): Promise<Metadata> {
       locale: 'zh_CN',
       siteName: '姆伊游戏书',
       url: '/',
+      images: [{ url: '/hero-bg.png', width: 1200, height: 630 }],
     },
   };
 }

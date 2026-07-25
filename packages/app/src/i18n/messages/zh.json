@@ -198,15 +198,15 @@
     "noGames": "暂无已发布的游戏，请稍后再来！"
   },
   "games": {
-    "pageTitle": "全部剧本 - 姆伊游戏书",
-    "pageDescription": "探索姆伊游戏书上的所有互动故事剧本",
+    "pageTitle": "全部剧本",
+    "pageDescription": "浏览姆伊游戏书上的全部互动小说剧本，涵盖悬疑、奇幻、职场、经典改编等多种题材，每一部都可以自由选择、创造属于你的结局。",
     "title": "全部剧本",
     "subtitle": "发现精彩的互动故事，开启你的冒险之旅",
     "noGames": "暂无已发布的游戏"
   },
   "minigames": {
-    "pageTitle": "小游戏 - 姆伊游戏书",
-    "pageDescription": "体验姆伊游戏书上的各种互动小游戏",
+    "pageTitle": "小游戏",
+    "pageDescription": "姆伊游戏书内嵌的互动小游戏合集，来自各部互动小说中的解谜、战斗等场景，也可以在这里直接单独体验。",
     "title": "小游戏体验",
     "subtitle": "感受与众不同的游戏互动体验",
     "noMinigames": "暂无可用的小游戏",
@@ -218,8 +218,8 @@
     "playFullStory": "体验完整故事"
   },
   "tags": {
-    "pageTitle": "{tag} - 姆伊游戏书",
-    "pageDescription": "浏览所有带有「{tag}」标签的互动故事",
+    "pageTitle": "{tag}",
+    "pageDescription": "浏览姆伊游戏书上所有带有「{tag}」标签的互动小说，找到你感兴趣的故事题材，点击即可开始阅读。",
     "indexTitle": "所有标签",
     "indexSubtitle": "按标签浏览互动故事",
     "backToGames": "返回剧本列表",
@@ -307,8 +307,8 @@
     "videoWhitelist": "视频生成白名单"
   },
   "about": {
-    "pageTitle": "关于我们 - 姆伊游戏书",
-    "pageDescription": "了解姆伊游戏书的核心功能、技术架构和愿景",
+    "pageTitle": "关于我们",
+    "pageDescription": "姆伊游戏书是 AI 辅助的互动小说创作与阅读平台，了解我们的核心功能、技术架构和产品愿景，看看我们如何帮助每个人讲好自己的故事。",
     "heroTitle": "关于姆伊游戏书",
     "heroSubtitle": "AI 驱动的互动故事创作平台，让每个人都能成为故事创作者",
     "missionTitle": "我们的愿景",
@@ -372,8 +372,8 @@
     "ctaCreate": "开始创作"
   },
   "contact": {
-    "pageTitle": "联系我们 - 姆伊游戏书",
-    "pageDescription": "与姆伊游戏书团队取得联系，或参与开源项目",
+    "pageTitle": "联系我们",
+    "pageDescription": "有问题、建议，或想参与姆伊游戏书的开源共建？在这里找到联系我们团队的方式，我们期待听到你的声音。",
     "heroTitle": "联系我们",
     "heroSubtitle": "我们很乐意听到您的声音，无论是反馈、建议还是合作意向",
     "contactTitle": "联系方式",
