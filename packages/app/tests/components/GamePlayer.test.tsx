@@ -82,6 +82,17 @@ describe('GamePlayer Component', () => {
     expect(screen.getByText('Go to Door')).toBeInTheDocument();
   });
 
+  it('should render an h1 with the game title on first paint (no loading gate before the title screen)', () => {
+    renderWithProviders(
+      <GamePlayer
+        game={mockGame}
+        slug="test-game-h1"
+      />,
+    );
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Test Adventure');
+  });
+
   it('should update state and navigate on choice click', () => {
     renderWithProviders(
       <GamePlayer

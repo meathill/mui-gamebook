@@ -85,6 +85,17 @@ describe('GamePlayerImmersive Component', () => {
     expect(screen.getByText('You are at the start.')).toBeInTheDocument();
   });
 
+  it('should render an h1 with the game title on first paint (no loading gate before the title screen)', () => {
+    renderWithProviders(
+      <GamePlayerImmersive
+        game={mockGame}
+        slug="immersive-test-h1"
+      />,
+    );
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Immersive Adventure');
+  });
+
   it('should reveal choices after finishing the scene text, and navigate on choice click', () => {
     const { container } = renderWithProviders(
       <GamePlayerImmersive
