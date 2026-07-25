@@ -88,8 +88,14 @@
 
 **SEO 实践**
 - robots.txt 和 sitemap 需要特殊处理（预渲染）
-- IndexNow 主动推送给搜索引擎
+- IndexNow 主动推送给搜索引擎（`packages/app/scripts/index-now.ts`，`--all` 支持从 sitemap 批量提交；目前仍是手动运行，未接入部署流程）
 - 域名验证文件放在 public 目录
+
+**Ahrefs Site Audit 体检与修复（2026-07-25，muistory.com Health Score 38→待复测）**
+- 起因：`curl http://muistory.com` 直接 200、不跳转 https，导致 sitemap.xml 同时以两个协议被抓到、站内几乎每个页面都有 http/https 两份"重复页面"，这一项解释了 Ahrefs 报告里的大多数 URL 数量。HTTP→HTTPS 重定向按约定在 Cloudflare zone 层（Always Use HTTPS）处理，不在应用代码里做——Workers 自定义域名下 app 层重定向没有必要，也多一层写错死循环的风险。应用侧只补了 `alternates.canonical`（每个路由一行，`metadataBase` 已在根布局设置，传相对路径即可，不需要额外抽 helper）。
+- **`/play/[slug]`（核心阅读页）曾经对爬虫是空壳**：`GamePlayer.tsx`/`GamePlayerImmersive.tsx` 用一个 `isLoaded`（`use-game-player.ts` 里只在 `useEffect` 读完 `localStorage` 存档后才置 true）挡在标题页前面，SSR 阶段 effect 不跑，导致服务端渲染出来的内容永远只是"加载中"四个字，标题、简介、封面全部拿不到。修复：直接不挡这层——`isGameStarted` 默认也是 `false`，去掉 `if (!isLoaded)` 分支后会自然落到标题页分支，新访客（含爬虫）SSR 首屏即可看到完整标题页；有存档的老用户水合后从标题页闪切到续读场景，是可接受的短暂闪烁，不是回归。**教训**：任何"先展示 loading，effect 跑完再展示正文"的模式，只要正文所需数据其实已经通过 props 同步可用（不依赖必须客户端才能读到的东西如 localStorage），就该让正文本身作为默认/首屏分支，只用 loading 兜底真正需要异步等待的部分——不然 SSR 输出的是空壳，SEO 和首屏体验双输。
+- 顺手发现的模式性 bug，日后新加页面时留意：根布局 `title.template: '%s | 姆伊游戏书'` 会自动加一次站点名，子路由的 title 不要再自己拼一遍站点名（曾经出现"标题 - 姆伊游戏书 | 姆伊游戏书"）；`layout.tsx` 的 `<head>` 不要手写 `<meta charSet>`/`<meta viewport>`，Next.js Metadata API 会自动注入，手写会重复两份；子路由一旦自己定义 `openGraph`，会整体覆盖（不是深合并）根布局的 `openGraph`，如果没带上 `images` 就会丢失默认分享图。
+- 游戏卡片（`components/home/GameCard.tsx`）原本只渲染前 3 个标签的可点击 chip，标签数超过 3 的游戏会让第 4 个及以后的标签永远没有任何入站链接（对应 Ahrefs 的 orphan tag page）；已去掉这个截断，改为渲染全部标签。
 
 ### UI 框架演进
 
