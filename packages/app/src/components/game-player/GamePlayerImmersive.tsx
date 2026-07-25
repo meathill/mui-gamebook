@@ -70,7 +70,6 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     currentSceneId,
     currentScene,
     runtimeState,
-    isLoaded,
     isGameStarted,
     currentImageUrl,
     visibleVariables,
@@ -172,10 +171,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showEndScreen]);
 
-  if (!isLoaded) {
-    return <div className="min-h-dvh flex items-center justify-center text-white bg-black">{t('loading')}</div>;
-  }
-
+  // 不额外挡 isLoaded：让 SSR 首屏直接落到下面的标题页分支，带上真实标题和简介，而不是空的"加载中"
   if (!isGameStarted) {
     return (
       <TitleScreen

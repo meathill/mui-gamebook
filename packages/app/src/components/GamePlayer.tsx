@@ -58,7 +58,6 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     currentSceneId,
     currentScene,
     runtimeState,
-    isLoaded,
     isGameStarted,
     currentImageUrl,
     imageLoading,
@@ -240,10 +239,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     setTextVisible((prev) => !prev);
   }
 
-  if (!isLoaded) {
-    return <div className="p-8 text-center">{t('loading')}</div>;
-  }
-
+  // 不额外挡 isLoaded：让 SSR 首屏直接落到下面的标题页分支，带上真实标题和简介，而不是空的"加载中"
   if (!isGameStarted) {
     return (
       <TitleScreen
