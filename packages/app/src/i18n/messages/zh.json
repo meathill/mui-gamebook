@@ -229,6 +229,8 @@
   "game": {
     "loading": "加载中...",
     "startAdventure": "开始冒险",
+    "continueAdventure": "继续冒险",
+    "restartFromStart": "重新开始",
     "backToLibrary": "返回游戏库",
     "defaultDescription": "一场互动冒险等待着你。",
     "theEnd": "剧终",

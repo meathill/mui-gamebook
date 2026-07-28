@@ -10,27 +10,22 @@ import {
   interpolateVariables,
   resolveSpeakerName,
 } from '@mui-gamebook/site-common/utils';
-import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
-import ShareButton from '@/components/ShareButton';
-import Comment from '@/components/Comment';
 import Button from '@/components/Button';
-import { CaretDownIcon, ChatIcon, XIcon } from '@phosphor-icons/react';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import TitleScreen from './TitleScreen';
 import EndScreen from './EndScreen';
 import ImmersiveBackground from './ImmersiveBackground';
 import ImmersiveTextBox from './ImmersiveTextBox';
+import ImmersiveMenu from './ImmersiveMenu';
+import CommentDrawer from './CommentDrawer';
 import FloatingVariablePanel from './FloatingVariablePanel';
 import { useImmersiveMode } from './hooks/useImmersiveMode';
+import { type GamePanel, useGameHashRoute } from './hooks/useGameHashRoute';
 
 const POSITION_STORAGE_KEY = 'immersive_text_pos';
 const POSITIONS: TextBoxPosition[] = ['bottom', 'center', 'top'];
-const POSITION_LABEL: Record<TextBoxPosition, string> = {
-  bottom: '底部',
-  center: '居中',
-  top: '顶部',
-};
+const PANELS: readonly GamePanel[] = ['settings', 'comments'];
 
 function isImageNode(
   node: PlayableScene['nodes'][number],
@@ -45,7 +40,10 @@ function isProseNode(
 }
 
 export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame & { id?: number }; slug: string }) {
-  useImmersiveMode();
+  const route = useGameHashRoute(PANELS);
+  const isPlaying = route.view === 'play';
+  // 只有真正进入游戏才锁滚动、藏 header/footer；标题页保持普通页面
+  useImmersiveMode(isPlaying);
 
   const t = useTranslations('game');
   const dialog = useDialog();
@@ -53,8 +51,6 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
 
   const [textIndex, setTextIndex] = useState(0);
   const [choicesRevealed, setChoicesRevealed] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [commentOpen, setCommentOpen] = useState(false);
   const [textPosition, setTextPosition] = useState<TextBoxPosition>(game.text_box_position || 'bottom');
 
   const gamePlayer = useGamePlayer(game, slug, {
@@ -70,7 +66,9 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     currentSceneId,
     currentScene,
     runtimeState,
-    isGameStarted,
+    isLoaded,
+    // isGameStarted 的语义是「有没有进行中的存档」，不是「该显示哪一屏」——后者由 hash 决定
+    isGameStarted: hasSave,
     currentImageUrl,
     visibleVariables,
     hasConfiguredChoices,
@@ -130,25 +128,37 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
 
   // 场景切换后：重置 textIndex / choicesRevealed，上报场景访问
   useEffect(() => {
-    if (!isGameStarted || !currentScene) return;
+    if (!isPlaying || !currentScene) return;
     setTextIndex(0);
     setChoicesRevealed(false);
     if (game.id) analytics.trackScene(game.id, currentSceneId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSceneId, isGameStarted]);
+  }, [currentSceneId, isPlaying]);
 
   // 回到标题画面时（初始挂载或重新开始成功后）重置文本推进进度
   useEffect(() => {
-    if (!isGameStarted) setTextIndex(0);
-  }, [isGameStarted]);
+    if (!isPlaying) setTextIndex(0);
+  }, [isPlaying]);
+
+  // 进入游戏视图时确保这一局已初始化。三条入口都走这里：点「开始冒险」、点「继续冒险」、
+  // 冷启动 #play 深链。handleStartGame 内部自己读 localStorage：有档不重置（=继续），无档从头开始
+  useEffect(() => {
+    if (!isLoaded || !isPlaying || hasSave) return;
+    handleStartGame();
+  }, [isLoaded, isPlaying, hasSave, handleStartGame]);
 
   const showEndScreen =
     !hasConfiguredChoices && !redirectTarget && textNodes.length > 0 && textIndex >= textNodes.length - 1;
   const isLastText = textNodes.length === 0 || textIndex >= textNodes.length - 1;
 
-  function handleStart() {
-    handleStartGame();
-    setTextIndex(0);
+  /** 清档回标题。noConfirm 用于结局页「再玩一次」和存档失效时的兜底恢复 */
+  async function resetToTitle(noConfirm = false) {
+    if (await handleRestart(noConfirm)) route.goToView('intro');
+  }
+
+  /** 标题页的「重新开始」：确认后清档，直接从头开始新的一局 */
+  async function handleRestartFromTitle() {
+    if (await handleRestart()) route.goToView('play');
   }
 
   function handleAdvance() {
@@ -172,11 +182,13 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   }, [showEndScreen]);
 
   // 不额外挡 isLoaded：让 SSR 首屏直接落到下面的标题页分支，带上真实标题和简介，而不是空的"加载中"
-  if (!isGameStarted) {
+  if (!isPlaying) {
     return (
       <TitleScreen
         game={game}
-        onStart={handleStart}
+        hasSave={hasSave}
+        onStart={() => route.goToView('play')}
+        onRestart={handleRestartFromTitle}
       />
     );
   }
@@ -186,10 +198,11 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
       <div className="min-h-dvh bg-black text-white flex flex-col items-center justify-center gap-4 p-8">
         <h2 className="text-xl font-bold text-red-400">{t('sceneNotFound')}</h2>
         <p>{t('cannotFindScene', { sceneId: currentSceneId })}</p>
+        {/* 存档指向了不存在的场景，必须清档，否则回标题页点「继续」会死循环 */}
         <Button
           variant="soft"
           size="lg"
-          onClick={() => handleRestart()}>
+          onClick={() => resetToTitle(true)}>
           {t('backToTitle')}
         </Button>
       </div>
@@ -197,7 +210,8 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   }
 
   const currentText = textNodes[textIndex];
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  // 不用 location.href：视图状态在 hash 里，分享出去的链接不该带上 #settings 之类
+  const shareUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
 
   const choices = currentScene.nodes
     .map((node, index) => ({ node, index }))
@@ -207,95 +221,23 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     <div className="fixed inset-0 bg-black text-white overflow-hidden">
       <ImmersiveBackground url={activeBgUrl} />
 
-      {/* 左上角面包屑：MuiStory › [Title ▾] */}
-      <div className="absolute top-4 left-4 z-40">
-        <div className="inline-flex items-center gap-1 bg-black/50 backdrop-blur-md ring-1 ring-white/10 rounded-full pl-3 pr-1 py-1 text-sm text-white">
-          <Link
-            href="/"
-            className="text-white/70 hover:text-white transition">
-            MuiStory
-          </Link>
-          <span className="text-white/30">›</span>
-          <button
-            type="button"
-            onClick={() => setMenuOpen((v) => !v)}
-            className="inline-flex items-center gap-1 px-2 py-1 rounded-full hover:bg-white/10 transition font-medium"
-            aria-haspopup="menu"
-            aria-expanded={menuOpen}>
-            <span className="max-w-[200px] truncate">{game.title}</span>
-            <CaretDownIcon
-              size={14}
-              className={`transition-transform ${menuOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-        </div>
-        {menuOpen && (
-          <div className="absolute left-0 mt-2 w-64 bg-black/75 backdrop-blur-md rounded-xl ring-1 ring-white/10 p-3 shadow-2xl text-sm">
-            <div className="text-xs uppercase tracking-wider text-white/50 mb-2">文字框位置</div>
-            <div className="flex gap-1 mb-3">
-              {POSITIONS.map((p) => (
-                <button
-                  key={p}
-                  onClick={() => changeTextPosition(p)}
-                  className={`flex-1 px-2 py-1 rounded text-xs transition ${
-                    textPosition === p ? 'bg-white/20 text-white' : 'bg-white/5 text-white/70 hover:bg-white/10'
-                  }`}>
-                  {POSITION_LABEL[p]}
-                </button>
-              ))}
-            </div>
-            <div className="border-t border-white/10 pt-2 space-y-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setMenuOpen(false);
-                  setCommentOpen(true);
-                }}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-white/80 hover:text-white hover:bg-white/10 transition">
-                <ChatIcon size={14} />
-                评论
-              </button>
-              <div className="flex items-center justify-between gap-2 px-1">
-                <ShareButton
-                  title={game.title}
-                  url={shareUrl}
-                />
-                <Button
-                  variant="ghost"
-                  color="red"
-                  size="sm"
-                  onClick={() => handleRestart()}>
-                  {t('exit')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      <ImmersiveMenu
+        title={game.title}
+        shareUrl={shareUrl}
+        open={route.panel === 'settings'}
+        textPosition={textPosition}
+        onToggle={() => (route.panel === 'settings' ? route.closePanel() : route.openPanel('settings'))}
+        onChangeTextPosition={changeTextPosition}
+        onOpenComments={() => route.openPanel('comments')}
+        onBackToTitle={() => route.goToView('intro')}
+        onRestart={() => resetToTitle()}
+      />
 
-      {/* 评论抽屉 */}
-      {commentOpen && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60"
-          onClick={() => setCommentOpen(false)}>
-          <div
-            className="absolute top-0 right-0 bottom-0 w-full sm:w-[480px] bg-white text-gray-900 shadow-2xl overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b px-5 py-3 flex items-center justify-between">
-              <h3 className="font-semibold">评论</h3>
-              <button
-                type="button"
-                onClick={() => setCommentOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
-                aria-label="关闭">
-                <XIcon size={18} />
-              </button>
-            </div>
-            <div className="p-5">
-              <Comment postId={slug} />
-            </div>
-          </div>
-        </div>
+      {route.panel === 'comments' && (
+        <CommentDrawer
+          postId={slug}
+          onClose={route.closePanel}
+        />
       )}
 
       <FloatingVariablePanel
@@ -309,7 +251,7 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
             <EndScreen
               title={game.title}
               shareUrl={shareUrl}
-              onRestart={handleRestart}
+              onRestart={resetToTitle}
             />
           </div>
         </div>

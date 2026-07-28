@@ -28,7 +28,8 @@ export interface GamePlayerState {
 
 export interface GamePlayerActions {
   handleStartGame: () => void;
-  handleRestart: (noConfirm?: boolean) => void;
+  /** 清档并回到未开始状态。返回是否真的执行了（用户在确认弹窗里取消时为 false） */
+  handleRestart: (noConfirm?: boolean) => Promise<boolean>;
   handleChoice: (nextSceneId: string, setInstruction?: string, choiceIndex?: number) => void;
   /**
    * 合并部分运行时状态更新并检查变量触发器（用于选项之外的状态变化来源，如小游戏结算）。
@@ -206,9 +207,9 @@ export function useGamePlayer(
   }, [storageKey, game.startSceneId, game.initialState, onGameStart, notifySceneVisit]);
 
   const handleRestart = useCallback(
-    async (noConfirm = false) => {
+    async (noConfirm = false): Promise<boolean> => {
       const confirmed = noConfirm || (await confirmRestart());
-      if (!confirmed) return;
+      if (!confirmed) return false;
 
       const startSceneId = game.startSceneId || 'start';
       localStorage.removeItem(storageKey);
@@ -220,6 +221,7 @@ export function useGamePlayer(
 
       const startScene = game.scenes[startSceneId];
       setCurrentImageUrl(startScene ? getSceneImage(startScene.nodes) : undefined);
+      return true;
     },
     [storageKey, game.startSceneId, game.initialState, game.scenes, confirmRestart],
   );

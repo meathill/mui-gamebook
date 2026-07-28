@@ -29,7 +29,9 @@ describe('TitleScreen', () => {
     renderWithProviders(
       <TitleScreen
         game={baseGame}
+        hasSave={false}
         onStart={vi.fn()}
+        onRestart={vi.fn()}
       />,
     );
 
@@ -41,7 +43,9 @@ describe('TitleScreen', () => {
     renderWithProviders(
       <TitleScreen
         game={{ ...baseGame, description: '一场惊险的冒险' }}
+        hasSave={false}
         onStart={vi.fn()}
+        onRestart={vi.fn()}
       />,
     );
 
@@ -53,7 +57,9 @@ describe('TitleScreen', () => {
     renderWithProviders(
       <TitleScreen
         game={{ ...baseGame, description: '简介', backgroundStory: '很久以前...' }}
+        hasSave={false}
         onStart={vi.fn()}
+        onRestart={vi.fn()}
       />,
     );
 
@@ -65,7 +71,9 @@ describe('TitleScreen', () => {
     renderWithProviders(
       <TitleScreen
         game={{ ...baseGame, tags: ['悬疑', '冒险'] }}
+        hasSave={false}
         onStart={vi.fn()}
+        onRestart={vi.fn()}
       />,
     );
 
@@ -77,7 +85,9 @@ describe('TitleScreen', () => {
     renderWithProviders(
       <TitleScreen
         game={baseGame}
+        hasSave={false}
         onStart={vi.fn()}
+        onRestart={vi.fn()}
       />,
     );
 
@@ -89,7 +99,9 @@ describe('TitleScreen', () => {
     renderWithProviders(
       <TitleScreen
         game={baseGame}
+        hasSave={false}
         onStart={onStart}
+        onRestart={vi.fn()}
       />,
     );
 
@@ -98,11 +110,48 @@ describe('TitleScreen', () => {
     expect(onStart).toHaveBeenCalledTimes(1);
   });
 
+  it('无存档时只有"开始冒险"，不渲染"重新开始"', () => {
+    renderWithProviders(
+      <TitleScreen
+        game={baseGame}
+        hasSave={false}
+        onStart={vi.fn()}
+        onRestart={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText('Start Adventure')).toBeInTheDocument();
+    expect(screen.queryByText('Start Over')).not.toBeInTheDocument();
+  });
+
+  it('有存档时主按钮变"继续冒险"，并额外提供"重新开始"', () => {
+    const onStart = vi.fn();
+    const onRestart = vi.fn();
+    renderWithProviders(
+      <TitleScreen
+        game={baseGame}
+        hasSave={true}
+        onStart={onStart}
+        onRestart={onRestart}
+      />,
+    );
+
+    expect(screen.queryByText('Start Adventure')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Continue'));
+    expect(onStart).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByText('Start Over'));
+    expect(onRestart).toHaveBeenCalledTimes(1);
+  });
+
   it('"返回首页"链接指向 /', () => {
     renderWithProviders(
       <TitleScreen
         game={baseGame}
+        hasSave={false}
         onStart={vi.fn()}
+        onRestart={vi.fn()}
       />,
     );
 

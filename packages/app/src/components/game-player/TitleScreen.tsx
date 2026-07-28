@@ -9,11 +9,17 @@ import ShareButton from '@/components/ShareButton';
 
 interface TitleScreenProps {
   game: PlayableGame;
+  /** 是否有本地存档。SSR 与水合首帧必须为 false，由调用方在读完 localStorage 的 effect 之后才置真 */
+  hasSave: boolean;
+  /** 开始 / 继续，同一个入口 */
   onStart: () => void;
+  /** 清档重来，仅 hasSave 时渲染 */
+  onRestart: () => void;
 }
 
-export default function TitleScreen({ game, onStart }: TitleScreenProps) {
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+export default function TitleScreen({ game, hasSave, onStart, onRestart }: TitleScreenProps) {
+  // 不用 location.href：播放页把视图状态放进了 hash，分享出去的链接不该带上 #settings 之类
+  const shareUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
   const t = useTranslations('game');
 
   return (
@@ -72,12 +78,23 @@ export default function TitleScreen({ game, onStart }: TitleScreenProps) {
         <button
           onClick={onStart}
           className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-lg font-semibold rounded-full shadow-lg hover:from-orange-600 hover:to-amber-600 hover:shadow-xl transition-all transform hover:-translate-y-0.5">
-          {t('startAdventure')}
+          {hasSave ? t('continueAdventure') : t('startAdventure')}
         </button>
+
+        {/* 存档信息只有客户端才知道，固定高度占位避免它到位后按钮区抖动 */}
+        <div className="h-10 mt-3 flex items-center justify-center">
+          {hasSave && (
+            <button
+              onClick={onRestart}
+              className="text-sm text-gray-500 hover:text-gray-800 underline">
+              {t('restartFromStart')}
+            </button>
+          )}
+        </div>
 
         <Link
           href="/"
-          className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline">
+          className="mt-3 text-sm text-gray-500 hover:text-gray-800 underline">
           {t('backToLibrary')}
         </Link>
       </div>
