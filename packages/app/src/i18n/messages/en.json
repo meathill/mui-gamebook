@@ -229,6 +229,8 @@
   "game": {
     "loading": "Loading...",
     "startAdventure": "Start Adventure",
+    "continueAdventure": "Continue",
+    "restartFromStart": "Start Over",
     "backToLibrary": "Back to Library",
     "defaultDescription": "An interactive adventure awaits you.",
     "theEnd": "The End",

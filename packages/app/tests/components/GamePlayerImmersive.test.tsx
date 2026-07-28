@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
-import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { afterEach, describe, it, expect } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import GamePlayerImmersive from '../../src/components/game-player/GamePlayerImmersive';
 import { DialogProvider } from '@/components/Dialog';
@@ -66,7 +66,16 @@ function advance(container: HTMLElement) {
   fireEvent.click(box);
 }
 
+/** 游戏中左上角面包屑上的菜单开关（带 aria-expanded，避免和标题页 h1 撞名） */
+function menuToggle(): HTMLElement {
+  return screen.getByRole('button', { expanded: false });
+}
+
 describe('GamePlayerImmersive Component', () => {
+  afterEach(() => {
+    delete document.documentElement.dataset.immersive;
+  });
+
   it('should render the title screen and start game correctly', () => {
     const { container } = renderWithProviders(
       <GamePlayerImmersive
@@ -153,6 +162,110 @@ describe('GamePlayerImmersive Component', () => {
 
     // 'win' 场景没有 choice，一进入就直接展示结局画面（不经过打字机逐字展示）
     expect(screen.getByText('The End')).toBeInTheDocument();
+  });
+
+  // ——— intro / play 分离与 hash 路由 ———
+
+  it('标题页不进入沉浸式（不锁滚动、不藏 header/footer），进入游戏才开启', () => {
+    renderWithProviders(
+      <GamePlayerImmersive
+        game={mockGame}
+        slug="immersive-hash-1"
+      />,
+    );
+
+    expect(document.documentElement.dataset.immersive).toBeUndefined();
+
+    fireEvent.click(screen.getByText('Start Adventure'));
+    expect(document.documentElement.dataset.immersive).toBe('true');
+
+    fireEvent.click(menuToggle());
+    fireEvent.click(screen.getByText('Back to Title'));
+    expect(document.documentElement.dataset.immersive).toBeUndefined();
+  });
+
+  it('点「开始冒险」把视图写进 URL hash', () => {
+    renderWithProviders(
+      <GamePlayerImmersive
+        game={mockGame}
+        slug="immersive-hash-2"
+      />,
+    );
+
+    fireEvent.click(screen.getByText('Start Adventure'));
+
+    expect(window.location.hash).toBe('#play');
+  });
+
+  it('「返回标题」保留存档，标题页主按钮变「继续冒险」并提供「重新开始」', () => {
+    renderWithProviders(
+      <GamePlayerImmersive
+        game={mockGame}
+        slug="immersive-hash-3"
+      />,
+    );
+    fireEvent.click(screen.getByText('Start Adventure'));
+
+    fireEvent.click(menuToggle());
+    fireEvent.click(screen.getByText('Back to Title'));
+
+    expect(window.location.hash).toBe('');
+    expect(localStorage.getItem('game_progress_immersive-hash-3')).not.toBeNull();
+    expect(screen.getByText('Continue')).toBeInTheDocument();
+    expect(screen.getByText('Start Over')).toBeInTheDocument();
+  });
+
+  it('有存档时首屏仍是带 h1 的标题页（不自动跳进游戏，SSR 与水合首帧一致）', () => {
+    localStorage.setItem(
+      'game_progress_immersive-hash-4',
+      JSON.stringify({ sceneId: 'door', state: { gold: 10, has_key: false } }),
+    );
+
+    renderWithProviders(
+      <GamePlayerImmersive
+        game={mockGame}
+        slug="immersive-hash-4"
+      />,
+    );
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Immersive Adventure');
+    expect(screen.getByText('Continue')).toBeInTheDocument();
+  });
+
+  it('带 #play 深链直接进入游戏', () => {
+    window.history.replaceState(null, '', '/play/immersive-hash-5#play');
+
+    const { container } = renderWithProviders(
+      <GamePlayerImmersive
+        game={mockGame}
+        slug="immersive-hash-5"
+      />,
+    );
+
+    expect(screen.queryByText('Start Adventure')).not.toBeInTheDocument();
+    fireEvent.click(container.querySelector('.cursor-pointer') as HTMLElement);
+    expect(screen.getByText('You are at the start.')).toBeInTheDocument();
+  });
+
+  it('菜单与评论抽屉的开关状态走 URL hash，关闭后退回 #play', async () => {
+    renderWithProviders(
+      <GamePlayerImmersive
+        game={mockGame}
+        slug="immersive-hash-6"
+      />,
+    );
+    fireEvent.click(screen.getByText('Start Adventure'));
+
+    fireEvent.click(menuToggle());
+    expect(window.location.hash).toBe('#settings');
+
+    fireEvent.click(screen.getByText('评论'));
+    expect(window.location.hash).toBe('#comments');
+    expect(screen.getByLabelText('关闭')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('关闭'));
+    await waitFor(() => expect(window.location.hash).toBe('#play'));
+    expect(screen.queryByLabelText('关闭')).not.toBeInTheDocument();
   });
 
   it('should show the end screen when the scene has no choices', () => {

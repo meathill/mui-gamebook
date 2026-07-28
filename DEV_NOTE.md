@@ -97,6 +97,19 @@
 - 顺手发现的模式性 bug，日后新加页面时留意：根布局 `title.template: '%s | 姆伊游戏书'` 会自动加一次站点名，子路由的 title 不要再自己拼一遍站点名（曾经出现"标题 - 姆伊游戏书 | 姆伊游戏书"）；`layout.tsx` 的 `<head>` 不要手写 `<meta charSet>`/`<meta viewport>`，Next.js Metadata API 会自动注入，手写会重复两份；子路由一旦自己定义 `openGraph`，会整体覆盖（不是深合并）根布局的 `openGraph`，如果没带上 `images` 就会丢失默认分享图。
 - 游戏卡片（`components/home/GameCard.tsx`）原本只渲染前 3 个标签的可点击 chip，标签数超过 3 的游戏会让第 4 个及以后的标签永远没有任何入站链接（对应 Ahrefs 的 orphan tag page）；已去掉这个截断，改为渲染全部标签。
 
+### 播放页视图状态放进 URL hash（2026-07-28）
+
+- 起因三连：immersive 作品的标题页滚不动、开始游戏后再也回不到标题页、游戏内面板状态无法通过 URL 表达。三件事同一个根子：**`isGameStarted` 一个布尔值同时承担了「有没有存档」和「该显示哪一屏」两种语义**，而 UI 状态完全不进 URL。
+- 滚动 bug 的具体成因：`GamePlayerImmersive` 在函数体第一行无条件调 `useImmersiveMode()`，早于 `if (!isGameStarted) return <TitleScreen/>` 的提前 return，于是标题页阶段 `<html data-immersive="true">` 就已经生效，`globals.css` 的 `body { overflow: hidden }` 把整页锁死。**hook 里带副作用又跑在提前 return 之前，是这类 bug 的通用形态**——副作用的开关条件必须和渲染分支用同一个判据。
+- 现在的语义：`isGameStarted` 只表示「有没有进行中的存档」（两个播放器解构时直接改名 `hasSave` 提醒自己），显示哪一屏由 hash 决定。`use-game-player.ts` 行为一行没改，55/jianjian 零影响。
+- **hash 词表**（`components/game-player/hooks/useGameHashRoute.ts`）：无 hash = intro（唯一 canonical 落点），`#play` = 游戏中，其余注册过的 token = 叠在视图上的面板（当前 `#settings`/`#comments`）。认不出来的 hash 一律当 intro，不猜。
+- **导航规则**：视图 = 页面语义，切换用 push；面板 = 模态语义，打开 push、**关闭走 `history.back()`**，这样 X 按钮和 Android 返回键完全等价（绝不 push 一条"已关闭"记录，否则返回键会把面板重新打开）。面板互切用 replace，栈里最多一条面板记录。冷启动直接落在面板 hash 上时没有可退的历史，改用 `replaceState`（`didPushPanelRef` 守卫，防止 back 把用户弹出站外）。
+- **加新面板的 checklist**：① `GamePanel` union 加成员 ② `PANEL_BASE` 加一行声明冷启动 base 视图 ③ 组件里按 `route.panel` 渲染 ④ 确认页面上没有同名 DOM id（`Comment.tsx` 有 `id="comment"`，和 `#comments` 只差一个字母）。
+- **为什么是 hash 不是 query**：`useSearchParams()` 会让路由进入 CSR bailout，Next 要求外面套 `<Suspense>`，而全仓库一个都没有——用 query 会把刚修好 SSR 首屏的页面重新推回空壳。hash 完全不进服务端：canonical / sitemap / JSON-LD / OpenNext 边缘缓存键全不受影响，也不会缓存分裂。
+- **代价与硬约束**：服务端永远拿不到 fragment，所以 **hook 首帧必须硬编码 intro，绝不能在 render 里读 `location`**，否则水合 mismatch。连带结果是带 `#play` 刷新必闪一帧标题页——这比改之前好（原先是所有有存档用户都闪），是保住 SSR h1 的必要代价。写 URL 一律用 `history.pushState/replaceState`，不给 `location.hash` 赋值（赋值会触发浏览器锚点滚动，且去不掉裸 `#`）。
+- **埋点口径变了**：原先有存档用户一打开页面就自动进游戏、立刻 `trackScene`；现在必须点「继续冒险」才上报。`/admin/stats` 的场景访问数会掉一截，是口径变化不是故障；好处是「打开 → 开始」的转化率第一次有意义。
+- 顺带：三处 `shareUrl` 从 `location.href` 改成 `origin + pathname`，否则分享出去的链接会带上 `#settings`，别人一打开就是菜单展开态。classic 播放器 header 上的「退出」（清档）改成「返回标题」（保留存档），销毁进度的入口收敛为标题页的「重新开始」和结局页的「再玩一次」，两者都带确认。
+
 ### UI 框架演进
 
 **Radix UI 引入**

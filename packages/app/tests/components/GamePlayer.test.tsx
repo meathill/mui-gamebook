@@ -148,4 +148,41 @@ describe('GamePlayer Component', () => {
     fireEvent.click(screen.getByText('Unlock Door'));
     expect(screen.getByText('You Win!')).toBeInTheDocument();
   });
+
+  it('「返回标题」保留存档（区别于旧的「退出」会清档），标题页主按钮变「继续冒险」', () => {
+    renderWithProviders(
+      <GamePlayer
+        game={mockGame}
+        slug="classic-hash-1"
+      />,
+    );
+    fireEvent.click(screen.getByText('Start Adventure'));
+    fireEvent.click(screen.getByText('Go to Door'));
+    expect(window.location.hash).toBe('#play');
+
+    fireEvent.click(screen.getByText('Back to Title'));
+
+    expect(window.location.hash).toBe('');
+    expect(localStorage.getItem('game_progress_classic-hash-1')).not.toBeNull();
+    expect(screen.getByText('Continue')).toBeInTheDocument();
+    expect(screen.getByText('Start Over')).toBeInTheDocument();
+
+    // 「继续冒险」回到离开时的场景，不是从头开始
+    fireEvent.click(screen.getByText('Continue'));
+    expect(screen.getByText('You are at the door.')).toBeInTheDocument();
+  });
+
+  it('带 #play 深链直接进入游戏', () => {
+    window.history.replaceState(null, '', '/play/classic-hash-2#play');
+
+    renderWithProviders(
+      <GamePlayer
+        game={mockGame}
+        slug="classic-hash-2"
+      />,
+    );
+
+    expect(screen.queryByText('Start Adventure')).not.toBeInTheDocument();
+    expect(screen.getByText('You are at the start.')).toBeInTheDocument();
+  });
 });

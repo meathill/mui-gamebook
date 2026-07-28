@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import { useDialog } from '@/components/Dialog';
-import type { AudiobookClip } from '@/lib/audiobook-types';
 import ShareButton from '@/components/ShareButton';
 import Button from '@/components/Button';
 import {
@@ -16,11 +15,17 @@ import {
   SceneNodes,
   AudioControls,
   usePreload,
-  useAudioPlayer,
 } from '@/components/game-player';
+import { type GamePanel, useGameHashRoute } from '@/components/game-player/hooks/useGameHashRoute';
+import { useSceneAudiobook } from '@/components/game-player/hooks/useSceneAudiobook';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 
+// classic 播放器没有叠加面板，注册空表让 #settings 之类归一成 intro，不会莫名把人塞进游戏
+const NO_PANELS: readonly GamePanel[] = [];
+
 export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?: number }; slug: string }) {
+  const route = useGameHashRoute(NO_PANELS);
+  const isPlaying = route.view === 'play';
   const [minigameCompleted, setMinigameCompleted] = useState(false);
   const [textVisible, setTextVisible] = useState(true);
   const [hasReadAll, setHasReadAll] = useState(false);
@@ -29,20 +34,6 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   const autoScrollRef = useRef<number | null>(null);
   const dialog = useDialog();
   const t = useTranslations('game');
-  // 分角色有声书按句顺序播放：clipQueueRef 记录当前场景的 clip 列表，
-  // clipIndexRef 记录播放到第几句，onEnded 驱动"这句读完，播放下一句"
-  const clipQueueRef = useRef<AudiobookClip[]>([]);
-  const clipIndexRef = useRef(0);
-  const [hasAudioThisScene, setHasAudioThisScene] = useState(false);
-  function playNextAudiobookClip() {
-    const queue = clipQueueRef.current;
-    const nextIndex = clipIndexRef.current + 1;
-    if (nextIndex < queue.length) {
-      clipIndexRef.current = nextIndex;
-      audioPlayer.play(queue[nextIndex].url);
-    }
-  }
-  const audioPlayer = useAudioPlayer(playNextAudiobookClip);
   const analytics = useGameAnalytics();
 
   const gamePlayer = useGamePlayer(game, slug, {
@@ -58,7 +49,9 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     currentSceneId,
     currentScene,
     runtimeState,
-    isGameStarted,
+    isLoaded,
+    // isGameStarted 的语义是「有没有进行中的存档」，不是「该显示哪一屏」——后者由 hash 决定
+    isGameStarted: hasSave,
     currentImageUrl,
     imageLoading,
     visibleVariables,
@@ -71,6 +64,14 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     applyStateUpdate,
     setImageLoading,
   } = gamePlayer;
+
+  const { audioPlayer, hasAudioThisScene } = useSceneAudiobook({
+    slug,
+    currentSceneId,
+    currentScene,
+    isPlaying,
+    getSceneAudioUrl: gamePlayer.getSceneAudioUrl,
+  });
 
   // 预加载下一个可能场景的素材
   usePreload(game, currentSceneId);
@@ -97,63 +98,28 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
 
   // 每次到达场景都上报（不去重，与埋点数据的既有口径一致）
   useEffect(() => {
-    if (isGameStarted && game.id && currentSceneId) {
+    if (isPlaying && game.id && currentSceneId) {
       analytics.trackScene(game.id, currentSceneId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSceneId, isGameStarted]);
+  }, [currentSceneId, isPlaying]);
 
-  // 场景切换时自动播放语音：优先播放已生成的分角色有声书（逐句顺序播放），
-  // 没有生成过（或请求失败）时回退到旧的单条 audio_url 播放逻辑
+  // 进入游戏视图时确保这一局已初始化。三条入口都走这里：点「开始冒险」、点「继续冒险」、
+  // 冷启动 #play 深链。handleStartGame 内部自己读 localStorage：有档不重置（=继续），无档从头开始
   useEffect(() => {
-    if (!isGameStarted || !currentScene || !currentSceneId) return;
+    if (!isLoaded || !isPlaying || hasSave) return;
+    handleStartGame();
+  }, [isLoaded, isPlaying, hasSave, handleStartGame]);
 
-    let cancelled = false;
-    audioPlayer.stop();
-    clipQueueRef.current = [];
-    clipIndexRef.current = 0;
-    setHasAudioThisScene(false);
+  /** 清档回标题。noConfirm 用于结局页「再玩一次」和存档失效时的兜底恢复 */
+  async function resetToTitle(noConfirm = false) {
+    if (await handleRestart(noConfirm)) route.goToView('intro');
+  }
 
-    function playClassicAudio() {
-      if (cancelled || !currentScene) return;
-      const audioUrl = gamePlayer.getSceneAudioUrl(currentScene.nodes);
-      if (audioUrl) {
-        setHasAudioThisScene(true);
-        setTimeout(() => {
-          if (!cancelled) audioPlayer.play(audioUrl);
-        }, 500);
-      }
-    }
-
-    async function loadAudiobook() {
-      try {
-        const res = await fetch(`/api/games/${slug}/audiobook/${encodeURIComponent(currentSceneId)}`);
-        if (cancelled) return;
-        if (res.ok) {
-          const data = (await res.json()) as { clips: AudiobookClip[] };
-          if (!cancelled && data.clips?.length > 0) {
-            clipQueueRef.current = data.clips;
-            clipIndexRef.current = 0;
-            setHasAudioThisScene(true);
-            setTimeout(() => {
-              if (!cancelled) audioPlayer.play(data.clips[0].url);
-            }, 500);
-            return;
-          }
-        }
-      } catch {
-        // 网络错误等同于"这个场景还没有有声书"，走下面的回退逻辑
-      }
-      playClassicAudio();
-    }
-
-    loadAudiobook();
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSceneId, isGameStarted]);
+  /** 标题页的「重新开始」：确认后清档，直接从头开始新的一局 */
+  async function handleRestartFromTitle() {
+    if (await handleRestart()) route.goToView('play');
+  }
 
   function handleChoice(nextSceneId: string, setInstruction?: string, choiceIndex?: number) {
     gamePlayerHandleChoice(nextSceneId, setInstruction, choiceIndex);
@@ -240,11 +206,13 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   }
 
   // 不额外挡 isLoaded：让 SSR 首屏直接落到下面的标题页分支，带上真实标题和简介，而不是空的"加载中"
-  if (!isGameStarted) {
+  if (!isPlaying) {
     return (
       <TitleScreen
         game={game}
-        onStart={handleStartGame}
+        hasSave={hasSave}
+        onStart={() => route.goToView('play')}
+        onRestart={handleRestartFromTitle}
       />
     );
   }
@@ -254,18 +222,20 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
       <div className="p-8 text-center">
         <h2 className="text-xl font-bold text-red-600 mb-4">{t('sceneNotFound')}</h2>
         <p className="mb-6">{t('cannotFindScene', { sceneId: currentSceneId })}</p>
+        {/* 存档指向了不存在的场景，必须清档，否则回标题页点「继续」会死循环 */}
         <Button
           variant="soft"
           color="gray"
           size="lg"
-          onClick={() => handleRestart()}>
+          onClick={() => resetToTitle(true)}>
           {t('backToTitle')}
         </Button>
       </div>
     );
   }
 
-  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  // 不用 location.href：视图状态在 hash 里，分享出去的链接不该带上它
+  const shareUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
 
   return (
     <div className="flex flex-col min-h-dvh sm:min-h-[600px]">
@@ -283,11 +253,12 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
             title={game.title}
             url={shareUrl}
           />
+          {/* 回标题页，保留存档；销毁进度的入口只留标题页的「重新开始」和结局页的「再玩一次」 */}
           <Button
             variant="ghost"
-            color="red"
-            onClick={() => handleRestart()}>
-            {t('exit')}
+            color="gray"
+            onClick={() => route.goToView('intro')}>
+            {t('backToTitle')}
           </Button>
         </div>
       </div>
@@ -372,7 +343,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
               <EndScreen
                 title={game.title}
                 shareUrl={shareUrl}
-                onRestart={handleRestart}
+                onRestart={resetToTitle}
               />
             )}
           </div>
