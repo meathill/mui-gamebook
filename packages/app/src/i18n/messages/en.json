@@ -28,7 +28,10 @@
     "copyright": "© {year} MuiStory. All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
-    "contact": "Contact Us"
+    "contact": "Contact Us",
+    "interactiveFiction": "Interactive Fiction",
+    "howToPlay": "How to Play",
+    "create": "Create"
   },
   "open": {
     "hero": {
@@ -198,11 +201,12 @@
     "noGames": "No published stories yet, please check back later!"
   },
   "games": {
-    "pageTitle": "All Stories - MuiStory",
-    "pageDescription": "Explore all interactive story scripts on MuiStory",
-    "title": "All Stories",
+    "pageTitle": "Interactive Fiction Games - All Stories",
+    "pageDescription": "Play interactive fiction games online: explore all interactive stories on MuiStory, from suspense and fantasy to workplace and classic adaptations. Every choice is yours.",
+    "title": "Interactive Fiction Games",
     "subtitle": "Discover amazing interactive stories and start your adventure",
-    "noGames": "No published games yet"
+    "noGames": "No published games yet",
+    "whatIs": "What is interactive fiction?"
   },
   "minigames": {
     "pageTitle": "Mini Games - MuiStory",
@@ -244,7 +248,10 @@
     "restartConfirm": "Are you sure you want to restart? Your progress will be lost.",
     "startGame": "Start Game",
     "generating": "Generating...",
-    "relatedGames": "More Games"
+    "relatedGames": "More Games",
+    "byAuthor": "By {name}",
+    "updatedAt": "Updated {date}",
+    "howToPlay": "How do interactive novels work?"
   },
   "share": {
     "share": "Share",
@@ -443,5 +450,83 @@
     "serverError": "Server error",
     "networkError": "Network error",
     "tryAgain": "Please try again"
+  },
+  "interactiveFiction": {
+    "pageTitle": "Interactive Fiction - Online Interactive Story Platform",
+    "pageDescription": "Interactive fiction is a story form where your choices decide the plot. MuiStory is a free online interactive fiction website: play interactive stories, or create and self-publish your own with Markdown and AI.",
+    "heroTitle": "Interactive Fiction: Every Choice You Make Shapes the Story",
+    "heroSubtitle": "Interactive fiction is a narrative form that lets readers participate through choices. You decide for the protagonist, and the story branches according to your decisions. MuiStory (muistory.com) offers free online interactive stories to play and create — this is where you start.",
+    "whatIsTitle": "What is interactive fiction?",
+    "whatIsContent": "Interactive fiction turns \"reading\" into \"choosing\": at key moments, you make decisions for the protagonist, and the story branches into different paths with different endings. The same work reads completely differently for each reader. Web interactive fiction needs no download — just open your browser and play.",
+    "howToPlayTitle": "How do web interactive novels work?",
+    "howToPlayContent": "Reading interactive fiction on the web is simple: read like a novel, and when choices appear, click one — your decision instantly changes the story. Some works include variable systems: items, affinity and key choices you accumulate will genuinely affect what happens later.",
+    "howToPlayLink": "Learn the full interactive fiction gameplay",
+    "featuredTitle": "Featured interactive stories",
+    "featuredSubtitle": "From suspense and exorcism to classic adaptations, these works deserve your choices.",
+    "game1Title": "The Exorcist of Zhumadian",
+    "game1Desc": "A suspenseful interactive exorcism story. Step cautiously through eerie events — every judgment you make can decide life and death.",
+    "game1Play": "Start reading The Exorcist of Zhumadian",
+    "game2Title": "Dream of the Crimson Manor",
+    "game2Desc": "A classic adapted into interactive fiction. Make your choices where steampunk meets a classic Chinese novel.",
+    "game2Play": "Start reading Dream of the Crimson Manor",
+    "allGames": "Browse all interactive fiction games",
+    "createTitle": "Create and self-publish your own interactive fiction",
+    "createContent": "Creating interactive fiction on MuiStory requires no programming. Write your story in familiar Markdown, let the AI assistant polish your prose and generate art and audio, then add branching choices, variables and minigames. Publish with one click so everyone can play your self-published interactive story.",
+    "createLink": "Learn how to create interactive fiction",
+    "ctaTitle": "Start playing right now",
+    "ctaSubtitle": "Read for free, create for free, no downloads needed.",
+    "ctaPlay": "Play interactive fiction",
+    "ctaCreate": "Start creating"
+  },
+  "howToPlay": {
+    "pageTitle": "How to Play Interactive Fiction - Web Interactive Novel Guide",
+    "pageDescription": "How do web interactive novels work? From branching choices and variable systems to multiple endings, this guide helps you start playing interactive fiction games and understand how every choice changes the story.",
+    "heroTitle": "How do web interactive novels work?",
+    "heroSubtitle": "Choices, branches, endings — the joy of interactive fiction is that every decision you make counts.",
+    "stepTitle": "Three steps into an interactive story",
+    "step1Title": "Read like a novel",
+    "step1Content": "Interactive fiction has a complete plot and characters just like the novels you know. Enjoy the story unfolding — there is no rush to decide.",
+    "step2Title": "Make choices when they appear",
+    "step2Content": "The story pauses to hand the decision to you: choices can change dialogue, unlock new scenes, grant items, or lead the story in a completely different direction.",
+    "step3Title": "Reach your own ending",
+    "step3Content": "A single work can have multiple endings. After finishing, go back and choose another branch to see what kind of story different choices create.",
+    "mechanicTitle": "Common gameplay mechanics",
+    "mechanicBranchTitle": "Branching and multiple endings",
+    "mechanicBranchContent": "Every choice branches the story, and multiple endings invite you to explore the same work again and again.",
+    "mechanicVariableTitle": "Variables and state",
+    "mechanicVariableContent": "Some works track your state: affinity, items, key events. These states genuinely affect which options and endings you can reach later.",
+    "mechanicRestartTitle": "Restart anytime",
+    "mechanicRestartContent": "Missed something? Most works let you restart anytime — exploring every possibility is a valid way to play.",
+    "ctaTitle": "Pick a story and try it",
+    "ctaSubtitle": "No registration needed — open and play.",
+    "ctaPlay": "Play interactive fiction games",
+    "backToHub": "What is interactive fiction?"
+  },
+  "create": {
+    "pageTitle": "How to Create Interactive Fiction - No-Code Guide to Self-Publishing",
+    "pageDescription": "Want to create your own interactive fiction? MuiStory lets you write stories in Markdown, polish with AI, add branching and variables, and publish with one click — self-publishing to the web and beyond, no programming needed.",
+    "heroTitle": "Creating interactive fiction is easier than you think",
+    "heroSubtitle": "Write your story in the Markdown you already know, let AI polish your prose and generate art and audio, add branches and variables, then publish with one click — anyone can create and self-publish interactive fiction.",
+    "workflowTitle": "The workflow",
+    "step1Title": "Write your story in Markdown",
+    "step1Content": "No programming required. Write your plot in familiar Markdown syntax; the editor autosaves and offers smart hints, designed specifically for interactive fiction.",
+    "step2Title": "Create with AI assistance",
+    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art and background audio to cover the gaps of solo creation.",
+    "step3Title": "Add interactive elements",
+    "step3Content": "Add branching choices, variable systems, conditional text, even embed minigames — make the reader a participant in the story.",
+    "step4Title": "Publish with one click, self-publish",
+    "step4Content": "Publishing to the web goes live instantly, with a dedicated link and sharing capability. Future support includes exporting Ren'Py scripts or desktop apps for stores like Steam.",
+    "featureTitle": "Why self-published interactive fiction is worth it",
+    "feature1Title": "Zero barrier to start",
+    "feature1Content": "Create without any programming background. Register and begin — core creation features are free.",
+    "feature2Title": "AI covers the gaps",
+    "feature2Content": "Prose, art, audio, dialogue quality — the AI assistant is on call, while you stay in control of the creative direction.",
+    "feature3Title": "The work is truly yours",
+    "feature3Content": "Your story, your design choices, your world — the platform provides tools; the work and its readers are always yours.",
+    "ctaTitle": "Write your first sentence now",
+    "ctaSubtitle": "Register and start creating for free.",
+    "ctaCreate": "Start creating",
+    "ctaBrowse": "See what others have made",
+    "backToHub": "What is interactive fiction?"
   }
 }

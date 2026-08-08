@@ -59,6 +59,21 @@ export default function Footer() {
 
           <div className="flex items-center gap-4 sm:ms-auto">
             <Link
+              href="/interactive-fiction"
+              className="text-gray-500 hover:text-gray-700 text-sm">
+              {t('interactiveFiction')}
+            </Link>
+            <Link
+              href="/how-to-play"
+              className="text-gray-500 hover:text-gray-700 text-sm">
+              {t('howToPlay')}
+            </Link>
+            <Link
+              href="/create"
+              className="text-gray-500 hover:text-gray-700 text-sm">
+              {t('create')}
+            </Link>
+            <Link
               href="/privacy"
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('privacy')}

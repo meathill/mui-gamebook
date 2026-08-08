@@ -1,11 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getGamesByTag, getAllTags, getFeaturedGames } from '@/lib/games';
+import { getGamesByTag, getAllTags, getFeaturedGames, getGameBySlug } from '@/lib/games';
 
 // Mock getCloudflareContext
 vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: vi.fn(),
 }));
+
+vi.mock('@/lib/auth-server', () => ({
+  getSession: vi.fn(),
+}));
+
+import { getSession } from '@/lib/auth-server';
 
 describe('games tag functions', () => {
   const mockDB = {
@@ -229,6 +235,80 @@ describe('games tag functions', () => {
       const result = await getFeaturedGames({ pinnedSlugs: [], limit: 5 });
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('getGameBySlug', () => {
+    const VALID_CONTENT = `---
+title: "测试作品"
+---
+# start
+`;
+
+    function mockGameRecord(overrides: Record<string, unknown> = {}) {
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          first: vi.fn().mockResolvedValue({
+            id: 1,
+            owner_id: 'owner-1',
+            published: 1,
+            updated_at: 1700000000,
+            content: VALID_CONTENT,
+            author_name: '作者甲',
+            author_image: 'https://example.com/a.png',
+            ...overrides,
+          }),
+        }),
+      });
+    }
+
+    beforeEach(() => {
+      (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    });
+
+    it('返回作者昵称、头像与更新 ISO 时间（秒级时间戳）', async () => {
+      mockGameRecord();
+
+      const game = await getGameBySlug('test-game');
+
+      expect(game).not.toBeNull();
+      expect(game?.authorName).toBe('作者甲');
+      expect(game?.authorImage).toBe('https://example.com/a.png');
+      expect(game?.updatedAt).toBe(new Date(1700000000 * 1000).toISOString());
+    });
+
+    it('毫秒级时间戳正确转换为 ISO 时间', async () => {
+      mockGameRecord({ updated_at: 1700000000000 });
+
+      const game = await getGameBySlug('test-game');
+
+      expect(game?.updatedAt).toBe(new Date(1700000000000).toISOString());
+    });
+
+    it('无 owner 时作者字段为 undefined', async () => {
+      mockGameRecord({ owner_id: null, author_name: null, author_image: null });
+
+      const game = await getGameBySlug('test-game');
+
+      expect(game?.authorName).toBeUndefined();
+      expect(game?.authorImage).toBeUndefined();
+    });
+
+    it('游戏不存在返回 null', async () => {
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          first: vi.fn().mockResolvedValue(null),
+        }),
+      });
+
+      expect(await getGameBySlug('not-exist')).toBeNull();
+    });
+
+    it('未发布且非 owner 拒绝访问返回 null', async () => {
+      (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'other' } });
+      mockGameRecord({ published: 0 });
+
+      expect(await getGameBySlug('draft-game')).toBeNull();
     });
   });
 });
