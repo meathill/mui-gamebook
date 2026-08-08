@@ -5,6 +5,7 @@ import { ArrowLeftIcon, CalendarIcon, TagIcon } from '@phosphor-icons/react/dist
 import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
 import { formatLongDate } from '@mui-gamebook/site-common/utils';
 import type { Metadata } from 'next';
+import JsonLd from '@/components/JsonLd';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,8 +33,35 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  // 博客文章结构化数据：面包屑 + Article（issue #14）
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: '首页', item: baseUrl },
+      { '@type': 'ListItem', position: 2, name: '博客', item: `${baseUrl}/blog` },
+      { '@type': 'ListItem', position: 3, name: post.title },
+    ],
+  };
+  const articleLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.description || undefined,
+    image: post.coverUrl || undefined,
+    url: `${baseUrl}/blog/${post.slug}`,
+    datePublished: post.publishedAt || post.createdAt,
+    dateModified: post.updatedAt,
+    inLanguage: 'zh-CN',
+    author: post.author ? { '@type': 'Person', name: post.author } : undefined,
+    publisher: { '@type': 'Organization', name: '姆伊游戏书', url: baseUrl },
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <JsonLd data={breadcrumbLd} />
+      <JsonLd data={articleLd} />
       <article className="max-w-3xl mx-auto px-4 py-12">
         {/* Back link */}
         <Link

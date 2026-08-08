@@ -28,7 +28,10 @@
     "copyright": "© {year} 姆伊游戏书. 保留所有权利.",
     "privacy": "隐私政策",
     "terms": "服务条款",
-    "contact": "联系我们"
+    "contact": "联系我们",
+    "interactiveFiction": "互动小说",
+    "howToPlay": "玩法指南",
+    "create": "制作互动小说"
   },
   "open": {
     "hero": {
@@ -198,11 +201,12 @@
     "noGames": "暂无已发布的游戏，请稍后再来！"
   },
   "games": {
-    "pageTitle": "全部剧本",
-    "pageDescription": "浏览姆伊游戏书上的全部互动小说剧本，涵盖悬疑、奇幻、职场、经典改编等多种题材，每一部都可以自由选择、创造属于你的结局。",
-    "title": "全部剧本",
+    "pageTitle": "互动小说游戏 - 全部作品",
+    "pageDescription": "在线玩互动小说游戏：浏览姆伊游戏书上的全部互动小说，涵盖悬疑、奇幻、职场、经典改编等多种题材，每一部都可以自由选择、创造属于你的结局。",
+    "title": "互动小说游戏",
     "subtitle": "发现精彩的互动故事，开启你的冒险之旅",
-    "noGames": "暂无已发布的游戏"
+    "noGames": "暂无已发布的游戏",
+    "whatIs": "什么是互动小说？"
   },
   "minigames": {
     "pageTitle": "小游戏",
@@ -244,7 +248,10 @@
     "restartConfirm": "确定要重新开始吗？游戏进度将会丢失。",
     "startGame": "开始游戏",
     "generating": "生成中...",
-    "relatedGames": "更多推荐"
+    "relatedGames": "更多推荐",
+    "byAuthor": "作者：{name}",
+    "updatedAt": "更新于 {date}",
+    "howToPlay": "互动小说怎么玩？"
   },
   "share": {
     "share": "分享",
@@ -443,5 +450,83 @@
     "serverError": "服务器错误",
     "networkError": "网络错误",
     "tryAgain": "请重试"
+  },
+  "interactiveFiction": {
+    "pageTitle": "互动小说 - 在线互动小说网站与创作平台",
+    "pageDescription": "互动小说（Interactive Fiction）是让你用选择决定故事走向的小说形式。姆伊游戏书是免费在线互动小说网站：在这里玩互动小说游戏，也学习用 Markdown 和 AI 制作并独立发布自己的互动小说。",
+    "heroTitle": "互动小说：你的每个选择，都在创造故事",
+    "heroSubtitle": "互动小说是一种让读者通过选项参与剧情的小说形式——你替主角做出决定，故事走向由你掌控。姆伊游戏书（muistory.com）提供免费在线的互动小说阅读与创作服务，无论你想玩还是想写，这里都是你的起点。",
+    "whatIsTitle": "什么是互动小说？",
+    "whatIsContent": "互动小说（Interactive Fiction）把「阅读」变成「选择」：在关键节点，你需要代替主角做出决定，故事因此走向不同的分支，最终抵达不同的结局。同一部作品，不同读者会读到完全不同的故事。网页互动小说无需下载安装，打开浏览器即可体验。",
+    "howToPlayTitle": "网页互动小说怎么玩？",
+    "howToPlayContent": "在网页上阅读互动小说非常简单：像读小说一样往下读，遇到选项时点击一个分支，你的选择会即时改变剧情走向。部分作品还带有变量系统——你积累的物品、好感度与关键选择，会在后面的剧情中产生实际影响。",
+    "howToPlayLink": "了解完整的互动小说玩法",
+    "featuredTitle": "推荐互动小说作品",
+    "featuredSubtitle": "从悬疑驱魔到经典名著改编，这些作品都值得你亲自做出选择。",
+    "game1Title": "驻马店驱魔人",
+    "game1Desc": "悬疑驱魔题材互动小说，在诡异事件中步步为营，你的每个判断都可能决定生死。",
+    "game1Play": "开始阅读《驻马店驱魔人》",
+    "game2Title": "绯红庄园之梦",
+    "game2Desc": "经典名著改编的互动小说，在蒸汽朋克与红楼梦的交汇处做出你的选择。",
+    "game2Play": "开始阅读《绯红庄园之梦》",
+    "allGames": "浏览全部互动小说游戏",
+    "createTitle": "自己制作互动小说并独立发布",
+    "createContent": "在姆伊游戏书，创作互动小说不需要编程。用熟悉的 Markdown 语法写故事，AI 助手帮你润色文笔、生成配图和音效，再添加分支选项、变量与小游戏，一键发布上线，让所有人都能玩到你独立发布的互动小说。",
+    "createLink": "了解如何制作互动小说",
+    "ctaTitle": "现在就开始玩",
+    "ctaSubtitle": "免费阅读，也可以免费创作，无需下载任何软件。",
+    "ctaPlay": "开始玩互动小说",
+    "ctaCreate": "开始创作"
+  },
+  "howToPlay": {
+    "pageTitle": "互动小说怎么玩 - 网页互动小说玩法指南",
+    "pageDescription": "网页互动小说怎么玩？从选项分支、变量系统到多结局设计，这份玩法指南带你快速上手互动小说游戏，理解每一次选择如何改变故事。",
+    "heroTitle": "网页互动小说怎么玩？",
+    "heroSubtitle": "看选择、看分支、看结局——互动小说的乐趣，在于你的每个决定都算数。",
+    "stepTitle": "三步开始一段互动故事",
+    "step1Title": "像读小说一样往下读",
+    "step1Content": "互动小说和你熟悉的小说一样有完整的剧情和人物。放心阅读，享受故事的展开，不用急着做决定。",
+    "step2Title": "遇到选项，做出选择",
+    "step2Content": "剧情会时不时停下，把决定权交给你：选项可能改变对话、解锁新场景、获得物品，甚至直接把故事引向完全不同的方向。",
+    "step3Title": "走向你的专属结局",
+    "step3Content": "同一部作品可能拥有多个结局。玩完后可以回头选择不同分支，看看别的选择会带来什么样的故事。",
+    "mechanicTitle": "常见玩法机制",
+    "mechanicBranchTitle": "分支与多结局",
+    "mechanicBranchContent": "每个选择都会让故事走向不同的分支，多结局设计让你反复探索同一部作品。",
+    "mechanicVariableTitle": "变量与状态",
+    "mechanicVariableContent": "部分作品会追踪你的状态：好感度、物品、关键事件。这些状态会在后续剧情中真正影响你能看到的选项与结局。",
+    "mechanicRestartTitle": "随时重来",
+    "mechanicRestartContent": "错过什么都可以重来。大部分作品支持随时重新开始，探索所有可能性也是一种玩法。",
+    "ctaTitle": "选一部作品试试手",
+    "ctaSubtitle": "不用注册，打开就能玩。",
+    "ctaPlay": "去玩互动小说游戏",
+    "backToHub": "什么是互动小说？"
+  },
+  "create": {
+    "pageTitle": "互动小说制作 - 零编程创作与独立发布指南",
+    "pageDescription": "想制作自己的互动小说？姆伊游戏书支持用 Markdown 写故事、AI 润色、添加分支变量，一键发布，独立发布到 Web 与更多平台，无需编程基础。",
+    "heroTitle": "制作互动小说，没有想象中那么难",
+    "heroSubtitle": "用你熟悉的 Markdown 写故事，AI 帮你润色文笔、生成配图和音效，再配上分支选项与变量，一键发布——人人都能制作并独立发布互动小说。",
+    "workflowTitle": "制作流程",
+    "step1Title": "用 Markdown 写故事",
+    "step1Content": "不需要学编程。用你熟悉的 Markdown 语法书写剧情，编辑器自动保存、智能提示，专门为互动小说设计。",
+    "step2Title": "AI 辅助创作",
+    "step2Content": "AI 助手帮你润色文笔、改善对话、检查情节一致性，还可以生成场景配图和背景音效，补足单人创作的短板。",
+    "step3Title": "添加互动元素",
+    "step3Content": "为剧情添加选项分支、变量系统、条件文本，甚至嵌入小游戏——让读者成为故事的参与者。",
+    "step4Title": "一键发布，独立发行",
+    "step4Content": "发布到 Web 即刻上线，作品拥有独立链接和分享能力。未来支持导出为 Ren'Py 脚本或桌面应用，发布到 Steam 等平台。",
+    "featureTitle": "独立发布的互动小说，为什么值得做",
+    "feature1Title": "零门槛开始",
+    "feature1Content": "没有编程基础也能创作，注册即可开始，核心创作功能免费。",
+    "feature2Title": "AI 补齐短板",
+    "feature2Content": "文笔、配图、音效、对话质量，AI 助手随时待命，你来掌控创作方向。",
+    "feature3Title": "作品真正属于你",
+    "feature3Content": "你的故事、你的选择设计、你的世界——平台提供工具，作品和读者永远是你的。",
+    "ctaTitle": "现在就写下你的第一句话",
+    "ctaSubtitle": "注册账号，免费开始创作。",
+    "ctaCreate": "开始创作",
+    "ctaBrowse": "先看看别人怎么玩",
+    "backToHub": "什么是互动小说？"
   }
 }

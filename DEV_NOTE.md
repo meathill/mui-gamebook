@@ -715,3 +715,26 @@ isValidVoiceId(voiceId: string, provider): boolean
 - D1 生产清洗（2026-07-15）：35 个游戏摸底，10 个清洗落库并逐字节读回校验（3 个旧围栏迁移恢复素材、5 个模板污染清零、2 个老转义产物规范化）。清洗前原始备份：`~/mui-gamebook-d1-backup-2026-07-15.json`（仓库之外，仅用于本次清洗的回滚校验；逐字节读回校验已通过，无需长期保留，确认无需回滚后可删除）。
 - **踩坑记录**：`scripts/migrate-game-script.ts` 曾经在旧版转义场景标题（如 `# forest\_path\_start`）下让 `SCENE_REGEX` 失配，场景重建阶段悄悄吞掉内容（生产实测「小红帽」一篇从 4233 字符缩到 1095），且完全静默、不报错。已加 `assertNoMassiveShrink` 护栏：重建后内容相对原文缩水 >40% 直接中止并提示改走 parse→stringify 规范化路径。**日后任何对 DSL 正文做正则重建/替换的脚本，都应该抄这个"缩水幅度校验"的思路**，不能假设正则一定按预期匹配。
 - 本地 dev D1 留有手测种子游戏 `v2-shou-ce`（id 9001），覆盖对话行/表情/全角标点/中文变量/or 表达式等 v2 语法，可复用于日后手测，不需要可随时删。
+
+## SEO 内容集群：互动小说 query-to-page 映射（2026-08-08）
+
+- 背景：issue #14。2026-08-01 全站 SEO 审计发现 muistory.com 已有可验证的"互动小说"搜索需求，为各目标 query 分配唯一主页面，避免关键词堆砌与薄页。
+- query-to-page 映射（所有 query 有唯一主页面）：
+  - `互动小说` / `互动小说网站` → `/interactive-fiction`（主题 hub，解释平台、作品、玩法、独立发布）
+  - `互动小说游戏` → `/games`（作品列表，title/H1 关键词化 + ItemList JSON-LD）
+  - `网页互动小说` → `/how-to-play`（玩法说明）
+  - `互动小说制作` / `可以独立发布的互动小说` → `/create`（创作与发布说明）
+  - `驻马店驱魔人` → `/play/zhumadian-exorcist`（首页精选 + 详情页作者/更新时间/dateModified）
+- 详情页 SEO 增强：`getGameBySlug` JOIN `user` 表返回 `authorName/authorImage/updatedAt`（只暴露昵称与头像，不暴露邮箱），详情页展示作者与更新时间，VideoGame JSON-LD 补 `author`（Person）与 `dateModified`；博客详情补 Article + BreadcrumbList JSON-LD。
+- 内部链接：Footer 增加 互动小说/玩法指南/制作互动小说 入口；hub ↔ 玩法 ↔ 创作 ↔ 作品列表 ↔ 精选作品互链；作品详情页带「互动小说怎么玩？」入口。
+- 页面原则：三个新页面均为纯静态内容页（不查 DB），headless 部署不报错；正文充实、各自承担独立 query，不批量生成薄页面。
+- 验收基线（2026-08-01 审计采集，Bing Webmaster Search Performance 2026-05-01 至 07-31）：
+  - 互动小说 37 展现/4 点击/CTR 10.81%/位置 6.51
+  - 互动小说网站 28/7/25.00%/6.36
+  - 驻马店驱魔人 26/3/11.54%/2.38
+  - 互动小说游戏 8/4/50.00%/5.13
+  - 网页互动小说 5/3/60.00%/3.40
+  - 互动小说制作 2/1/50.00%/6.50
+  - 可以独立发布的互动小说 4/0/0%/2.75
+  - GSC 28 天（2026-07 初）另行采集，作为对比基线
+- 对比方法：上线后完整 28 天窗口，比较展现、点击、CTR、平均位置与 GA 自然入口；Google Trends 相对指数（互动小说约 59、interactive fiction 约 58）只用于后续选题排序，不作绝对流量承诺。

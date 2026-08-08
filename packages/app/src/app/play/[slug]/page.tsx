@@ -7,10 +7,13 @@ import RelatedGames from '@/components/RelatedGames';
 import Comment from '@/components/Comment';
 import JsonLd from '@/components/JsonLd';
 import { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
+import { UserIcon, ClockIcon, QuestionIcon } from '@phosphor-icons/react/dist/ssr';
+import { formatLongDate } from '@mui-gamebook/site-common/utils';
 
 type GameForLd = NonNullable<Awaited<ReturnType<typeof cachedGetGameBySlug>>>;
 
-// 播放页结构化数据：面包屑 + 作品信息，供 Bing/Google 生成更清晰的摘要（issue #5）
+// 播放页结构化数据：面包屑 + 作品信息，供 Bing/Google 生成更清晰的摘要（issue #5/#14）
 function buildGameJsonLd(game: GameForLd, slug: string) {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
   const breadcrumbLd = {
@@ -32,6 +35,8 @@ function buildGameJsonLd(game: GameForLd, slug: string) {
     genre: game.tags?.length ? game.tags : undefined,
     gamePlatform: 'Web browser',
     inLanguage: 'zh-CN',
+    dateModified: game.updatedAt || undefined,
+    author: game.authorName ? { '@type': 'Person', name: game.authorName } : undefined,
     publisher: { '@type': 'Organization', name: '姆伊游戏书', url: baseUrl },
   };
   return { breadcrumbLd, gameLd };
@@ -74,6 +79,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PlayPage({ params }: Props) {
   const { slug } = await params;
   const game = await cachedGetGameBySlug(slug);
+  const t = await getTranslations('game');
 
   if (!game) {
     return (
@@ -141,6 +147,39 @@ export default async function PlayPage({ params }: Props) {
             </li>
           </ol>
         </nav>
+
+        {/* 作品元信息：作者、更新时间、玩法入口（issue #14） */}
+        {(game.authorName || game.updatedAt) && (
+          <div className="px-4 sm:px-0 pb-4 flex items-center gap-4 flex-wrap text-sm text-gray-500">
+            {game.authorName && (
+              <span className="flex items-center gap-1.5">
+                <UserIcon
+                  size={15}
+                  className="text-gray-400"
+                />
+                {t('byAuthor', { name: game.authorName })}
+              </span>
+            )}
+            {game.updatedAt && (
+              <span className="flex items-center gap-1.5">
+                <ClockIcon
+                  size={15}
+                  className="text-gray-400"
+                />
+                {t('updatedAt', { date: formatLongDate(game.updatedAt) })}
+              </span>
+            )}
+            <Link
+              href="/how-to-play"
+              className="flex items-center gap-1.5 text-orange-600 hover:text-orange-700 font-medium transition-colors ms-auto">
+              <QuestionIcon
+                size={15}
+                weight="fill"
+              />
+              {t('howToPlay')}
+            </Link>
+          </div>
+        )}
         <div className="bg-white sm:shadow-xl sm:rounded-2xl overflow-hidden">
           <GamePlayer
             game={game}

@@ -147,7 +147,17 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
   }
 }
 
-export async function getGameBySlug(slug: string): Promise<(PlayableGame & { id?: number }) | null> {
+/**
+ * 作品详情页数据：可玩内容 + 公开展示用的作者与更新时间（issue #14）
+ */
+export type GameDetail = PlayableGame & {
+  id?: number;
+  authorName?: string;
+  authorImage?: string;
+  updatedAt?: string;
+};
+
+export async function getGameBySlug(slug: string): Promise<GameDetail | null> {
   try {
     const { env } = getCloudflareContext();
     const DB = env.DB;
@@ -168,23 +178,41 @@ export async function getGameBySlug(slug: string): Promise<(PlayableGame & { id?
 
     // 获取游戏信息，包括 ownerId 和 published 状态
     let gameRecord = await DB.prepare(
-      `SELECT g.id, g.owner_id, g.published, c.content
+      `SELECT g.id, g.owner_id, g.published, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
 FROM Games g
 LEFT JOIN GameContent c ON c.game_id = g.id
+LEFT JOIN user u ON u.id = g.owner_id
 WHERE g.slug = ?`,
     )
       .bind(slug)
-      .first<{ id: number; owner_id: string | null; published: number; content: string }>();
+      .first<{
+        id: number;
+        owner_id: string | null;
+        published: number;
+        updated_at: number;
+        content: string;
+        author_name: string | null;
+        author_image: string | null;
+      }>();
 
     if (!gameRecord && /^\d+$/.test(slug)) {
       gameRecord = await DB.prepare(
-        `SELECT g.id, g.owner_id, g.published, c.content
+        `SELECT g.id, g.owner_id, g.published, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
 FROM Games g
 LEFT JOIN GameContent c ON c.game_id = g.id
+LEFT JOIN user u ON u.id = g.owner_id
 WHERE g.id = ?`,
       )
         .bind(Number(slug))
-        .first<{ id: number; owner_id: string | null; published: number; content: string }>();
+        .first<{
+          id: number;
+          owner_id: string | null;
+          published: number;
+          updated_at: number;
+          content: string;
+          author_name: string | null;
+          author_image: string | null;
+        }>();
     }
 
     if (!gameRecord || !gameRecord.content) {
@@ -204,10 +232,16 @@ WHERE g.id = ?`,
       return null;
     }
 
-    // 返回可玩游戏数据（包含 id 用于分析追踪）
+    // 返回可玩游戏数据（包含 id 用于分析追踪、作者/更新时间用于 SEO 展示）
+    const timestamp = Number(gameRecord.updated_at);
+    const updatedAt =
+      timestamp > 0 ? new Date(timestamp < 1e12 ? timestamp * 1000 : timestamp).toISOString() : undefined;
     return {
       ...toPlayableGame(result.data),
       id: gameRecord.id,
+      authorName: gameRecord.author_name ?? undefined,
+      authorImage: gameRecord.author_image ?? undefined,
+      updatedAt,
     };
   } catch (e) {
     console.error('Failed to fetch game from D1:', e);
