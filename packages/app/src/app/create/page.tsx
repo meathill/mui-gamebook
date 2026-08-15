@@ -12,6 +12,7 @@ import {
   GameControllerIcon,
   CheckCircleIcon,
 } from '@phosphor-icons/react/dist/ssr';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import JsonLd from '@/components/JsonLd';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // 创作与发布说明页（issue #14）：承担「互动小说制作 / 可以独立发布的互动小说」query
 export default async function CreatePage() {
   const t = await getTranslations('create');
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',

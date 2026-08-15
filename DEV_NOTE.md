@@ -92,7 +92,7 @@
 - 域名验证文件放在 public 目录
 
 **Ahrefs Site Audit 体检与修复（2026-07-25，muistory.com Health Score 38→待复测）**
-- 起因：`curl http://muistory.com` 直接 200、不跳转 https，导致 sitemap.xml 同时以两个协议被抓到、站内几乎每个页面都有 http/https 两份"重复页面"，这一项解释了 Ahrefs 报告里的大多数 URL 数量。HTTP→HTTPS 重定向按约定在 Cloudflare zone 层（Always Use HTTPS）处理，不在应用代码里做——Workers 自定义域名下 app 层重定向没有必要，也多一层写错死循环的风险。应用侧只补了 `alternates.canonical`（每个路由一行，`metadataBase` 已在根布局设置，传相对路径即可，不需要额外抽 helper）。
+- 起因：当时 `curl http://muistory.com` 直接 200、不跳转 https，导致 sitemap.xml 同时以两个协议被抓到、站内几乎每个页面都有 http/https 两份"重复页面"。**2026-08-15 复核（issue #13）**：apex / www / sitemap / 小鸟说 / 55 的 HTTP 入口均已 301 到 HTTPS，sitemap `<loc>`、canonical、robots 也全是 HTTPS。HTTP→HTTPS 仍只在 Cloudflare zone 层做，应用不写重定向。应用侧用 `getPublicSiteUrl()` 把 `NEXT_PUBLIC_SITE_URL` 收成 https origin（localhost 除外），避免环境变量写成 http 或带尾斜杠时再把 HTTP URL 写进 sitemap/JSON-LD。sitemap 静态条目不再写请求时刻 `lastmod`。
 - **`/play/[slug]`（核心阅读页）曾经对爬虫是空壳**：`GamePlayer.tsx`/`GamePlayerImmersive.tsx` 用一个 `isLoaded`（`use-game-player.ts` 里只在 `useEffect` 读完 `localStorage` 存档后才置 true）挡在标题页前面，SSR 阶段 effect 不跑，导致服务端渲染出来的内容永远只是"加载中"四个字，标题、简介、封面全部拿不到。修复：直接不挡这层——`isGameStarted` 默认也是 `false`，去掉 `if (!isLoaded)` 分支后会自然落到标题页分支，新访客（含爬虫）SSR 首屏即可看到完整标题页；有存档的老用户水合后从标题页闪切到续读场景，是可接受的短暂闪烁，不是回归。**教训**：任何"先展示 loading，effect 跑完再展示正文"的模式，只要正文所需数据其实已经通过 props 同步可用（不依赖必须客户端才能读到的东西如 localStorage），就该让正文本身作为默认/首屏分支，只用 loading 兜底真正需要异步等待的部分——不然 SSR 输出的是空壳，SEO 和首屏体验双输。
 - 顺手发现的模式性 bug，日后新加页面时留意：根布局 `title.template: '%s | 姆伊游戏书'` 会自动加一次站点名，子路由的 title 不要再自己拼一遍站点名（曾经出现"标题 - 姆伊游戏书 | 姆伊游戏书"）；`layout.tsx` 的 `<head>` 不要手写 `<meta charSet>`/`<meta viewport>`，Next.js Metadata API 会自动注入，手写会重复两份；子路由一旦自己定义 `openGraph`，会整体覆盖（不是深合并）根布局的 `openGraph`，如果没带上 `images` 就会丢失默认分享图。
 - 游戏卡片（`components/home/GameCard.tsx`）原本只渲染前 3 个标签的可点击 chip，标签数超过 3 的游戏会让第 4 个及以后的标签永远没有任何入站链接（对应 Ahrefs 的 orphan tag page）；已去掉这个截断，改为渲染全部标签。
@@ -123,9 +123,18 @@
 - 移除后线上 Lighthouse：桌面 56→95、移动 73→96、unused CSS 归零。**不要再引入组件级 CSS 框架**，新按钮场景优先复用共享 Button
 - 附带约定：@phosphor-icons/react 已列入 next.config 的 `experimental.optimizePackageImports`（不在 Next 默认清单内）
 
-**爬虫默认语言 = 中文（2026-07-17，issue #5）**
+**爬虫默认语言 = 中文（2026-07-17，issue #5；2026-08-15 issue #15 再收紧）**
 - next-intl 的 locale 解析原本在「无 cookie 且无 Accept-Language」时 fallback 英文，导致 Bingbot 抓到英文正文、与中文 meta/关键词不一致
-- 现改为该场景回落 `defaultLocale`（zh），显式带 Accept-Language 的真实浏览器行为不变；改动在 `src/i18n/request.ts`
+- issue #5 先改成该场景回落 `defaultLocale`（zh）
+- issue #15：`request.ts` 不再读 cookie / Accept-Language，服务端始终中文。根布局读 `cookies()` 会把整站钉成 `private, no-cache`，公开目录无法 ISR。语言切换改纯客户端（写 cookie + 换 messages，不再 `router.refresh()`）。英文用户公开页会先闪一帧中文 chrome。
+
+**多站点 ISR / 缓存（2026-08-15，issue #15）**
+- 配方：`createRevalidatingOpenNextConfig()` = R2 incremental cache + `withRegionalCache({ mode: 'long-lived' })` + `enableCacheInterception`。主站 / 小鸟说 / 55 共用，headless 部署跟主站同一份 `open-next.config.ts`。
+- 55 会从主站 API 拉剧本，不是纯 SSG，不上 Static Assets incremental cache。
+- 公开目录 / 博客 / sitemap / 播放页 `revalidate = 3600`；发布、下架、删除走 `revalidatePublicCatalog()`（`revalidatePath`，不另建 tag cache）。
+- 播放页不再给作者预览未发布作品（会读 session，页面无法缓存）。作者预览只走编辑器。
+- `/_next/static/*` 一年 immutable：主站原有 `public/_headers`，55 / 小鸟说补齐。
+- `packages/cms`（Payload）没有 wrangler，不按部署单元做缓存策略。独立站不做跨 Worker 发布钩子，继续时间盒。
 
 **MediaAssetItem 统一组件**
 - 将封面编辑器和素材编辑器合并

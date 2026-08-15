@@ -1,12 +1,14 @@
 import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
 import Link from 'next/link';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { getPublishedGames, getPublishedGamesCount } from '@/lib/games';
+import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 import { GameCard } from '@/components/home';
 import Pagination from '@/components/Pagination';
 import JsonLd from '@/components/JsonLd';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
 
 const PAGE_SIZE = 12;
 
@@ -36,7 +38,7 @@ export default async function GamesPage({ searchParams }: Props) {
   ]);
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
   // 作品列表结构化数据（issue #14）：ItemList 供 Bing/Google 理解页面语义
   const itemListLd = {

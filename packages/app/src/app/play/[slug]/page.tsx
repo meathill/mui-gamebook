@@ -9,13 +9,16 @@ import JsonLd from '@/components/JsonLd';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { UserIcon, ClockIcon, QuestionIcon } from '@phosphor-icons/react/dist/ssr';
-import { formatLongDate } from '@mui-gamebook/site-common/utils';
+import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
+import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
+
+export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
 
 type GameForLd = NonNullable<Awaited<ReturnType<typeof cachedGetGameBySlug>>>;
 
 // 播放页结构化数据：面包屑 + 作品信息，供 Bing/Google 生成更清晰的摘要（issue #5/#14）
 function buildGameJsonLd(game: GameForLd, slug: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
   const breadcrumbLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -48,7 +51,7 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const game = await cachedGetGameBySlug(slug);
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
   if (!game) {
     return {

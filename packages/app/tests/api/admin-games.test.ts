@@ -18,11 +18,16 @@ vi.mock('@/lib/config', () => ({
   isRootUser: vi.fn(),
 }));
 
+vi.mock('@/lib/public-cache', () => ({
+  revalidatePublicCatalog: vi.fn(),
+}));
+
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { DELETE, GET, PATCH, PUT } from '@/app/api/admin/games/[slug]/route';
 import { getSession } from '@/lib/auth-server';
 import { isRootUser } from '@/lib/config';
+import { revalidatePublicCatalog } from '@/lib/public-cache';
 
 describe('Admin Games API', () => {
   const mockEnv = {
@@ -205,6 +210,7 @@ describe('Admin Games API', () => {
       const data = (await res.json()) as any;
       expect(data.published).toBe(false);
       expect(setMock).toHaveBeenCalledWith(expect.objectContaining({ published: false }));
+      expect(revalidatePublicCatalog).toHaveBeenCalledWith({ slug: 'test-game', tags: undefined });
     });
 
     it('published 非布尔值时返回 400', async () => {
@@ -239,6 +245,7 @@ describe('Admin Games API', () => {
 
       expect(res.status).toBe(200);
       expect(deleteWhere).toHaveBeenCalled();
+      expect(revalidatePublicCatalog).toHaveBeenCalledWith({ slug: 'test-game', tags: undefined });
     });
 
     it('游戏不存在时返回 404', async () => {

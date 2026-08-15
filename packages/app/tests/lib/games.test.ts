@@ -7,12 +7,6 @@ vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: vi.fn(),
 }));
 
-vi.mock('@/lib/auth-server', () => ({
-  getSession: vi.fn(),
-}));
-
-import { getSession } from '@/lib/auth-server';
-
 describe('games tag functions', () => {
   const mockDB = {
     prepare: vi.fn(),
@@ -262,10 +256,6 @@ title: "测试作品"
       });
     }
 
-    beforeEach(() => {
-      (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-    });
-
     it('返回作者昵称、头像与更新 ISO 时间（秒级时间戳）', async () => {
       mockGameRecord();
 
@@ -304,8 +294,7 @@ title: "测试作品"
       expect(await getGameBySlug('not-exist')).toBeNull();
     });
 
-    it('未发布且非 owner 拒绝访问返回 null', async () => {
-      (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'other' } });
+    it('未发布作品对任何人返回 null，作者预览只走编辑器', async () => {
       mockGameRecord({ published: 0 });
 
       expect(await getGameBySlug('draft-game')).toBeNull();

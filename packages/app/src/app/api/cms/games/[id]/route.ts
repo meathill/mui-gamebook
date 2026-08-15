@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
 import { getSession } from '@/lib/auth-server';
 import { getManagedGame } from '@/lib/game-access';
+import { revalidatePublicCatalog } from '@/lib/public-cache';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -101,6 +102,11 @@ export async function PUT(req: Request, { params }: Props) {
   // Update GameContent table
   await db.update(schema.gameContent).set({ content }).where(eq(schema.gameContent.gameId, id));
 
+  revalidatePublicCatalog({ slug: finalSlug, tags });
+  if (currentGame.slug !== finalSlug) {
+    revalidatePublicCatalog({ slug: currentGame.slug });
+  }
+
   return NextResponse.json({ success: true, slug: finalSlug });
 }
 
@@ -117,6 +123,7 @@ export async function DELETE(req: Request, { params }: Props) {
   if (!game) return NextResponse.json({ error: 'Game not found or unauthorized' }, { status: 404 });
 
   await db.delete(schema.games).where(eq(schema.games.id, id));
+  revalidatePublicCatalog({ slug: game.slug, tags: game.tags });
 
   return NextResponse.json({ success: true });
 }

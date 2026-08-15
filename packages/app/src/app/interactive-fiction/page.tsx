@@ -9,6 +9,7 @@ import {
   PencilSimpleIcon,
   SparkleIcon,
 } from '@phosphor-icons/react/dist/ssr';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import JsonLd from '@/components/JsonLd';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // 互动小说主题入口（issue #14）：承担「互动小说 / 互动小说网站」query
 export default async function InteractiveFictionPage() {
   const t = await getTranslations('interactiveFiction');
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',

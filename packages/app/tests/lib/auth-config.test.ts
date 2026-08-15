@@ -57,6 +57,15 @@ describe('createAuth', () => {
       expect(config.trustedOrigins).toEqual(['https://custom.example.com']);
     });
 
+    it('NEXT_PUBLIC_SITE_URL 是 http 时提升为 https', () => {
+      process.env.NEXT_PUBLIC_SITE_URL = 'http://custom.example.com/';
+
+      const config = createAuth(makeEnv()) as unknown as { baseURL: string; trustedOrigins: string[] };
+
+      expect(config.baseURL).toBe('https://custom.example.com');
+      expect(config.trustedOrigins).toEqual(['https://custom.example.com']);
+    });
+
     it('NEXT_PUBLIC_SITE_URL 不存在时回退到 https://muistory.com', () => {
       delete process.env.NEXT_PUBLIC_SITE_URL;
 

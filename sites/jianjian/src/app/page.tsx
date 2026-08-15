@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getGames } from '@/lib/api';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
 
 // 可爱的装饰 emoji 组
 const decorEmojis = ['🌈', '⭐', '🎨', '🎪', '🎠', '🎡', '🎢', '🦄', '🐰', '🐻'];

@@ -1,93 +1,36 @@
 import { MetadataRoute } from 'next';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { getPublishedGames, getAllTags } from '@/lib/games';
 import { getPublishedPosts } from '@/lib/blog';
 import { getPublicMinigames } from '@/lib/minigames';
+import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // 移除末尾斜杠以避免 URL 双斜杠问题
-  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com').replace(/\/$/, '');
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
-  // 静态页面
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1,
-    },
-    {
-      url: `${baseUrl}/games`,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 0.9,
-    },
-    {
-      url: `${baseUrl}/interactive-fiction`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/how-to-play`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/create`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/minigames`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/about`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
-    {
-      url: `${baseUrl}/contact`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.5,
-    },
-    {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.3,
-    },
-    {
-      url: `${baseUrl}/terms`,
-      lastModified: new Date(),
-      changeFrequency: 'monthly',
-      priority: 0.3,
-    },
+    { url: baseUrl, changeFrequency: 'daily', priority: 1 },
+    { url: `${baseUrl}/games`, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${baseUrl}/interactive-fiction`, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${baseUrl}/how-to-play`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/create`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/minigames`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/blog`, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${baseUrl}/about`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/contact`, changeFrequency: 'monthly', priority: 0.5 },
+    { url: `${baseUrl}/privacy`, changeFrequency: 'monthly', priority: 0.3 },
+    { url: `${baseUrl}/terms`, changeFrequency: 'monthly', priority: 0.3 },
   ];
 
-  // 动态游戏页面
   const games = await getPublishedGames();
   const gamePages: MetadataRoute.Sitemap = games.map((game) => {
-    // updated_at 可能是秒级时间戳，需要转换为毫秒级
     const timestamp = Number(game.updated_at);
     const lastModified =
       timestamp < 1e12
         ? new Date(timestamp * 1000) // 秒级时间戳
-        : new Date(timestamp); // 已经是毫秒级
+        : new Date(timestamp);
     return {
       url: `${baseUrl}/play/${game.slug}`,
       lastModified,
@@ -96,15 +39,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  // 小游戏详情页
   const minigames = await getPublicMinigames();
   const minigamePages: MetadataRoute.Sitemap = minigames.map((minigame) => {
-    // created_at 可能是秒级时间戳，需要转换为毫秒级
     const timestamp = Number(minigame.created_at);
     const lastModified =
       timestamp < 1e12
         ? new Date(timestamp * 1000) // 秒级时间戳
-        : new Date(timestamp); // 已经是毫秒级
+        : new Date(timestamp);
     return {
       url: `${baseUrl}/minigames/${minigame.id}`,
       lastModified,
@@ -113,16 +54,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  // 标签页面
   const tags = await getAllTags();
   const tagPages: MetadataRoute.Sitemap = tags.map((tagInfo) => ({
     url: `${baseUrl}/tags/${encodeURIComponent(tagInfo.tag)}`,
-    lastModified: new Date(),
     changeFrequency: 'weekly' as const,
     priority: 0.6,
   }));
 
-  // 博客文章（CMS 不可用时 getPublishedPosts 返回空列表）
   const { docs: posts } = await getPublishedPosts({ limit: 100 });
   const blogPages: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,

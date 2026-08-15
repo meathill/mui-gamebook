@@ -1,14 +1,16 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
-import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Providers from '@/components/Providers';
+import LocaleProvider from '@/i18n/locale-provider';
+import type { Locale } from '@/i18n/config';
 import { ReactNode } from 'react';
 import { cn } from '@/lib';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 
 const interSans = Inter({
   variable: '--font-geist-sans',
@@ -21,7 +23,7 @@ const jetBrainsMono = JetBrains_Mono({
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
-    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com'),
+    metadataBase: new URL(getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)),
     title: {
       template: '%s | 姆伊游戏书',
       default: '姆伊游戏书 - 互动小说创作平台',
@@ -66,13 +68,15 @@ export default async function RootLayout({
       </head>
       {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />}
       <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
-        <NextIntlClientProvider messages={messages}>
+        <LocaleProvider
+          initialLocale={locale as Locale}
+          initialMessages={messages}>
           <Providers>
             <Header siteName={process.env.NEXT_PUBLIC_SITE_NAME} />
             <main className="grow flex flex-col">{children}</main>
             <Footer />
           </Providers>
-        </NextIntlClientProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

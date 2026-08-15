@@ -94,6 +94,7 @@ describe('GET /api/games/[slug]', () => {
     const res = await GET({} as Request, makeParams('g'));
 
     expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
   });
 
   it('已发布时公开访问，返回以数据库字段为准的元数据', async () => {
@@ -115,6 +116,7 @@ describe('GET /api/games/[slug]', () => {
     expect(data.title).toBe('数据库标题');
     expect(data.tags).toEqual(['x']);
     expect(data.slug).toBe('g');
+    expect(res.headers.get('Cache-Control')).toBe('public, s-maxage=60');
   });
 
   it('数据库 published=false 但 DSL frontmatter 里 published=true 时仍视为已发布', async () => {

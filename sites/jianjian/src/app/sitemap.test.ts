@@ -45,6 +45,20 @@ describe('sitemap', () => {
     ]);
     expect(entries[0]).toMatchObject({ changeFrequency: 'daily', priority: 1 });
     expect(entries[1]).toMatchObject({ changeFrequency: 'monthly', priority: 0.3 });
+    expect(entries[0].lastModified).toBeUndefined();
+  });
+
+  it('http 站点地址会被提升为 https', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'http://jianjian.example.com/');
+    getGamesMock.mockResolvedValue([]);
+
+    const entries = await sitemap();
+
+    expect(entries.map((e) => e.url)).toEqual([
+      'https://jianjian.example.com',
+      'https://jianjian.example.com/privacy',
+      'https://jianjian.example.com/tos',
+    ]);
   });
 
   it('每个已发布游戏生成一条 /play/{slug} 条目', async () => {
