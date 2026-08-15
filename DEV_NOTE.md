@@ -132,6 +132,8 @@
 - 配方：`createRevalidatingOpenNextConfig()` = R2 incremental cache + `withRegionalCache({ mode: 'long-lived' })` + `enableCacheInterception`。主站 / 小鸟说 / 55 共用，headless 部署跟主站同一份 `open-next.config.ts`。
 - 55 会从主站 API 拉剧本，不是纯 SSG，不上 Static Assets incremental cache。
 - 公开目录 / 博客 / sitemap / 播放页 `revalidate = 3600`；发布、下架、删除走 `revalidatePublicCatalog()`（`revalidatePath`，不另建 tag cache）。
+- 列表分页不能用 `?page=`：await searchParams 会把整页钉成 `private, no-cache`。已改成 `/games/p/2`、`/blog/c/update` 这类路径，旧 query 由 middleware 308 过去。详情页补 `generateStaticParams`（失败则空数组 + `dynamicParams`）才能按需 ISR。
+- `/admin` `/sign-in` `/my` 必须 `force-dynamic`。去掉根布局 cookies 后它们会变成一年静态壳。
 - 播放页不再给作者预览未发布作品（会读 session，页面无法缓存）。作者预览只走编辑器。
 - `/_next/static/*` 一年 immutable：主站原有 `public/_headers`，55 / 小鸟说补齐。
 - `packages/cms`（Payload）没有 wrangler，不按部署单元做缓存策略。独立站不做跨 Worker 发布钩子，继续时间盒。

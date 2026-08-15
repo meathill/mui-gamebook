@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react/dist/ssr';
+import { catalogPageHref } from '@/lib/catalog-path';
 
 interface PaginationProps {
   currentPage: number;
@@ -55,7 +56,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
       {/* 上一页 */}
       {currentPage > 1 ? (
         <Link
-          href={`${basePath}?page=${currentPage - 1}`}
+          href={catalogPageHref(basePath, currentPage - 1)}
           className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
           aria-label="Previous page">
           <CaretLeftIcon className="w-5 h-5" />
@@ -77,7 +78,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
         ) : (
           <Link
             key={page}
-            href={`${basePath}?page=${page}`}
+            href={catalogPageHref(basePath, page)}
             className={`px-3 py-2 rounded-lg font-medium transition-colors ${
               page === currentPage ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-gray-100'
             }`}
@@ -90,7 +91,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
       {/* 下一页 */}
       {currentPage < totalPages ? (
         <Link
-          href={`${basePath}?page=${currentPage + 1}`}
+          href={catalogPageHref(basePath, currentPage + 1)}
           className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
           aria-label="Next page">
           <CaretRightIcon className="w-5 h-5" />

@@ -8,6 +8,17 @@ import type { Metadata } from 'next';
 import JsonLd from '@/components/JsonLd';
 
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const { getPublishedPosts } = await import('@/lib/blog');
+    const { docs } = await getPublishedPosts({ limit: 100 });
+    return docs.map((post) => ({ slug: post.slug }));
+  } catch {
+    return [];
+  }
+}
 
 type Props = {
   params: Promise<{ slug: string }>;
