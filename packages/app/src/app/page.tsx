@@ -6,7 +6,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { getFeaturedGames } from '@/lib/games';
-import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
+
 import JsonLd from '@/components/JsonLd';
 import {
   HeroSection,
@@ -19,7 +19,7 @@ import {
   BlogPreviewSection,
 } from '@/components/home';
 
-export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
+export const revalidate = 3600;
 
 // Bing 高展示搜索词对应的作品固定出现在首页精选（issue #5）
 const FEATURED_SLUGS = ['zhumadian-exorcist', 'the-steam-punk-dream-of-the-red-chamber'];

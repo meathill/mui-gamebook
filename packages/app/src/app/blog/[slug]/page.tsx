@@ -6,9 +6,8 @@ import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
 import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import type { Metadata } from 'next';
 import JsonLd from '@/components/JsonLd';
-import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 
-export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
+export const revalidate = 3600;
 
 type Props = {
   params: Promise<{ slug: string }>;

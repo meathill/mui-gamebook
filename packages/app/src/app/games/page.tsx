@@ -3,12 +3,12 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { getPublishedGames, getPublishedGamesCount } from '@/lib/games';
-import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
+
 import { GameCard } from '@/components/home';
 import Pagination from '@/components/Pagination';
 import JsonLd from '@/components/JsonLd';
 
-export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
+export const revalidate = 3600;
 
 const PAGE_SIZE = 12;
 

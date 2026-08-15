@@ -5,9 +5,8 @@ import { CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublishedPosts, getCategoryLabel } from '@/lib/blog';
 import { formatDate } from '@mui-gamebook/site-common/utils';
 import type { Metadata } from 'next';
-import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 
-export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
+export const revalidate = 3600;
 
 type SearchParams = Promise<{ category?: string; page?: string }>;
 
