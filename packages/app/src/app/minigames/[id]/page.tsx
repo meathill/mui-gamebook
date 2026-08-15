@@ -3,11 +3,21 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, BookOpenIcon } from '@phosphor-icons/react/dist/ssr';
-import { getMinigameById } from '@/lib/minigames';
+import { getMinigameById, getPublicMinigames } from '@/lib/minigames';
 
 import StandaloneMiniGamePlayer from '@/components/game-player/StandaloneMiniGamePlayer';
 
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const minigames = await getPublicMinigames();
+    return minigames.map((item) => ({ id: String(item.id) }));
+  } catch {
+    return [];
+  }
+}
 
 type Props = {
   params: Promise<{ id: string }>;

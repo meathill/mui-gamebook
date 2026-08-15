@@ -21,8 +21,10 @@ function parseTagList(tags: string | string[] | null | undefined): string[] {
  * 作品发布 / 下架 / 删除后，清掉目录、sitemap 和该作播放页的 ISR 缓存。
  */
 export function revalidatePublicCatalog(options?: { slug?: string | null; tags?: string | string[] | null }) {
-  revalidatePath('/');
-  revalidatePath('/games');
+  revalidatePath('/', 'layout');
+  revalidatePath('/games', 'layout');
+  revalidatePath('/blog', 'layout');
+  revalidatePath('/minigames', 'layout');
   revalidatePath('/sitemap.xml');
 
   if (options?.slug) {
@@ -30,6 +32,6 @@ export function revalidatePublicCatalog(options?: { slug?: string | null; tags?:
   }
 
   for (const tag of parseTagList(options?.tags)) {
-    revalidatePath(`/tags/${encodeURIComponent(tag)}`);
+    revalidatePath(`/tags/${encodeURIComponent(tag)}`, 'layout');
   }
 }

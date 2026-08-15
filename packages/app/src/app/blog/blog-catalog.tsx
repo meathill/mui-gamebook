@@ -1,0 +1,127 @@
+import Link from 'next/link';
+import Image from 'next/image';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
+import { getPublishedPosts, getCategoryLabel } from '@/lib/blog';
+import { formatDate } from '@mui-gamebook/site-common/utils';
+import { blogCatalogHref } from '@/lib/catalog-path';
+import type { Metadata } from 'next';
+
+const BLOG_CATEGORIES = ['update', 'tutorial', 'story', 'insight'];
+
+export async function generateBlogMetadata(category: string | undefined, page: number): Promise<Metadata> {
+  return {
+    title: '博客',
+    description: '产品更新、创作教程、创作者故事和行业观察',
+    alternates: { canonical: blogCatalogHref(category, page) },
+  };
+}
+
+export async function BlogCatalog({ category, page }: { category?: string; page: number }) {
+  const currentPage = Math.max(1, page);
+  const [t, locale] = await Promise.all([getTranslations('home'), getLocale()]);
+  const data = await getPublishedPosts({ limit: 10, page: currentPage, category });
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-gray-900">{t('blog.title')}</h1>
+          <p className="mt-2 text-gray-600">{t('blog.subtitle')}</p>
+        </div>
+
+        <div className="flex gap-2 mb-8 flex-wrap">
+          <Link
+            href="/blog"
+            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+              !category
+                ? 'bg-gray-900 text-white border-gray-900'
+                : 'text-gray-600 border-gray-200 hover:border-gray-300'
+            }`}>
+            {t('blog.all')}
+          </Link>
+          {BLOG_CATEGORIES.map((cat) => (
+            <Link
+              key={cat}
+              href={blogCatalogHref(cat, 1)}
+              className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                category === cat
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'text-gray-600 border-gray-200 hover:border-gray-300'
+              }`}>
+              {getCategoryLabel(cat, locale)}
+            </Link>
+          ))}
+        </div>
+
+        {data.docs.length > 0 ? (
+          <div className="space-y-6">
+            {data.docs.map((post) => (
+              <Link
+                key={post.id}
+                href={`/blog/${post.slug}`}
+                className="block p-6 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-sm transition-all">
+                <div className="flex items-start gap-4">
+                  {post.coverUrl && (
+                    <Image
+                      src={post.coverUrl}
+                      alt={post.title}
+                      width={128}
+                      height={80}
+                      className="w-32 h-20 object-cover rounded-lg shrink-0 hidden sm:block"
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-1">{post.title}</h2>
+                    {post.description && <p className="text-sm text-gray-600 line-clamp-2 mb-3">{post.description}</p>}
+                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                      {post.publishedAt && (
+                        <span className="flex items-center gap-1">
+                          <CalendarIcon className="w-3 h-3" />
+                          {formatDate(post.publishedAt)}
+                        </span>
+                      )}
+                      {post.category && (
+                        <span className="flex items-center gap-1">
+                          <TagIcon className="w-3 h-3" />
+                          {getCategoryLabel(post.category)}
+                        </span>
+                      )}
+                      {post.author && <span>{post.author}</span>}
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 text-gray-500">
+            <p>暂无文章，敬请期待。</p>
+          </div>
+        )}
+
+        {data.totalPages > 1 && (
+          <div className="flex justify-center gap-2 mt-8">
+            {data.hasPrevPage && (
+              <Link
+                href={blogCatalogHref(category, currentPage - 1)}
+                className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                上一页
+              </Link>
+            )}
+            <span className="px-4 py-2 text-sm text-gray-500">
+              {currentPage} / {data.totalPages}
+            </span>
+            {data.hasNextPage && (
+              <Link
+                href={blogCatalogHref(category, currentPage + 1)}
+                className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
+                下一页
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

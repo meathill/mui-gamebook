@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
-import { cachedGetGameBySlug } from '@/lib/games';
+import { cachedGetGameBySlug, getPublishedGames } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
 import { GamePlayerImmersive } from '@/components/game-player';
 import RelatedGames from '@/components/RelatedGames';
@@ -12,6 +12,16 @@ import { UserIcon, ClockIcon, QuestionIcon } from '@phosphor-icons/react/dist/ss
 import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 
 export const revalidate = 3600;
+export const dynamicParams = true;
+
+export async function generateStaticParams() {
+  try {
+    const games = await getPublishedGames();
+    return games.map((game) => ({ slug: game.slug }));
+  } catch {
+    return [];
+  }
+}
 
 type GameForLd = NonNullable<Awaited<ReturnType<typeof cachedGetGameBySlug>>>;
 

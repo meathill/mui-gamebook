@@ -15,8 +15,8 @@ describe('revalidatePublicCatalog', () => {
   it('始终刷新首页、目录和 sitemap', () => {
     revalidatePublicCatalog();
 
-    expect(revalidatePath).toHaveBeenCalledWith('/');
-    expect(revalidatePath).toHaveBeenCalledWith('/games');
+    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
+    expect(revalidatePath).toHaveBeenCalledWith('/games', 'layout');
     expect(revalidatePath).toHaveBeenCalledWith('/sitemap.xml');
   });
 
@@ -24,12 +24,12 @@ describe('revalidatePublicCatalog', () => {
     revalidatePublicCatalog({ slug: 'demo', tags: '["悬疑","河南"]' });
 
     expect(revalidatePath).toHaveBeenCalledWith('/play/demo');
-    expect(revalidatePath).toHaveBeenCalledWith(`/tags/${encodeURIComponent('悬疑')}`);
-    expect(revalidatePath).toHaveBeenCalledWith(`/tags/${encodeURIComponent('河南')}`);
+    expect(revalidatePath).toHaveBeenCalledWith(`/tags/${encodeURIComponent('悬疑')}`, 'layout');
+    expect(revalidatePath).toHaveBeenCalledWith(`/tags/${encodeURIComponent('河南')}`, 'layout');
   });
 
   it('非法 tags 不会抛错', () => {
     expect(() => revalidatePublicCatalog({ tags: '{not-json' })).not.toThrow();
-    expect(revalidatePath).toHaveBeenCalledTimes(3);
+    expect(revalidatePath).toHaveBeenCalledTimes(5);
   });
 });
