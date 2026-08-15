@@ -1,7 +1,5 @@
 import { revalidatePath } from 'next/cache';
 
-export const PUBLIC_PAGE_REVALIDATE_SECONDS = 3600;
-
 export const PUBLISHED_GAME_CACHE_CONTROL = 'public, s-maxage=60';
 export const PRIVATE_GAME_CACHE_CONTROL = 'private, no-store';
 

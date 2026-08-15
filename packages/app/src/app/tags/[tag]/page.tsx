@@ -3,11 +3,11 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 import { TagIcon, ArrowLeftIcon } from '@phosphor-icons/react/dist/ssr';
 import { getGamesByTag } from '@/lib/games';
-import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
+
 import GameCard from '@/components/home/GameCard';
 import Pagination from '@/components/Pagination';
 
-export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
+export const revalidate = 3600;
 
 const GAMES_PER_PAGE = 12;
 

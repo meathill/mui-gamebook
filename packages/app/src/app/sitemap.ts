@@ -3,9 +3,8 @@ import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { getPublishedGames, getAllTags } from '@/lib/games';
 import { getPublishedPosts } from '@/lib/blog';
 import { getPublicMinigames } from '@/lib/minigames';
-import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
-
-export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
+// Next 要求 segment 配置是字面量，不能从模块导入
+export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);

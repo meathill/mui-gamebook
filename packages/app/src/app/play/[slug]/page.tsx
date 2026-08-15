@@ -10,9 +10,8 @@ import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { UserIcon, ClockIcon, QuestionIcon } from '@phosphor-icons/react/dist/ssr';
 import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
-import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 
-export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
+export const revalidate = 3600;
 
 type GameForLd = NonNullable<Awaited<ReturnType<typeof cachedGetGameBySlug>>>;
 
