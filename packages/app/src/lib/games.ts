@@ -4,7 +4,6 @@ import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GameRow, ParsedGameRow } from '@/types';
 import { cache } from 'react';
-import { getSession } from '@/lib/auth-server';
 
 export async function getPublishedGames(options?: { limit?: number; offset?: number }) {
   try {
@@ -167,16 +166,6 @@ export async function getGameBySlug(slug: string): Promise<GameDetail | null> {
       return null;
     }
 
-    // 获取当前用户 session
-    let currentUserId: string | null = null;
-    try {
-      const session = await getSession();
-      currentUserId = session?.user?.id || null;
-    } catch {
-      // 未登录用户，继续
-    }
-
-    // 获取游戏信息，包括 ownerId 和 published 状态
     let gameRecord = await DB.prepare(
       `SELECT g.id, g.owner_id, g.published, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
 FROM Games g
@@ -224,11 +213,8 @@ WHERE g.id = ?`,
       return null;
     }
 
-    const isOwner = currentUserId && gameRecord.owner_id === currentUserId;
     const isPublished = gameRecord.published === 1 || result.data.published || !!result.data.subdomain;
-
-    // 如果游戏未发布且当前用户不是所有者，拒绝访问
-    if (!isPublished && !isOwner) {
+    if (!isPublished) {
       return null;
     }
 

@@ -1,10 +1,11 @@
 import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
 import { getPublicMinigames, getPublicMinigamesCount } from '@/lib/minigames';
+import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 import { MiniGameCard } from '@/components/home';
 import Pagination from '@/components/Pagination';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
 
 const PAGE_SIZE = 16;
 

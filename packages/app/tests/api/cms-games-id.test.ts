@@ -26,9 +26,14 @@ vi.mock('@/lib/game-access', () => ({
   getManagedGame: vi.fn(),
 }));
 
+vi.mock('@/lib/public-cache', () => ({
+  revalidatePublicCatalog: vi.fn(),
+}));
+
 import { DELETE, GET, PUT } from '@/app/api/cms/games/[id]/route';
 import { getSession } from '@/lib/auth-server';
 import { getManagedGame } from '@/lib/game-access';
+import { revalidatePublicCatalog } from '@/lib/public-cache';
 
 const VALID_CONTENT = `---
 title: "新剧本"
@@ -144,6 +149,7 @@ describe('PUT /api/cms/games/[id]', () => {
       expect.objectContaining({ title: '新剧本', backgroundStory: 'bg', coverImage: 'https://x.com/c.png' }),
     );
     expect(mockDb.set).toHaveBeenCalledWith({ content: VALID_CONTENT });
+    expect(revalidatePublicCatalog).toHaveBeenCalledWith({ slug: 'old-slug', tags: ['a', 'b'] });
   });
 });
 
@@ -170,11 +176,12 @@ describe('DELETE /api/cms/games/[id]', () => {
   });
 
   it('成功路径：删除游戏', async () => {
-    (getManagedGame as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1 });
+    (getManagedGame as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1, slug: 'old-slug', tags: '["a"]' });
 
     const res = await DELETE(makeReq(undefined, 'DELETE'), makeParams());
 
     expect(res.status).toBe(200);
     expect(mockDb.delete).toHaveBeenCalled();
+    expect(revalidatePublicCatalog).toHaveBeenCalledWith({ slug: 'old-slug', tags: '["a"]' });
   });
 });

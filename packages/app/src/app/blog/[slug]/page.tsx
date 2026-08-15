@@ -3,11 +3,12 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { ArrowLeftIcon, CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
-import { formatLongDate } from '@mui-gamebook/site-common/utils';
+import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import type { Metadata } from 'next';
 import JsonLd from '@/components/JsonLd';
+import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -33,7 +34,7 @@ export default async function BlogPostPage({ params }: Props) {
     notFound();
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
   // 博客文章结构化数据：面包屑 + Article（issue #14）
   const breadcrumbLd = {
     '@context': 'https://schema.org',

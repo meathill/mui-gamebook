@@ -2,12 +2,13 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { sendEmail } from './email';
 
 export function createAuth(env: CloudflareEnv) {
   const db = drizzle(env.DB);
   const domain = env.COOKIE_DOMAIN || undefined;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const siteUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
   // 允许的认证来源
   const trustedOrigins: string[] = [siteUrl];
   // wrangler.jsonc 里 TRUSTED_ORIGINS 默认值是 ""，wrangler types 会把它推断成字面量类型，

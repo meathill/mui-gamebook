@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
 import { getSession } from '@/lib/auth-server';
 import { isRootUser } from '@/lib/config';
+import { revalidatePublicCatalog } from '@/lib/public-cache';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -106,6 +107,7 @@ export async function PUT(req: Request, { params }: Props) {
 
   // 更新 GameContent 表
   await db.update(schema.gameContent).set({ content }).where(eq(schema.gameContent.gameId, game.id));
+  revalidatePublicCatalog({ slug, tags });
 
   return NextResponse.json({ success: true, slug });
 }
@@ -136,6 +138,7 @@ export async function PATCH(req: Request, { params }: Props) {
   }
 
   await db.update(schema.games).set({ published, updatedAt: new Date() }).where(eq(schema.games.id, game.id));
+  revalidatePublicCatalog({ slug, tags: game.tags });
 
   return NextResponse.json({ success: true, published });
 }
@@ -160,6 +163,7 @@ export async function DELETE(req: Request, { params }: Props) {
   }
 
   await db.delete(schema.games).where(eq(schema.games.id, game.id));
+  revalidatePublicCatalog({ slug, tags: game.tags });
 
   return NextResponse.json({ success: true });
 }

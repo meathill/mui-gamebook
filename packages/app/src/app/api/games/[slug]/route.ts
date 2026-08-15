@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { parse } from '@mui-gamebook/parser';
 import { getSession } from '@/lib/auth-server';
+import { PRIVATE_GAME_CACHE_CONTROL, PUBLISHED_GAME_CACHE_CONTROL } from '@/lib/public-cache';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -78,5 +79,6 @@ export async function GET(request: Request, { params }: Props) {
     slug: game.slug, // Inject slug for frontend use
   };
 
-  return NextResponse.json(finalGame);
+  const cacheControl = isPublished && !isOwner ? PUBLISHED_GAME_CACHE_CONTROL : PRIVATE_GAME_CACHE_CONTROL;
+  return NextResponse.json(finalGame, { headers: { 'Cache-Control': cacheControl } });
 }

@@ -18,7 +18,7 @@ mkdir -p sites/your-site-name/src/{app,components,lib}
 |------|---------------|
 | `package.json` | `name` 字段 |
 | `next.config.ts` | 根据需要调整 |
-| `open-next.config.ts` | 通常无需修改 |
+| `open-next.config.ts` | 使用 `createRevalidatingOpenNextConfig()`，一般不用改 |
 | `wrangler.jsonc` | `name`、KV/R2 资源 ID、环境变量 |
 | `tsconfig.json` | 通常无需修改 |
 | `postcss.config.mjs` | 通常无需修改 |
@@ -178,6 +178,8 @@ pnpm dev
 | 游戏播放器 Hook | `@mui-gamebook/site-common/game-player` | 状态管理和游戏逻辑 |
 | 工具函数 | `@mui-gamebook/site-common/utils` | 条件评估、变量插值 |
 | 站点配置 | `@mui-gamebook/site-common/components` | 配置管理工具 |
+| 公开站点 URL | `@mui-gamebook/site-common/utils` | `getPublicSiteUrl()`，sitemap/canonical 强制 https |
+| OpenNext 缓存 | `@mui-gamebook/site-common/open-next` | `createRevalidatingOpenNextConfig()`：R2 + regional + cache interception |
 
 ## 部署
 

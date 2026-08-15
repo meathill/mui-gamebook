@@ -1,30 +1,11 @@
 import { getRequestConfig } from 'next-intl/server';
-import { cookies, headers } from 'next/headers';
-import { defaultLocale, locales, type Locale } from './config';
+import { defaultLocale } from './config';
 
 export default getRequestConfig(async () => {
-  // 优先从 cookie 获取语言设置
-  const cookieStore = await cookies();
-  let locale = cookieStore.get('locale')?.value as Locale | undefined;
-
-  // 如果 cookie 中没有，则从 Accept-Language header 获取
-  if (!locale || !locales.includes(locale)) {
-    const headersList = await headers();
-    const acceptLanguage = headersList.get('accept-language');
-
-    if (!acceptLanguage) {
-      // 没有任何语言信号（搜索引擎爬虫、curl 等）：用站点默认语言，
-      // 保证爬虫抓到的正文和中文 meta/关键词一致（issue #5）
-      locale = defaultLocale;
-    } else if (acceptLanguage.includes('zh')) {
-      locale = 'zh';
-    } else {
-      locale = 'en';
-    }
-  }
-
+  // 服务端固定默认语言，避免 cookies()/headers() 把整站钉成动态渲染（issue #15）。
+  // 爬虫与 ISR 首屏都是中文，和 issue #5 口径一致；英文切换只在客户端进行。
   return {
-    locale,
-    messages: (await import(`./messages/${locale}.json`)).default,
+    locale: defaultLocale,
+    messages: (await import(`./messages/${defaultLocale}.json`)).default,
   };
 });

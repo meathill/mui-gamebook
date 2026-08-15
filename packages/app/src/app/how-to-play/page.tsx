@@ -12,6 +12,7 @@ import {
   ArrowClockwiseIcon,
   GameControllerIcon,
 } from '@phosphor-icons/react/dist/ssr';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import JsonLd from '@/components/JsonLd';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,7 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // 玩法说明页（issue #14）：承担「网页互动小说」query
 export default async function HowToPlayPage() {
   const t = await getTranslations('howToPlay');
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',

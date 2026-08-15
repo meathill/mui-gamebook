@@ -4,7 +4,9 @@ import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { getFeaturedGames } from '@/lib/games';
+import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 import JsonLd from '@/components/JsonLd';
 import {
   HeroSection,
@@ -17,7 +19,7 @@ import {
   BlogPreviewSection,
 } from '@/components/home';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
 
 // Bing 高展示搜索词对应的作品固定出现在首页精选（issue #5）
 const FEATURED_SLUGS = ['zhumadian-exorcist', 'the-steam-punk-dream-of-the-red-chamber'];
@@ -64,7 +66,7 @@ export default async function Home() {
     getTranslations('home'),
   ]);
 
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
   const websiteLd = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',

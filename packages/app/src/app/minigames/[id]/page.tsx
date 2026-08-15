@@ -4,9 +4,10 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, BookOpenIcon } from '@phosphor-icons/react/dist/ssr';
 import { getMinigameById } from '@/lib/minigames';
+import { PUBLIC_PAGE_REVALIDATE_SECONDS } from '@/lib/public-cache';
 import StandaloneMiniGamePlayer from '@/components/game-player/StandaloneMiniGamePlayer';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = PUBLIC_PAGE_REVALIDATE_SECONDS;
 
 type Props = {
   params: Promise<{ id: string }>;
