@@ -2,6 +2,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '@/db/schema';
 import type { AiUsageInfo } from '@mui-gamebook/core/lib/ai';
+import { calculateBilledTokens } from '@mui-gamebook/core/lib/pricing';
 
 export type AiUsageType =
   | 'text_generation'
@@ -21,13 +22,22 @@ interface RecordUsageParams {
 }
 
 /**
- * 记录 AI 用量到数据库。每日用量统计（用于限制）直接从这张表实时聚合，
- * 这次 insert 本身就是"增量"，不需要再单独维护一份用量计数器。
+ * 记录 AI 用量到数据库。
+ * 根据模型与模态的真实每 1M Token（或次/字符）定价核算标准计费 Token（totalTokens），
+ * 每日用量统计与限额直接从 AiUsage 表 SUM(totalTokens) 聚合。
  */
 export async function recordAiUsage(params: RecordUsageParams): Promise<void> {
   try {
     const { env } = getCloudflareContext();
     const db = drizzle(env.DB);
+
+    const billedTokens = calculateBilledTokens({
+      type: params.type,
+      model: params.model,
+      promptTokens: params.usage.promptTokens,
+      completionTokens: params.usage.completionTokens,
+      totalTokens: params.usage.totalTokens,
+    });
 
     await db.insert(schema.aiUsage).values({
       userId: params.userId,
@@ -35,13 +45,13 @@ export async function recordAiUsage(params: RecordUsageParams): Promise<void> {
       model: params.model,
       promptTokens: params.usage.promptTokens,
       completionTokens: params.usage.completionTokens,
-      totalTokens: params.usage.totalTokens,
+      totalTokens: billedTokens,
       gameId: params.gameId,
       createdAt: new Date(),
     });
 
     console.log(
-      `[AI Usage] 记录用量: 用户=${params.userId}, 类型=${params.type}, 模型=${params.model}, 总token=${params.usage.totalTokens}`,
+      `[AI Usage] 记录用量: 用户=${params.userId}, 类型=${params.type}, 模型=${params.model}, 原始token=${params.usage.totalTokens}, 核算计费token=${billedTokens}`,
     );
   } catch (error) {
     // 用量记录失败不应阻止主流程

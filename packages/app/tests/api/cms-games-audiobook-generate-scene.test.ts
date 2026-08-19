@@ -39,6 +39,7 @@ vi.mock('@/lib/ai-usage', () => ({
 
 vi.mock('@/lib/ai-provider-factory', () => ({
   createAiProvider: vi.fn(),
+  resolveTtsProviderType: vi.fn().mockResolvedValue('mimo'),
 }));
 
 // 分段/切句/音色分配都是纯函数，故意不 mock——用一个真实可控的 fake provider

@@ -13,17 +13,17 @@ describe('parseUserAiPermissions', () => {
     expect(parseUserAiPermissions('{not json')).toBeNull();
   });
 
-  it('合法 JSON 按字段解析，providers 缺失时默认 [mimo]', () => {
+  it('合法 JSON 按字段解析，providers 缺失时默认 [opencode]', () => {
     expect(parseUserAiPermissions(JSON.stringify({ canGenerateImage: true }))).toEqual({
-      providers: ['mimo'],
+      providers: ['opencode'],
       canGenerateImage: true,
       canGenerateVideo: false,
     });
   });
 
-  it('providers 不是数组时回退为 [mimo]', () => {
-    expect(parseUserAiPermissions(JSON.stringify({ providers: 'mimo' }))).toEqual({
-      providers: ['mimo'],
+  it('providers 不是数组时回退为 [opencode]', () => {
+    expect(parseUserAiPermissions(JSON.stringify({ providers: 'opencode' }))).toEqual({
+      providers: ['opencode'],
       canGenerateImage: false,
       canGenerateVideo: false,
     });
@@ -51,7 +51,7 @@ describe('UserAiPermissionsFields', () => {
       />,
     );
 
-    expect(screen.getByText('默认权限：仅可用 MiMo，不可生成图片/视频')).toBeInTheDocument();
+    expect(screen.getByText('默认权限：仅可用 OpenCode Go (DeepSeek)，不可生成图片/视频')).toBeInTheDocument();
     expect(screen.getByText('自定义')).toBeInTheDocument();
   });
 
@@ -66,18 +66,22 @@ describe('UserAiPermissionsFields', () => {
 
     fireEvent.click(screen.getByText('自定义'));
 
-    expect(onChange).toHaveBeenCalledWith({ providers: ['mimo'], canGenerateImage: false, canGenerateVideo: false });
+    expect(onChange).toHaveBeenCalledWith({
+      providers: ['opencode'],
+      canGenerateImage: false,
+      canGenerateVideo: false,
+    });
   });
 
   it('value 非空时渲染 provider 复选框并反映选中状态', () => {
     render(
       <UserAiPermissionsFields
-        value={{ providers: ['mimo', 'anthropic'], canGenerateImage: true, canGenerateVideo: false }}
+        value={{ providers: ['opencode', 'anthropic'], canGenerateImage: true, canGenerateVideo: false }}
         onChange={vi.fn()}
       />,
     );
 
-    expect(screen.getByLabelText('MiMo（默认，低成本）')).toBeChecked();
+    expect(screen.getByLabelText('OpenCode Go（DeepSeek 默认）')).toBeChecked();
     expect(screen.getByLabelText('Claude（高级）')).toBeChecked();
     expect(screen.getByLabelText('Gemini')).not.toBeChecked();
     expect(screen.getByLabelText('图片生成')).toBeChecked();
@@ -88,7 +92,7 @@ describe('UserAiPermissionsFields', () => {
     const onChange = vi.fn();
     render(
       <UserAiPermissionsFields
-        value={{ providers: ['mimo'], canGenerateImage: false, canGenerateVideo: false }}
+        value={{ providers: ['opencode'], canGenerateImage: false, canGenerateVideo: false }}
         onChange={onChange}
       />,
     );
@@ -96,7 +100,7 @@ describe('UserAiPermissionsFields', () => {
     fireEvent.click(screen.getByLabelText('Gemini'));
 
     expect(onChange).toHaveBeenCalledWith({
-      providers: ['mimo', 'google'],
+      providers: ['opencode', 'google'],
       canGenerateImage: false,
       canGenerateVideo: false,
     });
@@ -106,7 +110,7 @@ describe('UserAiPermissionsFields', () => {
     const onChange = vi.fn();
     render(
       <UserAiPermissionsFields
-        value={{ providers: ['mimo', 'anthropic'], canGenerateImage: false, canGenerateVideo: false }}
+        value={{ providers: ['opencode', 'anthropic'], canGenerateImage: false, canGenerateVideo: false }}
         onChange={onChange}
       />,
     );
@@ -114,7 +118,7 @@ describe('UserAiPermissionsFields', () => {
     fireEvent.click(screen.getByLabelText('Claude（高级）'));
 
     expect(onChange).toHaveBeenCalledWith({
-      providers: ['mimo'],
+      providers: ['opencode'],
       canGenerateImage: false,
       canGenerateVideo: false,
     });
@@ -124,12 +128,12 @@ describe('UserAiPermissionsFields', () => {
     const onChange = vi.fn();
     render(
       <UserAiPermissionsFields
-        value={{ providers: ['mimo'], canGenerateImage: false, canGenerateVideo: false }}
+        value={{ providers: ['opencode'], canGenerateImage: false, canGenerateVideo: false }}
         onChange={onChange}
       />,
     );
 
-    fireEvent.click(screen.getByLabelText('MiMo（默认，低成本）'));
+    fireEvent.click(screen.getByLabelText('OpenCode Go（DeepSeek 默认）'));
 
     expect(onChange).not.toHaveBeenCalled();
   });
@@ -138,7 +142,7 @@ describe('UserAiPermissionsFields', () => {
     const onChange = vi.fn();
     render(
       <UserAiPermissionsFields
-        value={{ providers: ['mimo'], canGenerateImage: false, canGenerateVideo: false }}
+        value={{ providers: ['opencode'], canGenerateImage: false, canGenerateVideo: false }}
         onChange={onChange}
       />,
     );
@@ -146,7 +150,7 @@ describe('UserAiPermissionsFields', () => {
     fireEvent.click(screen.getByLabelText('视频生成'));
 
     expect(onChange).toHaveBeenCalledWith({
-      providers: ['mimo'],
+      providers: ['opencode'],
       canGenerateImage: false,
       canGenerateVideo: true,
     });
@@ -156,7 +160,7 @@ describe('UserAiPermissionsFields', () => {
     const onChange = vi.fn();
     render(
       <UserAiPermissionsFields
-        value={{ providers: ['mimo'], canGenerateImage: false, canGenerateVideo: false }}
+        value={{ providers: ['opencode'], canGenerateImage: false, canGenerateVideo: false }}
         onChange={onChange}
       />,
     );

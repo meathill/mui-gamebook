@@ -33,21 +33,27 @@ describe('GET /api/cms/config', () => {
   it('只返回用户需要的字段，不泄漏完整管理配置', async () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
-      defaultAiProvider: 'mimo',
+      defaultTextProvider: 'opencode',
+      defaultAiProvider: 'opencode',
       defaultTtsProvider: 'google',
+      defaultImageProvider: 'google',
+      defaultVideoProvider: 'google',
       dailyTokenLimit: 100000,
       adminUserIds: ['secret-admin-id'],
     });
-    (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
+    (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['opencode'] });
 
     const res = await GET();
 
     expect(res.status).toBe(200);
     const data = (await res.json()) as Record<string, unknown>;
     expect(data).toEqual({
-      defaultAiProvider: 'mimo',
+      defaultTextProvider: 'opencode',
+      defaultAiProvider: 'opencode',
       defaultTtsProvider: 'google',
-      aiPermissions: { providers: ['mimo'] },
+      defaultImageProvider: 'google',
+      defaultVideoProvider: 'google',
+      aiPermissions: { providers: ['opencode'] },
     });
     expect(data.adminUserIds).toBeUndefined();
     expect(data.dailyTokenLimit).toBeUndefined();

@@ -1,71 +1,143 @@
-import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import type {
+  AiProviderType,
+  ImageProviderType,
+  MusicProviderType,
+  SfxProviderType,
+  SttProviderType,
+  TextProviderType,
+  TtsProviderType,
+  VideoProviderType,
+} from '@mui-gamebook/core/lib/ai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 
-// 默认配置
-const DEFAULT_CONFIG = {
-  // 普通用户每日 AI token 上限（默认 100000 tokens）
-  dailyTokenLimit: 100000,
-  // 管理员用户（无限制）
-  adminUserIds: [] as string[],
-  // 允许生成视频的用户邮箱白名单
-  videoWhitelist: [] as string[],
-  // 默认 AI 提供者（文本）
-  defaultAiProvider: 'google' as AiProviderType,
-  // 默认 TTS 提供者，与 defaultAiProvider 独立（Claude 不支持 TTS，不在可选范围）
-  // 各 provider 的默认音色由 voice-config.ts 的 getDefaultVoice() 按 provider 派生，不在这里单独配置
-  defaultTtsProvider: 'mimo' as 'google' | 'openai' | 'mimo',
-  // Google AI 文本模型
-  googleTextModel: 'gemini-3.1-pro-preview',
-  // Google AI 图片模型
-  googleImageModel: 'gemini-3.1-flash-image',
-  // Google AI TTS 模型
-  googleTtsModel: 'gemini-3.1-flash-tts-preview',
-  // Google AI 视频模型
-  googleVideoModel: 'veo-3.1-generate-preview',
-  // OpenAI 文本模型
-  openaiTextModel: 'gpt-5.5',
-  // OpenAI 图片模型
-  openaiImageModel: 'gpt-image-1.5',
-  // OpenAI TTS 模型
-  openaiTtsModel: 'gpt-4o-mini-tts',
-  // OpenAI 视频模型
-  openaiVideoModel: 'sora-2',
-  // 小米 MiMo 文本模型
-  mimoTextModel: 'mimo-v2.5-pro',
-  // 小米 MiMo base URL（默认 Token Plan 订阅地址，按量付费为 https://api.xiaomimimo.com/v1）
-  mimoBaseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
-  // 小米 MiMo TTS 模型（预置音色版本；-voicedesign/-voiceclone 暂未接入）
-  mimoTtsModel: 'mimo-v2.5-tts',
-  // Anthropic Claude 文本模型
-  anthropicTextModel: 'claude-sonnet-5',
-  // Cloudflare AI Gateway 基础地址（形如 https://gateway.ai.cloudflare.com/v1/{account}/{gateway}）
-  // Claude/Gemini/OpenAI 的密钥存储在网关（BYOK），必须配置此项才能调用这三家；
-  // 留空会在调用时抛出明确错误。MiMo 不受影响，始终直连官方。
-  cfAiGatewayBaseUrl: '',
-};
-
-export type AppConfig = typeof DEFAULT_CONFIG;
+export interface AppConfig {
+  dailyTokenLimit: number;
+  adminUserIds: string[];
+  videoWhitelist: string[];
+  /** 默认文本生成提供者 */
+  defaultTextProvider: TextProviderType;
+  /** 默认 AI 文本提供者别名（兼容旧接口） */
+  defaultAiProvider: TextProviderType;
+  /** 默认 TTS 语音合成提供者 */
+  defaultTtsProvider: TtsProviderType;
+  /** 默认图片生成提供者 */
+  defaultImageProvider: ImageProviderType;
+  /** 默认视频生成提供者 */
+  defaultVideoProvider: VideoProviderType;
+  /** 默认语音识别提供者 */
+  defaultSttProvider: SttProviderType;
+  /** 默认音乐生成提供者 */
+  defaultMusicProvider: MusicProviderType;
+  /** 默认音效生成提供者 */
+  defaultSfxProvider: SfxProviderType;
+  /** 音乐模型 */
+  musicModel: string;
+  /** 音效模型 */
+  sfxModel: string;
+  /** OpenCode Go 文本模型 */
+  opencodeTextModel: string;
+  /** OpenCode Go base URL */
+  opencodeBaseUrl: string;
+  /** Google AI 文本模型 */
+  googleTextModel: string;
+  /** Google AI 图片模型 */
+  googleImageModel: string;
+  /** Google AI TTS 模型 */
+  googleTtsModel: string;
+  /** Google AI 视频模型 */
+  googleVideoModel: string;
+  /** OpenAI 文本模型 */
+  openaiTextModel: string;
+  /** OpenAI 图片模型 */
+  openaiImageModel: string;
+  /** OpenAI TTS 模型 */
+  openaiTtsModel: string;
+  /** OpenAI 视频模型 */
+  openaiVideoModel: string;
+  /** 小米 MiMo 文本模型 */
+  mimoTextModel: string;
+  /** 小米 MiMo base URL */
+  mimoBaseUrl: string;
+  /** 小米 MiMo TTS 模型 */
+  mimoTtsModel: string;
+  /** Anthropic Claude 文本模型 */
+  anthropicTextModel: string;
+  /** Cloudflare AI Gateway 基础地址 */
+  cfAiGatewayBaseUrl: string;
+}
 
 const CONFIG_KEY = 'app:config';
 
 /**
+ * 从环境变量装配各模态的基准配置
+ * 基准值全部由 wrangler.jsonc (vars) 注入，不再在代码中写死兜底
+ */
+export function getEnvDefaults(envMap?: unknown): AppConfig {
+  const env = (envMap || (typeof process !== 'undefined' ? process.env : {}) || {}) as Record<string, unknown>;
+  const defaultTextProvider =
+    (env.DEFAULT_TEXT_PROVIDER as TextProviderType) || (env.DEFAULT_AI_PROVIDER as TextProviderType) || 'opencode';
+
+  return {
+    dailyTokenLimit: Number(env.DAILY_TOKEN_LIMIT) || 100000,
+    adminUserIds: [],
+    videoWhitelist: [],
+    defaultTextProvider,
+    defaultAiProvider: defaultTextProvider,
+    defaultTtsProvider: (env.DEFAULT_TTS_PROVIDER as TtsProviderType) || 'mimo',
+    defaultImageProvider: (env.DEFAULT_IMAGE_PROVIDER as ImageProviderType) || 'google',
+    defaultVideoProvider: (env.DEFAULT_VIDEO_PROVIDER as VideoProviderType) || 'google',
+    defaultSttProvider: (env.DEFAULT_STT_PROVIDER as SttProviderType) || 'openai',
+    defaultMusicProvider: (env.DEFAULT_MUSIC_PROVIDER as MusicProviderType) || 'internal',
+    defaultSfxProvider: (env.DEFAULT_SFX_PROVIDER as SfxProviderType) || 'internal',
+    musicModel: (env.MUSIC_MODEL as string) || 'suno-v4',
+    sfxModel: (env.SFX_MODEL as string) || 'eleven-sfx-v1',
+    opencodeBaseUrl: (env.OPENCODE_BASE_URL as string) || 'https://opencode.ai/zen/go/v1',
+    opencodeTextModel: (env.OPENCODE_TEXT_MODEL as string) || 'deepseek-v4-flash',
+    googleTextModel: (env.GOOGLE_TEXT_MODEL as string) || (env.GOOGLE_MODEL as string) || 'gemini-3.7-flash',
+    googleImageModel: (env.GOOGLE_IMAGE_MODEL as string) || 'gemini-3.1-flash-lite-image',
+    googleTtsModel: (env.GOOGLE_TTS_MODEL as string) || 'gemini-3.1-flash-tts-preview',
+    googleVideoModel: (env.GOOGLE_VIDEO_MODEL as string) || 'veo-3.1-fast-generate-preview',
+    openaiTextModel: (env.OPENAI_TEXT_MODEL as string) || 'gpt-5.6-luna',
+    openaiImageModel: (env.OPENAI_IMAGE_MODEL as string) || 'gpt-image-1.5',
+    openaiTtsModel: (env.OPENAI_TTS_MODEL as string) || 'gpt-4o-mini-tts',
+    openaiVideoModel: (env.OPENAI_VIDEO_MODEL as string) || '',
+    mimoTextModel: (env.MIMO_TEXT_MODEL as string) || 'mimo-v2.5-pro',
+    mimoBaseUrl: (env.MIMO_BASE_URL as string) || 'https://token-plan-cn.xiaomimimo.com/v1',
+    mimoTtsModel: (env.MIMO_TTS_MODEL as string) || 'mimo-v2.5-tts',
+    anthropicTextModel: (env.ANTHROPIC_TEXT_MODEL as string) || 'claude-sonnet-5',
+    cfAiGatewayBaseUrl: (env.CF_AI_GATEWAY_BASE_URL as string) || '',
+  };
+}
+
+/**
  * 获取全局配置
- * 优先从 KV 读取，如果不存在则使用默认配置
+ * 以环境变量为基准，叠加 KV 存储的管理端覆盖值
  */
 export async function getConfig(): Promise<AppConfig> {
   try {
     const { env } = getCloudflareContext();
+    const defaults = getEnvDefaults(env);
     const kv = env.KV;
 
-    const stored = await kv.get<AppConfig>(CONFIG_KEY, 'json');
+    const stored = await kv?.get<Partial<AppConfig>>(CONFIG_KEY, 'json');
     if (stored) {
-      return { ...DEFAULT_CONFIG, ...stored };
+      const textProvider =
+        stored.defaultTextProvider ||
+        (stored as { defaultAiProvider?: TextProviderType }).defaultAiProvider ||
+        defaults.defaultTextProvider;
+
+      return {
+        ...defaults,
+        ...stored,
+        defaultTextProvider: textProvider,
+        defaultAiProvider: textProvider,
+      };
     }
 
-    return DEFAULT_CONFIG;
+    return defaults;
   } catch (error) {
     console.error('[Config] 获取配置失败:', error);
-    return DEFAULT_CONFIG;
+    return getEnvDefaults(process.env);
   }
 }
 

@@ -7,6 +7,7 @@ import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { buildChatHistory, CHAT_FUNCTION_DECLARATIONS, ChatRequest } from '@/lib/editor/chat-declarations';
 import { getManagedGame } from '@/lib/game-access';
+import { getConfig } from '@/lib/config';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 type Props = {
@@ -89,11 +90,21 @@ export async function POST(req: Request, { params }: Props) {
           CHAT_FUNCTION_DECLARATIONS,
         );
 
+        const config = await getConfig();
+        const modelMap: Record<string, string> = {
+          opencode: config.opencodeTextModel,
+          google: config.googleTextModel,
+          openai: config.openaiTextModel,
+          mimo: config.mimoTextModel,
+          anthropic: config.anthropicTextModel,
+        };
+        const modelName = modelMap[providerType] || providerType;
+
         // 记录 AI 用量
         await recordAiUsage({
           userId: session.user.id,
           type: 'chat',
-          model: provider.type,
+          model: modelName,
           usage: response.usage,
           gameId: Number(id),
         });

@@ -112,22 +112,30 @@ export interface TTSResult {
 
 /**
  * AI 提供者类型
- * - mimo: 小米 MiMo（OpenAI 兼容协议，仅文本/工具调用）
+ * - opencode: OpenCode Go（OpenAI 兼容协议，主打 DeepSeek 文本/代码生成）
+ * - mimo: 小米 MiMo（OpenAI 兼容协议，支持文本/TTS）
  * - anthropic: Anthropic Claude（仅文本/工具调用）
+ * - google: Google GenAI（文本/生图/视频/TTS）
+ * - openai: OpenAI（文本/生图/视频/TTS）
  */
-export type AiProviderType = 'google' | 'openai' | 'mimo' | 'anthropic';
+export type AiProviderType = 'opencode' | 'google' | 'openai' | 'mimo' | 'anthropic';
+
+/** 各模态专有 Provider 类型 */
+export type TextProviderType = 'opencode' | 'mimo' | 'anthropic' | 'google' | 'openai';
+export type TtsProviderType = 'mimo' | 'google' | 'openai';
+export type ImageProviderType = 'google' | 'openai';
+export type VideoProviderType = 'google' | 'openai';
+export type SttProviderType = 'openai' | 'google';
+export type MusicProviderType = 'internal' | 'suno' | 'udio' | 'elevenlabs';
+export type SfxProviderType = 'internal' | 'elevenlabs' | 'stable-audio';
 
 /**
  * AI 提供者配置
  */
 export interface AiProviderConfig {
-  // 默认 AI 提供者
   defaultProvider: AiProviderType;
-  // 文本生成模型
   textModel?: string;
-  // 图片生成模型
   imageModel?: string;
-  // 视频生成模型（目前只有 Google 支持）
   videoModel?: string;
 }
 

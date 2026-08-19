@@ -52,6 +52,7 @@ describe('MimoProvider', () => {
     expect(constructorSpy).toHaveBeenCalledWith({
       apiKey: 'tp-test-key',
       baseURL: MIMO_DEFAULT_BASE_URL,
+      dangerouslyAllowBrowser: true,
     });
   });
 
@@ -60,6 +61,7 @@ describe('MimoProvider', () => {
     expect(constructorSpy).toHaveBeenCalledWith({
       apiKey: 'sk-test-key',
       baseURL: 'https://api.xiaomimimo.com/v1',
+      dangerouslyAllowBrowser: true,
     });
   });
 

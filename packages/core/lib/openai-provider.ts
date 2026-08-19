@@ -42,6 +42,7 @@ export class OpenAiProvider implements AiProvider {
     this.gatewayHeaders = options?.headers ?? {};
     this.client = new OpenAI({
       apiKey,
+      dangerouslyAllowBrowser: true,
       ...(options?.baseURL && { baseURL: options.baseURL }),
       ...(options?.headers && Object.keys(options.headers).length > 0 && { defaultHeaders: options.headers }),
     });

@@ -151,7 +151,7 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'text_generation',
-      model: 'mimo',
+      model: 'mimo-v2.5-pro',
       usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
       gameId: 1,
     });
@@ -181,7 +181,7 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'text_generation',
-      model: 'mimo',
+      model: 'mimo-v2.5-pro',
       usage: { promptTokens: 150, completionTokens: 280, totalTokens: 430 },
       gameId: 1,
     });

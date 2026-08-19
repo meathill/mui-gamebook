@@ -3,10 +3,13 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import {
   createAiProvider,
   createGoogleAiProvider,
-  resolveImageVideoProviderType,
+  resolveImageProviderType,
+  resolveTextProviderType,
   resolveTtsProviderType,
+  resolveVideoProviderType,
 } from './ai-provider-factory';
 import { wrapWav } from './audio';
+import { getConfig } from './config';
 
 export type { AiUsageInfo };
 
@@ -62,6 +65,7 @@ export interface StartVideoGenerationResult {
   operationName: string;
   usage: AiUsageInfo;
   model: string;
+  provider: 'google' | 'openai';
 }
 
 export interface CheckVideoStatusResult {
@@ -92,13 +96,17 @@ export async function generateAndUploadImage(
   },
 ): Promise<GenerateImageResult> {
   const { env } = getCloudflareContext();
+  const config = await getConfig();
 
-  // 图片生成只支持 Google/OpenAI，全局默认为 MiMo/Claude 时回退
-  const provider = await createAiProvider(await resolveImageVideoProviderType());
+  // 生图使用独立的 Image Provider（默认 Google）
+  const imageProviderType = await resolveImageProviderType();
+  const provider = await createAiProvider(imageProviderType);
   const { buffer, type, usage } = await provider.generateImage(prompt, {
     aspectRatio: options?.aspectRatio,
     referenceImages: options?.referenceImages,
   });
+
+  const model = imageProviderType === 'google' ? config.googleImageModel : config.openaiImageModel;
 
   // 根据实际 mimeType 修正文件扩展名
   const finalFileName = fixFileExtension(fileName, type);
@@ -116,7 +124,7 @@ export async function generateAndUploadImage(
   return {
     url: `${publicDomain}/${finalFileName}`,
     usage,
-    model: provider.type,
+    model,
   };
 }
 
@@ -127,21 +135,24 @@ export async function generateAndUploadImage(
  */
 export async function startAsyncVideoGeneration(
   prompt: string,
-  config?: { durationSeconds?: number; aspectRatio?: string },
+  configParams?: { durationSeconds?: number; aspectRatio?: string },
 ): Promise<StartVideoGenerationResult> {
-  // 视频生成只支持 Google/OpenAI，全局默认为 MiMo/Claude 时回退
-  const provider = await createAiProvider(await resolveImageVideoProviderType());
+  const config = await getConfig();
+  const videoProviderType = await resolveVideoProviderType();
+  const provider = await createAiProvider(videoProviderType);
 
   if (!provider.startVideoGeneration) {
     throw new Error('当前 AI 提供者不支持视频生成');
   }
 
-  const { operationName, usage } = await provider.startVideoGeneration(prompt, config);
+  const { operationName, usage } = await provider.startVideoGeneration(prompt, configParams);
+  const model = videoProviderType === 'google' ? config.googleVideoModel : config.openaiVideoModel;
 
   return {
     operationName,
     usage,
-    model: provider.type,
+    model,
+    provider: videoProviderType,
   };
 }
 
@@ -158,8 +169,8 @@ export async function checkAndCompleteVideoGeneration(
 ): Promise<CheckVideoStatusResult> {
   const { env } = getCloudflareContext();
 
-  // 根据 provider 类型创建对应的 provider
-  const provider = await createAiProvider(providerType);
+  const activeProviderType = providerType || (await resolveVideoProviderType());
+  const provider = await createAiProvider(activeProviderType);
 
   if (!provider.checkVideoGenerationStatus) {
     throw new Error('当前 AI 提供者不支持视频状态检查');
@@ -183,15 +194,11 @@ export async function checkAndCompleteVideoGeneration(
   const bucket = env.ASSETS_BUCKET;
   if (!bucket) throw new Error("R2 Bucket 'ASSETS_BUCKET' not found");
 
-  // 下载生成完成的视频文件：这是对 Google/OpenAI 存储的直接请求，不经过 AI Gateway
-  // （Gateway 只代理生成调用本身，不代理响应里返回的资源下载链接），因此仍需要真实的
-  // provider key。GOOGLE_API_KEY/OPENAI_API_KEY 不再是必需的 app secret（生成调用走
-  // Gateway 的 BYOK），只有需要下载视频时才用得到；未配置时下载会因鉴权失败报错。
   const headers: Record<string, string> = {};
-  if (providerType === 'google' || !providerType) {
+  if (activeProviderType === 'google') {
     const apiKey = process.env.GOOGLE_API_KEY;
     headers['x-goog-api-key'] = apiKey || '';
-  } else if (providerType === 'openai') {
+  } else if (activeProviderType === 'openai') {
     const apiKey = process.env.OPENAI_API_KEY;
     headers['Authorization'] = `Bearer ${apiKey}`;
   }
@@ -224,9 +231,10 @@ export async function generateAndStoreMiniGame(
   providerType?: AiProviderType,
 ): Promise<GenerateMiniGameResult> {
   const { env } = getCloudflareContext();
+  const config = await getConfig();
 
-  // 使用 AI 提供者工厂（可按用户权限指定提供者）
-  const provider = await createAiProvider(providerType);
+  const activeProviderType = providerType || (await resolveTextProviderType());
+  const provider = await createAiProvider(activeProviderType);
   const { code, usage } = await provider.generateMiniGame(prompt, variables);
 
   // 存储到数据库
@@ -243,13 +251,22 @@ export async function generateAndStoreMiniGame(
 
   const minigameId = result.meta.last_row_id as number;
 
+  const modelMap: Record<string, string> = {
+    opencode: config.opencodeTextModel,
+    google: config.googleTextModel,
+    openai: config.openaiTextModel,
+    mimo: config.mimoTextModel,
+    anthropic: config.anthropicTextModel,
+  };
+  const model = modelMap[activeProviderType] || activeProviderType;
+
   // 返回访问 URL
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
   return {
     id: minigameId,
     url: `${baseUrl}/api/cms/minigames/${minigameId}`,
     usage,
-    model: provider.type,
+    model,
   };
 }
 
@@ -271,8 +288,7 @@ const DEFAULT_SAMPLE_RATE = 24000;
 
 /**
  * 生成 TTS 语音并上传到 R2
- * 支持 Google、OpenAI、MiMo 三家 TTS，走独立于文本生成的 defaultTtsProvider 配置
- * 会根据实际生成的音频格式自动修正文件扩展名
+ * 支持 MiMo、Google、OpenAI 三家 TTS，走独立于文本生成的 defaultTtsProvider 配置
  */
 export async function generateAndUploadTTS(
   text: string,
@@ -280,16 +296,15 @@ export async function generateAndUploadTTS(
   voiceName?: TTSVoiceName,
 ): Promise<GenerateTTSResult> {
   const { env } = getCloudflareContext();
+  const config = await getConfig();
 
   const ttsProviderType = await resolveTtsProviderType();
   const provider = await createAiProvider(ttsProviderType);
 
-  // 检查 provider 是否支持 TTS
   if (!provider.generateTTS) {
     throw new Error('当前 AI 提供者不支持 TTS');
   }
 
-  // 未指定音色时按当前 TTS 提供者取默认音色，而不是写死某一家的音色 ID
   const result = await provider.generateTTS(text, voiceName || getDefaultVoice(ttsProviderType));
 
   // 处理音频数据
@@ -297,11 +312,9 @@ export async function generateAndUploadTTS(
   let contentType: string;
 
   if (result.mimeType === 'audio/pcm') {
-    // Google 返回的是 PCM，需要转换为 WAV
     audioBuffer = wrapWav(result.buffer, DEFAULT_SAMPLE_RATE);
     contentType = 'audio/wav';
   } else {
-    // OpenAI 返回的是 MP3
     audioBuffer = result.buffer;
     contentType = result.mimeType;
   }
@@ -319,18 +332,22 @@ export async function generateAndUploadTTS(
 
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
 
-  // Google/OpenAI/MiMo 的 TTS 响应都不暴露可靠的 token 用量，用输入文本长度做估算，
-  // 确保 TTS 生成至少会计入每日用量限额（此前完全不记账，是持续发生的计费缺口）。
-  // 这不是精确的计费口径，如果某个 provider 之后能拿到真实用量，再替换成真实值。
   const usage: AiUsageInfo = {
     promptTokens: text.length,
     completionTokens: 0,
     totalTokens: text.length,
   };
 
+  const modelMap: Record<string, string> = {
+    mimo: config.mimoTtsModel,
+    google: config.googleTtsModel,
+    openai: config.openaiTtsModel,
+  };
+  const model = modelMap[ttsProviderType] || ttsProviderType;
+
   return {
     url: `${publicDomain}/${finalFileName}`,
     usage,
-    model: provider.type,
+    model,
   };
 }

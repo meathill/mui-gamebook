@@ -108,7 +108,7 @@ describe('POST /api/cms/games/[id]/clarify-story', () => {
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'clarify_questions',
-      model: 'mimo',
+      model: MIMO_FAST_TEXT_MODEL,
       usage: { promptTokens: 20, completionTokens: 15, totalTokens: 35 },
       gameId: 1,
     });

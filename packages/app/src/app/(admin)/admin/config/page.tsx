@@ -132,7 +132,7 @@ export default function AdminConfigPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">系统配置</h1>
-            <p className="text-gray-500 mt-1">管理全局设置和 AI 模型配置</p>
+            <p className="text-gray-500 mt-1">按生成类型管理 AI 模态、模型及系统全局配置</p>
           </div>
         </header>
 
@@ -140,164 +140,334 @@ export default function AdminConfigPage() {
           onSubmit={handleSubmit}
           noValidate
           className="space-y-8">
-          {/* AI 提供者配置 */}
+          {/* 1. 文本生成 (Text / LLM) */}
           <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">AI 提供者配置</h2>
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>📝</span>
+              <span>文本生成 (Text / LLM)</span>
+            </h2>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">默认 AI 提供者</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认文本提供者</label>
                 <select
-                  value={formData.defaultAiProvider}
+                  value={formData.defaultTextProvider}
                   onChange={(e) =>
-                    updateField('defaultAiProvider', e.target.value as AdminConfigDraft['defaultAiProvider'])
+                    updateField('defaultTextProvider', e.target.value as AdminConfigDraft['defaultTextProvider'])
                   }
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                  <option value="opencode">OpenCode Go（DeepSeek 默认）</option>
+                  <option value="mimo">小米 MiMo</option>
                   <option value="google">Google GenAI</option>
                   <option value="openai">OpenAI</option>
-                  <option value="mimo">小米 MiMo</option>
                   <option value="anthropic">Anthropic Claude</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  全局默认文本提供者。图片/视频只有 Google/OpenAI 支持，MiMo/Claude 会自动回退到 Google；TTS
-                  用下面单独的开关。
-                </p>
+                <p className="text-xs text-gray-500 mt-1">剧本生成、对话助手（Chat）、故事评估等文本任务的默认引擎。</p>
               </div>
 
+              <div className="pt-2 border-t space-y-4">
+                <h3 className="text-sm font-semibold text-gray-600">各提供商文本模型</h3>
+
+                <ConfigTextField
+                  label="OpenCode 文本模型"
+                  value={formData.opencodeTextModel}
+                  onChange={(value) => updateField('opencodeTextModel', value)}
+                  placeholder="deepseek-v4-flash"
+                  hint="OpenCode Go 默认模型"
+                />
+
+                <ConfigTextField
+                  label="OpenCode base URL"
+                  value={formData.opencodeBaseUrl}
+                  onChange={(value) => updateField('opencodeBaseUrl', value)}
+                  placeholder="https://opencode.ai/zen/go/v1"
+                  hint="OpenCode 官方端点"
+                />
+
+                <ConfigTextField
+                  label="小米 MiMo 文本模型"
+                  value={formData.mimoTextModel}
+                  onChange={(value) => updateField('mimoTextModel', value)}
+                  placeholder="mimo-v2.5-pro"
+                />
+
+                <ConfigTextField
+                  label="小米 MiMo base URL"
+                  value={formData.mimoBaseUrl}
+                  onChange={(value) => updateField('mimoBaseUrl', value)}
+                  placeholder="https://token-plan-cn.xiaomimimo.com/v1"
+                  hint="Token Plan 订阅端点；按量付费可改为 https://api.xiaomimimo.com/v1"
+                />
+
+                <ConfigTextField
+                  label="Anthropic Claude 文本模型"
+                  value={formData.anthropicTextModel}
+                  onChange={(value) => updateField('anthropicTextModel', value)}
+                  placeholder="claude-sonnet-5"
+                  hint="仅授权用户可用"
+                />
+
+                <ConfigTextField
+                  label="Google GenAI 文本模型"
+                  value={formData.googleTextModel}
+                  onChange={(value) => updateField('googleTextModel', value)}
+                  placeholder="gemini-3.7-flash"
+                />
+
+                <ConfigTextField
+                  label="OpenAI 文本模型"
+                  value={formData.openaiTextModel}
+                  onChange={(value) => updateField('openaiTextModel', value)}
+                  placeholder="gpt-5.6-luna"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* 2. 角色台词与语音合成 (TTS / Voice) */}
+          <section className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>🎙️</span>
+              <span>语音合成 (TTS / Voice)</span>
+            </h2>
+
+            <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">默认 TTS 提供者</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认 TTS 语音合成提供者</label>
                 <select
                   value={formData.defaultTtsProvider}
                   onChange={(e) =>
                     updateField('defaultTtsProvider', e.target.value as AdminConfigDraft['defaultTtsProvider'])
                   }
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
-                  <option value="mimo">小米 MiMo</option>
+                  <option value="mimo">小米 MiMo（推荐）</option>
                   <option value="google">Google GenAI</option>
                   <option value="openai">OpenAI</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">
-                  与「默认 AI 提供者」相互独立（Claude 不支持
-                  TTS，不在此列）。各提供者的可选音色在编辑器角色配置里按当前 TTS 提供者动态显示。
-                </p>
+                <p className="text-xs text-gray-500 mt-1">角色对白、旁白与音色试听合成提供者。</p>
               </div>
 
+              <div className="pt-2 border-t space-y-4">
+                <h3 className="text-sm font-semibold text-gray-600">各提供商 TTS 模型</h3>
+
+                <ConfigTextField
+                  label="小米 MiMo TTS 模型"
+                  value={formData.mimoTtsModel}
+                  onChange={(value) => updateField('mimoTtsModel', value)}
+                  placeholder="mimo-v2.5-tts"
+                  hint="预置丰富音色；在默认 TTS 选 MiMo 时生效"
+                />
+
+                <ConfigTextField
+                  label="Google GenAI TTS 模型"
+                  value={formData.googleTtsModel}
+                  onChange={(value) => updateField('googleTtsModel', value)}
+                  placeholder="gemini-3.1-flash-tts-preview"
+                />
+
+                <ConfigTextField
+                  label="OpenAI TTS 模型"
+                  value={formData.openaiTtsModel}
+                  onChange={(value) => updateField('openaiTtsModel', value)}
+                  placeholder="gpt-4o-mini-tts"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* 3. 图像生成 (Image) */}
+          <section className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>🖼️</span>
+              <span>图像生成 (Image)</span>
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认图片生成提供者</label>
+                <select
+                  value={formData.defaultImageProvider}
+                  onChange={(e) =>
+                    updateField('defaultImageProvider', e.target.value as AdminConfigDraft['defaultImageProvider'])
+                  }
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                  <option value="google">Google GenAI（推荐）</option>
+                  <option value="openai">OpenAI</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">角色立绘、场景插画与背景生图引擎。</p>
+              </div>
+
+              <div className="pt-2 border-t space-y-4">
+                <h3 className="text-sm font-semibold text-gray-600">各提供商图像模型</h3>
+
+                <ConfigTextField
+                  label="Google GenAI 图片模型"
+                  value={formData.googleImageModel}
+                  onChange={(value) => updateField('googleImageModel', value)}
+                  placeholder="gemini-3.1-flash-lite-image"
+                />
+
+                <ConfigTextField
+                  label="OpenAI 图片模型"
+                  value={formData.openaiImageModel}
+                  onChange={(value) => updateField('openaiImageModel', value)}
+                  placeholder="gpt-image-1.5"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* 4. 视频生成 (Video) */}
+          <section className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>🎬</span>
+              <span>视频生成 (Video)</span>
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认视频生成提供者</label>
+                <select
+                  value={formData.defaultVideoProvider}
+                  onChange={(e) =>
+                    updateField('defaultVideoProvider', e.target.value as AdminConfigDraft['defaultVideoProvider'])
+                  }
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                  <option value="google">Google GenAI (Veo)</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">场景视频与动画生成（未来支持接入 Kie / Fal 等）。</p>
+              </div>
+
+              <div className="pt-2 border-t space-y-4">
+                <h3 className="text-sm font-semibold text-gray-600">视频模型配置</h3>
+
+                <ConfigTextField
+                  label="Google GenAI 视频模型"
+                  value={formData.googleVideoModel}
+                  onChange={(value) => updateField('googleVideoModel', value)}
+                  placeholder="veo-3.1-fast-generate-preview"
+                />
+
+                <ConfigTextField
+                  label="OpenAI 视频模型"
+                  value={formData.openaiVideoModel}
+                  onChange={(value) => updateField('openaiVideoModel', value)}
+                  placeholder="（暂不可用）"
+                  hint="Sora 2 已下线，未来将扩展支持 Kie / Fal 等"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* 5. 音乐音效生成 (Music / SFX) */}
+          <section className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>🎵</span>
+              <span>音乐与音效 (Music / SFX)</span>
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认背景音乐 (BGM) 提供者</label>
+                <select
+                  value={formData.defaultMusicProvider}
+                  onChange={(e) =>
+                    updateField('defaultMusicProvider', e.target.value as AdminConfigDraft['defaultMusicProvider'])
+                  }
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                  <option value="internal">内置精选素材库（默认）</option>
+                  <option value="suno">Suno AI（即将接入）</option>
+                  <option value="udio">Udio（即将接入）</option>
+                  <option value="elevenlabs">ElevenLabs（即将接入）</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">互动小说与游戏章节背景音乐 (BGM) 生成引擎。</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认音效 (SFX) 提供者</label>
+                <select
+                  value={formData.defaultSfxProvider}
+                  onChange={(e) =>
+                    updateField('defaultSfxProvider', e.target.value as AdminConfigDraft['defaultSfxProvider'])
+                  }
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                  <option value="internal">内置音效库（默认）</option>
+                  <option value="elevenlabs">ElevenLabs Sound Effects（即将接入）</option>
+                  <option value="stable-audio">Stable Audio（即将接入）</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">按键音、交互反馈及场景环境音效 (SFX) 生成引擎。</p>
+              </div>
+
+              <div className="pt-2 border-t space-y-4">
+                <h3 className="text-sm font-semibold text-gray-600">音乐与音效模型配置</h3>
+
+                <ConfigTextField
+                  label="音乐生成模型"
+                  value={formData.musicModel}
+                  onChange={(value) => updateField('musicModel', value)}
+                  placeholder="suno-v4"
+                  hint="AI 音乐生成服务调用模型"
+                />
+
+                <ConfigTextField
+                  label="音效生成模型"
+                  value={formData.sfxModel}
+                  onChange={(value) => updateField('sfxModel', value)}
+                  placeholder="eleven-sfx-v1"
+                  hint="AI 短音效/环境音生成模型"
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* 6. 语音识别 (STT) */}
+          <section className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>👂</span>
+              <span>语音识别 (STT)</span>
+            </h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">默认 STT 语音识别提供者</label>
+                <select
+                  value={formData.defaultSttProvider}
+                  onChange={(e) =>
+                    updateField('defaultSttProvider', e.target.value as AdminConfigDraft['defaultSttProvider'])
+                  }
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                  <option value="openai">OpenAI (Whisper)</option>
+                  <option value="google">Google GenAI</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">语音输入与录音转写引擎。</p>
+              </div>
+            </div>
+          </section>
+
+          {/* 7. 网关与网络连接 (AI Gateway) */}
+          <section className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>🌐</span>
+              <span>网关与网络连接 (AI Gateway)</span>
+            </h2>
+
+            <div className="space-y-4">
               <ConfigTextField
                 label="Cloudflare AI Gateway 地址"
                 value={formData.cfAiGatewayBaseUrl}
                 onChange={(value) => updateField('cfAiGatewayBaseUrl', value)}
                 placeholder="https://gateway.ai.cloudflare.com/v1/{account}/{gateway}"
-                hint="必填：Claude/Gemini/OpenAI 的密钥存储在网关（BYOK），必须经它转发才能调用；MiMo 不受影响，始终直连官方。若网关开启了 Authenticated Gateway，还需配置 CF_AI_GATEWAY_TOKEN（Workers secret，不在这里填）"
+                hint="Claude/Gemini/OpenAI 的密钥存储在网关（BYOK），经它转发调用；OpenCode 与 MiMo 直连官方。"
               />
             </div>
           </section>
 
-          {/* MiMo / Claude 模型配置 */}
+          {/* 8. 用量限制配置 */}
           <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">MiMo / Claude 模型</h2>
-
-            <div className="space-y-4">
-              <ConfigTextField
-                label="MiMo 文本模型"
-                value={formData.mimoTextModel}
-                onChange={(value) => updateField('mimoTextModel', value)}
-                placeholder="mimo-v2.5-pro"
-                hint="普通用户默认使用的文本模型"
-              />
-
-              <ConfigTextField
-                label="MiMo base URL"
-                value={formData.mimoBaseUrl}
-                onChange={(value) => updateField('mimoBaseUrl', value)}
-                placeholder="https://token-plan-cn.xiaomimimo.com/v1"
-                hint="Token Plan 订阅地址；按量付费可改为 https://api.xiaomimimo.com/v1"
-              />
-
-              <ConfigTextField
-                label="MiMo TTS 模型"
-                value={formData.mimoTtsModel}
-                onChange={(value) => updateField('mimoTtsModel', value)}
-                placeholder="mimo-v2.5-tts"
-                hint="预置音色版本；仅在「默认 TTS 提供者」选 MiMo 时生效"
-              />
-
-              <ConfigTextField
-                label="Claude 文本模型"
-                value={formData.anthropicTextModel}
-                onChange={(value) => updateField('anthropicTextModel', value)}
-                placeholder="claude-sonnet-5"
-                hint="仅授权用户可用（在用户管理中按用户开通）"
-              />
-            </div>
-          </section>
-
-          {/* Google AI 模型配置 */}
-          <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">Google GenAI 模型</h2>
-
-            <div className="space-y-4">
-              <ConfigTextField
-                label="文本模型"
-                value={formData.googleTextModel}
-                onChange={(value) => updateField('googleTextModel', value)}
-                placeholder="gemini-3.1-pro-preview"
-              />
-              <ConfigTextField
-                label="图片模型"
-                value={formData.googleImageModel}
-                onChange={(value) => updateField('googleImageModel', value)}
-                placeholder="gemini-3.1-flash-image"
-              />
-              <ConfigTextField
-                label="TTS 模型"
-                value={formData.googleTtsModel}
-                onChange={(value) => updateField('googleTtsModel', value)}
-                placeholder="gemini-3.1-flash-tts-preview"
-              />
-              <ConfigTextField
-                label="视频模型"
-                value={formData.googleVideoModel}
-                onChange={(value) => updateField('googleVideoModel', value)}
-                placeholder="veo-3.1-generate-preview"
-              />
-            </div>
-          </section>
-
-          {/* OpenAI 模型配置 */}
-          <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">OpenAI 模型</h2>
-
-            <div className="space-y-4">
-              <ConfigTextField
-                label="文本模型"
-                value={formData.openaiTextModel}
-                onChange={(value) => updateField('openaiTextModel', value)}
-                placeholder="gpt-5.5"
-              />
-              <ConfigTextField
-                label="图片模型"
-                value={formData.openaiImageModel}
-                onChange={(value) => updateField('openaiImageModel', value)}
-                placeholder="gpt-image-1.5"
-              />
-              <ConfigTextField
-                label="TTS 模型"
-                value={formData.openaiTtsModel}
-                onChange={(value) => updateField('openaiTtsModel', value)}
-                placeholder="gpt-4o-mini-tts"
-              />
-              <ConfigTextField
-                label="视频模型"
-                value={formData.openaiVideoModel}
-                onChange={(value) => updateField('openaiVideoModel', value)}
-                placeholder="sora-2"
-              />
-            </div>
-          </section>
-
-          {/* 用量限制配置 */}
-          <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">用量限制</h2>
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>📊</span>
+              <span>用量限制</span>
+            </h2>
 
             <div className="space-y-4">
               <div>
@@ -324,14 +494,19 @@ export default function AdminConfigPage() {
                     {validationError}
                   </p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">普通用户每日可使用的 AI Token 上限</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  普通用户每日可使用的标准计费 Token 上限（$1.00 USD = 1,000,000 Tokens）
+                </p>
               </div>
             </div>
           </section>
 
-          {/* 白名单配置 */}
+          {/* 9. 白名单与访问控制 */}
           <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2">访问控制</h2>
+            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
+              <span>🔒</span>
+              <span>访问控制</span>
+            </h2>
 
             <div className="space-y-4">
               <div>

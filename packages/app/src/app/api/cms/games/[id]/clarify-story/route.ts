@@ -52,10 +52,17 @@ export async function POST(req: Request, { params }: Props) {
       ...(providerType === 'mimo' && { model: MIMO_FAST_TEXT_MODEL }),
     });
 
+    const modelName =
+      providerType === 'mimo'
+        ? MIMO_FAST_TEXT_MODEL
+        : providerType === 'opencode'
+          ? 'deepseek-v4-flash'
+          : provider.type;
+
     await recordAiUsage({
       userId: session.user.id,
       type: 'clarify_questions',
-      model: provider.type,
+      model: modelName,
       usage: result.usage,
       gameId: Number(id),
     });

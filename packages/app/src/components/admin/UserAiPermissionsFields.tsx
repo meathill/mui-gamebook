@@ -2,7 +2,8 @@ import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
 import type { AiPermissions } from '@/lib/ai-permissions';
 
 const PROVIDER_OPTIONS: { value: AiProviderType; label: string }[] = [
-  { value: 'mimo', label: 'MiMo（默认，低成本）' },
+  { value: 'opencode', label: 'OpenCode Go（DeepSeek 默认）' },
+  { value: 'mimo', label: 'MiMo（低成本）' },
   { value: 'anthropic', label: 'Claude（高级）' },
   { value: 'google', label: 'Gemini' },
   { value: 'openai', label: 'GPT' },
@@ -17,7 +18,7 @@ export function parseUserAiPermissions(raw: string | null | undefined): AiPermis
   try {
     const parsed = JSON.parse(raw) as Partial<AiPermissions>;
     return {
-      providers: Array.isArray(parsed.providers) ? (parsed.providers as AiProviderType[]) : ['mimo'],
+      providers: Array.isArray(parsed.providers) ? (parsed.providers as AiProviderType[]) : ['opencode'],
       canGenerateImage: parsed.canGenerateImage === true,
       canGenerateVideo: parsed.canGenerateVideo === true,
     };
@@ -61,7 +62,7 @@ export function UserAiPermissionsFields({ value, onChange }: UserAiPermissionsFi
         ) : (
           <button
             type="button"
-            onClick={() => onChange({ providers: ['mimo'], canGenerateImage: false, canGenerateVideo: false })}
+            onClick={() => onChange({ providers: ['opencode'], canGenerateImage: false, canGenerateVideo: false })}
             className="text-xs text-blue-600 hover:text-blue-800">
             自定义
           </button>
@@ -114,7 +115,7 @@ export function UserAiPermissionsFields({ value, onChange }: UserAiPermissionsFi
           </div>
         </div>
       ) : (
-        <p className="text-xs text-gray-500">默认权限：仅可用 MiMo，不可生成图片/视频</p>
+        <p className="text-xs text-gray-500">默认权限：仅可用 OpenCode Go (DeepSeek)，不可生成图片/视频</p>
       )}
     </div>
   );
