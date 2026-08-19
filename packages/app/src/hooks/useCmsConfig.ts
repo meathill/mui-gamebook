@@ -1,7 +1,17 @@
+import type {
+  ImageProviderType,
+  TextProviderType,
+  TtsProviderType,
+  VideoProviderType,
+} from '@mui-gamebook/core/lib/ai-provider';
 import { useQuery } from '@tanstack/react-query';
 
-interface CmsConfig {
-  defaultAiProvider: 'google' | 'openai';
+export interface CmsConfig {
+  defaultTextProvider?: TextProviderType;
+  defaultAiProvider?: TextProviderType;
+  defaultTtsProvider?: TtsProviderType;
+  defaultImageProvider?: ImageProviderType;
+  defaultVideoProvider?: VideoProviderType;
 }
 
 export function useCmsConfig() {
@@ -39,6 +49,6 @@ export const GOOGLE_ASPECT_RATIOS = [
   { value: '21:9', label: '21:9 (超宽)' },
 ];
 
-export function getAspectRatios(provider: 'google' | 'openai' | undefined) {
+export function getAspectRatios(provider: ImageProviderType | string | undefined) {
   return provider === 'openai' ? OPENAI_ASPECT_RATIOS : GOOGLE_ASPECT_RATIOS;
 }

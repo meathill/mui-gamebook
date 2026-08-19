@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
     if (type === 'ai_video') {
       // 启动异步视频生成
-      const { operationName, usage, model } = await startAsyncVideoGeneration(prompt, config);
+      const { operationName, usage, model, provider } = await startAsyncVideoGeneration(prompt, config);
 
       // 记录 AI 用量
       await recordAiUsage({
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         gameId: parseInt(gameId, 10),
         type: 'video_generation',
         operationName,
-        inputData: { prompt, config, gameId, provider: model },
+        inputData: { prompt, config, gameId, provider },
       });
 
       // 返回占位符 URL

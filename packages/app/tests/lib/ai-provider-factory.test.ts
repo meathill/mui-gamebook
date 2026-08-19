@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { mimoCtor, claudeCtor, openaiCtor, googleAiCtor, googleGenAiCtor } = vi.hoisted(() => ({
+const { opencodeCtor, mimoCtor, claudeCtor, openaiCtor, googleAiCtor, googleGenAiCtor } = vi.hoisted(() => ({
+  opencodeCtor: vi.fn(),
   mimoCtor: vi.fn(),
   claudeCtor: vi.fn(),
   openaiCtor: vi.fn(),
@@ -16,6 +17,14 @@ vi.mock('@google/genai', () => ({
   GoogleGenAI: class {
     constructor(options: unknown) {
       googleGenAiCtor(options);
+    }
+  },
+}));
+
+vi.mock('@mui-gamebook/core/lib/opencode-provider', () => ({
+  OpencodeProvider: class {
+    constructor(...args: unknown[]) {
+      opencodeCtor(...args);
     }
   },
 }));
@@ -60,25 +69,38 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import {
   createAiProvider,
   createGoogleAiProvider,
+  resolveImageProviderType,
   resolveImageVideoProviderType,
+  resolveTextProviderType,
   resolveTtsProviderType,
+  resolveVideoProviderType,
 } from '@/lib/ai-provider-factory';
 import { getConfig } from '@/lib/config';
 
 const BASE_CONFIG = {
-  defaultAiProvider: 'google' as const,
+  defaultTextProvider: 'opencode' as const,
+  defaultAiProvider: 'opencode' as const,
   defaultTtsProvider: 'mimo' as const,
+  defaultImageProvider: 'google' as const,
+  defaultVideoProvider: 'google' as const,
+  defaultSttProvider: 'openai' as const,
+  defaultMusicProvider: 'internal' as const,
+  defaultSfxProvider: 'internal' as const,
+  musicModel: 'suno-v4',
+  sfxModel: 'eleven-sfx-v1',
+  opencodeTextModel: 'deepseek-v4-flash',
+  opencodeBaseUrl: 'https://opencode.ai/zen/go/v1',
   mimoTextModel: 'mimo-v2.5-pro',
   mimoBaseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
   mimoTtsModel: 'mimo-v2.5-tts',
   anthropicTextModel: 'claude-sonnet-5',
-  openaiTextModel: 'gpt-5.5',
+  openaiTextModel: 'gpt-5.6-luna',
   openaiImageModel: 'gpt-image-1.5',
-  openaiVideoModel: 'sora-2',
+  openaiVideoModel: '',
   openaiTtsModel: 'gpt-4o-mini-tts',
-  googleTextModel: 'gemini-3.1-pro-preview',
-  googleImageModel: 'gemini-3.1-flash-image',
-  googleVideoModel: 'veo-3.1-generate-preview',
+  googleTextModel: 'gemini-3.7-flash',
+  googleImageModel: 'gemini-3.1-flash-lite-image',
+  googleVideoModel: 'veo-3.1-fast-generate-preview',
   googleTtsModel: 'gemini-3.1-flash-tts-preview',
   cfAiGatewayBaseUrl: '',
 };
@@ -86,7 +108,25 @@ const BASE_CONFIG = {
 describe('ai-provider-factory', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({ env: { MIMO_API_KEY: 'tp-test' } });
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({
+      env: { MIMO_API_KEY: 'tp-test', OPENCODE_API_KEY: 'opencode-test' },
+    });
+  });
+
+  it('OpenCode 需要 OPENCODE_API_KEY，且直连官方不走 AI Gateway', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue(BASE_CONFIG);
+    await createAiProvider('opencode');
+    expect(opencodeCtor).toHaveBeenCalledWith(
+      'opencode-test',
+      { text: 'deepseek-v4-flash' },
+      BASE_CONFIG.opencodeBaseUrl,
+    );
+  });
+
+  it('OPENCODE_API_KEY 缺失时报错', async () => {
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({ env: {} });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue(BASE_CONFIG);
+    await expect(createAiProvider('opencode')).rejects.toThrow('OPENCODE_API_KEY not configured');
   });
 
   it('MiMo 仍需要 MIMO_API_KEY，且不走网关（不要求 cfAiGatewayBaseUrl），带上 tts 模型', async () => {
@@ -195,47 +235,27 @@ describe('ai-provider-factory', () => {
   });
 });
 
-describe('resolveImageVideoProviderType（图片/视频，只支持 google/openai）', () => {
+describe('模态独立 Provider 解析函数', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('defaultAiProvider 为 google/openai 时原样返回', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ...BASE_CONFIG, defaultAiProvider: 'openai' });
+  it('resolveTextProviderType: 读取 defaultTextProvider', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ...BASE_CONFIG, defaultTextProvider: 'opencode' });
+    expect(await resolveTextProviderType()).toBe('opencode');
+  });
+
+  it('resolveImageProviderType: 读取 defaultImageProvider', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ...BASE_CONFIG, defaultImageProvider: 'openai' });
+    expect(await resolveImageProviderType()).toBe('openai');
     expect(await resolveImageVideoProviderType()).toBe('openai');
   });
 
-  it('defaultAiProvider 为 mimo/anthropic 时回退 google', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ...BASE_CONFIG, defaultAiProvider: 'mimo' });
-    expect(await resolveImageVideoProviderType()).toBe('google');
-
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ...BASE_CONFIG, defaultAiProvider: 'anthropic' });
-    expect(await resolveImageVideoProviderType()).toBe('google');
-  });
-});
-
-describe('resolveTtsProviderType（TTS，独立于 defaultAiProvider，三选一）', () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it('读取独立的 defaultTtsProvider 配置，与 defaultAiProvider 无关', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ...BASE_CONFIG,
-      defaultAiProvider: 'google',
-      defaultTtsProvider: 'mimo',
-    });
-    expect(await resolveTtsProviderType()).toBe('mimo');
+  it('resolveVideoProviderType: 读取 defaultVideoProvider', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ...BASE_CONFIG, defaultVideoProvider: 'google' });
+    expect(await resolveVideoProviderType()).toBe('google');
   });
 
-  it('三个合法值原样返回', async () => {
-    for (const provider of ['google', 'openai', 'mimo'] as const) {
-      (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ...BASE_CONFIG, defaultTtsProvider: provider });
-      expect(await resolveTtsProviderType()).toBe(provider);
-    }
-  });
-
-  it('非法值（如遗留数据里的 anthropic）回退 mimo', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ...BASE_CONFIG,
-      defaultTtsProvider: 'anthropic' as never,
-    });
+  it('resolveTtsProviderType: 读取独立的 defaultTtsProvider', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ ...BASE_CONFIG, defaultTtsProvider: 'mimo' });
     expect(await resolveTtsProviderType()).toBe('mimo');
   });
 });

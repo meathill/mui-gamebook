@@ -12,6 +12,7 @@ interface CmsConfigResponse {
 
 /** 提供者的用户可读名称 */
 export const AI_PROVIDER_LABELS: Record<AiProviderType, string> = {
+  opencode: 'OpenCode Go',
   mimo: 'MiMo',
   anthropic: 'Claude',
   google: 'Gemini',
@@ -19,7 +20,7 @@ export const AI_PROVIDER_LABELS: Record<AiProviderType, string> = {
 };
 
 const FALLBACK_PERMISSIONS: AiPermissions = {
-  providers: ['mimo'],
+  providers: ['opencode'],
   canGenerateImage: false,
   canGenerateVideo: false,
 };

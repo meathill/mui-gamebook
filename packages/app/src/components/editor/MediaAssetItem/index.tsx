@@ -38,7 +38,7 @@ export default function MediaAssetItem({
   const hasAutoOpenedGeneratorRef = useRef(shouldAutoOpenGenerator);
   const dialog = useDialog();
   const { data: cmsConfig } = useCmsConfig();
-  const aspectRatios = getAspectRatios(cmsConfig?.defaultAiProvider);
+  const aspectRatios = getAspectRatios(cmsConfig?.defaultImageProvider || cmsConfig?.defaultAiProvider);
 
   useEffect(() => {
     if (shouldAutoOpenGenerator && !hasAutoOpenedGeneratorRef.current) {

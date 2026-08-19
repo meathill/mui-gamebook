@@ -1,36 +1,72 @@
 /**
  * AI 提供者工厂
- * 根据配置创建对应的 AI 提供者
+ * 按模态（文本、TTS、图片、视频、STT）创建对应的 AI 提供者
  */
 
 import { GoogleGenAI } from '@google/genai';
-import type { AiProvider, AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import type {
+  AiProvider,
+  AiProviderType,
+  ImageProviderType,
+  SttProviderType,
+  TextProviderType,
+  TtsProviderType,
+  VideoProviderType,
+} from '@mui-gamebook/core/lib/ai-provider';
 import { ClaudeProvider } from '@mui-gamebook/core/lib/claude-provider';
 import { GoogleAiProvider } from '@mui-gamebook/core/lib/google-ai-provider';
 import { MimoProvider } from '@mui-gamebook/core/lib/mimo-provider';
+import { OpencodeProvider } from '@mui-gamebook/core/lib/opencode-provider';
 import { OpenAiProvider } from '@mui-gamebook/core/lib/openai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { type AppConfig, getConfig } from './config';
 
 /**
- * 解析图片/视频生成使用的提供者类型
- * 只有 Google/OpenAI 支持图片和视频；全局默认是 mimo/anthropic 时回退到 Google
+ * 解析文本生成使用的提供者类型
  */
-export async function resolveImageVideoProviderType(): Promise<'google' | 'openai'> {
+export async function resolveTextProviderType(): Promise<TextProviderType> {
   const config = await getConfig();
-  const defaultType = config.defaultAiProvider;
-  return defaultType === 'google' || defaultType === 'openai' ? defaultType : 'google';
+  return config.defaultTextProvider || config.defaultAiProvider;
 }
 
 /**
- * 解析 TTS 使用的提供者类型
- * 三选一（Claude 不支持 TTS），独立于 defaultAiProvider（后者只管文本），
- * 由管理后台单独配置的 defaultTtsProvider 决定
+ * 解析 TTS 语音合成使用的提供者类型
  */
-export async function resolveTtsProviderType(): Promise<'google' | 'openai' | 'mimo'> {
+export async function resolveTtsProviderType(): Promise<TtsProviderType> {
   const config = await getConfig();
-  const ttsType = config.defaultTtsProvider;
-  return ttsType === 'google' || ttsType === 'openai' || ttsType === 'mimo' ? ttsType : 'mimo';
+  return config.defaultTtsProvider;
+}
+
+/**
+ * 解析图片生成使用的提供者类型
+ */
+export async function resolveImageProviderType(): Promise<ImageProviderType> {
+  const config = await getConfig();
+  return config.defaultImageProvider;
+}
+
+/**
+ * 解析视频生成使用的提供者类型
+ */
+export async function resolveVideoProviderType(): Promise<VideoProviderType> {
+  const config = await getConfig();
+  return config.defaultVideoProvider;
+}
+
+/**
+ * 解析语音识别使用的提供者类型
+ */
+export async function resolveSttProviderType(): Promise<SttProviderType> {
+  const config = await getConfig();
+  return config.defaultSttProvider;
+}
+
+/**
+ * 兼容旧方法：解析图片/视频提供者类型
+ * @deprecated 请使用 resolveImageProviderType 或 resolveVideoProviderType
+ */
+export async function resolveImageVideoProviderType(): Promise<ImageProviderType> {
+  return resolveImageProviderType();
 }
 
 /**
@@ -42,7 +78,7 @@ const AI_GATEWAY_MANAGED_KEY = 'cf-ai-gateway-managed';
 
 /**
  * 计算某提供者经 Cloudflare AI Gateway 转发的 base URL
- * Claude/Gemini/OpenAI 必须经网关（密钥存在网关侧）；MiMo 不受影响，始终直连官方
+ * Claude/Gemini/OpenAI 必须经网关（密钥存在网关侧）；MiMo/OpenCode 不受影响，直连官方
  */
 function resolveGatewayBaseUrl(config: AppConfig, provider: 'openai' | 'anthropic' | 'google-ai-studio'): string {
   const gateway = config.cfAiGatewayBaseUrl?.trim().replace(/\/+$/, '');
@@ -65,13 +101,21 @@ function resolveGatewayHeaders(token: string | undefined): Record<string, string
 
 /**
  * 创建 AI 提供者
- * @param type 指定提供者类型，如不指定则使用配置中的默认值
+ * @param type 指定提供者类型，如不指定则使用配置中的默认文本提供者
  */
 export async function createAiProvider(type?: AiProviderType): Promise<AiProvider> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
 
-  const providerType = type || config.defaultAiProvider || 'google';
+  const providerType = type || config.defaultTextProvider || config.defaultAiProvider;
+
+  if (providerType === 'opencode') {
+    const apiKey = env.OPENCODE_API_KEY || process.env.OPENCODE_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENCODE_API_KEY not configured');
+    }
+    return new OpencodeProvider(apiKey, { text: config.opencodeTextModel }, config.opencodeBaseUrl);
+  }
 
   if (providerType === 'mimo') {
     const apiKey = env.MIMO_API_KEY || process.env.MIMO_API_KEY;
@@ -107,12 +151,15 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
     );
   }
 
-  // 默认使用 Google AI
-  return buildGoogleAiProvider(config, gatewayHeaders);
+  if (providerType === 'google') {
+    return buildGoogleAiProvider(config, gatewayHeaders);
+  }
+
+  throw new Error(`Unsupported AI provider: ${providerType as string}`);
 }
 
 /**
- * 创建 Google AI 提供者（用于视频生成，因为 OpenAI 不支持）
+ * 创建 Google AI 提供者
  */
 export async function createGoogleAiProvider(): Promise<GoogleAiProvider> {
   const { env } = getCloudflareContext();

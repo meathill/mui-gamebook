@@ -9,7 +9,7 @@ import { resolveVoiceForSpeaker } from '@mui-gamebook/core/lib/audiobook/voice-a
 import { NARRATOR_SPEAKER_ID } from '@mui-gamebook/core/lib/audiobook/types';
 import * as schema from '@/db/schema';
 import type { AudiobookClip } from '@/lib/audiobook-types';
-import { createAiProvider } from '@/lib/ai-provider-factory';
+import { createAiProvider, resolveTtsProviderType } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { getManagedGame } from '@/lib/game-access';
@@ -86,7 +86,8 @@ export async function POST(req: Request, { params }: Params) {
   }
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
 
-  const provider = await createAiProvider('mimo');
+  const ttsProviderType = await resolveTtsProviderType();
+  const provider = await createAiProvider(ttsProviderType);
   if (!provider.generateTTS) {
     return NextResponse.json({ error: '当前 provider 不支持 TTS' }, { status: 500 });
   }
@@ -112,7 +113,7 @@ export async function POST(req: Request, { params }: Params) {
       precedingExcerpt: '',
     });
     if (result.usage) {
-      await recordAiUsage({ userId, type: 'chat', model: provider.type, usage: result.usage, gameId });
+      await recordAiUsage({ userId, type: 'chat', model: 'mimo-v2.5-pro', usage: result.usage, gameId });
     }
     return result.segments;
   }
@@ -122,7 +123,7 @@ export async function POST(req: Request, { params }: Params) {
     await recordAiUsage({
       userId,
       type: 'audio_generation',
-      model: provider.type,
+      model: ttsProviderType === 'mimo' ? 'mimo-v2.5-tts' : `${ttsProviderType}-tts`,
       usage: { promptTokens: text.length, completionTokens: 0, totalTokens: text.length },
       gameId,
     });

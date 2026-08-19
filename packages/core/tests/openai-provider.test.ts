@@ -22,13 +22,14 @@ describe('OpenAiProvider headers（AI Gateway 鉴权场景）', () => {
     new OpenAiProvider('sk-test', {}, { headers: { 'cf-aig-authorization': 'Bearer cf-token' } });
     expect(constructorSpy).toHaveBeenLastCalledWith({
       apiKey: 'sk-test',
+      dangerouslyAllowBrowser: true,
       defaultHeaders: { 'cf-aig-authorization': 'Bearer cf-token' },
     });
 
     new OpenAiProvider('sk-test');
-    expect(constructorSpy).toHaveBeenLastCalledWith({ apiKey: 'sk-test' });
+    expect(constructorSpy).toHaveBeenLastCalledWith({ apiKey: 'sk-test', dangerouslyAllowBrowser: true });
 
     new OpenAiProvider('sk-test', {}, { headers: {} });
-    expect(constructorSpy).toHaveBeenLastCalledWith({ apiKey: 'sk-test' });
+    expect(constructorSpy).toHaveBeenLastCalledWith({ apiKey: 'sk-test', dangerouslyAllowBrowser: true });
   });
 });

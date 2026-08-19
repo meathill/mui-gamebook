@@ -14,6 +14,7 @@ import {
   validateGeneratedScript,
 } from '@/lib/editor/generate-script';
 import { getManagedGame } from '@/lib/game-access';
+import { getConfig } from '@/lib/config';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 type Props = {
@@ -134,11 +135,21 @@ export async function POST(req: Request, { params }: Props) {
           }
         }
 
+        const config = await getConfig();
+        const modelMap: Record<string, string> = {
+          opencode: config.opencodeTextModel,
+          google: config.googleTextModel,
+          openai: config.openaiTextModel,
+          mimo: config.mimoTextModel,
+          anthropic: config.anthropicTextModel,
+        };
+        const modelName = modelMap[providerType] || providerType;
+
         // 记录 AI 用量（两次调用合计）
         await recordAiUsage({
           userId: session.user.id,
           type: 'text_generation',
-          model: provider.type,
+          model: modelName,
           usage: totalUsage,
           gameId: Number(id),
         });

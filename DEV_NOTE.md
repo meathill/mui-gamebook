@@ -749,3 +749,28 @@ isValidVoiceId(voiceId: string, provider): boolean
   - 可以独立发布的互动小说 4/0/0%/2.75
   - GSC 28 天（2026-07 初）另行采集，作为对比基线
 - 对比方法：上线后完整 28 天窗口，比较展现、点击、CTR、平均位置与 GA 自然入口；Google Trends 相对指数（互动小说约 59、interactive fiction 约 58）只用于后续选题排序，不作绝对流量承诺。
+
+## 按模态解耦 AI 配置、OpenCode Go 接入与 M Token 真实计费体系（2026-08）
+
+### 架构演进：从 Provider 为主到模态类型为主
+
+- **背景与动机**：此前系统以单一的 `defaultAiProvider` 为中心进行配置与调度，导致文本、TTS、生图、生视频耦合严重。当希望引入专门的代码/文本模型（如 OpenCode Go / DeepSeek）或继续使用 MiMo 作为高质量中文 TTS 时，原有的单开关架构无法支持细粒度分工。
+- **按模态解耦**：
+  - **Text（文本）**：默认 `opencode`（OpenCode Go / `deepseek-v4-flash`），负责剧本生成、AI Chat 对话、大纲梳理等文本任务。
+  - **TTS（语音合成）**：默认 `mimo`（小米 MiMo / `mimo-v2.5-tts`），负责角色对白与音色试听合成。
+  - **Image（生图）**：默认 `google`（Google GenAI / `gemini-3.1-flash-lite-image`），负责角色立绘与场景背景图。
+  - **Video（生视频）**：默认 `google`（Google GenAI / `veo-3.1-fast-generate-preview`），负责场景视频生成。
+  - **Music / SFX（音乐与音效）**：默认内置素材库，支持配置 `musicModel`（如 `suno-v4`）与 `sfxModel`（如 `eleven-sfx-v1`），预留 Suno / Udio / ElevenLabs / Stable Audio 接入。
+  - **STT（语音识别）**：默认 `openai`。
+- **管理后台 UI 重构（`/admin/config`）**：彻底摆脱按 Provider 分组的旧卡片结构，全面改为按**生成类型（Text, TTS, Image, Video, Music/SFX, STT）**分拆独立卡片，直观呈现每个生成类型的默认引擎及其对应模型配置。
+- **移除代码硬编码兜底**：所有模态与模型的基准值均声明在 `wrangler.jsonc` 的 `vars` 中，运行时由环境变量注入（`getEnvDefaults(env)`），KV 仅作为管理后台动态修改的覆盖层，彻底消除代码中分散的静态 fallback。
+
+### OpenCode Go Provider 接入
+
+- 采用 OpenAI 兼容协议直连官方（`https://opencode.ai/zen/go/v1`），通过 `OPENCODE_API_KEY` 鉴权，支持 reasoning 思考过程解析（`reasoning_content`）、流式响应与工具调用。
+
+### M Token 真实费率核算系统
+
+- **核心基准**：以 $1.00 USD = 1,000,000 标准 Tokens 为统一度量衡。
+- **实时核算**：在 `packages/core/lib/pricing.ts` 中维护全部模型及模态的真实成本表（包含 DeepSeek 调价后的真实折算费率与处于 5 折特惠期的 `gpt-5.6-luna` 等）。当调用模型生成后，`recordAiUsage` 调用 `calculateBilledTokens` 将实际模型费用换算为标准计费 Token 并入库 D1 `totalTokens`，确保用量限制（`checkUserUsageLimit`）按实际成本公平扣减。
+

@@ -1,6 +1,6 @@
 /**
  * 用户 AI 权限
- * 权限按定价分级：便宜的 MiMo 是所有人的默认，Claude/Gemini/GPT 及生图/生视频由管理员按用户开通
+ * 默认文本提供者为 OpenCode Go（DeepSeek），Claude/Gemini/GPT 及生图/生视频由管理员按用户开通
  */
 
 import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
@@ -17,10 +17,10 @@ export interface AiPermissions {
   canGenerateVideo: boolean;
 }
 
-export const ALL_TEXT_PROVIDERS: AiProviderType[] = ['mimo', 'anthropic', 'google', 'openai'];
+export const ALL_TEXT_PROVIDERS: AiProviderType[] = ['opencode', 'mimo', 'anthropic', 'google', 'openai'];
 
 export const DEFAULT_AI_PERMISSIONS: AiPermissions = {
-  providers: ['mimo'],
+  providers: ['opencode'],
   canGenerateImage: false,
   canGenerateVideo: false,
 };
@@ -83,7 +83,7 @@ export function resolveTextProvider(permissions: AiPermissions, requested?: stri
   if (requested && isProviderType(requested) && permissions.providers.includes(requested)) {
     return requested;
   }
-  return permissions.providers[0] ?? 'mimo';
+  return permissions.providers[0] ?? 'opencode';
 }
 
 /**

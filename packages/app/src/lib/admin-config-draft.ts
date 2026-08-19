@@ -19,9 +19,9 @@ const INVALID_TOKEN_LIMIT_MESSAGE = '每日 Token 限制必须是非负安全整
 export function createAdminConfigDraft(config: AppConfig): AdminConfigDraft {
   return {
     ...config,
-    dailyTokenLimit: String(config.dailyTokenLimit),
-    adminUserIds: config.adminUserIds.join('\n'),
-    videoWhitelist: config.videoWhitelist.join('\n'),
+    dailyTokenLimit: String(config.dailyTokenLimit ?? 100000),
+    adminUserIds: (config.adminUserIds || []).join('\n'),
+    videoWhitelist: (config.videoWhitelist || []).join('\n'),
   };
 }
 

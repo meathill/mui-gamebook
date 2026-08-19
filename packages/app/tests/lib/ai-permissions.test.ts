@@ -50,11 +50,11 @@ describe('parseAiPermissions', () => {
     expect(parsed.canGenerateVideo).toBe(false);
 
     const empty = parseAiPermissions(JSON.stringify({ providers: ['unknown'] }));
-    expect(empty.providers).toEqual(['mimo']);
+    expect(empty.providers).toEqual(['opencode']);
   });
 
   it('非布尔 flag 视为 false', () => {
-    const parsed = parseAiPermissions(JSON.stringify({ providers: ['mimo'], canGenerateImage: 'yes' }));
+    const parsed = parseAiPermissions(JSON.stringify({ providers: ['opencode'], canGenerateImage: 'yes' }));
     expect(parsed.canGenerateImage).toBe(false);
   });
 });
@@ -108,9 +108,9 @@ describe('resolveTextProvider', () => {
     expect(resolveTextProvider({ ...permissions, providers: [...permissions.providers] }, 'bogus')).toBe('mimo');
   });
 
-  it('未请求时使用第一项；空列表兜底 mimo', () => {
+  it('未请求时使用第一项；空列表兜底 opencode', () => {
     expect(resolveTextProvider({ ...permissions, providers: [...permissions.providers] })).toBe('mimo');
-    expect(resolveTextProvider({ providers: [], canGenerateImage: false, canGenerateVideo: false })).toBe('mimo');
+    expect(resolveTextProvider({ providers: [], canGenerateImage: false, canGenerateVideo: false })).toBe('opencode');
   });
 });
 

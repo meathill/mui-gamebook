@@ -124,7 +124,7 @@ describe('POST /api/cms/games/[id]/chat', () => {
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'chat',
-      model: 'mimo',
+      model: 'mimo-v2.5-pro',
       usage: { promptTokens: 20, completionTokens: 30, totalTokens: 50 },
       gameId: 1,
     });
