@@ -40,7 +40,7 @@
   "r2_buckets": [
     {
       "binding": "NEXT_INC_CACHE_R2_BUCKET",
-      "bucket_name": "baifo"
+      "bucket_name": "gamebook-assets"
     },
     {
       "binding": "ASSETS_BUCKET",

@@ -35,4 +35,4 @@ const filled = template
   .join('\n');
 
 writeFileSync(envPath, filled);
-console.log('已生成 .env，请检查并按需补充其余变量（如 CMS_API_URL、Google 登录等）');
+console.log('已生成 .env，请检查并按需补充其余变量（如 NEXT_PUBLIC_CMS_API_URL、Google 登录等）');
