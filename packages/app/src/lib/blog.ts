@@ -1,7 +1,7 @@
 /**
  * Blog data fetching from Payload CMS REST API.
  *
- * The CMS runs as a separate service. Configure CMS_API_URL env var
+ * The CMS runs as a separate service. Configure NEXT_PUBLIC_CMS_API_URL env var
  * to point to the Payload CMS instance (e.g. https://cms.muistory.com).
  */
 
@@ -31,8 +31,13 @@ interface PayloadResponse<T> {
   hasPrevPage: boolean;
 }
 
-function getCmsUrl(): string {
-  return process.env.CMS_API_URL || 'http://localhost:3021';
+function getCmsUrl(): string | null {
+  const url = process.env.NEXT_PUBLIC_CMS_API_URL?.trim();
+  if (url) return url;
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3021';
+  }
+  return null;
 }
 
 export async function getPublishedPosts(options?: {
@@ -41,6 +46,20 @@ export async function getPublishedPosts(options?: {
   category?: string;
 }): Promise<PayloadResponse<BlogPost>> {
   const { limit = 10, page = 1, category } = options || {};
+  const emptyResponse: PayloadResponse<BlogPost> = {
+    docs: [],
+    totalDocs: 0,
+    limit,
+    totalPages: 0,
+    page,
+    hasNextPage: false,
+    hasPrevPage: false,
+  };
+
+  const cmsUrl = getCmsUrl();
+  if (!cmsUrl) {
+    return emptyResponse;
+  }
 
   const params = new URLSearchParams({
     'where[status][equals]': 'published',
@@ -54,21 +73,26 @@ export async function getPublishedPosts(options?: {
   }
 
   try {
-    const res = await fetch(`${getCmsUrl()}/api/blog-posts?${params}`, {
-      next: { revalidate: 60 },
+    const res = await fetch(`${cmsUrl}/api/blog-posts?${params}`, {
+      signal: AbortSignal.timeout(3000),
     });
 
     if (!res.ok) {
-      return { docs: [], totalDocs: 0, limit, totalPages: 0, page, hasNextPage: false, hasPrevPage: false };
+      return emptyResponse;
     }
 
-    return res.json();
+    return await res.json();
   } catch {
-    return { docs: [], totalDocs: 0, limit, totalPages: 0, page, hasNextPage: false, hasPrevPage: false };
+    return emptyResponse;
   }
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  const cmsUrl = getCmsUrl();
+  if (!cmsUrl) {
+    return null;
+  }
+
   try {
     const params = new URLSearchParams({
       'where[slug][equals]': slug,
@@ -76,8 +100,8 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       limit: '1',
     });
 
-    const res = await fetch(`${getCmsUrl()}/api/blog-posts?${params}`, {
-      next: { revalidate: 60 },
+    const res = await fetch(`${cmsUrl}/api/blog-posts?${params}`, {
+      signal: AbortSignal.timeout(3000),
     });
 
     if (!res.ok) return null;

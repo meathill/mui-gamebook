@@ -88,6 +88,13 @@ export default function Footer() {
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('contact')}
             </Link>
+            <a
+              href="https://firstlook.tools"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-500 hover:text-gray-700 text-sm">
+              Featured on First Look
+            </a>
           </div>
         </div>
       </div>
