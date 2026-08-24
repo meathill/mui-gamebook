@@ -18,6 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: game.title,
     description: game.description || undefined,
+    alternates: { canonical: `/play/${slug}` },
     openGraph: {
       title: game.title,
       description: game.description || undefined,

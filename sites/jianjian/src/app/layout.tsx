@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     default: '简简 - 小朋友的故事乐园',
   },
   description: '简简是专为小朋友设计的互动故事平台，在这里可以体验各种有趣的故事冒险！',
+  alternates: { canonical: '/' },
   openGraph: {
     title: '简简 - 小朋友的故事乐园',
     description: '简简是专为小朋友设计的互动故事平台，在这里可以体验各种有趣的故事冒险！',

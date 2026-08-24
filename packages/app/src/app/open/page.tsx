@@ -1,5 +1,17 @@
+import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { ArrowRightIcon, CheckIcon, RobotIcon, GithubLogoIcon } from '@phosphor-icons/react/dist/ssr';
+
+export const revalidate = 3600;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('open');
+  return {
+    title: t('pageTitle'),
+    description: t('pageDescription'),
+    alternates: { canonical: '/open' },
+  };
+}
 
 export default async function OpenPage() {
   const t = await getTranslations('open');

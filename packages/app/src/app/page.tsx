@@ -17,6 +17,7 @@ import {
   WorkflowSection,
   CtaSection,
   BlogPreviewSection,
+  AiCreationInfographic,
 } from '@/components/home';
 
 export const revalidate = 3600;
@@ -26,9 +27,9 @@ const FEATURED_SLUGS = ['zhumadian-exorcist', 'the-steam-punk-dream-of-the-red-c
 // FAQ 内容的 key 列表：FaqSection 渲染与 FAQPage 结构化数据共用一份
 const FAQ_KEYS = ['whatIs', 'howCreate', 'pricing', 'export', 'aiRole'];
 
-const HOME_TITLE = '姆伊游戏书 - 在线互动小说创作与阅读平台';
+const HOME_TITLE = '姆伊游戏书 — 在线互动小说 · 文字冒险创作 · Markdown 游戏书平台';
 const HOME_DESCRIPTION =
-  '姆伊游戏书是免费的在线互动小说网站：阅读《驻马店驱魔人》《绯红庄园之梦》等交互小说，或用 Markdown 和 AI 助手创作你自己的互动小说，一键发布分享。';
+  '姆伊游戏书是免费的在线互动小说与文字冒险制作平台。接入顶尖大模型与全模态 AI 辅助创作工具（生图/视频/音乐/配音/声音克隆）限时免费开放，内置随时恭候的 AI Chatbot 灵感副驾。用 Markdown 轻松创作文字冒险与互动小说，一键发布分享，海量作品即开即玩。';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -96,6 +97,9 @@ export default async function Home() {
 
       {/* Hero */}
       <HeroSection />
+
+      {/* 全模态 AI 创作套件与灵感副驾信息图 */}
+      <AiCreationInfographic />
 
       {/* 功能亮点 */}
       <FeaturesSection />

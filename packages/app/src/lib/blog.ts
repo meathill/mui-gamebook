@@ -40,25 +40,27 @@ function getCmsUrl(): string | null {
   return null;
 }
 
+import { getStaticBlogPostBySlug, getStaticBlogPosts } from './static-posts';
+
 export async function getPublishedPosts(options?: {
   limit?: number;
   page?: number;
   category?: string;
 }): Promise<PayloadResponse<BlogPost>> {
   const { limit = 10, page = 1, category } = options || {};
-  const emptyResponse: PayloadResponse<BlogPost> = {
-    docs: [],
-    totalDocs: 0,
-    limit,
-    totalPages: 0,
-    page,
-    hasNextPage: false,
-    hasPrevPage: false,
-  };
+  const staticData = getStaticBlogPosts({ limit, page, category });
 
   const cmsUrl = getCmsUrl();
   if (!cmsUrl) {
-    return emptyResponse;
+    return {
+      docs: staticData.docs,
+      totalDocs: staticData.totalDocs,
+      limit,
+      totalPages: staticData.totalPages,
+      page,
+      hasNextPage: page < staticData.totalPages,
+      hasPrevPage: page > 1,
+    };
   }
 
   const params = new URLSearchParams({
@@ -78,16 +80,51 @@ export async function getPublishedPosts(options?: {
     });
 
     if (!res.ok) {
-      return emptyResponse;
+      return {
+        docs: staticData.docs,
+        totalDocs: staticData.totalDocs,
+        limit,
+        totalPages: staticData.totalPages,
+        page,
+        hasNextPage: page < staticData.totalPages,
+        hasPrevPage: page > 1,
+      };
     }
 
-    return await res.json();
+    const cmsData: PayloadResponse<BlogPost> = await res.json();
+    const seenSlugs = new Set(cmsData.docs.map((d) => d.slug));
+    const additionalStaticDocs = staticData.docs.filter((d) => !seenSlugs.has(d.slug));
+    const mergedDocs = [...cmsData.docs, ...additionalStaticDocs];
+    const totalDocs = cmsData.totalDocs + additionalStaticDocs.length;
+    const totalPages = Math.max(1, Math.ceil(totalDocs / limit));
+
+    return {
+      ...cmsData,
+      docs: mergedDocs,
+      totalDocs,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    };
   } catch {
-    return emptyResponse;
+    return {
+      docs: staticData.docs,
+      totalDocs: staticData.totalDocs,
+      limit,
+      totalPages: staticData.totalPages,
+      page,
+      hasNextPage: page < staticData.totalPages,
+      hasPrevPage: page > 1,
+    };
   }
 }
 
 export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
+  const staticPost = getStaticBlogPostBySlug(slug);
+  if (staticPost) {
+    return staticPost;
+  }
+
   const cmsUrl = getCmsUrl();
   if (!cmsUrl) {
     return null;

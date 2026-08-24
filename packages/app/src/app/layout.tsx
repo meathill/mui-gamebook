@@ -26,12 +26,14 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: new URL(getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)),
     title: {
       template: '%s | 姆伊游戏书',
-      default: '姆伊游戏书 - 互动小说创作平台',
+      default: '姆伊游戏书 — 在线互动小说 · 文字冒险创作 · Markdown 游戏书平台',
     },
-    description: '用 Markdown 写互动小说，AI 帮你润色，一键发布到多个平台。姆伊游戏书，每个人都能创作好故事。',
+    description:
+      '用 Markdown 写互动小说，顶尖 AI 灵感副驾随时协助，一键生成配图、视频、音乐与配音。姆伊游戏书是免费的在线互动小说制作与文字冒险创作工具，每个人都能轻松创作好故事。',
     openGraph: {
-      title: '姆伊游戏书 - 互动小说创作平台',
-      description: '用 Markdown 写互动小说，AI 帮你润色，一键发布到多个平台。姆伊游戏书，每个人都能创作好故事。',
+      title: '姆伊游戏书 — 在线互动小说 · 文字冒险创作 · Markdown 游戏书平台',
+      description:
+        '用 Markdown 写互动小说，顶尖 AI 灵感副驾随时协助，一键生成配图、视频、音乐与配音。姆伊游戏书是免费的在线互动小说制作与文字冒险创作工具，每个人都能轻松创作好故事。',
       type: 'website',
       locale: 'zh_CN',
       siteName: '姆伊游戏书',
@@ -40,8 +42,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     twitter: {
       card: 'summary_large_image',
-      title: '姆伊游戏书 - 互动小说创作平台',
-      description: '用 Markdown 写互动小说，AI 帮你润色，一键发布到多个平台。姆伊游戏书，每个人都能创作好故事。',
+      title: '姆伊游戏书 — 在线互动小说 · 文字冒险创作 · Markdown 游戏书平台',
+      description:
+        '用 Markdown 写互动小说，顶尖 AI 灵感副驾随时协助，一键生成配图、视频、音乐与配音。姆伊游戏书是免费的在线互动小说制作与文字冒险创作工具，每个人都能轻松创作好故事。',
       images: ['/hero-bg.png'],
     },
     robots: process.env.NEXT_PUBLIC_HEADLESS_MODE ? { index: false, follow: false } : undefined,

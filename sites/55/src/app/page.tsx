@@ -15,6 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: game.title,
     description: game.description || undefined,
+    alternates: { canonical: '/' },
     openGraph: {
       title: game.title,
       description: game.description || undefined,

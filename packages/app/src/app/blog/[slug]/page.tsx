@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import ReactMarkdown from 'react-markdown';
 import { ArrowLeftIcon, CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
 import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
@@ -27,12 +28,46 @@ type Props = {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const post = await getPostBySlug(slug);
-  if (!post) return { title: 'Not Found' };
+  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
+
+  if (!post) return { title: '文章未找到' };
+
+  const ogImages = post.coverUrl
+    ? [
+        {
+          url: post.coverUrl.startsWith('http') ? post.coverUrl : `${baseUrl}${post.coverUrl}`,
+          width: 1200,
+          height: 630,
+          alt: `${post.title} 封面`,
+        },
+      ]
+    : [
+        {
+          url: `${baseUrl}/hero-bg.png`,
+          width: 1200,
+          height: 630,
+          alt: `${post.title} - 姆伊游戏书`,
+        },
+      ];
 
   return {
     title: post.title,
     description: post.description,
     alternates: { canonical: `/blog/${slug}` },
+    openGraph: {
+      title: `${post.title} | 姆伊游戏书`,
+      description: post.description,
+      type: 'article',
+      siteName: '姆伊游戏书',
+      url: `${baseUrl}/blog/${slug}`,
+      images: ogImages,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${post.title} | 姆伊游戏书`,
+      description: post.description,
+      images: ogImages.map((img) => img.url),
+    },
   };
 }
 
@@ -120,7 +155,11 @@ export default async function BlogPostPage({ params }: Props) {
         {/* Content */}
         <div className="prose prose-gray max-w-none">
           {post.content ? (
-            <RichTextContent content={post.content} />
+            typeof post.content === 'string' ? (
+              <ReactMarkdown>{post.content}</ReactMarkdown>
+            ) : (
+              <RichTextContent content={post.content} />
+            )
           ) : (
             <p className="text-gray-500">文章内容加载中...</p>
           )}

@@ -6,7 +6,7 @@ backgroundStory: |
   摄魂怪——阿兹卡班的看守——驻守霍格沃茨，危险四伏。
   但随着真相渐渐揭开，小天狼星的真实身份远比传言复杂...
 cover_prompt: "Harry Potter casting a silver stag Patronus against dark Dementors, classic British comic book style, dramatic lighting, magical silver glow"
-cover: "https://i.muistory.com/images/harry-potter-3/1767943535039-cover.webp"
+cover_image: "https://i.muistory.com/images/harry-potter-3/1767943535039-cover.webp"
 tags:
   - 魔法
   - 冒险
