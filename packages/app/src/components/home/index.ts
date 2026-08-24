@@ -7,3 +7,4 @@ export { default as WorkflowSection } from './WorkflowSection';
 export { default as CtaSection } from './CtaSection';
 export { default as HighlightsSection } from './HighlightsSection';
 export { default as BlogPreviewSection } from './BlogPreviewSection';
+export { default as AiCreationInfographic } from './AiCreationInfographic';

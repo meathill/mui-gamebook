@@ -34,6 +34,8 @@
     "create": "Create"
   },
   "open": {
+    "pageTitle": "Open Source & Self-Hosting",
+    "pageDescription": "MuiStory is fully open source. Deploy privately with custom AI Providers, retaining full ownership of your data and code.",
     "hero": {
       "title": "Embrace Open Source, Control the Future",
       "subtitle": "MuiStory is fully open source. We believe in the power of openness and invite you to build the future of interactive storytelling together.",
@@ -71,12 +73,12 @@
       }
     },
     "deployment": {
-      "title": "Easy Deployment",
-      "description": "Built on Next.js and Cloudflare full-stack architecture, deployment is simple and cost-effective.",
+      "title": "Deploy Your Own Instance",
+      "description": "Built on Cloudflare Workers and Next.js, launch your own instance on the global edge network in minutes.",
       "steps": {
-        "1": "Fork the repository",
-        "2": "Configure Cloudflare and AI API Keys",
-        "3": "One-click deploy to Cloudflare Pages"
+        "1": "Clone the repository",
+        "2": "Configure Cloudflare D1 database and AI API Keys",
+        "3": "Deploy to Cloudflare Workers with one click"
       },
       "cta": "View Deployment Guide"
     },
@@ -90,9 +92,58 @@
   "home": {
     "hero": {
       "title": "Interactive Fiction Online — Everyone Can Read It, Everyone Can Write It",
-      "subtitle": "Read interactive stories on MuiStory, or write your own in Markdown: AI polishes your prose, add branching choices and interactive elements, publish and share in one click.",
+      "freeBadge": "Limited-Time Offer · Full AI Creation Studio Free Access",
+      "subtitle": "State-of-the-art AI models + always-ready AI Chatbot co-pilot. Full multimodal AI tools are currently FREE for a limited time! Create interactive fiction with Markdown, generate art, music & voice, and publish everywhere.",
       "startCreating": "Start Creating",
       "browseStories": "Browse Interactive Fiction"
+    },
+    "aiStudio": {
+      "badge": "Full Multimodal AI Studio · Limited-Time Free",
+      "title": "Top-Tier AI Models + 24/7 Co-pilot",
+      "subtitle": "Fully connected to all high-value AI capabilities for interactive storytelling. Generous compute out of the box — empower every story with art, music, video, and voice.",
+      "freeBanner": "Limited-time benefit: AI Story Co-pilot, Scene Art, Music & SFX, TTS, and Voice Cloning are all 100% free for a limited time upon registration!",
+      "freeCta": "Try AI Creation Tools for Free",
+      "chatbot": {
+        "tag": "Live Chat Co-pilot",
+        "title": "AI Story Co-pilot · Always Ready",
+        "desc": "Brainstorm plot twists, polish dialogue, check branch consistency, and inject variables — like having a veteran game writer by your side 24/7."
+      },
+      "image": {
+        "tag": "AI Illustration",
+        "title": "Scene Art & Character Portraits",
+        "desc": "Generates world-coherent illustrations and expressive character portraits directly from your Markdown prompts."
+      },
+      "video": {
+        "tag": "AI Motion Video",
+        "title": "Dynamic Cutscenes",
+        "desc": "Transforms climax scenes into cinematic dynamic video clips, taking story immersion to the next level."
+      },
+      "music": {
+        "tag": "AI Music & SFX",
+        "title": "Emotional BGM & Sound Effects",
+        "desc": "Synthesizes custom ambient tracks and sound effects tailored to the tension and atmosphere of each scene."
+      },
+      "tts": {
+        "tag": "AI Voice (TTS)",
+        "title": "Multi-Character Natural Voice",
+        "desc": "Delivers lifelike, emotionally resonant voice acting for character dialogue and narration."
+      },
+      "voiceClone": {
+        "tag": "Voice Cloning",
+        "title": "Custom Character Voice Clone",
+        "desc": "Clone or craft bespoke voices to give your protagonists an instantly recognizable identity."
+      },
+      "pipeline": {
+        "title": "Streamlined Multimodal Workflow",
+        "step1Title": "Markdown Script",
+        "step1Desc": "Zero barrier, focus on the story",
+        "step2Title": "AI Co-pilot Collab",
+        "step2Desc": "Real-time polish & logic deduction",
+        "step3Title": "Multimodal Asset Injection",
+        "step3Desc": "One-click image, video, music & voice",
+        "step4Title": "Multi-Platform Publish",
+        "step4Desc": "Instant web play / Steam export"
+      }
     },
     "recentGames": "Featured Interactive Fiction",
     "recentGamesSubtitle": "From supernatural mysteries to steampunk retellings — every story is an interactive tale shaped by your choices.",
@@ -180,7 +231,7 @@
       },
       "pricing": {
         "question": "Is it free to use?",
-        "answer": "Core creation features are free. The AI writing assistant provides a free daily quota. If you need more, you can purchase additional usage or use your own AI API keys."
+        "answer": "Core creation and publishing features are free forever. The multimodal AI creation suite (AI Story Co-pilot, illustrations, video, music, and voice acting) is currently 100% FREE for a limited time upon registration! We will also continue providing a generous free tier and support for personal API keys."
       },
       "export": {
         "question": "Can I export to other platforms?",
@@ -506,12 +557,12 @@
     "pageTitle": "How to Create Interactive Fiction - No-Code Guide to Self-Publishing",
     "pageDescription": "Want to create your own interactive fiction? MuiStory lets you write stories in Markdown, polish with AI, add branching and variables, and publish with one click — self-publishing to the web and beyond, no programming needed.",
     "heroTitle": "Creating interactive fiction is easier than you think",
-    "heroSubtitle": "Write your story in the Markdown you already know, let AI polish your prose and generate art and audio, add branches and variables, then publish with one click — anyone can create and self-publish interactive fiction.",
+    "heroSubtitle": "Write your story in the Markdown you already know. Full multimodal AI tools are currently FREE for a limited time to polish prose, generate art, music and sound effects. Publish everywhere with one click.",
     "workflowTitle": "The workflow",
     "step1Title": "Write your story in Markdown",
     "step1Content": "No programming required. Write your plot in familiar Markdown syntax; the editor autosaves and offers smart hints, designed specifically for interactive fiction.",
-    "step2Title": "Create with AI assistance",
-    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art and background audio to cover the gaps of solo creation.",
+    "step2Title": "AI-Assisted Creation (Limited-Time Free)",
+    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art, background music and character voices — currently 100% free.",
     "step3Title": "Add interactive elements",
     "step3Content": "Add branching choices, variable systems, conditional text, even embed minigames — make the reader a participant in the story.",
     "step4Title": "Publish with one click, self-publish",

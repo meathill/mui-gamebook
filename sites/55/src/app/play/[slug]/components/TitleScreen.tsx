@@ -22,7 +22,7 @@ export default function TitleScreen({ game, hasAutoSave, onNewGame, onContinue }
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={game.cover_image}
-            alt=""
+            alt={`${game.title} 封面背景`}
             className="w-full h-full object-cover opacity-30 blur-sm"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />

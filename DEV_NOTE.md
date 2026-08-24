@@ -774,3 +774,23 @@ isValidVoiceId(voiceId: string, provider): boolean
 - **核心基准**：以 $1.00 USD = 1,000,000 标准 Tokens 为统一度量衡。
 - **实时核算**：在 `packages/core/lib/pricing.ts` 中维护全部模型及模态的真实成本表（包含 DeepSeek 调价后的真实折算费率与处于 5 折特惠期的 `gpt-5.6-luna` 等）。当调用模型生成后，`recordAiUsage` 调用 `calculateBilledTokens` 将实际模型费用换算为标准计费 Token 并入库 D1 `totalTokens`，确保用量限制（`checkUserUsageLimit`）按实际成本公平扣减。
 
+## 抢占「互动小说」「文字冒险」创作平台词与全模态 AI 创作套件升级（2026-08，issue #17）
+
+- **SEO 场景词与 Title 优化**：
+  - 根布局与首页 Title 统一升级为 `姆伊游戏书 — 在线互动小说 · 文字冒险创作 · Markdown 游戏书平台`。
+  - Meta Description 及 JSON-LD 注入「在线文字冒险制作」「Markdown 互动小说」「免费互动小说创作工具」「全模态 AI 辅助创作」等行业蓝海关键词。
+- **作品独立 OpenGraph 卡片与 Meta 描述**：
+  - `/play/[slug]` 播放页 `generateMetadata`：提取作品封面图作为绝对 URL 的独立 OG image（带 1200x630 尺寸与 alt 描述）；无封面作品回退至 `/hero-bg.png` 兜底，避免覆盖根布局导致丢图。
+  - 描述提取算法：优先取作者描述，次选自动剥离 Markdown 标签的背景故事前 150 字符，最后回退至定制场景词文案。
+  - Parser 语法兼容：`cover_image` 支持 `cover` 作为别名，兼容旧剧本。
+- **Ahrefs Site Audit 8 个技术错误修复**：
+  - `/open` 补齐 `generateMetadata` 与 canonical `/open`，并在 `sitemap.ts` 静态清单中补齐。
+  - `sites/55` 与 `sites/jianjian` 首页与播放页补齐 canonical。
+  - 补全/优化全站图片 alt 属性（`GamePlayer` 场景插画、`ImmersiveBackground` 场景图、子站点封面等）。
+- **全模态 AI 创作套件与可视化信息图（首页升级）**：
+  - 首页 Hero 呈现 Markdown 编辑器 + 随时恭候的 AI Chatbot 灵感副驾实时协同交互。
+  - 新增 `AiCreationInfographic` 可视化矩阵，全面展示 AI 灵感副驾、AI 场景生图、AI 动态过场视频、AI 情绪配乐与音效、AI 语音合成 (TTS) 与专属声音克隆。
+- **内置静态 SEO 文章与 Markdown 深度创作教程**：
+  - 新增 `/blog/how-to-create-interactive-fiction-with-markdown`（《如何用 Markdown 制作互动小说？从零开始的文字冒险创作指南》），支持无需 CMS 依赖的内置静态文章与 CMS 文章平滑合并与静态预渲染。
+  - 博客详情页支持 `ReactMarkdown` 直接渲染 Markdown 文本，且自动注入 Article + BreadcrumbList JSON-LD 与独立 OG 卡片。
+

@@ -200,7 +200,7 @@ export function parse(source: string): ParseResult {
     title,
     description,
     backgroundStory: backgroundStory || background_story,
-    cover_image,
+    cover_image: cover_image || globalConfig.cover,
     cover_prompt,
     cover_aspect_ratio,
     tags: tags || [],

@@ -69,7 +69,7 @@ export default function ImmersiveBackground({ url }: ImmersiveBackgroundProps) {
       />
       <Image
         src={currentUrl}
-        alt="Scene"
+        alt="场景插画"
         fill
         priority
         className={`object-contain transition-opacity duration-300 ${fading ? 'opacity-0' : 'opacity-100'}`}

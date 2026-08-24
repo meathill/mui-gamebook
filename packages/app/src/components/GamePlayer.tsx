@@ -286,7 +286,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
           <div className="w-full sm:relative absolute inset-0 overflow-hidden bg-gray-100">
             <Image
               src={currentImageUrl}
-              alt="Scene"
+              alt={game.title ? `${game.title} 场景插画` : '场景插画'}
               width={1200}
               height={675}
               className={`w-full h-full object-cover sm:h-auto sm:object-contain transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}

@@ -68,22 +68,55 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  // 优先取作者填写的描述；若无则截取背景故事；最后回退至定制场景词描述
+  const cleanBackgroundStory = game.backgroundStory
+    ? game.backgroundStory
+        .replace(/^[#*>\s-]+/gm, '')
+        .replace(/\n+/g, ' ')
+        .trim()
+        .slice(0, 150)
+    : undefined;
+
+  const description =
+    game.description ||
+    cleanBackgroundStory ||
+    `在姆伊游戏书在线体验《${game.title}》，开启你的文字冒险与互动小说之旅。分支剧情由你抉择。`;
+
+  // 独立 OG 图片：优先使用作品封面图，未配置封面时回退至站点默认大图，避免覆盖根布局 OG 导致丢失卡片
+  const coverUrl = game.cover_image
+    ? game.cover_image.startsWith('http')
+      ? game.cover_image
+      : `${baseUrl}${game.cover_image.startsWith('/') ? '' : '/'}${game.cover_image}`
+    : `${baseUrl}/hero-bg.png`;
+
+  const ogImages = [
+    {
+      url: coverUrl,
+      width: 1200,
+      height: 630,
+      alt: `${game.title} - 互动小说封面`,
+    },
+  ];
+
+  const fullTitle = `${game.title} - 在线互动小说`;
+
   return {
     title: game.title,
-    description: game.description || `在姆伊游戏书体验《${game.title}》，开启你的互动冒险之旅。`,
+    description,
     alternates: { canonical: `/play/${slug}` },
     openGraph: {
-      title: `${game.title} | 姆伊游戏书`,
-      description: game.description || `在姆伊游戏书体验《${game.title}》，开启你的互动冒险之旅。`,
-      images: game.cover_image ? [{ url: game.cover_image, width: 1200, height: 630 }] : [],
+      title: `${fullTitle} | 姆伊游戏书`,
+      description,
+      images: ogImages,
       type: 'article',
+      siteName: '姆伊游戏书',
       url: `${baseUrl}/play/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${game.title} | 姆伊游戏书`,
-      description: game.description || `在姆伊游戏书体验《${game.title}》，开启你的互动冒险之旅。`,
-      images: game.cover_image ? [game.cover_image] : [],
+      title: `${fullTitle} | 姆伊游戏书`,
+      description,
+      images: ogImages.map((img) => img.url),
     },
   };
 }
