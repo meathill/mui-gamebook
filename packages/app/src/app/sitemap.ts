@@ -24,7 +24,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/terms`, changeFrequency: 'monthly', priority: 0.3 },
   ];
 
-  const games = await getPublishedGames();
+  // 每段独立 try/catch，避免单数据源失败导致整站 sitemap 500（Ahrefs 会判为 text/plain）
+  let games: Awaited<ReturnType<typeof getPublishedGames>> = [];
+  try {
+    games = await getPublishedGames();
+  } catch (e) {
+    console.error('sitemap: getPublishedGames failed', e);
+  }
   const gamePages: MetadataRoute.Sitemap = games.map((game) => {
     const timestamp = Number(game.updated_at);
     const lastModified =
@@ -39,7 +45,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  const minigames = await getPublicMinigames();
+  let minigames: Awaited<ReturnType<typeof getPublicMinigames>> = [];
+  try {
+    minigames = await getPublicMinigames();
+  } catch (e) {
+    console.error('sitemap: getPublicMinigames failed', e);
+  }
   const minigamePages: MetadataRoute.Sitemap = minigames.map((minigame) => {
     const timestamp = Number(minigame.created_at);
     const lastModified =
@@ -54,17 +65,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     };
   });
 
-  const tags = await getAllTags();
+  let tags: Awaited<ReturnType<typeof getAllTags>> = [];
+  try {
+    tags = await getAllTags();
+  } catch (e) {
+    console.error('sitemap: getAllTags failed', e);
+  }
   const tagPages: MetadataRoute.Sitemap = tags.map((tagInfo) => ({
     url: `${baseUrl}/tags/${encodeURIComponent(tagInfo.tag)}`,
     changeFrequency: 'weekly' as const,
     priority: 0.6,
   }));
 
-  const { docs: posts } = await getPublishedPosts({ limit: 100 });
+  let posts: Awaited<ReturnType<typeof getPublishedPosts>>['docs'] = [];
+  try {
+    const data = await getPublishedPosts({ limit: 100 });
+    posts = data.docs;
+  } catch (e) {
+    console.error('sitemap: getPublishedPosts failed', e);
+  }
   const blogPages: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
-    lastModified: new Date(post.updatedAt),
+    lastModified: post.updatedAt ? new Date(post.updatedAt) : undefined,
     changeFrequency: 'monthly' as const,
     priority: 0.6,
   }));

@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import ShareButton from '@/components/ShareButton';
+import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../../image-loader';
 
 interface TitleScreenProps {
   game: PlayableGame;
@@ -21,24 +23,21 @@ export default function TitleScreen({ game, hasSave, onStart, onRestart }: Title
   // 不用 location.href：播放页把视图状态放进了 hash，分享出去的链接不该带上 #settings 之类
   const shareUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
   const t = useTranslations('game');
+  const [imgError, setImgError] = useState(false);
+  const coverSrc = imgError ? PLACEHOLDER_COVER : resolveCoverSrc(game.cover_image);
 
   return (
     <div className="flex flex-col min-h-150 bg-white">
       <div className="relative w-full h-64 md:h-80 bg-gray-200 overflow-hidden">
-        {game.cover_image ? (
-          <Image
-            src={game.cover_image}
-            alt={game.title}
-            fill
-            className="object-cover"
-            priority
-            sizes="(max-width: 768px) 100vw, 768px"
-          />
-        ) : (
-          <div className="flex items-center justify-center h-full text-gray-400">
-            <span className="text-4xl font-bold opacity-20">{game.title}</span>
-          </div>
-        )}
+        <Image
+          src={coverSrc}
+          alt={game.title}
+          fill
+          className="object-cover"
+          priority
+          sizes="(max-width: 768px) 100vw, 768px"
+          onError={() => setImgError(true)}
+        />
         <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent flex items-end">
           <div className="p-6 md:p-8 text-white flex-1">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{game.title}</h1>

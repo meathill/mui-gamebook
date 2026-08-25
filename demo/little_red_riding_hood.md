@@ -1,7 +1,7 @@
 ---
 title: 小红帽
 description: 一个经典童话的互动版本，你的选择将决定小红帽的命运。
-cover_image: https://picsum.photos/400/600
+cover_image: /images/placeholder-cover-400x600.png
 tags:
   - 童话
   - 多分支

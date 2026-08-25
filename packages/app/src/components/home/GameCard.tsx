@@ -1,14 +1,18 @@
+'use client';
+
 import Link from 'next/link';
 import ImageIcon from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import type { ParsedGameRow } from '@/types';
+import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../../image-loader';
 
 interface GameCardProps {
   game: ParsedGameRow;
 }
 
 export default function GameCard({ game }: GameCardProps) {
-  const t = useTranslations('home');
+  const [imgError, setImgError] = useState(false);
+  const coverSrc = imgError ? PLACEHOLDER_COVER : resolveCoverSrc(game.cover_image);
 
   return (
     <div className="group">
@@ -17,16 +21,13 @@ export default function GameCard({ game }: GameCardProps) {
           href={`/play/${game.slug}`}
           className="block">
           <div className="relative h-40 w-full bg-gradient-to-br from-gray-100 to-gray-200">
-            {game.cover_image ? (
-              <ImageIcon
-                src={game.cover_image}
-                alt={game.title}
-                fill
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 text-sm">{t('noCover')}</div>
-            )}
+            <ImageIcon
+              src={coverSrc}
+              alt={game.title}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              onError={() => setImgError(true)}
+            />
           </div>
         </Link>
         <div className="p-4 flex-1 flex flex-col">

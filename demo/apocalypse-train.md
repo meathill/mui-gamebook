@@ -1,7 +1,7 @@
 ---
 title: "“默示录”号列车"
 description: "驶向朴茨茅斯的“默示录”号列车，在夕阳中缓缓起航。等待塞恩的，究竟是希望的洗礼，还是无尽的红色地狱？"
-cover_image: https://picsum.photos/400/600
+cover_image: /images/placeholder-cover-400x600.png
 tags:
   - 悬疑
   - 恐怖

@@ -25,11 +25,16 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const minigame = await getMinigameById(parseInt(id, 10));
+  const parsed = Number.parseInt(id, 10);
+  if (!Number.isFinite(parsed)) {
+    const t = await getTranslations('minigames');
+    return { title: t('notFound'), robots: { index: false } };
+  }
+  const minigame = await getMinigameById(parsed);
   const t = await getTranslations('minigames');
 
   if (!minigame) {
-    return { title: t('notFound') };
+    return { title: t('notFound'), robots: { index: false } };
   }
 
   return {
@@ -41,7 +46,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function MinigameDetailPage({ params }: Props) {
   const { id } = await params;
-  const minigame = await getMinigameById(parseInt(id, 10));
+  const parsed = Number.parseInt(id, 10);
+  if (!Number.isFinite(parsed)) notFound();
+  const minigame = await getMinigameById(parsed);
   const t = await getTranslations('minigames');
 
   if (!minigame) {

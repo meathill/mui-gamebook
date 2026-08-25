@@ -1,7 +1,7 @@
 ---
 title: 凡人修仙传
 description: 一个普通凡人踏上修仙之路的冒险故事，你的选择将决定你的命运和修为境界。
-cover_image: https://picsum.photos/400/600
+cover_image: /images/placeholder-cover-400x600.png
 tags:
   - 修仙
   - 冒险

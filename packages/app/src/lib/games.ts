@@ -5,6 +5,17 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { GameRow, ParsedGameRow } from '@/types';
 import { cache } from 'react';
 
+function safeParseTags(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter((t) => typeof t === 'string');
+    return [];
+  } catch {
+    return [];
+  }
+}
+
 export async function getPublishedGames(options?: { limit?: number; offset?: number }) {
   try {
     const { env } = getCloudflareContext();
@@ -29,7 +40,7 @@ export async function getPublishedGames(options?: { limit?: number; offset?: num
 
     return results.map((row: GameRow) => ({
       ...row,
-      tags: row.tags ? JSON.parse(row.tags) : [],
+      tags: safeParseTags(row.tags),
     }));
   } catch (e) {
     console.error('Failed to fetch from D1:', e);
@@ -82,7 +93,7 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
 
     return merged.map((row) => ({
       ...row,
-      tags: row.tags ? JSON.parse(row.tags) : [],
+      tags: safeParseTags(row.tags),
     }));
   } catch (e) {
     console.error('Failed to fetch featured games:', e);
@@ -125,7 +136,7 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
 
     // 计算每个游戏与当前游戏的标签匹配数
     const gamesWithScore = results.map((row) => {
-      const gameTags: string[] = row.tags ? JSON.parse(row.tags) : [];
+      const gameTags: string[] = safeParseTags(row.tags);
       const matchCount = gameTags.filter((tag) => tags.includes(tag)).length;
       return {
         ...row,
@@ -184,7 +195,7 @@ WHERE g.slug = ?`,
         author_image: string | null;
       }>();
 
-    if (!gameRecord && /^\d+$/.test(slug)) {
+    if (!gameRecord && /^-?\d+$/.test(slug)) {
       gameRecord = await DB.prepare(
         `SELECT g.id, g.owner_id, g.published, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
 FROM Games g
@@ -287,7 +298,7 @@ export async function getGamesByTag(
       return {
         games: results.map((row) => ({
           ...row,
-          tags: row.tags ? JSON.parse(row.tags) : [],
+          tags: safeParseTags(row.tags),
         })),
         total,
       };
@@ -304,7 +315,7 @@ export async function getGamesByTag(
     ).all()) as { results: GameRow[] };
 
     const filteredGames = results.filter((row) => {
-      const gameTags: string[] = row.tags ? JSON.parse(row.tags) : [];
+      const gameTags: string[] = safeParseTags(row.tags);
       return gameTags.includes(tag);
     });
 
@@ -319,7 +330,7 @@ export async function getGamesByTag(
     return {
       games: paginatedGames.map((row) => ({
         ...row,
-        tags: row.tags ? JSON.parse(row.tags) : [],
+        tags: safeParseTags(row.tags),
       })),
       total,
     };
@@ -346,7 +357,7 @@ export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
     // 统计每个标签的使用次数
     const tagCounts = new Map<string, number>();
     for (const row of results) {
-      const tags: string[] = row.tags ? JSON.parse(row.tags) : [];
+      const tags: string[] = safeParseTags(row.tags);
       for (const tag of tags) {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
       }

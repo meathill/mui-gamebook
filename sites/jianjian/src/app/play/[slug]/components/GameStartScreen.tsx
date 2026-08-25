@@ -1,5 +1,16 @@
 'use client';
 
+import { useState } from 'react';
+
+const PLACEHOLDER_COVER = '/placeholder-cover-400x600.png';
+
+function resolveCoverSrc(src: string | undefined): string | null {
+  if (!src) return null;
+  const trimmed = src.trim();
+  if (!trimmed || trimmed.includes('picsum.photos')) return PLACEHOLDER_COVER;
+  return trimmed;
+}
+
 interface GameStartScreenProps {
   title: string;
   description?: string;
@@ -11,16 +22,21 @@ interface GameStartScreenProps {
  * 游戏开始画面
  */
 export default function GameStartScreen({ title, description, coverImage, onStart }: GameStartScreenProps) {
+  const [imgError, setImgError] = useState(false);
+  const resolved = resolveCoverSrc(coverImage);
+  const displaySrc = imgError ? PLACEHOLDER_COVER : resolved;
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center">
       {/* 封面图 */}
-      {coverImage && (
+      {displaySrc && (
         <div className="w-full max-w-md mb-6 rounded-2xl overflow-hidden shadow-lg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={coverImage}
+            src={displaySrc}
             alt={title}
             className="w-full h-48 object-cover"
+            onError={() => setImgError(true)}
           />
         </div>
       )}
