@@ -1,6 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+
+const PLACEHOLDER_COVER = '/placeholder-cover-400x600.png';
+function resolveCover(src: string | undefined | null): string | null {
+  if (!src) return null;
+  const t = src.trim();
+  if (!t || t.includes('picsum.photos')) return PLACEHOLDER_COVER;
+  return t;
+}
 
 interface Props {
   game: PlayableGame;
@@ -14,16 +23,20 @@ interface Props {
  * 显示游戏封面、标题，提供「开始」和「继续」按钮
  */
 export default function TitleScreen({ game, hasAutoSave, onNewGame, onContinue }: Props) {
+  const [imgError, setImgError] = useState(false);
+  const resolved = resolveCover(game.cover_image);
+  const displaySrc = imgError ? PLACEHOLDER_COVER : resolved;
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen">
       {/* 背景封面图 */}
-      {game.cover_image && (
+      {displaySrc && (
         <div className="absolute inset-0 z-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={game.cover_image}
+            src={displaySrc}
             alt={`${game.title} 封面背景`}
             className="w-full h-full object-cover opacity-30 blur-sm"
+            onError={() => setImgError(true)}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/40" />
         </div>

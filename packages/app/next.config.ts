@@ -25,11 +25,6 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'picsum.photos',
-        port: '',
-      },
-      {
-        protocol: 'https',
         hostname: 'i.muistory.com',
         port: '',
       },

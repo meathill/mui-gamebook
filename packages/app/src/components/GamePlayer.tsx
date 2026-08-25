@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
+import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../image-loader';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
 import Button from '@/components/Button';
@@ -30,6 +31,7 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   const [textVisible, setTextVisible] = useState(true);
   const [hasReadAll, setHasReadAll] = useState(false);
   const [autoScrolling, setAutoScrolling] = useState(true);
+  const [sceneImgError, setSceneImgError] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const autoScrollRef = useRef<number | null>(null);
   const dialog = useDialog();
@@ -200,6 +202,11 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     }
   }
 
+  // 场景切换时重置图片错误状态
+  useEffect(() => {
+    setSceneImgError(false);
+  }, [currentImageUrl]);
+
   // 处理图片点击切换文本显示
   function handleImageClick() {
     setTextVisible((prev) => !prev);
@@ -285,12 +292,16 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
         {currentImageUrl && (
           <div className="w-full sm:relative absolute inset-0 overflow-hidden bg-gray-100">
             <Image
-              src={currentImageUrl}
+              src={sceneImgError ? PLACEHOLDER_COVER : resolveCoverSrc(currentImageUrl)}
               alt={game.title ? `${game.title} 场景插画` : '场景插画'}
               width={1200}
               height={675}
               className={`w-full h-full object-cover sm:h-auto sm:object-contain transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}
               onLoad={() => setImageLoading(false)}
+              onError={() => {
+                setSceneImgError(true);
+                setImageLoading(false);
+              }}
               onClick={handleImageClick}
               sizes="(max-width: 640px) 100vw, 1200px"
               priority

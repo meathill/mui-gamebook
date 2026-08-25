@@ -19,5 +19,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/games', '/minigames', '/blog', '/tags/:tag'],
+  matcher: ['/games', '/minigames', '/blog', '/tags/:path*'],
 };

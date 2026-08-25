@@ -8,6 +8,7 @@ import ImageIcon from 'next/image';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
 import { formatDate } from '@mui-gamebook/site-common/utils';
+import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../../../../image-loader';
 
 interface GameListItem {
   id: string;
@@ -150,15 +151,16 @@ export default function GamesPage() {
               </div>
             </div>
             <div>
-              {game.coverImage && (
-                <ImageIcon
-                  alt={game.title}
-                  className="w-full object-cover rounded mb-4"
-                  height={200}
-                  src={game.coverImage}
-                  width={400}
-                />
-              )}
+              <ImageIcon
+                alt={game.title}
+                className="w-full object-cover rounded mb-4"
+                height={200}
+                src={resolveCoverSrc(game.coverImage)}
+                width={400}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = PLACEHOLDER_COVER;
+                }}
+              />
               <h3 className="font-medium text-gray-900">{game.title}</h3>
               <p className="text-xs text-gray-500">
                 /{game.slug} • 更新于：

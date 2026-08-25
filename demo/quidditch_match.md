@@ -1,7 +1,7 @@
 ---
 title: 魁地奇比赛
 description: 体验哈利波特的魁地奇世界，抓住金色飞贼赢得比赛！
-cover_image: https://picsum.photos/400/600?random=quidditch
+cover_image: /images/placeholder-cover-400x600.png
 tags:
   - 小游戏
   - 哈利波特

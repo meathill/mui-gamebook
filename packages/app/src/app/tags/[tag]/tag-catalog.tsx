@@ -9,8 +9,16 @@ import Pagination from '@/components/Pagination';
 
 export const TAG_PAGE_SIZE = 12;
 
+function safeDecodeTag(tag: string): string {
+  try {
+    return decodeURIComponent(tag);
+  } catch {
+    return tag;
+  }
+}
+
 export async function generateTagMetadata(tag: string, page: number): Promise<Metadata> {
-  const decodedTag = decodeURIComponent(tag);
+  const decodedTag = safeDecodeTag(tag);
   const t = await getTranslations('tags');
   const basePath = `/tags/${tag}`;
 
@@ -22,7 +30,7 @@ export async function generateTagMetadata(tag: string, page: number): Promise<Me
 }
 
 export async function TagCatalog({ tag, page }: { tag: string; page: number }) {
-  const decodedTag = decodeURIComponent(tag);
+  const decodedTag = safeDecodeTag(tag);
   const currentPage = Math.max(1, page);
   const offset = (currentPage - 1) * TAG_PAGE_SIZE;
   const t = await getTranslations('tags');

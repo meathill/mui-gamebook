@@ -37,13 +37,14 @@ function buildGameJsonLd(game: GameForLd, slug: string) {
       { '@type': 'ListItem', position: 3, name: game.title },
     ],
   };
+  const safeCover = game.cover_image?.includes('picsum.photos') ? undefined : game.cover_image || undefined;
   const gameLd = {
     '@context': 'https://schema.org',
     '@type': 'VideoGame',
     name: game.title,
     url: `${baseUrl}/play/${slug}`,
     description: game.description || undefined,
-    image: game.cover_image || undefined,
+    image: safeCover,
     genre: game.tags?.length ? game.tags : undefined,
     gamePlatform: 'Web browser',
     inLanguage: 'zh-CN',
@@ -58,67 +59,77 @@ type Props = {
   params: Promise<{ slug: string }>;
 };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const game = await cachedGetGameBySlug(slug);
-  const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
+  try {
+    const { slug } = await params;
+    const game = await cachedGetGameBySlug(slug);
+    const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
-  if (!game) {
+    if (!game) {
+      return {
+        title: '游戏未找到',
+        robots: { index: false, follow: true },
+      };
+    }
+
+    // 优先取作者填写的描述；若无则截取背景故事；最后回退至定制场景词描述
+    const cleanBackgroundStory = game.backgroundStory
+      ? game.backgroundStory
+          .replace(/^[#*>\s-]+/gm, '')
+          .replace(/\n+/g, ' ')
+          .trim()
+          .slice(0, 150)
+      : undefined;
+
+    const description =
+      game.description ||
+      cleanBackgroundStory ||
+      `在姆伊游戏书在线体验《${game.title}》，开启你的文字冒险与互动小说之旅。分支剧情由你抉择。`;
+
+    // 独立 OG 图片：优先使用作品封面图，未配置封面或为失效外链（picsum）时回退至站点默认大图
+    const isBlockedCover = game.cover_image?.includes('picsum.photos');
+    const coverUrl =
+      game.cover_image && !isBlockedCover
+        ? game.cover_image.startsWith('http')
+          ? game.cover_image
+          : `${baseUrl}${game.cover_image.startsWith('/') ? '' : '/'}${game.cover_image}`
+        : `${baseUrl}/hero-bg.png`;
+
+    const ogImages = [
+      {
+        url: coverUrl,
+        width: 1200,
+        height: 630,
+        alt: `${game.title} - 互动小说封面`,
+      },
+    ];
+
+    const fullTitle = `${game.title} - 在线互动小说`;
+
+    return {
+      title: game.title,
+      description,
+      alternates: { canonical: `/play/${slug}` },
+      openGraph: {
+        title: `${fullTitle} | 姆伊游戏书`,
+        description,
+        images: ogImages,
+        type: 'article',
+        siteName: '姆伊游戏书',
+        url: `${baseUrl}/play/${slug}`,
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title: `${fullTitle} | 姆伊游戏书`,
+        description,
+        images: ogImages.map((img) => img.url),
+      },
+    };
+  } catch {
     return {
       title: '游戏未找到',
+      robots: { index: false, follow: true },
     };
   }
-
-  // 优先取作者填写的描述；若无则截取背景故事；最后回退至定制场景词描述
-  const cleanBackgroundStory = game.backgroundStory
-    ? game.backgroundStory
-        .replace(/^[#*>\s-]+/gm, '')
-        .replace(/\n+/g, ' ')
-        .trim()
-        .slice(0, 150)
-    : undefined;
-
-  const description =
-    game.description ||
-    cleanBackgroundStory ||
-    `在姆伊游戏书在线体验《${game.title}》，开启你的文字冒险与互动小说之旅。分支剧情由你抉择。`;
-
-  // 独立 OG 图片：优先使用作品封面图，未配置封面时回退至站点默认大图，避免覆盖根布局 OG 导致丢失卡片
-  const coverUrl = game.cover_image
-    ? game.cover_image.startsWith('http')
-      ? game.cover_image
-      : `${baseUrl}${game.cover_image.startsWith('/') ? '' : '/'}${game.cover_image}`
-    : `${baseUrl}/hero-bg.png`;
-
-  const ogImages = [
-    {
-      url: coverUrl,
-      width: 1200,
-      height: 630,
-      alt: `${game.title} - 互动小说封面`,
-    },
-  ];
-
-  const fullTitle = `${game.title} - 在线互动小说`;
-
-  return {
-    title: game.title,
-    description,
-    alternates: { canonical: `/play/${slug}` },
-    openGraph: {
-      title: `${fullTitle} | 姆伊游戏书`,
-      description,
-      images: ogImages,
-      type: 'article',
-      siteName: '姆伊游戏书',
-      url: `${baseUrl}/play/${slug}`,
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: `${fullTitle} | 姆伊游戏书`,
-      description,
-      images: ogImages.map((img) => img.url),
-    },
-  };
 }
 
 export default async function PlayPage({ params }: Props) {
