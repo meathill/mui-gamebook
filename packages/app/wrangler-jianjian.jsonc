@@ -14,6 +14,12 @@
       "binding": "DB",
       "database_name": "xiaoniaoshuo-db",
       "database_id": "58b80611-f382-4e20-b110-cd50dac2f624"
+    },
+    {
+      // OpenNext D1 tag cache，revalidatePath 按需失效用；deploy 时自动建 revalidations 表
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "xiaoniaoshuo-db",
+      "database_id": "58b80611-f382-4e20-b110-cd50dac2f624"
     }
   ],
   "images": {

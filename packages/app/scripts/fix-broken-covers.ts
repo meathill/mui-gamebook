@@ -29,7 +29,9 @@ function query(sql: string): unknown {
 function main() {
   const selectSql = `SELECT id, slug, title, cover_image FROM Games WHERE cover_image LIKE '%picsum.photos%'`;
   console.log('查询待修复记录...');
-  const [result] = query(selectSql) as [{ results: Array<{ id: number; slug: string; title: string; cover_image: string }> }];
+  const [result] = query(selectSql) as [
+    { results: Array<{ id: number; slug: string; title: string; cover_image: string }> },
+  ];
   const rows = result?.results ?? [];
   if (rows.length === 0) {
     console.log('没有找到需要修复的记录。');

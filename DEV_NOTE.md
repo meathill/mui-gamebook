@@ -138,6 +138,16 @@
 - `/_next/static/*` 一年 immutable：主站原有 `public/_headers`，55 / 小鸟说补齐。
 - `packages/cms`（Payload）没有 wrangler，不按部署单元做缓存策略。独立站不做跨 Worker 发布钩子，继续时间盒。
 
+**ISR 必须配 queue，否则缓存过期即整站 500（2026-09-02，issue #18）**
+- 现象：8-15 上线 ISR 配方后，所有走 ISR 的路由在缓存条目过期需要后台重验证时返回**纯文本** `Internal Server Error`（Workers 运行时对未捕获异常的默认响应），静态页正常。Ahrefs 记 87/95 个 5XX，Health Score 33。
+- 根因：OpenNext 的 `revalidate` 是 time-based 时**必须配置 queue**（官方 caching 文档明说）。未配置时落到 dummy queue，`send()` 直接 `throw FatalError("Dummy queue is not implemented")`，从 cacheInterceptor / Next server 的 ISR 重验证路径逃出 Next 错误边界，error.tsx 兜不住。
+- 修复：`createRevalidatingOpenNextConfig()` 加 `queue: memoryQueue`（`@opennextjs/cloudflare/overrides/queue/memory-queue`）。它只依赖项目已有的 `WORKER_SELF_REFERENCE` service binding（向自身发 HEAD 触发重验证），内部自带容错与 isolate 级去重，零新增基础设施。
+- 按需失效：同轮启用 D1 tag cache（`tagCache: d1NextTagCache`，binding `NEXT_TAG_CACHE_D1` 复用各自主库），`revalidatePath` 真正生效；`revalidations` 表由 deploy 时的 populateCache 自动创建，无需手写 migration。配置函数参数化（`{ tagCache?: boolean }`）：无 D1 的 55 / 小鸟说读者站不开启，否则它们部署时 populateCache 会因缺绑定抛错；binding 缺失时运行时也会自动禁用（安全 no-op）。
+- 升级路径：流量上来后可换 `do-queue`（持久 + 重试 + 跨请求去重），需给每个 wrangler 配置加 `NEXT_CACHE_DO_QUEUE` durable object binding 和 `new_sqlite_classes` migration。
+- 遗留：regional cache（Cache API）在按需失效后最长 1 小时仍返回旧条目；要彻底即时需配 cache purge（`CACHE_PURGE_API_TOKEN` + `CACHE_PURGE_ZONE_ID` secrets），涉及账号级操作，另行安排。
+- 排查工具：`npx wrangler tail mui-gamebook` 抓实时异常栈（5 分钟定位根因）；`pnpm run audit-sitemap` 全量审计 sitemap URL 状态码（5XX 时退出码 1）。
+- 教训：① OpenNext 启用 ISR 要对照官方 caching 文档检查 queue / tag cache 前置条件，不能只配 incremental cache；② 「纯文本 500」= 异常在 Next 错误边界之外，先 `wrangler tail` 再读代码，别靠静态分析猜。
+
 **MediaAssetItem 统一组件**
 - 将封面编辑器和素材编辑器合并
 - 决策原因：两者逻辑高度重复（预览、生成、上传），统一后减少维护成本

@@ -22,7 +22,8 @@
     "db:migrate:local": "wrangler d1 migrations apply mui-gamebook --local",
     "db:migrate:remote": "wrangler d1 migrations apply mui-gamebook --remote",
     "test": "vitest",
-    "index-now": "node --experimental-strip-types scripts/index-now.ts"
+    "index-now": "node --experimental-strip-types scripts/index-now.ts",
+    "audit-sitemap": "node --experimental-strip-types scripts/audit-sitemap-urls.ts"
   },
   "dependencies": {
     "@google/genai": "^2.10.0",

@@ -6,6 +6,18 @@ import { getPublicMinigames } from '@/lib/minigames';
 // Next 要求 segment 配置是字面量，不能从模块导入
 export const revalidate = 3600;
 
+/**
+ * 时间戳可能是秒或毫秒；缺失或脏值时返回 undefined，
+ * 避免 new Date(NaN) 产生 Invalid Date 导致整个 sitemap 序列化 500。
+ */
+function toLastModified(timestamp: unknown): Date | undefined {
+  const value = Number(timestamp);
+  if (!Number.isFinite(value) || value <= 0) {
+    return undefined;
+  }
+  return value < 1e12 ? new Date(value * 1000) : new Date(value); // 秒级时间戳
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
 
@@ -31,19 +43,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch (e) {
     console.error('sitemap: getPublishedGames failed', e);
   }
-  const gamePages: MetadataRoute.Sitemap = games.map((game) => {
-    const timestamp = Number(game.updated_at);
-    const lastModified =
-      timestamp < 1e12
-        ? new Date(timestamp * 1000) // 秒级时间戳
-        : new Date(timestamp);
-    return {
-      url: `${baseUrl}/play/${game.slug}`,
-      lastModified,
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    };
-  });
+  const gamePages: MetadataRoute.Sitemap = games.map((game) => ({
+    url: `${baseUrl}/play/${game.slug}`,
+    lastModified: toLastModified(game.updated_at),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }));
 
   let minigames: Awaited<ReturnType<typeof getPublicMinigames>> = [];
   try {
@@ -51,19 +56,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   } catch (e) {
     console.error('sitemap: getPublicMinigames failed', e);
   }
-  const minigamePages: MetadataRoute.Sitemap = minigames.map((minigame) => {
-    const timestamp = Number(minigame.created_at);
-    const lastModified =
-      timestamp < 1e12
-        ? new Date(timestamp * 1000) // 秒级时间戳
-        : new Date(timestamp);
-    return {
-      url: `${baseUrl}/minigames/${minigame.id}`,
-      lastModified,
-      changeFrequency: 'weekly' as const,
-      priority: 0.5,
-    };
-  });
+  const minigamePages: MetadataRoute.Sitemap = minigames.map((minigame) => ({
+    url: `${baseUrl}/minigames/${minigame.id}`,
+    lastModified: toLastModified(minigame.created_at),
+    changeFrequency: 'weekly' as const,
+    priority: 0.5,
+  }));
 
   let tags: Awaited<ReturnType<typeof getAllTags>> = [];
   try {
@@ -86,7 +84,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   const blogPages: MetadataRoute.Sitemap = posts.map((post) => ({
     url: `${baseUrl}/blog/${post.slug}`,
-    lastModified: post.updatedAt ? new Date(post.updatedAt) : undefined,
+    lastModified: toLastModified(post.updatedAt),
     changeFrequency: 'monthly' as const,
     priority: 0.6,
   }));
