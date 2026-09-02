@@ -14,6 +14,12 @@
       "binding": "DB",
       "database_name": "mui-gamebook",
       "database_id": "f1e05f17-9197-4344-a106-1fe0f906586f"
+    },
+    {
+      // OpenNext D1 tag cache，revalidatePath 按需失效用；deploy 时自动建 revalidations 表
+      "binding": "NEXT_TAG_CACHE_D1",
+      "database_name": "mui-gamebook",
+      "database_id": "f1e05f17-9197-4344-a106-1fe0f906586f"
     }
   ],
   "images": {

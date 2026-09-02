@@ -61,6 +61,51 @@ describe('sitemap / robots URL 规范化', () => {
     expect(game?.lastModified).toEqual(new Date(1_700_000_000 * 1000));
   });
 
+  it('数据源 reject 时 sitemap 仍正常返回静态条目，不抛错', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://muistory.com';
+    getPublishedGamesMock.mockRejectedValue(new Error('D1 unavailable'));
+    getAllTagsMock.mockRejectedValue(new Error('D1 unavailable'));
+    getPublishedPostsMock.mockRejectedValue(new Error('CMS unavailable'));
+    getPublicMinigamesMock.mockRejectedValue(new Error('D1 unavailable'));
+
+    const entries = await sitemap();
+
+    expect(entries.length).toBeGreaterThan(0);
+    expect(entries.every((entry) => entry.url.startsWith('https://muistory.com'))).toBe(true);
+  });
+
+  it.each([
+    ['undefined', undefined],
+    ['null', null],
+    ['NaN', Number.NaN],
+    ['脏字符串', 'not-a-number'],
+  ])('updated_at 为%s等脏值时不含 Invalid Date，sitemap 不 500', async (_label, dirty) => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://muistory.com';
+    getPublishedGamesMock.mockResolvedValue([{ slug: 'dirty-ts', updated_at: dirty }]);
+    getPublicMinigamesMock.mockResolvedValue([{ id: 9, created_at: dirty }]);
+
+    const entries = await sitemap();
+    const game = entries.find((entry) => entry.url.endsWith('/play/dirty-ts'));
+    const minigame = entries.find((entry) => entry.url.endsWith('/minigames/9'));
+
+    expect(game?.lastModified).toBeUndefined();
+    expect(minigame?.lastModified).toBeUndefined();
+    // Invalid Date 会让 Next 序列化 sitemap 时抛 Invalid time value
+    expect(() => {
+      if (game?.lastModified instanceof Date) game.lastModified.toISOString();
+    }).not.toThrow();
+  });
+
+  it('created_at 为毫秒级时间戳时按毫秒解析', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://muistory.com';
+    getPublicMinigamesMock.mockResolvedValue([{ id: 7, created_at: 1_700_000_000_000 }]);
+
+    const entries = await sitemap();
+    const minigame = entries.find((entry) => entry.url.endsWith('/minigames/7'));
+
+    expect(minigame?.lastModified).toEqual(new Date(1_700_000_000_000));
+  });
+
   it('robots sitemap 地址强制 https 且去掉尾斜杠', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'http://muistory.com/';
 
