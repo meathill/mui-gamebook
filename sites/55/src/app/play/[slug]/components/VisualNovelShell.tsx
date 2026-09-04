@@ -9,6 +9,13 @@ import {
   useGameSettings,
   useRouteMap,
 } from '@mui-gamebook/site-common/game-player';
+import {
+  completeReadingKey,
+  startReadingKey,
+  trackCompleteReading,
+  trackOnce,
+  trackStartReading,
+} from '@mui-gamebook/site-common/utils';
 import TitleScreen from './TitleScreen';
 import SaveLoadScreen from './SaveLoadScreen';
 import RouteMapScreen from './RouteMapScreen';
@@ -54,6 +61,19 @@ export default function VisualNovelShell({ game, gameId, slug }: Props) {
   // 路线图
   const routeMap = useRouteMap(game, slug);
 
+  // GA4 关键事件：单本子站即公开落地页。开始/读完各记一次（会话内去重，
+  // 防重复进出游玩视图与 StrictMode 双 effect）。
+  function reportStartReading() {
+    trackOnce(startReadingKey(slug), () => trackStartReading({ gameId, slug }));
+  }
+
+  useEffect(() => {
+    if (gamePlayer.showEndScreen) {
+      trackOnce(completeReadingKey(slug), () => trackCompleteReading({ gameId, slug }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gamePlayer.showEndScreen]);
+
   // 场景切换时自动存档 + 标记已访问
   useEffect(() => {
     if (gamePlayer.isGameStarted && gamePlayer.currentSceneId) {
@@ -81,6 +101,7 @@ export default function VisualNovelShell({ game, gameId, slug }: Props) {
   // 开始新游戏
   function handleNewGame() {
     gamePlayer.handleStartGame();
+    reportStartReading();
     setScreen('playing');
   }
 
@@ -97,6 +118,7 @@ export default function VisualNovelShell({ game, gameId, slug }: Props) {
       if (!data) return;
 
       if (gamePlayer.restoreSave(data.sceneId, data.runtimeState)) {
+        reportStartReading();
         setScreen('playing');
       }
     },
@@ -135,6 +157,7 @@ export default function VisualNovelShell({ game, gameId, slug }: Props) {
     if (sceneId !== (game.startSceneId || 'start')) {
       gamePlayer.handleChoice(sceneId);
     }
+    reportStartReading();
     setScreen('playing');
   }
 

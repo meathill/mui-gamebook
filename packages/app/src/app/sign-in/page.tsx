@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { trackLogin, trackSignUp } from '@mui-gamebook/site-common/utils';
 
 type Mode = 'signIn' | 'signUp';
 
@@ -31,6 +32,8 @@ export default function SignInPage() {
         if (signInError) {
           setError(signInError.message || t('signInError'));
         } else {
+          // GA4 推荐事件：同一 _ga cookie 下与登录前的 start_reading 串起同一伪用户
+          trackLogin();
           router.push('/');
           router.refresh();
         }
@@ -43,6 +46,8 @@ export default function SignInPage() {
         if (signUpError) {
           setError(signUpError.message || t('signUpError'));
         } else {
+          // GA4 推荐事件（建议标为关键事件）：自然流量 → 注册的转化终点之一
+          trackSignUp();
           router.push('/');
           router.refresh();
         }

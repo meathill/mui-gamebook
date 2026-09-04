@@ -6,6 +6,7 @@ import { gameToFlow, flowToGame, replaceEditorSceneAssetUrl, SceneNodeData } fro
 import { pendingOperationsManager, isPlaceholderUrl, extractOperationId } from '@/lib/pending-operations-manager';
 import { loadDraft, clearDraft } from '@/hooks/useAutoSave';
 import { useDialog } from '@/components/Dialog';
+import { trackPublishStory } from '@mui-gamebook/site-common/utils';
 import type { Game } from '@mui-gamebook/parser/src/types';
 import type { Node, Edge } from '@xyflow/react';
 
@@ -55,6 +56,9 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
   const [initialFlow, setInitialFlow] = useState<{ nodes: Node[]; edges: Edge[] } | null>(null);
 
   const registeredOperationsRef = useRef<Set<number>>(new Set());
+  // 发布去重基线：加载时的发布状态。只有 草稿(false)→已发布(true) 的跃迁才上报
+  // publish_story，已发布状态下的普通保存不再重复上报。
+  const wasPublishedRef = useRef<boolean | null>(null);
 
   // 处理 pending 操作完成的回调
   const handleOperationComplete = useCallback(
@@ -128,6 +132,9 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
         const result = parse(contentToUse);
         if (result.success) {
           setOriginalGame({ ...result.data, ...data });
+          if (wasPublishedRef.current === null) {
+            wasPublishedRef.current = Boolean(data.published);
+          }
           setSlug(data.slug);
           setTextContent(contentToUse);
           const flow = gameToFlow(result.data);
@@ -209,10 +216,17 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
         const data = (await res.json()) as { error?: string };
         throw new Error(data.error || 'Failed to save');
       }
-      const result = (await res.json()) as { slug?: string };
-      if (result.slug) {
-        setSlug(result.slug);
+      const saveResult = (await res.json()) as { slug?: string };
+      if (saveResult.slug) {
+        setSlug(saveResult.slug);
       }
+      // GA4 关键事件 publish_story：只在草稿→已发布的跃迁时上报一次。
+      // 下架后重新发布会再次上报（新的跃迁）；已发布状态的普通保存不上报。
+      const nowPublished = Boolean(gameToSave.published);
+      if (nowPublished && wasPublishedRef.current === false) {
+        trackPublishStory({ gameId: id, slug: saveResult.slug ?? slug });
+      }
+      wasPublishedRef.current = nowPublished;
       await dialog.success('保存成功！');
     } catch (err) {
       await dialog.error((err as Error).message);
