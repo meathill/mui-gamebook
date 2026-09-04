@@ -5,10 +5,15 @@ import { useTranslations } from 'next-intl';
 import type { PlayableGame, PlayableScene, TextBoxPosition } from '@mui-gamebook/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import {
+  completeReadingKey,
   evaluateCondition,
   formatDialogueLine,
   interpolateVariables,
   resolveSpeakerName,
+  startReadingKey,
+  trackCompleteReading,
+  trackOnce,
+  trackStartReading,
 } from '@mui-gamebook/site-common/utils';
 import { useDialog } from '@/components/Dialog';
 import Button from '@/components/Button';
@@ -100,6 +105,14 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // GA4 关键事件 start_reading：进入游玩视图才算开始阅读（公开播放页专属），会话内去重一次
+  useEffect(() => {
+    if (isPlaying && game.id) {
+      trackOnce(startReadingKey(slug), () => trackStartReading({ gameId: game.id as number, slug }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying]);
+
   // 当前场景的有序文本节点
   const textNodes = useMemo(() => {
     if (!currentScene) return [];
@@ -177,7 +190,11 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   }
 
   useEffect(() => {
-    if (showEndScreen && game.id) analytics.trackComplete(game.id);
+    if (showEndScreen && game.id) {
+      analytics.trackComplete(game.id);
+      // GA4 关键事件 complete_reading：到达结局，会话内只记一次
+      trackOnce(completeReadingKey(slug), () => trackCompleteReading({ gameId: game.id as number, slug }));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showEndScreen]);
 

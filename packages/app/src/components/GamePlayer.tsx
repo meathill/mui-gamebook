@@ -5,6 +5,13 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
+import {
+  completeReadingKey,
+  startReadingKey,
+  trackCompleteReading,
+  trackOnce,
+  trackStartReading,
+} from '@mui-gamebook/site-common/utils';
 import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../image-loader';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
@@ -86,6 +93,15 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // GA4 关键事件 start_reading：用户进入游玩视图才算开始阅读（公开播放页专属，
+  // 私有编辑器预览不走此组件）。会话内去重一次：点开始/继续、#play 深链直达都只记一次。
+  useEffect(() => {
+    if (isPlaying && game.id) {
+      trackOnce(startReadingKey(slug), () => trackStartReading({ gameId: game.id as number, slug }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying]);
+
   const hasMinigame = currentScene ? currentScene.nodes.some((node) => node.type === 'minigame' && node.url) : false;
   // 有块级重定向（redirectTarget）时不算结束，改为显示「继续」按钮
   const canContinue = !!redirectTarget && !hasConfiguredChoices && (!hasMinigame || minigameCompleted);
@@ -94,6 +110,8 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   useEffect(() => {
     if (showEndScreen && game.id) {
       analytics.trackComplete(game.id);
+      // GA4 关键事件 complete_reading：到达结局，会话内只记一次
+      trackOnce(completeReadingKey(slug), () => trackCompleteReading({ gameId: game.id as number, slug }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showEndScreen]);
