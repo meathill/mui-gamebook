@@ -47,6 +47,7 @@ export default function ImmersiveMenu({
       <div className="inline-flex items-center gap-1 bg-black/50 backdrop-blur-md ring-1 ring-white/10 rounded-full pl-3 pr-1 py-1 text-sm text-white">
         <Link
           href="/"
+          prefetch={false}
           className="text-white/70 hover:text-white transition">
           MuiStory
         </Link>

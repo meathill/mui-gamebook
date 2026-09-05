@@ -32,13 +32,10 @@
       "preview_id": "a9863dd8de514dc8940e0da4cf5c76da"
     }
   ],
+  // observability 已关闭：Workers Logs 额度不足，打开 persist/head 采样会持续烧额度。
+  // 需要排障时再临时打开，平时保持关闭。
   "observability": {
-    "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "invocation_logs": true,
-      "persist": true
-    }
+    "enabled": false
   },
   "placement": {
     "mode": "smart"

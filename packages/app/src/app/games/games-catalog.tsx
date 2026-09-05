@@ -53,6 +53,7 @@ export async function GamesCatalog({ page }: { page: number }) {
           <p className="text-lg text-gray-600">{t('subtitle')}</p>
           <Link
             href="/interactive-fiction"
+            prefetch={false}
             className="inline-flex items-center gap-1 mt-4 text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors">
             {t('whatIs')}
           </Link>

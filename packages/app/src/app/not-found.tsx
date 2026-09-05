@@ -8,6 +8,7 @@ export default function NotFound() {
         <p className="text-gray-600 mb-6">你要找的页面不存在或已被移动。</p>
         <Link
           href="/"
+          prefetch={false}
           className="inline-flex items-center px-5 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors">
           回首页
         </Link>

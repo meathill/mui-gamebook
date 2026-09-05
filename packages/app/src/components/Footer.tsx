@@ -58,33 +58,40 @@ export default function Footer() {
           </DropdownMenu.Root>
 
           <div className="flex items-center gap-4 sm:ms-auto">
+            {/* 页脚为低意向链接：关闭预取，避免 _rsc 预取放大 Worker 请求（#20） */}
             <Link
               href="/interactive-fiction"
+              prefetch={false}
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('interactiveFiction')}
             </Link>
             <Link
               href="/how-to-play"
+              prefetch={false}
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('howToPlay')}
             </Link>
             <Link
               href="/create"
+              prefetch={false}
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('create')}
             </Link>
             <Link
               href="/privacy"
+              prefetch={false}
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('privacy')}
             </Link>
             <Link
               href="/terms"
+              prefetch={false}
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('terms')}
             </Link>
             <Link
               href="/contact"
+              prefetch={false}
               className="text-gray-500 hover:text-gray-700 text-sm">
               {t('contact')}
             </Link>

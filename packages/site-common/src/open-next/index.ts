@@ -14,8 +14,14 @@ interface RevalidatingOptions {
 }
 
 /**
- * 需要 ISR / 按需失效的站点：R2 存增量缓存，同区域 Cache API 减少 R2 读，
- * 并打开 cache interception。后台动态路由靠 private Cache-Control 自然绕开。
+ * 需要 ISR / 按需失效的站点：R2 存增量缓存，同区域 Cache API 减少 R2 读。
+ *
+ * 注意（#20）：`enableCacheInterception` 保持关闭。Next 16.3 + OpenNext 已出现
+ * 可见 <Link> 目标循环发 `_rsc` 预取、两天烧掉 ~10M Worker 请求的线上事故，
+ * 只关 `optimisticRouting` 拦不住，关掉 cache interception 才停。
+ * 详见 https://github.com/opennextjs/opennextjs-cloudflare/pull/1348
+ * 和 https://github.com/opennextjs/opennextjs-aws/issues/1212。
+ * 后台动态路由靠 private Cache-Control 自然绕开。
  *
  * ISR 的时间型 revalidate 依赖 queue：未配置时会落到 dummy queue，
  * 缓存过期一触发后台重验证就直接抛 FatalError，整页 500。
@@ -24,7 +30,7 @@ interface RevalidatingOptions {
 export function createRevalidatingOpenNextConfig(options: RevalidatingOptions = {}) {
   return defineCloudflareConfig({
     incrementalCache: withRegionalCache(r2IncrementalCache, { mode: 'long-lived' }),
-    enableCacheInterception: true,
+    enableCacheInterception: false,
     queue: memoryQueue,
     tagCache: options.tagCache ? d1NextTagCache : undefined,
   });

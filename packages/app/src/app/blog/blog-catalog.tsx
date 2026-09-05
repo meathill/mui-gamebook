@@ -33,6 +33,7 @@ export async function BlogCatalog({ category, page }: { category?: string; page:
         <div className="flex gap-2 mb-8 flex-wrap">
           <Link
             href="/blog"
+            prefetch={false}
             className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
               !category
                 ? 'bg-gray-900 text-white border-gray-900'
@@ -44,6 +45,7 @@ export async function BlogCatalog({ category, page }: { category?: string; page:
             <Link
               key={cat}
               href={blogCatalogHref(cat, 1)}
+              prefetch={false}
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                 category === cat
                   ? 'bg-gray-900 text-white border-gray-900'
@@ -105,6 +107,7 @@ export async function BlogCatalog({ category, page }: { category?: string; page:
             {data.hasPrevPage && (
               <Link
                 href={blogCatalogHref(category, currentPage - 1)}
+                prefetch={false}
                 className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
                 上一页
               </Link>
@@ -115,6 +118,7 @@ export async function BlogCatalog({ category, page }: { category?: string; page:
             {data.hasNextPage && (
               <Link
                 href={blogCatalogHref(category, currentPage + 1)}
+                prefetch={false}
                 className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-gray-300 transition-colors">
                 下一页
               </Link>

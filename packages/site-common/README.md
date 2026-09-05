@@ -179,7 +179,7 @@ pnpm dev
 | 工具函数 | `@mui-gamebook/site-common/utils` | 条件评估、变量插值 |
 | 站点配置 | `@mui-gamebook/site-common/components` | 配置管理工具 |
 | 公开站点 URL | `@mui-gamebook/site-common/utils` | `getPublicSiteUrl()`，sitemap/canonical 强制 https |
-| OpenNext 缓存 | `@mui-gamebook/site-common/open-next` | `createRevalidatingOpenNextConfig()`：R2 + regional + cache interception |
+| OpenNext 缓存 | `@mui-gamebook/site-common/open-next` | `createRevalidatingOpenNextConfig()`：R2 + regional，cache interception 关闭（#20） |
 
 ## 部署
 

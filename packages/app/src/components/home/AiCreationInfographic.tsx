@@ -219,6 +219,7 @@ export default async function AiCreationInfographic() {
           </div>
           <Link
             href="/my/dashboard"
+            prefetch={false}
             className="inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-sm rounded-xl shadow-lg hover:shadow-orange-500/30 transition-all shrink-0 hover:-translate-y-0.5">
             <span>{t('aiStudio.freeCta')}</span>
             <ArrowRightIcon className="w-4 h-4" />

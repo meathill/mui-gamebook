@@ -28,15 +28,17 @@ export default function Footer() {
           {/* 版权 */}
           <p className="text-sm text-foreground/70">© {new Date().getFullYear()} 简简. 用心讲好每个故事 💝</p>
 
-          {/* 链接 */}
+          {/* 链接（低意向：关闭预取，避免 _rsc 预取放大 Worker 请求） */}
           <div className="flex gap-4 text-sm">
             <Link
               href="/privacy"
+              prefetch={false}
               className="text-foreground/70 hover:text-primary transition-colors underline-offset-4 hover:underline">
               隐私政策
             </Link>
             <Link
               href="/terms"
+              prefetch={false}
               className="text-foreground/70 hover:text-primary transition-colors underline-offset-4 hover:underline">
               服务条款
             </Link>

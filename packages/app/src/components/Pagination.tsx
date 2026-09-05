@@ -53,10 +53,11 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
     <nav
       className="flex items-center justify-center gap-1"
       aria-label="Pagination">
-      {/* 上一页 */}
+      {/* 上一页（低意向翻页：关闭预取，避免 _rsc 预取放大 Worker 请求） */}
       {currentPage > 1 ? (
         <Link
           href={catalogPageHref(basePath, currentPage - 1)}
+          prefetch={false}
           className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
           aria-label="Previous page">
           <CaretLeftIcon className="w-5 h-5" />
@@ -79,6 +80,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
           <Link
             key={page}
             href={catalogPageHref(basePath, page)}
+            prefetch={false}
             className={`px-3 py-2 rounded-lg font-medium transition-colors ${
               page === currentPage ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-gray-100'
             }`}
@@ -92,6 +94,7 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
       {currentPage < totalPages ? (
         <Link
           href={catalogPageHref(basePath, currentPage + 1)}
+          prefetch={false}
           className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
           aria-label="Next page">
           <CaretRightIcon className="w-5 h-5" />

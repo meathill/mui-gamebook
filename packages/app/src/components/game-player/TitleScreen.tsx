@@ -93,6 +93,7 @@ export default function TitleScreen({ game, hasSave, onStart, onRestart }: Title
 
         <Link
           href="/"
+          prefetch={false}
           className="mt-3 text-sm text-gray-500 hover:text-gray-800 underline">
           {t('backToLibrary')}
         </Link>

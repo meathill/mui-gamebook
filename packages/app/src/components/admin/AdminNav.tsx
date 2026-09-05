@@ -28,6 +28,7 @@ export default function AdminNav() {
           <Link
             key={item.href}
             href={item.href}
+            prefetch={false}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
               isActive ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
             }`}>

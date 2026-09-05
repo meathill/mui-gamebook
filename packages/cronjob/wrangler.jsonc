@@ -5,13 +5,10 @@
   "compatibility_date": "2026-06-27",
   "compatibility_flags": ["nodejs_compat"],
   "account_id": "fdc63eeea83ae8f5234357308b9a638b",
+  // observability 已关闭：Workers Logs 额度不足，打开 persist/head 采样会持续烧额度。
+  // 需要排障时再临时打开，平时保持关闭。
   "observability": {
-    "logs": {
-      "enabled": true,
-      "head_sampling_rate": 1,
-      "invocation_logs": true,
-      "persist": true
-    }
+    "enabled": false
   },
   // Service Binding 到主应用
   "services": [

@@ -42,6 +42,7 @@ export default function GameCard({ game }: GameCardProps) {
               <Link
                 key={tag}
                 href={`/tags/${encodeURIComponent(tag)}`}
+                prefetch={false}
                 className="px-2 py-0.5 bg-amber-50 text-amber-700 text-xs rounded-full font-medium border border-amber-100 hover:bg-amber-100 hover:text-amber-800 transition-colors">
                 {tag}
               </Link>

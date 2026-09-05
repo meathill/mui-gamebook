@@ -59,6 +59,7 @@ export default function EditorToolbar({
       <div className="flex items-center gap-3">
         <Link
           href="/my/games"
+          prefetch={false}
           className="text-gray-500 hover:text-gray-700">
           <ArrowLeftIcon size={18} />
         </Link>

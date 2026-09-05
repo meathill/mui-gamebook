@@ -47,6 +47,7 @@ export async function TagCatalog({ tag, page }: { tag: string; page: number }) {
       <div className="max-w-6xl mx-auto">
         <Link
           href="/games"
+          prefetch={false}
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors">
           <ArrowLeftIcon className="w-4 h-4" />
           {t('backToGames')}
