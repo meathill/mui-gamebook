@@ -40,6 +40,7 @@ export default function UserMenu() {
     return (
       <Link
         href="/sign-in"
+        prefetch={false}
         className="btn btn-primary text-base py-2 px-5 min-h-0">
         <span className="mr-1">👋</span>
         登录
@@ -77,6 +78,7 @@ export default function UserMenu() {
           <DropdownMenu.Item asChild>
             <Link
               href="/profile"
+              prefetch={false}
               className="flex items-center gap-3 px-3 py-2 mx-1 rounded-xl text-foreground hover:bg-primary-light hover:text-primary cursor-pointer outline-none transition-colors">
               <UserIcon size={20} />
               <span className="font-semibold">个人中心</span>

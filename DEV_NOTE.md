@@ -128,8 +128,10 @@
 - issue #5 先改成该场景回落 `defaultLocale`（zh）
 - issue #15：`request.ts` 不再读 cookie / Accept-Language，服务端始终中文。根布局读 `cookies()` 会把整站钉成 `private, no-cache`，公开目录无法 ISR。语言切换改纯客户端（写 cookie + 换 messages，不再 `router.refresh()`）。英文用户公开页会先闪一帧中文 chrome。
 
-**多站点 ISR / 缓存（2026-08-15，issue #15）**
-- 配方：`createRevalidatingOpenNextConfig()` = R2 incremental cache + `withRegionalCache({ mode: 'long-lived' })` + `enableCacheInterception`。主站 / 小鸟说 / 55 共用，headless 部署跟主站同一份 `open-next.config.ts`。
+**多站点 ISR / 缓存（2026-08-15，issue #15；2026-09-05 issue #20 关闭 cache interception）**
+- 配方：`createRevalidatingOpenNextConfig()` = R2 incremental cache + `withRegionalCache({ mode: 'long-lived' })`，`enableCacheInterception: false`。主站 / 小鸟说 / 55 共用，headless 部署跟主站同一份 `open-next.config.ts`。
+- #20 背景：Next 16.3 + OpenNext 出现可见 `<Link>` 目标循环发 `_rsc` 预取、两天烧掉 ~10M Worker 请求的线上事故（freeaiapi），只关 `optimisticRouting` 拦不住，关掉 cache interception 才停。上游：opennextjs-cloudflare#1348、opennextjs-aws#1212。本仓库当时在 Next `~16.2.9`，趁升级 16.3.4 前先关，避免多站复现。
+- 页脚 / 次级导航 / 低意向链接统一 `prefetch={false}`（Footer、Pagination、AdminNav/MyNav、tag 链接、分类过滤、翻页、回退链接等），主导航和正文卡片保持默认预取。
 - 55 会从主站 API 拉剧本，不是纯 SSG，不上 Static Assets incremental cache。
 - 公开目录 / 博客 / sitemap / 播放页 `revalidate = 3600`；发布、下架、删除走 `revalidatePublicCatalog()`（`revalidatePath`，不另建 tag cache）。
 - 列表分页不能用 `?page=`：await searchParams 会把整页钉成 `private, no-cache`。已改成 `/games/p/2`、`/blog/c/update` 这类路径，旧 query 由 middleware 308 过去。详情页补 `generateStaticParams`（失败则空数组 + `dynamicParams`）才能按需 ISR。
