@@ -56,7 +56,7 @@ export async function POST(req: Request, { params }: Props) {
       providerType === 'mimo'
         ? MIMO_FAST_TEXT_MODEL
         : providerType === 'opencode'
-          ? 'deepseek-v4-flash'
+          ? 'deepseek-v4.1-flash'
           : provider.type;
 
     await recordAiUsage({

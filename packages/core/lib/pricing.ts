@@ -19,9 +19,9 @@ export interface ModelPricingRate {
  */
 export const MODEL_PRICING_RATES: Record<string, ModelPricingRate> = {
   // === OpenCode Go / DeepSeek (调价后，换算 USD: 1 USD ≈ 7.2 RMB) ===
-  // DeepSeek-V4-Flash 官方高峰 3元/9元，空闲 1.5元/4.5元；OpenCode Go 基准折算取综合平均约 $0.30 / $0.90 每 1M Tokens
-  'deepseek-v4-flash': { inputPricePerMillion: 0.3, outputPricePerMillion: 0.9 },
-  'deepseek-v4-flash-free': { inputPricePerMillion: 0.3, outputPricePerMillion: 0.9 },
+  // deepseek-v4.1-flash 官方高峰 3元/9元，空闲 1.5元/4.5元；OpenCode Go 基准折算取综合平均约 $0.30 / $0.90 每 1M Tokens
+  'deepseek-v4.1-flash': { inputPricePerMillion: 0.3, outputPricePerMillion: 0.9 },
+  'deepseek-v4.1-flash-free': { inputPricePerMillion: 0.3, outputPricePerMillion: 0.9 },
   'deepseek-chat': { inputPricePerMillion: 0.3, outputPricePerMillion: 0.9 },
   // DeepSeek-V4-Pro / Reasoner 官方高峰 9元/27元，折合 $1.25 / $3.75 每 1M Tokens
   'deepseek-v4-pro': { inputPricePerMillion: 1.25, outputPricePerMillion: 3.75 },
@@ -33,7 +33,7 @@ export const MODEL_PRICING_RATES: Record<string, ModelPricingRate> = {
   'gpt-5.5': { inputPricePerMillion: 2.5, outputPricePerMillion: 10.0 },
   'gpt-4o': { inputPricePerMillion: 2.5, outputPricePerMillion: 10.0 },
   'gpt-4o-mini': { inputPricePerMillion: 0.15, outputPricePerMillion: 0.6 },
-  'gpt-image-1.5': { pricePerCall: 0.04 },
+  'gpt-image-2.5-sunburst': { pricePerCall: 0.04 },
   'gpt-image-1': { pricePerCall: 0.04 },
   'dall-e-3': { pricePerCall: 0.04 },
   'gpt-4o-mini-tts': { inputPricePerMillion: 15.0 },
@@ -53,7 +53,7 @@ export const MODEL_PRICING_RATES: Record<string, ModelPricingRate> = {
   'claude-3-5-haiku-latest': { inputPricePerMillion: 0.8, outputPricePerMillion: 4.0 },
 
   // === Google GenAI ===
-  'gemini-3.7-flash': { inputPricePerMillion: 0.15, outputPricePerMillion: 0.6 },
+  'gemini-3.8-flash': { inputPricePerMillion: 0.15, outputPricePerMillion: 0.6 },
   'gemini-2.5-flash': { inputPricePerMillion: 0.15, outputPricePerMillion: 0.6 },
   'gemini-3.1-pro-preview': { inputPricePerMillion: 1.25, outputPricePerMillion: 5.0 },
   'gemini-3-pro-preview': { inputPricePerMillion: 1.25, outputPricePerMillion: 5.0 },

@@ -172,7 +172,7 @@ export default function AdminConfigPage() {
                   label="OpenCode 文本模型"
                   value={formData.opencodeTextModel}
                   onChange={(value) => updateField('opencodeTextModel', value)}
-                  placeholder="deepseek-v4-flash"
+                  placeholder="deepseek-v4.1-flash"
                   hint="OpenCode Go 默认模型"
                 />
 
@@ -211,7 +211,7 @@ export default function AdminConfigPage() {
                   label="Google GenAI 文本模型"
                   value={formData.googleTextModel}
                   onChange={(value) => updateField('googleTextModel', value)}
-                  placeholder="gemini-3.7-flash"
+                  placeholder="gemini-3.8-flash"
                 />
 
                 <ConfigTextField
@@ -311,7 +311,7 @@ export default function AdminConfigPage() {
                   label="OpenAI 图片模型"
                   value={formData.openaiImageModel}
                   onChange={(value) => updateField('openaiImageModel', value)}
-                  placeholder="gpt-image-1.5"
+                  placeholder="gpt-image-2.5-sunburst"
                 />
               </div>
             </div>

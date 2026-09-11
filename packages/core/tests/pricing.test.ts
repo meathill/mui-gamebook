@@ -4,7 +4,7 @@ import { calculateBilledTokens, calculateCostUsd, getModelPricingRate } from '..
 describe('pricing.ts 计费核算模块', () => {
   describe('getModelPricingRate', () => {
     it('精准匹配已知模型费率', () => {
-      const ds = getModelPricingRate('deepseek-v4-flash');
+      const ds = getModelPricingRate('deepseek-v4.1-flash');
       expect(ds.inputPricePerMillion).toBe(0.3);
       expect(ds.outputPricePerMillion).toBe(0.9);
 
@@ -30,7 +30,7 @@ describe('pricing.ts 计费核算模块', () => {
     it('DeepSeek V4 Flash: 1000 input tokens + 2000 output tokens', () => {
       const usage = {
         type: 'text_generation',
-        model: 'deepseek-v4-flash',
+        model: 'deepseek-v4.1-flash',
         promptTokens: 1000,
         completionTokens: 2000,
       };
@@ -88,7 +88,7 @@ describe('pricing.ts 计费核算模块', () => {
     it('生图: GPT Image 1.5 单次生成', () => {
       const usage = {
         type: 'image_generation',
-        model: 'gpt-image-1.5',
+        model: 'gpt-image-2.5-sunburst',
       };
       // Cost = $0.04 USD -> Billed Tokens = 40,000 tokens (0.04 M tokens)
       expect(calculateCostUsd(usage)).toBe(0.04);
