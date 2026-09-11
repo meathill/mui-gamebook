@@ -88,17 +88,17 @@ const BASE_CONFIG = {
   defaultSfxProvider: 'internal' as const,
   musicModel: 'suno-v4',
   sfxModel: 'eleven-sfx-v1',
-  opencodeTextModel: 'deepseek-v4-flash',
+  opencodeTextModel: 'deepseek-v4.1-flash',
   opencodeBaseUrl: 'https://opencode.ai/zen/go/v1',
   mimoTextModel: 'mimo-v2.5-pro',
   mimoBaseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
   mimoTtsModel: 'mimo-v2.5-tts',
   anthropicTextModel: 'claude-sonnet-5',
   openaiTextModel: 'gpt-5.6-luna',
-  openaiImageModel: 'gpt-image-1.5',
+  openaiImageModel: 'gpt-image-2.5-sunburst',
   openaiVideoModel: '',
   openaiTtsModel: 'gpt-4o-mini-tts',
-  googleTextModel: 'gemini-3.7-flash',
+  googleTextModel: 'gemini-3.8-flash',
   googleImageModel: 'gemini-3.1-flash-lite-image',
   googleVideoModel: 'veo-3.1-fast-generate-preview',
   googleTtsModel: 'gemini-3.1-flash-tts-preview',
@@ -118,7 +118,7 @@ describe('ai-provider-factory', () => {
     await createAiProvider('opencode');
     expect(opencodeCtor).toHaveBeenCalledWith(
       'opencode-test',
-      { text: 'deepseek-v4-flash' },
+      { text: 'deepseek-v4.1-flash' },
       BASE_CONFIG.opencodeBaseUrl,
     );
   });

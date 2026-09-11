@@ -34,7 +34,7 @@ describe('OpencodeProvider', () => {
       }),
     );
 
-    const provider = new OpencodeProvider('test-key', { text: 'deepseek-v4-flash' });
+    const provider = new OpencodeProvider('test-key', { text: 'deepseek-v4.1-flash' });
     const result = await provider.generateText('你好');
 
     expect(result.text).toBe('这是 DeepSeek 生成的内容');

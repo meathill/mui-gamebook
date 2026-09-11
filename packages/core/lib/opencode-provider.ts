@@ -16,7 +16,7 @@ import type {
 import { OpenAiProvider } from './openai-provider';
 
 export const OPENCODE_DEFAULT_BASE_URL = 'https://opencode.ai/zen/go/v1';
-export const OPENCODE_DEFAULT_TEXT_MODEL = 'deepseek-v4-flash';
+export const OPENCODE_DEFAULT_TEXT_MODEL = 'deepseek-v4.1-flash';
 
 interface OpenCodeChatCompletionResponse {
   choices?: Array<{

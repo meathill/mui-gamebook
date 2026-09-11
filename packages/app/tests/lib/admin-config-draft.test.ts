@@ -16,7 +16,7 @@ const CONFIG: AppConfig = {
   defaultSfxProvider: 'internal',
   musicModel: 'suno-v4',
   sfxModel: 'eleven-sfx-v1',
-  opencodeTextModel: 'deepseek-v4-flash',
+  opencodeTextModel: 'deepseek-v4.1-flash',
   opencodeBaseUrl: 'https://opencode.ai/zen/go/v1',
   googleTextModel: 'google-text',
   googleImageModel: 'google-image',

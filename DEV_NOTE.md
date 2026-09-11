@@ -768,7 +768,7 @@ isValidVoiceId(voiceId: string, provider): boolean
 
 - **背景与动机**：此前系统以单一的 `defaultAiProvider` 为中心进行配置与调度，导致文本、TTS、生图、生视频耦合严重。当希望引入专门的代码/文本模型（如 OpenCode Go / DeepSeek）或继续使用 MiMo 作为高质量中文 TTS 时，原有的单开关架构无法支持细粒度分工。
 - **按模态解耦**：
-  - **Text（文本）**：默认 `opencode`（OpenCode Go / `deepseek-v4-flash`），负责剧本生成、AI Chat 对话、大纲梳理等文本任务。
+  - **Text（文本）**：默认 `opencode`（OpenCode Go / `deepseek-v4.1-flash`），负责剧本生成、AI Chat 对话、大纲梳理等文本任务。
   - **TTS（语音合成）**：默认 `mimo`（小米 MiMo / `mimo-v2.5-tts`），负责角色对白与音色试听合成。
   - **Image（生图）**：默认 `google`（Google GenAI / `gemini-3.1-flash-lite-image`），负责角色立绘与场景背景图。
   - **Video（生视频）**：默认 `google`（Google GenAI / `veo-3.1-fast-generate-preview`），负责场景视频生成。

@@ -50,7 +50,7 @@ describe('recordAiUsage', () => {
     await recordAiUsage({
       userId: 'u1',
       type: 'text_generation',
-      model: 'deepseek-v4-flash',
+      model: 'deepseek-v4.1-flash',
       usage: { promptTokens: 1000, completionTokens: 2000, totalTokens: 3000 },
       gameId: 1,
     });
@@ -59,7 +59,7 @@ describe('recordAiUsage', () => {
       expect.objectContaining({
         userId: 'u1',
         type: 'text_generation',
-        model: 'deepseek-v4-flash',
+        model: 'deepseek-v4.1-flash',
         totalTokens: 2100,
       }),
     );
