@@ -62,16 +62,6 @@
         }
       }
     },
-    "successCases": {
-      "title": "Success Cases",
-      "description": "See how others are using MuiStory to create amazing stories.",
-      "items": {
-        "xiaoniao": {
-          "title": "Xiao Niao Shuo",
-          "description": "An interactive story park designed for children, built with MuiStory, allowing kids to learn and grow through fun story adventures."
-        }
-      }
-    },
     "deployment": {
       "title": "Deploy Your Own Instance",
       "description": "Built on Cloudflare Workers and Next.js, launch your own instance on the global edge network in minutes.",

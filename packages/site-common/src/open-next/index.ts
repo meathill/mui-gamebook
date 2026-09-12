@@ -11,6 +11,7 @@ interface RevalidatingOptions {
    * 没有 D1 的站点不要开启，否则部署时 populateCache 会因缺绑定而失败。
    */
   tagCache?: boolean;
+  useR2Cache?: boolean;
 }
 
 /**
@@ -29,7 +30,10 @@ interface RevalidatingOptions {
  */
 export function createRevalidatingOpenNextConfig(options: RevalidatingOptions = {}) {
   return defineCloudflareConfig({
-    incrementalCache: withRegionalCache(r2IncrementalCache, { mode: 'long-lived' }),
+    incrementalCache:
+      options.useR2Cache === false
+        ? 'dummy'
+        : withRegionalCache(r2IncrementalCache, { mode: 'long-lived' }),
     enableCacheInterception: false,
     queue: memoryQueue,
     tagCache: options.tagCache ? d1NextTagCache : undefined,

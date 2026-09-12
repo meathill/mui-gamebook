@@ -12,7 +12,7 @@ mkdir -p sites/your-site-name/src/{app,components,lib}
 
 ### 2. 复制配置文件
 
-从 `sites/jianjian` 复制以下文件并修改：
+从 `sites/55` 或其他现有站点复制以下文件并修改：
 
 | 文件 | 必须修改的内容 |
 |------|---------------|

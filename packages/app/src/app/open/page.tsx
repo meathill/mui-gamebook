@@ -57,28 +57,6 @@ export default async function OpenPage() {
         </div>
       </section>
 
-      {/* Success Cases */}
-      <section className="py-20 px-4 bg-stone-50">
-        <div className="max-w-6xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-6">{t('successCases.title')}</h2>
-          <p className="text-stone-600 mb-12 max-w-2xl mx-auto">{t('successCases.description')}</p>
-          <div className="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto">
-            <a
-              href="https://xiaoniaoshuo.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group block bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all hover:-translate-y-1">
-              <div className="p-8">
-                <h3 className="text-2xl font-bold mb-2 group-hover:text-amber-600 transition-colors">
-                  {t('successCases.items.xiaoniao.title')}
-                </h3>
-                <p className="text-stone-600">{t('successCases.items.xiaoniao.description')}</p>
-              </div>
-            </a>
-          </div>
-        </div>
-      </section>
-
       {/* Deployment & Support */}
       <section className="py-20 px-4 bg-stone-900 text-white">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-16 items-start">

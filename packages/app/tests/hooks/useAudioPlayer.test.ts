@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAudioPlayer } from '@/hooks/useAudioPlayer';
 
-// 原本挪自 sites/jianjian/src/app/play/[slug]/useAudioPlayer.test.ts——jianjian
+// 独立播放实现的回归测试。
 // 没有自己的封装，直接跨包引用这个 hook，测试理应放在源码所在的这个包里。
 // 另有 src/components/game-player/useAudioPlayer.ts 是几乎重复的独立实现
 // （多暴露一个 currentUrl 字段），见 tests/hooks/useAudioPlayer.gamePlayer.test.ts。

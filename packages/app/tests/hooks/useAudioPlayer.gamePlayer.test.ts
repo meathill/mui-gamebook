@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAudioPlayer } from '@/components/game-player/useAudioPlayer';
 
 // 文件名带 .gamePlayer 后缀：另有 src/hooks/useAudioPlayer.ts 是几乎重复的
-// 独立实现（GamePlayer.tsx / sites/jianjian 用），二者同名会在打平的 tests/hooks/
+// 独立实现（GamePlayer.tsx 用），避免与同目录的播放器测试重名。
 // 目录下冲突，因此用来源子目录限定区分，见 tests/hooks/useAudioPlayer.test.ts
 // jsdom 的 HTMLMediaElement.play/pause 是 "not implemented" 桩实现，不会真正
 // 改变 paused 状态也不返回 Promise；因此用一个有状态的假 Audio 类替代全局构造函数，

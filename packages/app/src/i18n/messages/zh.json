@@ -62,16 +62,6 @@
         }
       }
     },
-    "successCases": {
-      "title": "成功案例",
-      "description": "看看大家是如何使用姆伊游戏书创造精彩故事的。",
-      "items": {
-        "xiaoniao": {
-          "title": "小鸟说",
-          "description": "专为小朋友设计的互动故事乐园，使用姆伊游戏书构建，让孩子在有趣的故事冒险中学习与成长。"
-        }
-      }
-    },
     "deployment": {
       "title": "快速部署你自己的版本",
       "description": "基于 Cloudflare Workers 构建，几分钟即可在全球边缘网络启动你的独立实例。",

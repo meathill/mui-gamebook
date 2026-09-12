@@ -61,7 +61,7 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 - `packages/app/src/app/api/**/route.ts` 绝大部分 route（AI 生成计费闭环、Story Protocol 注册、其余 CRUD/代理类 route）
 - 编辑器核心业务逻辑 `packages/app/src/lib/editor/handlers/`，以及编辑器 UI 组件（`RichEditor`/`VisualEditor`/`Inspector`/`ChatPanel` 等）
 - `packages/app/src/components/admin/`、`game-player/`，`packages/cronjob`
-- `sites/55`、`sites/jianjian` 的组件层和数据/逻辑层
+- `sites/55` 的组件层和数据/逻辑层
 
 明确不测的部分（结构性障碍或纯展示，非遗漏）：
 - Next.js `page.tsx`/`layout.tsx` 里用 `async function` 声明的 Server Component——React DOM 的客户端渲染器不支持 async 函数组件，`@testing-library/react` 的 `render()` 无法调用，需要真实浏览器/RSC 渲染管线才能测
@@ -70,4 +70,3 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 - `packages/cms` 的 Payload 声明式配置（collections 均为纯字段声明，无自定义 `hooks`/`access`/`validate`）、`app/(payload)/**` admin 面板样板代码
 - 纯静态展示组件（无 props、无条件渲染、无状态），如 `components/home/*`、jianjian 的 `Header.tsx`/`Footer.tsx`/隐私政策与服务条款页
 - 已确认零引用的死代码（如曾经的 `packages/app/src/lib/auth.ts`，已删除）；`GameSettings.tsx` 已确认死代码但受权限限制未删除，暂时也未补测试
-

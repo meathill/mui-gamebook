@@ -7,8 +7,6 @@
 | 单元 | 目录 | Worker 名称 | 说明 |
 |---|---|---|---|
 | 主站（创作平台/CMS） | `packages/app` | `mui-gamebook` | MuiStory 品牌，创作者写作、AI 生成、管理后台，也是游戏播放的默认站点 |
-| 主站（Headless 模式） | `packages/app`（`wrangler-jianjian.jsonc`） | `xiaoniaoshuo-admin` | 同一套代码，以 headless 模式部署为"小鸟说"品牌的管理后台，独立的 D1/KV/R2 |
-| 小鸟说读者站 | `sites/jianjian` | `xiaoniaoshuo` | 面向读者的独立站点，KV 与 `xiaoniaoshuo-admin` 共享同一个 namespace |
 | 55 站点 | `sites/55` | `muistory-55` | 视觉小说风格的独立站点 |
 | 定时任务 | `packages/cronjob` | `mui-gamebook-cronjob` | 每 15 分钟触发一次，通过 Service Binding 调用主站 |
 
@@ -28,8 +26,6 @@ pnpm run upload     # 构建并上传为一个新版本，不自动切流量（C
 ```
 
 `packages/cronjob` 是纯 Worker（没有 Next.js/OpenNext），直接 `wrangler deploy`。
-
-**Headless 模式（`xiaoniaoshuo-admin`）的部署命令未在本次维护中验证**——`wrangler-jianjian.jsonc` 确认存在且配置完整，但 `package.json` 里没有对应的脚本，大概率是手动传 `--config wrangler-jianjian.jsonc` 触发，具体命令请找了解这部分历史的人确认后再补充到这里。
 
 ## 环境变量与 Secrets
 

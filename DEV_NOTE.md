@@ -156,29 +156,6 @@
 
 ---
 
-## 独立站点认证架构
-
-独立站点（如 `sites/jianjian`）不直接处理用户认证，而是通过 API 代理将认证请求转发到 CMS（`packages/app`）：
-
-1. **认证流程**：
-   - 用户在独立站点访问 `/sign-in` 页面
-   - 使用 better-auth 客户端发起登录请求到 `/api/auth/*`
-   - 独立站点的 API 代理 (`/api/auth/[...path]/route.ts`) 将请求转发到 CMS
-   - CMS 处理认证并设置 Cookie
-   - API 代理保留所有响应头（包括 Set-Cookie）返回给客户端
-
-2. **配置要点**：
-   - 使用 `NEXT_PUBLIC_API_URL` 环境变量配置 CMS 地址
-   - 共享配置统一在 `src/lib/config.ts` 管理
-   - Cookie 跨域配置通过 CMS 的 `COOKIE_DOMAIN` 环境变量控制
-
-3. **相关文件**：
-   - `/sites/jianjian/src/lib/config.ts` - 共享配置
-   - `/sites/jianjian/src/lib/auth-client.ts` - better-auth 客户端配置
-   - `/sites/jianjian/src/app/sign-in/page.tsx` - 登录页面
-   - `/sites/jianjian/src/app/api/auth/[...path]/route.ts` - 认证 API 代理
-   - `/packages/app/src/lib/auth-config.ts` - CMS 认证配置
-
 ## 异步操作系统
 
 视频生成等耗时较长的操作使用异步处理模式：
@@ -264,18 +241,6 @@ CMS 对外提供的 API 遵循以下格式：
 | `GET /api/games` | `Game[]` (直接数组) |
 | `GET /api/games/:slug` | `Game` (单个对象) |
 | `GET /api/games/:slug/play` | `PlayableGame` (单个对象) |
-
-### 子站点调用 API
-
-子站点（如 `sites/jianjian`）通过 HTTP 调用 CMS API 获取数据。调用时注意：
-
-1. **响应格式**：API 直接返回数组或对象，不包裹在 `{ data: ... }` 或类似结构中
-2. **错误处理**：需捕获网络错误和 HTTP 错误，返回合理的默认值
-3. **缓存策略**：使用 Next.js 的 `revalidate` 配置控制缓存时间
-
-相关文件：
-- `/sites/jianjian/src/lib/api.ts` - API 调用封装
-- `/sites/jianjian/src/lib/api.test.ts` - API 测试
 
 ## AI 上下文自动合并
 
@@ -797,7 +762,7 @@ isValidVoiceId(voiceId: string, provider): boolean
   - Parser 语法兼容：`cover_image` 支持 `cover` 作为别名，兼容旧剧本。
 - **Ahrefs Site Audit 8 个技术错误修复**：
   - `/open` 补齐 `generateMetadata` 与 canonical `/open`，并在 `sitemap.ts` 静态清单中补齐。
-  - `sites/55` 与 `sites/jianjian` 首页与播放页补齐 canonical。
+  - `sites/55` 首页与播放页补齐 canonical。
   - 补全/优化全站图片 alt 属性（`GamePlayer` 场景插画、`ImmersiveBackground` 场景图、子站点封面等）。
 - **全模态 AI 创作套件与可视化信息图（首页升级）**：
   - 首页 Hero 呈现 Markdown 编辑器 + 随时恭候的 AI Chatbot 灵感副驾实时协同交互。
