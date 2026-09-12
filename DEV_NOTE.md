@@ -806,3 +806,32 @@ isValidVoiceId(voiceId: string, provider): boolean
   - 新增 `/blog/how-to-create-interactive-fiction-with-markdown`（《如何用 Markdown 制作互动小说？从零开始的文字冒险创作指南》），支持无需 CMS 依赖的内置静态文章与 CMS 文章平滑合并与静态预渲染。
   - 博客详情页支持 `ReactMarkdown` 直接渲染 Markdown 文本，且自动注入 Article + BreadcrumbList JSON-LD 与独立 OG 卡片。
 
+
+## WebMCP + Chatbot 参考图 + 生成剧本统一阶段状态（2026-09）
+
+### WebMCP 三层
+- 新建 `packages/webmcp` 纯函数内核（操作 `Game` 对象，无 React 依赖）：`tools.ts` 是工具定义的唯一源
+  （22 个：20 个沿用 chatbot 命名 + 只读 `getDsl`/`listScenes`），`core.ts` 是无头执行（含 增→删→改 排序、
+  悬空指向清理、`dryRun` 克隆预演）。
+- `CHAT_FUNCTION_DECLARATIONS` 改为复用 `WEBMCP_TOOLS` 写子集，保证 chatbot 与 MCP 语义同源。
+- in-page 注册走 `document.modelContext`（无 polyfill 依赖，不支持的浏览器静默跳过）：
+  `useWebMcpTools` hook，编辑器页全量（写操作经 `handleFunctionCall` 同一链路，含 undo），
+  播放页经客户端小组件 `PlayWebMcpTools` 只挂只读（播放页是 ISR 服务端组件，不能直接注册）。
+- 后端 `POST /api/mcp` 为手写 JSON-RPC（`initialize/tools/list/tools/call/ping`），没引
+  `@modelcontextprotocol/sdk`——SDK 的 Node 依赖在 Workers 运行时是风险，当前体量手写更稳；
+  `initialize/list` 可匿名，`call` 需登录 + `getManagedGame` 鉴权，写操作与 CMS PUT 同落库路径，
+  `dryRun: true` 只返回结果与新 DSL 不写库（建议外部 Agent 先 dryRun）。
+
+### Chatbot 参考图（≤4）
+- `ChatMessage.content: string | ChatContentPart[]`；Google=fetch→inlineData、OpenAI=`image_url` 直传 R2 URL、
+  Claude=fetch→base64 块；Mimo/Opencode 继承 OpenAI 实现，模型若不支持则路由层报错提示切换 provider，
+  绝不静默丢图。assistant 历史回退纯文本（OpenAI SDK 不接受 assistant 发 image_url，类型层会拦）。
+- 上传复用 `games/[id]/upload` 新增 `type: 'chat'`（`images/<slug>/chat-<ts>.<ext>`）；
+  chat 路由校验 `≤4 + URL 含 /images/<slug>/` 防盗链；用量统计不动（图片 token 已进 usage）。
+- 聊天记录仍不落库（沿用前端内存 + 全量回传 history，图片只传 URL）。
+
+### 生成剧本统一阶段
+- 后端 SSE 契约不动；`StoryImporter` 统一展示 `thinking/writing/correcting + 已写 N 字`（content delta
+  只计字不预览），思考原文收进 `<details>` 折叠，Mimo/Opencode 有真 reasoning 才展开有内容，
+  其他三家只显示阶段——全 provider 体验一致。另补了取消按钮（AbortController，取消不弹错）与
+  追问轮次显示。不做轮询/D1 job、不持久化思考。

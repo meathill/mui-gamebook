@@ -86,11 +86,40 @@ export interface FunctionCallResult {
 }
 
 /**
+ * Chat 消息内容块：文本或图片引用（R2 公网 URL，由各 provider 转为自家多模态格式）
+ */
+export interface ChatContentPart {
+  type: 'text' | 'image_url';
+  text?: string;
+  url?: string;
+}
+
+/**
  * Chat 消息
  */
 export interface ChatMessage {
   role: 'user' | 'model';
-  content: string;
+  content: string | ChatContentPart[];
+}
+
+/** 是否为多模态消息 */
+export function isMultimodalContent(content: ChatMessage['content']): content is ChatContentPart[] {
+  return Array.isArray(content);
+}
+
+/** 取消息纯文本（忽略图片块） */
+export function getMessageText(content: ChatMessage['content']): string {
+  if (typeof content === 'string') return content;
+  return content
+    .filter((p) => p.type === 'text')
+    .map((p) => p.text ?? '')
+    .join('');
+}
+
+/** 取消息图片 URL 列表 */
+export function getMessageImages(content: ChatMessage['content']): string[] {
+  if (typeof content === 'string') return [];
+  return content.filter((p) => p.type === 'image_url' && p.url).map((p) => p.url as string);
 }
 
 /**

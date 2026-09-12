@@ -21,6 +21,7 @@ import { hasSubstantialScript } from '@/lib/editor/generate-script';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
 import { useEditorData } from '@/lib/editor/useEditorData';
 import { useFlowNodeHandlers } from '@/lib/editor/useFlowNodeHandlers';
+import { useWebMcpTools } from '@/lib/editor/useWebMcpTools';
 import { useEditorStore } from '@/lib/editor/store';
 import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
@@ -194,6 +195,17 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
     screenToFlowPosition,
     fitView,
     dialog,
+  });
+
+  // 编辑器页 in-page WebMCP：浏览器 AI 可直接调用编辑工具（写操作走同一批量链路，含 undo）
+  useWebMcpTools({
+    mode: 'editor',
+    getDsl: () => textContent,
+    listScenes: () => nodes.map((n) => n.id).join(', ') || '暂无场景',
+    onWriteCall: (name, args) => {
+      handleFunctionCall([{ name, args }]);
+      return `已执行 ${name}`;
+    },
   });
 
   if (isAuthPending || loading) return <div className="p-8 text-center">加载中...</div>;

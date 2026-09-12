@@ -123,10 +123,45 @@ export class ClaudeProvider implements AiProvider {
     const response = await this.client.messages.create({
       model,
       max_tokens: MAX_OUTPUT_TOKENS,
-      messages: messages.map((msg) => ({
-        role: msg.role === 'model' ? ('assistant' as const) : ('user' as const),
-        content: msg.content,
-      })),
+      messages: await Promise.all(
+        messages.map(async (msg) => {
+          if (typeof msg.content === 'string') {
+            return {
+              role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user',
+              content: msg.content,
+            };
+          }
+          const blocks: Anthropic.ContentBlockParam[] = [];
+          for (const part of msg.content) {
+            if (part.type === 'text' && part.text) {
+              blocks.push({ type: 'text', text: part.text });
+            } else if (part.type === 'image_url' && part.url) {
+              try {
+                const imgRes = await fetch(part.url);
+                if (!imgRes.ok) {
+                  console.warn(`[Claude] Failed to fetch chat image: ${part.url}`);
+                  continue;
+                }
+                const buf = await imgRes.arrayBuffer();
+                const mime = imgRes.headers.get('content-type') || 'image/png';
+                blocks.push({
+                  type: 'image',
+                  source: {
+                    type: 'base64',
+                    media_type: (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mime)
+                      ? mime
+                      : 'image/png') as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+                    data: Buffer.from(buf).toString('base64'),
+                  },
+                });
+              } catch (e) {
+                console.warn(`[Claude] Failed to process chat image: ${part.url}`, e);
+              }
+            }
+          }
+          return { role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user', content: blocks };
+        }),
+      ),
       tools: claudeTools,
     });
 

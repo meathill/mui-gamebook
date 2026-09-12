@@ -3,6 +3,7 @@
  */
 import OpenAI from 'openai';
 import { buildMiniGamePrompt, extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
+import { getMessageText } from './ai-provider';
 import type {
   AiProvider,
   AiProviderType,
@@ -302,11 +303,26 @@ export class OpenAiProvider implements AiProvider {
     const model = this.models.text || 'gpt-4o';
     console.log(`[OpenAI] Chat with tools using model: ${model}`);
 
-    // 转换消息格式为 OpenAI 格式
-    const openaiMessages = messages.map((msg) => ({
-      role: msg.role === 'model' ? ('assistant' as const) : ('user' as const),
-      content: msg.content,
-    }));
+    // 转换消息格式为 OpenAI 格式：纯文本保持 string（兼容旧调用），带图时用 content 数组。
+    // 图片只会出现在 user 消息上；assistant 历史回退为纯文本（SDK 不接受 assistant 发 image_url）。
+    const openaiMessages = messages.map((msg) => {
+      if (typeof msg.content === 'string') {
+        return { role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user', content: msg.content };
+      }
+      if (msg.role === 'model') {
+        return { role: 'assistant' as const, content: getMessageText(msg.content) };
+      }
+      return {
+        role: 'user' as const,
+        content: msg.content
+          .filter((p) => (p.type === 'text' && p.text) || (p.type === 'image_url' && p.url))
+          .map((p) =>
+            p.type === 'image_url'
+              ? ({ type: 'image_url' as const, image_url: { url: p.url as string } })
+              : ({ type: 'text' as const, text: p.text as string }),
+          ),
+      };
+    });
 
     // 转换工具声明为 OpenAI 格式
     const openaiTools = tools.map((tool) => ({

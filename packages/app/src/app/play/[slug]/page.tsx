@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { cachedGetGameBySlug, getPublishedGames } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
 import { GamePlayerImmersive } from '@/components/game-player';
+import PlayWebMcpTools from '@/components/PlayWebMcpTools';
 import RelatedGames from '@/components/RelatedGames';
 import Comment from '@/components/Comment';
 import JsonLd from '@/components/JsonLd';
@@ -161,6 +162,11 @@ export default async function PlayPage({ params }: Props) {
       <>
         <JsonLd data={breadcrumbLd} />
         <JsonLd data={gameLd} />
+        <PlayWebMcpTools
+          slug={slug}
+          title={game.title}
+          sceneIds={Object.keys(game.scenes)}
+        />
         <GamePlayerImmersive
           game={game}
           slug={slug}
@@ -175,6 +181,11 @@ export default async function PlayPage({ params }: Props) {
       <JsonLd data={gameLd} />
 
       <div className="max-w-3xl mx-auto">
+        <PlayWebMcpTools
+          slug={slug}
+          title={game.title}
+          sceneIds={Object.keys(game.scenes)}
+        />
         {/* 面包屑：关键词锚文本链回首页与作品库 */}
         <nav
           aria-label="面包屑"

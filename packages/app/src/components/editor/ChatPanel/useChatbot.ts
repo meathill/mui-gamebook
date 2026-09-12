@@ -4,6 +4,7 @@ export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  images?: string[];
   functionCalls?: FunctionCall[];
 }
 
@@ -42,8 +43,9 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
   messagesRef.current = messages;
 
   const sendMessage = useCallback(
-    async (content: string, context: ChatContext, provider?: string) => {
-      if (!content.trim() || loading) return;
+    async (content: string, context: ChatContext, provider?: string, images?: string[]) => {
+      if (!content.trim() && (!images || images.length === 0)) return;
+      if (loading) return;
 
       // 取消之前的请求
       if (abortControllerRef.current) {
@@ -55,6 +57,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
         id: Date.now().toString(),
         role: 'user',
         content,
+        ...(images && images.length > 0 ? { images } : {}),
       };
       // 使用 ref 获取最新的 messages
       const updatedMessages = [...messagesRef.current, userMessage];
@@ -62,17 +65,24 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
       setLoading(true);
       setError(null);
 
-      // 将历史消息转换为 API 格式（排除 functionCalls 和 id）
+      // 将历史消息转换为 API 格式（排除 functionCalls 和 id，保留图片引用）
       const history = updatedMessages.map((msg) => ({
         role: msg.role,
         content: msg.content,
+        ...(msg.images && msg.images.length > 0 ? { images: msg.images } : {}),
       }));
 
       try {
         const response = await fetch(`/api/cms/games/${gameId}/chat`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: content, context, history, provider }),
+          body: JSON.stringify({
+            message: content,
+            context,
+            history,
+            provider,
+            ...(images && images.length > 0 ? { images } : {}),
+          }),
           signal: abortControllerRef.current.signal,
         });
 
