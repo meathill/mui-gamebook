@@ -18,7 +18,7 @@ export async function POST(req: Request, { params }: Props) {
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File;
-    const type = formData.get('type') as string; // 'cover', 'character', 'scene'
+    const type = formData.get('type') as string; // 'cover', 'character', 'scene', 'chat'
     const characterId = formData.get('characterId') as string | null;
 
     if (!file) {
@@ -48,6 +48,9 @@ export async function POST(req: Request, { params }: Props) {
         break;
       case 'scene':
         fileName = `images/${gameSlug}/scenes/${Date.now()}.${ext}`;
+        break;
+      case 'chat':
+        fileName = `images/${gameSlug}/chat-${Date.now()}.${ext}`;
         break;
       case 'audio':
         fileName = `audio/${gameSlug}/${Date.now()}.${ext}`;

@@ -305,11 +305,41 @@ export class GoogleAiProvider implements AiProvider {
     const model = this.models.text || 'gemini-2.5-flash';
     console.log(`[Google AI] Chat with tools using model: ${model}`);
 
-    // 转换消息格式为 Google AI 格式
-    const contents = messages.map((msg) => ({
-      role: msg.role === 'model' ? 'model' : 'user',
-      parts: [{ text: msg.content }],
-    }));
+    // 转换消息格式为 Google AI 格式：文本直传，图片 URL 先下载再以 inlineData 传入
+    const contents: Array<{
+      role: string;
+      parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
+    }> = [];
+    for (const msg of messages) {
+      const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
+      if (typeof msg.content === 'string') {
+        parts.push({ text: msg.content });
+      } else {
+        for (const part of msg.content) {
+          if (part.type === 'text' && part.text) {
+            parts.push({ text: part.text });
+          } else if (part.type === 'image_url' && part.url) {
+            try {
+              const imgRes = await fetch(part.url);
+              if (!imgRes.ok) {
+                console.warn(`[Google AI] Failed to fetch chat image: ${part.url}`);
+                continue;
+              }
+              const buf = await imgRes.arrayBuffer();
+              parts.push({
+                inlineData: {
+                  mimeType: imgRes.headers.get('content-type') || 'image/png',
+                  data: Buffer.from(buf).toString('base64'),
+                },
+              });
+            } catch (e) {
+              console.warn(`[Google AI] Failed to process chat image: ${part.url}`, e);
+            }
+          }
+        }
+      }
+      contents.push({ role: msg.role === 'model' ? 'model' : 'user', parts });
+    }
 
     // 转换工具声明为 Google AI 格式
     // 使用类型断言因为我们的接口与 Google AI 的类型定义略有不同

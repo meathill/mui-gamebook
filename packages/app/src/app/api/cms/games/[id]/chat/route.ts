@@ -1,11 +1,17 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
+import slugify from 'slugify';
 import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
-import { buildChatHistory, CHAT_FUNCTION_DECLARATIONS, ChatRequest } from '@/lib/editor/chat-declarations';
+import {
+  buildChatHistory,
+  CHAT_FUNCTION_DECLARATIONS,
+  ChatRequest,
+  MAX_CHAT_IMAGES,
+} from '@/lib/editor/chat-declarations';
 import { getManagedGame } from '@/lib/game-access';
 import { getConfig } from '@/lib/config';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
@@ -27,10 +33,14 @@ export async function POST(req: Request, { params }: Props) {
   }
 
   const { id } = await params;
-  const { message, context, history, provider: requestedProvider } = (await req.json()) as ChatRequest;
+  const { message, context, history, provider: requestedProvider, images } = (await req.json()) as ChatRequest;
 
   if (!message) {
     return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+  }
+
+  if (images && images.length > MAX_CHAT_IMAGES) {
+    return NextResponse.json({ error: `最多支持 ${MAX_CHAT_IMAGES} 张参考图` }, { status: 400 });
   }
 
   // 校验游戏归属（所有者或 root）
@@ -38,6 +48,17 @@ export async function POST(req: Request, { params }: Props) {
   const game = await getManagedGame(drizzle(env.DB), Number(id), session);
   if (!game) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+  }
+
+  // 参考图必须是本游戏的 R2 素材（防盗链其他游戏/外部 URL）
+  if (images && images.length > 0) {
+    const gameSlug = slugify(String(game.slug || game.title || 'game'), { lower: true });
+    const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN || '';
+    const allowedPrefix = publicDomain ? `${publicDomain}/images/${gameSlug}/` : `/images/${gameSlug}/`;
+    const bad = images.find((url) => typeof url !== 'string' || !url.includes(allowedPrefix));
+    if (bad) {
+      return NextResponse.json({ error: '参考图须为本游戏已上传的素材' }, { status: 400 });
+    }
   }
 
   // 按用户权限解析文本提供者；创建失败（如密钥缺失）在进入 SSE 前返回 JSON 错误
@@ -74,6 +95,10 @@ export async function POST(req: Request, { params }: Props) {
 
   const userMessage =
     contextParts.length > 0 ? `${contextParts.join('\n\n')}\n\n---\n\n## 用户请求\n\n${message}` : message;
+  const userMessageWithImages =
+    images && images.length > 0
+      ? `${userMessage}\n\n（本次附带 ${images.length} 张参考图，请结合图片内容理解需求）`
+      : userMessage;
 
   // 创建 SSE 响应流
   const encoder = new TextEncoder();
@@ -85,10 +110,15 @@ export async function POST(req: Request, { params }: Props) {
           throw new Error('当前 AI 提供者不支持 function calling');
         }
 
-        const response = await provider.chatWithTools(
-          buildChatHistory(history, userMessage),
-          CHAT_FUNCTION_DECLARATIONS,
-        );
+        const response = await provider
+          .chatWithTools(buildChatHistory(history, userMessageWithImages, images), CHAT_FUNCTION_DECLARATIONS)
+          .catch((e: Error) => {
+            // 部分文本模型不支持多模态输入：不静默丢图，直接报错提示切换 provider
+            if (images && images.length > 0) {
+              throw new Error(`${e.message}（本次携带参考图，若当前模型不支持图片请切换 provider 重试）`);
+            }
+            throw e;
+          });
 
         const config = await getConfig();
         const modelMap: Record<string, string> = {

@@ -1,0 +1,17 @@
+{
+  "name": "@mui-gamebook/webmcp",
+  "version": "0.1.0",
+  "description": "WebMCP 纯函数内核：编辑工具定义与无头执行（无 React 依赖）",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@mui-gamebook/parser": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  }
+}

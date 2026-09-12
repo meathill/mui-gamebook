@@ -77,9 +77,13 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
   const [story, setStory] = useState(initialStory || '');
   const [phase, setPhase] = useState<GenerationPhase>('idle');
   const [reasoningText, setReasoningText] = useState('');
+  // content 事件不预览正文，只累计字数：各 provider 的思考可见性本就不同，
+  // 统一只展示阶段 + 字数，保证体验一致
+  const [writtenChars, setWrittenChars] = useState(0);
   const loading = phase !== 'idle';
   const dialog = useDialog();
   const reasoningBoxRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   // 已有剧本时，点击生成前先让用户选择"重新生成"还是"在现有剧本基础上修改"
   const [scriptMode, setScriptMode] = useState<ScriptMode>('unset');
@@ -217,6 +221,9 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
   async function runGeneration(finalStory: string, mode: ScriptMode) {
     setPhase('thinking');
     setReasoningText('');
+    setWrittenChars(0);
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
     try {
       // 先保存原始输入（不含追问拼接内容），确保用户输入不丢失
       if (onSaveStory) {
@@ -226,6 +233,7 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
       const res = await fetch(`/api/cms/games/${id}/generate-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: abortRef.current.signal,
         body: JSON.stringify({
           story: finalStory,
           provider: activeProvider,
@@ -277,6 +285,7 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
               break;
             case 'content':
               setPhase('writing');
+              setWrittenChars((prev) => prev + event.delta.length);
               break;
             case 'done':
               script = event.script;
@@ -292,10 +301,17 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
       onImport(script);
       onClose();
     } catch (e: unknown) {
+      // 用户主动取消不弹错
+      if ((e as Error).name === 'AbortError') return;
       await dialog.error((e as Error).message);
     } finally {
+      abortRef.current = null;
       setPhase('idle');
     }
+  }
+
+  function handleCancelGeneration() {
+    abortRef.current?.abort();
   }
 
   function handleUseExample() {
@@ -347,11 +363,31 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
           placeholder="在这里输入你的故事..."
         />
 
-        {loading && reasoningText && (
-          <div
-            ref={reasoningBoxRef}
-            className="mb-4 max-h-32 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 whitespace-pre-wrap">
-            {reasoningText}
+        {loading && (
+          <div className="mb-4 rounded-md border border-purple-200 bg-purple-50/50 p-3">
+            <div className="flex items-center gap-2 text-sm text-purple-900">
+              <SpinnerIcon className="animate-spin size-4 shrink-0" />
+              <span className="font-medium">{PHASE_LABELS[phase]}</span>
+              {phase === 'writing' && writtenChars > 0 && (
+                <span className="text-xs text-purple-500">已写 {writtenChars} 字</span>
+              )}
+              <button
+                onClick={handleCancelGeneration}
+                className="ml-auto text-xs text-gray-500 hover:text-red-600 underline shrink-0"
+                type="button">
+                取消
+              </button>
+            </div>
+            {reasoningText && (
+              <details className="mt-2">
+                <summary className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">查看 AI 思考过程</summary>
+                <div
+                  ref={reasoningBoxRef}
+                  className="mt-1 max-h-32 overflow-y-auto rounded-md border border-gray-200 bg-gray-50 p-3 text-xs text-gray-500 whitespace-pre-wrap">
+                  {reasoningText}
+                </div>
+              </details>
+            )}
           </div>
         )}
 
@@ -435,7 +471,9 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
               className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
               type="button">
               {(loading || clarifyLoading) && <SpinnerIcon className="animate-spin size-4" />}
-              {clarifyLoading ? '正在分析故事...' : PHASE_LABELS[phase]}
+              {clarifyLoading
+                ? `正在分析故事（第 ${clarifyRound + 1}/${MAX_CLARIFY_ROUNDS} 轮）...`
+                : PHASE_LABELS[phase]}
             </button>
           </div>
         )}
