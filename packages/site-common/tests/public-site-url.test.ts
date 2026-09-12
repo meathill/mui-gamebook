@@ -13,7 +13,7 @@ describe('getPublicSiteUrl', () => {
     expect(getPublicSiteUrl('http://muistory.com')).toBe('https://muistory.com');
     expect(getPublicSiteUrl('http://muistory.com/')).toBe('https://muistory.com');
     expect(getPublicSiteUrl('https://muistory.com/')).toBe('https://muistory.com');
-    expect(getPublicSiteUrl('  https://xiaoniaoshuo.com/play/x  ')).toBe('https://xiaoniaoshuo.com');
+    expect(getPublicSiteUrl('  https://55.muistory.com/play/x  ')).toBe('https://55.muistory.com');
   });
 
   it('缺协议时补 https', () => {

@@ -1,3 +1,3 @@
 import { createRevalidatingOpenNextConfig } from '@mui-gamebook/site-common/open-next';
 
-export default createRevalidatingOpenNextConfig();
+export default createRevalidatingOpenNextConfig({ useR2Cache: false });
