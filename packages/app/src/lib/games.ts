@@ -282,8 +282,10 @@ export type GameDetail = PlayableGame & {
  * 三态语义（调用方据此区分处理）：
  * - 正常 playable → GameDetail
  * - 真缺失（无记录/无正文/解析失败/未发布）→ null，调用方走 404
- * - D1 不可用或查询抛错 → throw，调用方走 500（不进 ISR 缓存，避免故障期全站误 404）
- * 构建期无请求上下文时抓线上公开 API（404 → null）。
+ * - 运行时 D1 不可用或查询抛错 → throw，调用方走 500（不进 ISR 缓存，避免故障期全站误 404）
+ * - 构建期（NEXT_PHASE=phase-production-build）：D1 可能直接抛错（无上下文），
+ *   也可能连上一个空表（no such table），统一抓线上公开 API；抓不到则 null，
+ *   保证构建通过，靠重验证自愈。
  */
 export async function getGameBySlug(slug: string): Promise<GameDetail | null> {
   let cloudflareContext: { env: { DB: unknown } };
@@ -302,6 +304,7 @@ export async function getGameBySlug(slug: string): Promise<GameDetail | null> {
     | undefined;
 
   if (!DB) {
+    if (isBuildPhase()) return fetchLiveGameBySlug(slug);
     throw new Error("D1 database binding 'DB' not found.");
   }
 
@@ -370,10 +373,16 @@ WHERE g.id = ?`,
       updatedAt,
     };
   } catch (e) {
-    // 查询失败向上抛（500，不进 ISR 缓存）；真缺失上面已返回 null（404）
+    // 查询失败：构建期抓线上快照保构建通过；运行时向上抛走 500，不误缓存 404
     console.error('Failed to fetch game from D1:', e);
+    if (isBuildPhase()) return fetchLiveGameBySlug(slug);
     throw e;
   }
+}
+
+/** Next 构建期（next build 预渲染）为 true；线上 Worker 运行时无此变量 */
+function isBuildPhase() {
+  return process.env.NEXT_PHASE === 'phase-production-build';
 }
 
 export const cachedGetGameBySlug = cache(getGameBySlug);
