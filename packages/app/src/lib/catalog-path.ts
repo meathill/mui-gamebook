@@ -27,7 +27,7 @@ export function legacyCatalogRedirect(
     return blogCatalogHref(category, nextPage);
   }
 
-  if (pathname === '/games' || pathname === '/minigames' || pathname.startsWith('/tags/')) {
+  if (pathname === '/games' || pathname.startsWith('/tags/')) {
     if (!hasPage) return null;
     if (!page || page <= 1) return pathname;
     return catalogPageHref(pathname, page);

@@ -30,6 +30,6 @@ describe('revalidatePublicCatalog', () => {
 
   it('非法 tags 不会抛错', () => {
     expect(() => revalidatePublicCatalog({ tags: '{not-json' })).not.toThrow();
-    expect(revalidatePath).toHaveBeenCalledTimes(5);
+    expect(revalidatePath).toHaveBeenCalledTimes(4);
   });
 });

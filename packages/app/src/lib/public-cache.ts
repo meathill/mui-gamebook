@@ -24,7 +24,6 @@ export function revalidatePublicCatalog(options?: { slug?: string | null; tags?:
   revalidatePath('/', 'layout');
   revalidatePath('/games', 'layout');
   revalidatePath('/blog', 'layout');
-  revalidatePath('/minigames', 'layout');
   revalidatePath('/sitemap.xml');
 
   if (options?.slug) {

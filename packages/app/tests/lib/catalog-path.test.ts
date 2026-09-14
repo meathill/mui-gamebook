@@ -28,10 +28,9 @@ describe('legacyCatalogRedirect', () => {
     expect(legacyCatalogRedirect('/blog', {})).toBeNull();
   });
 
-  it('games/minigames/tags 的 ?page= 收到路径', () => {
+  it('games/tags 的 ?page= 收到路径', () => {
     expect(legacyCatalogRedirect('/games', { page: '1' })).toBe('/games');
     expect(legacyCatalogRedirect('/games', { page: '3' })).toBe('/games/p/3');
-    expect(legacyCatalogRedirect('/minigames', { page: '2' })).toBe('/minigames/p/2');
     expect(legacyCatalogRedirect('/tags/悬疑', { page: '2' })).toBe('/tags/悬疑/p/2');
   });
 

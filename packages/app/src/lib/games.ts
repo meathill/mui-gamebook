@@ -16,6 +16,55 @@ function safeParseTags(raw: string | null): string[] {
   }
 }
 
+/** 线上 API 行的 tags 可能是已解析数组（API 直接返回），也可能是 D1 存的 JSON 字符串 */
+function normalizeTags(raw: string | string[] | null | undefined): string[] {
+  if (Array.isArray(raw)) return raw.filter((t): t is string => typeof t === 'string');
+  return safeParseTags(raw ?? null);
+}
+
+/** 构建期抓线上公开 API 的分页大小（与 /api/games 上限对齐） */
+const LIVE_SNAPSHOT_PAGE_SIZE = 100;
+
+function getLiveSiteBase(): string | null {
+  const base = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/$/, '');
+  return base.startsWith('https://') ? base : null;
+}
+
+/**
+ * 无 D1 binding 时的回退：构建期 `getCloudflareContext()` 直接抛错，
+ * 此时抓线上公开 /api/games 全量快照做预渲染，避免把空目录 bake 进 ISR 缓存。
+ * 线上 API 本身是 dynamic、直读生产 D1，不会预渲染，不存在循环依赖。
+ * 非 https 站点（本地构建）不抓；抓不到就返回空数组（保持现状）。
+ */
+async function fetchLiveGamesSnapshot(): Promise<ParsedGameRow[]> {
+  const base = getLiveSiteBase();
+  if (!base) return [];
+  const snapshot: ParsedGameRow[] = [];
+  try {
+    for (let offset = 0; ; offset += LIVE_SNAPSHOT_PAGE_SIZE) {
+      const res = await fetch(`${base}/api/games?limit=${LIVE_SNAPSHOT_PAGE_SIZE}&offset=${offset}`, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) return [];
+      const page = (await res.json()) as Array<Omit<GameRow, 'tags'> & { tags: string | string[] }>;
+      if (!Array.isArray(page) || page.length === 0) break;
+      snapshot.push(...page.map((row) => ({ ...row, tags: normalizeTags(row.tags) })));
+      if (page.length < LIVE_SNAPSHOT_PAGE_SIZE) break;
+    }
+    return snapshot;
+  } catch {
+    return [];
+  }
+}
+
+/** 与 D1 分支同语义：只有带 limit 才做分页（offset 单独出现时忽略） */
+function applyGamesPaging(rows: ParsedGameRow[], options?: { limit?: number; offset?: number }): ParsedGameRow[] {
+  if (!options?.limit) return rows;
+  const offset = options.offset ?? 0;
+  return rows.slice(offset, offset + options.limit);
+}
+
 export async function getPublishedGames(options?: { limit?: number; offset?: number }) {
   try {
     const { env } = getCloudflareContext();
@@ -23,7 +72,7 @@ export async function getPublishedGames(options?: { limit?: number; offset?: num
 
     if (!DB) {
       console.error("D1 database binding 'DB' not found.");
-      return [];
+      return applyGamesPaging(await fetchLiveGamesSnapshot(), options);
     }
 
     let query =
@@ -44,7 +93,7 @@ export async function getPublishedGames(options?: { limit?: number; offset?: num
     }));
   } catch (e) {
     console.error('Failed to fetch from D1:', e);
-    return [];
+    return applyGamesPaging(await fetchLiveGamesSnapshot(), options);
   }
 }
 
@@ -59,7 +108,7 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
 
     if (!DB) {
       console.error("D1 database binding 'DB' not found.");
-      return [];
+      return pickFeatured(await fetchLiveGamesSnapshot(), pinnedSlugs, limit);
     }
 
     const columns = 'slug, title, description, cover_image, tags, created_at, updated_at';
@@ -97,8 +146,24 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
     }));
   } catch (e) {
     console.error('Failed to fetch featured games:', e);
-    return [];
+    return pickFeatured(await fetchLiveGamesSnapshot(), pinnedSlugs, limit);
   }
+}
+
+/** 线上快照已按 updated_at 倒序：置顶优先（保序），其余补足到 limit */
+function pickFeatured(snapshot: ParsedGameRow[], pinnedSlugs: string[], limit: number): ParsedGameRow[] {
+  const bySlug = new Map(snapshot.map((row) => [row.slug, row]));
+  const pinned = pinnedSlugs.map((slug) => bySlug.get(slug)).filter((row): row is ParsedGameRow => !!row);
+  const seen = new Set(pinned.map((row) => row.slug));
+  const merged = [...pinned];
+  for (const row of snapshot) {
+    if (merged.length >= limit) break;
+    if (!seen.has(row.slug)) {
+      seen.add(row.slug);
+      merged.push(row);
+    }
+  }
+  return merged;
 }
 
 export async function getPublishedGamesCount(): Promise<number> {
@@ -106,7 +171,7 @@ export async function getPublishedGamesCount(): Promise<number> {
     const { env } = getCloudflareContext();
     const DB = env.DB;
 
-    if (!DB) return 0;
+    if (!DB) return (await fetchLiveGamesSnapshot()).length;
 
     const result = await DB.prepare('SELECT COUNT(*) as count FROM Games WHERE published = 1').first<{
       count: number;
@@ -114,7 +179,7 @@ export async function getPublishedGamesCount(): Promise<number> {
     return result?.count ?? 0;
   } catch (e) {
     console.error('Failed to get games count:', e);
-    return 0;
+    return (await fetchLiveGamesSnapshot()).length;
   }
 }
 
@@ -348,27 +413,30 @@ export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
     const { env } = getCloudflareContext();
     const DB = env.DB;
 
-    if (!DB) return [];
+    if (!DB) return countTags((await fetchLiveGamesSnapshot()).map((row) => row.tags));
 
     const { results } = (await DB.prepare(`SELECT tags FROM Games WHERE published = 1`).all()) as {
       results: { tags: string | null }[];
     };
 
-    // 统计每个标签的使用次数
-    const tagCounts = new Map<string, number>();
-    for (const row of results) {
-      const tags: string[] = safeParseTags(row.tags);
-      for (const tag of tags) {
-        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
-      }
-    }
-
-    // 转换为数组并按计数排序
-    return Array.from(tagCounts.entries())
-      .map(([tag, count]) => ({ tag, count }))
-      .sort((a, b) => b.count - a.count);
+    return countTags(results.map((row) => safeParseTags(row.tags)));
   } catch (e) {
     console.error('Failed to get all tags:', e);
-    return [];
+    return countTags((await fetchLiveGamesSnapshot()).map((row) => row.tags));
   }
+}
+
+/** 标签计数聚合（D1 分支与线上快照分支共用） */
+function countTags(tagLists: string[][]): { tag: string; count: number }[] {
+  const tagCounts = new Map<string, number>();
+  for (const tags of tagLists) {
+    for (const tag of tags) {
+      tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
+    }
+  }
+
+  // 转换为数组并按计数排序
+  return Array.from(tagCounts.entries())
+    .map(([tag, count]) => ({ tag, count }))
+    .sort((a, b) => b.count - a.count);
 }
