@@ -197,6 +197,12 @@ export default async function AboutPage() {
               {t('ctaCreate')}
             </Link>
           </div>
+          <Link
+            href="/open"
+            prefetch={false}
+            className="mt-6 inline-block text-sm text-gray-300 hover:text-white underline underline-offset-4">
+            {t('ctaOpen')}
+          </Link>
         </div>
       </section>
     </div>

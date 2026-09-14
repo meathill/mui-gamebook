@@ -31,7 +31,8 @@
     "contact": "Contact Us",
     "interactiveFiction": "Interactive Fiction",
     "howToPlay": "How to Play",
-    "create": "Create"
+    "create": "Create",
+    "open": "Open Source"
   },
   "open": {
     "pageTitle": "Open Source & Self-Hosting",
@@ -182,7 +183,8 @@
       },
       "openDev": {
         "title": "Actively Developed, We Listen",
-        "description": "This project is under active development, and we truly value every creator's feedback. Share your ideas and suggestions — they might make it into the next release."
+        "description": "This project is under active development, and we truly value every creator's feedback. Share your ideas and suggestions — they might make it into the next release.",
+        "link": "Explore self-hosting"
       }
     },
     "workflow": {
@@ -419,7 +421,8 @@
     "ctaTitle": "Ready to Get Started?",
     "ctaContent": "Whether you want to experience amazing interactive stories or create your own adventures, MuiStory is here for you.",
     "ctaPlay": "Start Playing",
-    "ctaCreate": "Start Creating"
+    "ctaCreate": "Start Creating",
+    "ctaOpen": "Open source & self-hosting"
   },
   "contact": {
     "pageTitle": "Contact Us - MuiStory",
