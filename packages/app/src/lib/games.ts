@@ -22,6 +22,15 @@ function normalizeTags(raw: string | string[] | null | undefined): string[] {
   return safeParseTags(raw ?? null);
 }
 
+/**
+ * 「可玩」口径：已发布且正文存在。sitemap/列表/置顶/tag/推荐统一用它，
+ * 与播放页 getGameBySlug（有记录 + 正文非空 + 解析成功）对齐，
+ * 避免 sitemap 收录打不开的死链（Ahrefs noindex-in-sitemap）。
+ */
+function playableContentExists(gamesAlias: string) {
+  return `EXISTS (SELECT 1 FROM GameContent c WHERE c.game_id = ${gamesAlias}.id AND c.content IS NOT NULL AND TRIM(c.content) != '')`;
+}
+
 /** 构建期抓线上公开 API 的分页大小（与 /api/games 上限对齐） */
 const LIVE_SNAPSHOT_PAGE_SIZE = 100;
 
@@ -58,6 +67,27 @@ async function fetchLiveGamesSnapshot(): Promise<ParsedGameRow[]> {
   }
 }
 
+/**
+ * 构建期抓单游戏线上公开 API（404/失败 → null）。
+ * toPlayableGame 过滤掉创作者 prompt 等 AI 字段，不泄露进预渲染 HTML。
+ */
+async function fetchLiveGameBySlug(slug: string): Promise<GameDetail | null> {
+  const base = getLiveSiteBase();
+  if (!base) return null;
+  try {
+    const res = await fetch(`${base}/api/games/${encodeURIComponent(slug)}`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as Parameters<typeof toPlayableGame>[0];
+    if (!data || typeof data !== 'object') return null;
+    return { ...toPlayableGame(data) };
+  } catch {
+    return null;
+  }
+}
+
 /** 与 D1 分支同语义：只有带 limit 才做分页（offset 单独出现时忽略） */
 function applyGamesPaging(rows: ParsedGameRow[], options?: { limit?: number; offset?: number }): ParsedGameRow[] {
   if (!options?.limit) return rows;
@@ -75,8 +105,7 @@ export async function getPublishedGames(options?: { limit?: number; offset?: num
       return applyGamesPaging(await fetchLiveGamesSnapshot(), options);
     }
 
-    let query =
-      'SELECT slug, title, description, cover_image, tags, created_at, updated_at FROM Games WHERE published = 1 ORDER BY updated_at DESC';
+    let query = `SELECT slug, title, description, cover_image, tags, created_at, updated_at FROM Games WHERE published = 1 AND ${playableContentExists('Games')} ORDER BY updated_at DESC`;
 
     if (options?.limit) {
       query += ` LIMIT ${options.limit}`;
@@ -116,7 +145,7 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
     if (pinnedSlugs.length > 0) {
       const placeholders = pinnedSlugs.map(() => '?').join(', ');
       const { results } = (await DB.prepare(
-        `SELECT ${columns} FROM Games WHERE published = 1 AND slug IN (${placeholders})`,
+        `SELECT ${columns} FROM Games WHERE published = 1 AND ${playableContentExists('Games')} AND slug IN (${placeholders})`,
       )
         .bind(...pinnedSlugs)
         .all()) as { results: GameRow[] };
@@ -125,7 +154,7 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
     }
 
     const { results: recent } = (await DB.prepare(
-      `SELECT ${columns} FROM Games WHERE published = 1 ORDER BY updated_at DESC LIMIT ?`,
+      `SELECT ${columns} FROM Games WHERE published = 1 AND ${playableContentExists('Games')} ORDER BY updated_at DESC LIMIT ?`,
     )
       .bind(limit)
       .all()) as { results: GameRow[] };
@@ -173,7 +202,9 @@ export async function getPublishedGamesCount(): Promise<number> {
 
     if (!DB) return (await fetchLiveGamesSnapshot()).length;
 
-    const result = await DB.prepare('SELECT COUNT(*) as count FROM Games WHERE published = 1').first<{
+    const result = await DB.prepare(
+      `SELECT COUNT(*) as count FROM Games WHERE published = 1 AND ${playableContentExists('Games')}`,
+    ).first<{
       count: number;
     }>();
     return result?.count ?? 0;
@@ -188,12 +219,15 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
     const { env } = getCloudflareContext();
     const DB = env.DB;
 
-    if (!DB || tags.length === 0) return [];
+    if (!DB || tags.length === 0) {
+      if (!DB) return getRelatedGamesFromLive(currentSlug, tags, limit);
+      return [];
+    }
 
-    // 获取所有已发布游戏（除当前游戏外），然后在内存中按标签匹配排序
+    // 获取所有已发布且可玩的游戏（除当前游戏外），然后在内存中按标签匹配排序
     const { results } = (await DB.prepare(
       `SELECT slug, title, description, cover_image, tags, created_at, updated_at
-       FROM Games WHERE published = 1 AND slug != ?
+       FROM Games WHERE published = 1 AND ${playableContentExists('Games')} AND slug != ?
        ORDER BY updated_at DESC`,
     )
       .bind(currentSlug)
@@ -218,8 +252,20 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
       .map(({ matchCount: _, ...rest }) => rest);
   } catch (e) {
     console.error('Failed to get related games:', e);
-    return [];
+    return getRelatedGamesFromLive(currentSlug, tags, limit);
   }
+}
+
+async function getRelatedGamesFromLive(currentSlug: string, tags: string[], limit: number): Promise<ParsedGameRow[]> {
+  if (tags.length === 0) return [];
+  const snapshot = await fetchLiveGamesSnapshot();
+  return snapshot
+    .filter((row) => row.slug !== currentSlug)
+    .map((row) => ({ ...row, matchCount: row.tags.filter((tag) => tags.includes(tag)).length }))
+    .filter((g) => g.matchCount > 0)
+    .sort((a, b) => b.matchCount - a.matchCount)
+    .slice(0, limit)
+    .map(({ matchCount: _, ...rest }) => rest);
 }
 
 /**
@@ -232,16 +278,34 @@ export type GameDetail = PlayableGame & {
   updatedAt?: string;
 };
 
+/**
+ * 三态语义（调用方据此区分处理）：
+ * - 正常 playable → GameDetail
+ * - 真缺失（无记录/无正文/解析失败/未发布）→ null，调用方走 404
+ * - D1 不可用或查询抛错 → throw，调用方走 500（不进 ISR 缓存，避免故障期全站误 404）
+ * 构建期无请求上下文时抓线上公开 API（404 → null）。
+ */
 export async function getGameBySlug(slug: string): Promise<GameDetail | null> {
+  let cloudflareContext: { env: { DB: unknown } };
   try {
-    const { env } = getCloudflareContext();
-    const DB = env.DB;
+    cloudflareContext = getCloudflareContext() as { env: { DB: unknown } };
+  } catch {
+    return fetchLiveGameBySlug(slug);
+  }
+  const DB = cloudflareContext.env.DB as
+    | {
+        prepare: (query: string) => {
+          bind: (...args: unknown[]) => { first: <T>() => Promise<T | null> };
+        };
+      }
+    | null
+    | undefined;
 
-    if (!DB) {
-      console.error("D1 database binding 'DB' not found.");
-      return null;
-    }
+  if (!DB) {
+    throw new Error("D1 database binding 'DB' not found.");
+  }
 
+  try {
     let gameRecord = await DB.prepare(
       `SELECT g.id, g.owner_id, g.published, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
 FROM Games g
@@ -306,8 +370,9 @@ WHERE g.id = ?`,
       updatedAt,
     };
   } catch (e) {
+    // 查询失败向上抛（500，不进 ISR 缓存）；真缺失上面已返回 null（404）
     console.error('Failed to fetch game from D1:', e);
-    return null;
+    throw e;
   }
 }
 
@@ -327,7 +392,7 @@ export async function getGamesByTag(
 
     if (!DB) {
       console.error("D1 database binding 'DB' not found.");
-      return { games: [], total: 0 };
+      return getGamesByTagFromLive(tag, options);
     }
 
     // 尝试使用 GameTags 关联表查询
@@ -337,7 +402,7 @@ export async function getGamesByTag(
         `SELECT COUNT(DISTINCT g.id) as count
          FROM Games g
          INNER JOIN GameTags gt ON g.id = gt.game_id
-         WHERE g.published = 1 AND gt.tag = ?`,
+         WHERE g.published = 1 AND ${playableContentExists('g')} AND gt.tag = ?`,
       )
         .bind(tag)
         .first<{ count: number }>();
@@ -348,7 +413,7 @@ export async function getGamesByTag(
       let query = `SELECT g.slug, g.title, g.description, g.cover_image, g.tags, g.created_at, g.updated_at
                    FROM Games g
                    INNER JOIN GameTags gt ON g.id = gt.game_id
-                   WHERE g.published = 1 AND gt.tag = ?
+                   WHERE g.published = 1 AND ${playableContentExists('g')} AND gt.tag = ?
                    ORDER BY g.updated_at DESC`;
 
       if (options?.limit) {
@@ -372,10 +437,10 @@ export async function getGamesByTag(
       console.log('GameTags table not found, falling back to JSON parsing');
     }
 
-    // 降级：获取所有已发布游戏，然后在内存中筛选
+    // 降级：获取所有已发布且可玩的游戏，然后在内存中筛选
     const { results } = (await DB.prepare(
       `SELECT slug, title, description, cover_image, tags, created_at, updated_at
-       FROM Games WHERE published = 1
+       FROM Games WHERE published = 1 AND ${playableContentExists('Games')}
        ORDER BY updated_at DESC`,
     ).all()) as { results: GameRow[] };
 
@@ -401,8 +466,20 @@ export async function getGamesByTag(
     };
   } catch (e) {
     console.error('Failed to fetch games by tag:', e);
-    return { games: [], total: 0 };
+    return getGamesByTagFromLive(tag, options);
   }
+}
+
+/** 线上快照已按 updated_at 倒序，与 D1 分支同分页语义 */
+async function getGamesByTagFromLive(
+  tag: string,
+  options?: { limit?: number; offset?: number },
+): Promise<{ games: ParsedGameRow[]; total: number }> {
+  const snapshot = await fetchLiveGamesSnapshot();
+  const filtered = snapshot.filter((row) => row.tags.includes(tag));
+  if (!options?.limit) return { games: filtered, total: filtered.length };
+  const offset = options.offset ?? 0;
+  return { games: filtered.slice(offset, offset + options.limit), total: filtered.length };
 }
 
 /**
@@ -415,7 +492,9 @@ export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
 
     if (!DB) return countTags((await fetchLiveGamesSnapshot()).map((row) => row.tags));
 
-    const { results } = (await DB.prepare(`SELECT tags FROM Games WHERE published = 1`).all()) as {
+    const { results } = (await DB.prepare(
+      `SELECT tags FROM Games WHERE published = 1 AND ${playableContentExists('Games')}`,
+    ).all()) as {
       results: { tags: string | null }[];
     };
 
