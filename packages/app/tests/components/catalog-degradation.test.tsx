@@ -24,7 +24,6 @@ vi.mock('@mui-gamebook/site-common/utils', async (importOriginal) => ({
 }));
 
 import { GamesCatalog } from '@/app/games/games-catalog';
-import { MinigamesCatalog } from '@/app/minigames/minigames-catalog';
 import { BlogCatalog } from '@/app/blog/blog-catalog';
 
 describe('目录页数据层故障降级', () => {
@@ -45,13 +44,6 @@ describe('目录页数据层故障降级', () => {
     render(ui);
 
     expect(screen.getByText('noGames')).toBeTruthy();
-  });
-
-  it('D1 故障时 /minigames 渲染空态而非抛错', async () => {
-    const ui = await MinigamesCatalog({ page: 1 });
-    render(ui);
-
-    expect(screen.getByText('noMinigames')).toBeTruthy();
   });
 
   it('CMS 无数据时 /blog 渲染空列表而非抛错', async () => {

@@ -2,7 +2,6 @@ import { MetadataRoute } from 'next';
 import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { getPublishedGames, getAllTags } from '@/lib/games';
 import { getPublishedPosts } from '@/lib/blog';
-import { getPublicMinigames } from '@/lib/minigames';
 // Next 要求 segment 配置是字面量，不能从模块导入
 export const revalidate = 3600;
 
@@ -27,7 +26,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/interactive-fiction`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/how-to-play`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/create`, changeFrequency: 'monthly', priority: 0.6 },
-    { url: `${baseUrl}/minigames`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/blog`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/about`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/contact`, changeFrequency: 'monthly', priority: 0.5 },
@@ -48,19 +46,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: toLastModified(game.updated_at),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
-  }));
-
-  let minigames: Awaited<ReturnType<typeof getPublicMinigames>> = [];
-  try {
-    minigames = await getPublicMinigames();
-  } catch (e) {
-    console.error('sitemap: getPublicMinigames failed', e);
-  }
-  const minigamePages: MetadataRoute.Sitemap = minigames.map((minigame) => ({
-    url: `${baseUrl}/minigames/${minigame.id}`,
-    lastModified: toLastModified(minigame.created_at),
-    changeFrequency: 'weekly' as const,
-    priority: 0.5,
   }));
 
   let tags: Awaited<ReturnType<typeof getAllTags>> = [];
@@ -89,5 +74,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...gamePages, ...minigamePages, ...tagPages, ...blogPages];
+  return [...staticPages, ...gamePages, ...tagPages, ...blogPages];
 }
