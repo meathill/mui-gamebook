@@ -12,18 +12,25 @@ function isDevelopmentRuntime() {
   return process.env.NODE_ENV !== 'production';
 }
 
+/** Cloudflare 缩放宽度上限：全屏背景 1920 足够，4K 屏也够用（Ahrefs width=3840 超大图治理） */
+export const MAX_IMAGE_WIDTH = 1920;
+
+/** 默认压缩质量：AI 插画在 75 下视觉无感、体积降 30–50% */
+export const DEFAULT_IMAGE_QUALITY = 75;
+
 function normalizeWidth(width: number) {
-  return Number.isFinite(width) && width > 0 ? Math.round(width) : 1200;
+  if (!Number.isFinite(width) || width <= 0) return 1200;
+  return Math.min(MAX_IMAGE_WIDTH, Math.round(width));
 }
 
 function normalizeQuality(quality: number | undefined) {
   if (quality === undefined) {
-    return undefined;
+    return DEFAULT_IMAGE_QUALITY;
   }
 
   const nextQuality = Math.round(quality);
   if (!Number.isFinite(nextQuality)) {
-    return undefined;
+    return DEFAULT_IMAGE_QUALITY;
   }
 
   return Math.min(100, Math.max(1, nextQuality));

@@ -22,6 +22,9 @@ const nextConfig: NextConfig = {
   images: {
     loader: 'custom',
     loaderFile: './image-loader.ts',
+    // 上限 1920：漏写 sizes 时最大也只到 1920，不会再出现 width=3840（Ahrefs 超大图治理）
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [128, 256, 384, 512, 640],
     remotePatterns: [
       {
         protocol: 'https',

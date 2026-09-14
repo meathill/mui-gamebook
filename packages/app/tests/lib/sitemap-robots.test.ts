@@ -20,6 +20,8 @@ vi.mock('@/lib/minigames', () => ({
 
 import sitemap from '@/app/sitemap';
 import robots from '@/app/robots';
+import zhMessages from '@/i18n/messages/zh.json';
+import enMessages from '@/i18n/messages/en.json';
 
 describe('sitemap / robots URL 规范化', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
@@ -48,6 +50,14 @@ describe('sitemap / robots URL 规范化', () => {
     expect(entries.some((entry) => entry.url.startsWith('http://'))).toBe(false);
     const home = entries.find((entry) => entry.url === 'https://muistory.com');
     expect(home?.lastModified).toBeUndefined();
+  });
+
+  it('sitemap 包含 /open（页脚/首页/关于页均有内链，防孤儿页回归）', async () => {
+    process.env.NEXT_PUBLIC_SITE_URL = 'https://muistory.com';
+
+    const entries = await sitemap();
+
+    expect(entries.some((entry) => entry.url === 'https://muistory.com/open')).toBe(true);
   });
 
   it('sitemap 游戏条目带 updated_at，协议仍是 https', async () => {
@@ -110,5 +120,10 @@ describe('sitemap / robots URL 规范化', () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'http://muistory.com/';
 
     expect(robots().sitemap).toBe('https://muistory.com/sitemap.xml');
+  });
+
+  it('页脚文案含 /open 入口（中英），孤儿页不再复发', () => {
+    expect(zhMessages.footer.open).toBeTruthy();
+    expect(enMessages.footer.open).toBeTruthy();
   });
 });
