@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getAllTags, getFeaturedGames, getPublishedGames, getPublishedGamesCount } from '@/lib/games';
+import {
+  getAllTags,
+  getFeaturedGames,
+  getGameBySlug,
+  getGamesByTag,
+  getPublishedGames,
+  getPublishedGamesCount,
+  getRelatedGames,
+} from '@/lib/games';
 
 vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: vi.fn(),
@@ -103,5 +111,98 @@ describe('构建期无 D1 时回退抓线上 API', () => {
 
     expect(await getPublishedGames()).toEqual([]);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('目录查询 SQL 带正文存在检查（sitemap/列表与播放页同口径）', async () => {
+    const seenSql: string[] = [];
+    const mockDB = {
+      prepare: vi.fn((sql: string) => {
+        seenSql.push(sql);
+        return {
+          bind: () => ({ all: async () => ({ results: [] }), first: async () => ({ count: 0 }) }),
+          all: async () => ({ results: [] }),
+        };
+      }),
+    };
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({ env: { DB: mockDB } });
+
+    await getPublishedGames();
+    await getGamesByTag('悬疑');
+    await getAllTags();
+
+    expect(seenSql.length).toBeGreaterThan(0);
+    expect(seenSql.every((sql) => sql.includes('GameContent'))).toBe(true);
+  });
+
+  it('getGamesByTag 无 D1 时从快照按标签过滤并计数', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [row('a', ['悬疑', '奇幻']), row('b', ['悬疑']), row('c', ['科幻'])],
+    });
+
+    const { games, total } = await getGamesByTag('悬疑', { limit: 1, offset: 1 });
+
+    expect(total).toBe(2);
+    expect(games.map((g) => g.slug)).toEqual(['b']);
+  });
+
+  it('getRelatedGames 无 D1 时排除自己并按匹配数排序', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => [row('me', ['悬疑']), row('a', ['悬疑', '奇幻']), row('b', ['悬疑'])],
+    });
+
+    const related = await getRelatedGames('me', ['悬疑', '奇幻'], 4);
+
+    expect(related.map((g) => g.slug)).toEqual(['a', 'b']);
+  });
+
+  it('getGameBySlug 构建期抓单游戏 API，并过滤创作者 prompt', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        title: 'T',
+        slug: 't',
+        ai: {
+          characters: {
+            hero: { name: 'H', image_url: 'u', description: 'SECRET', image_prompt: 'SECRET' },
+          },
+        },
+        scenes: { start: { id: 'start', nodes: [{ type: 'text', content: 'hi' }] } },
+      }),
+    });
+
+    const game = await getGameBySlug('t');
+
+    expect(fetchMock.mock.calls[0][0]).toBe('https://muistory.com/api/games/t');
+    expect(game).not.toBeNull();
+    expect(game?.scenes['start'].nodes).toHaveLength(1);
+    expect(game?.characters?.['hero']).toEqual({ name: 'H', image_url: 'u' });
+  });
+
+  it('getGameBySlug 线上 404 时返回 null（调用方走 404）', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 404 });
+
+    expect(await getGameBySlug('gone')).toBeNull();
+  });
+
+  it('getGameBySlug D1 查询抛错时向上抛（500，不吞成 null 误缓存）', async () => {
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({
+      env: {
+        DB: {
+          prepare: vi.fn(() => {
+            throw new Error('D1 down');
+          }),
+        },
+      },
+    });
+
+    await expect(getGameBySlug('x')).rejects.toThrow('D1 down');
+  });
+
+  it('getGameBySlug 无 DB binding 时抛错而非返回 null', async () => {
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({ env: {} });
+
+    await expect(getGameBySlug('x')).rejects.toThrow();
   });
 });

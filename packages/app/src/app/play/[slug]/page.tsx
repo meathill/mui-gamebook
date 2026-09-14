@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { cachedGetGameBySlug, getPublishedGames } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
@@ -139,14 +139,8 @@ export default async function PlayPage({ params }: Props) {
   const t = await getTranslations('game');
 
   if (!game) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">游戏未找到</h1>
-          <p className="mt-2 text-gray-600">找不到故事：{slug}</p>
-        </div>
-      </div>
-    );
+    // 缺失/下架/内容损坏一律真 404（配 sitemap 可玩口径，结构性消除 noindex-in-sitemap）
+    notFound();
   }
 
   // 绑定了子站点的游戏，重定向到子站点
