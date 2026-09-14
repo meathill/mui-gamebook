@@ -27,12 +27,14 @@ function row(slug: string, tags: string[] | string, updatedAt = '2026-01-01') {
 
 describe('构建期无 D1 时回退抓线上 API', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const originalNextPhase = process.env.NEXT_PHASE;
   const fetchMock = vi.fn();
 
   beforeEach(() => {
     vi.resetAllMocks();
     mockBuildTime();
     process.env.NEXT_PUBLIC_SITE_URL = 'https://muistory.com';
+    delete process.env.NEXT_PHASE;
     vi.stubGlobal('fetch', fetchMock);
   });
 
@@ -42,6 +44,11 @@ describe('构建期无 D1 时回退抓线上 API', () => {
       delete process.env.NEXT_PUBLIC_SITE_URL;
     } else {
       process.env.NEXT_PUBLIC_SITE_URL = originalSiteUrl;
+    }
+    if (originalNextPhase === undefined) {
+      delete process.env.NEXT_PHASE;
+    } else {
+      process.env.NEXT_PHASE = originalNextPhase;
     }
   });
 
@@ -198,6 +205,59 @@ describe('构建期无 D1 时回退抓线上 API', () => {
     });
 
     await expect(getGameBySlug('x')).rejects.toThrow('D1 down');
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('构建期 D1 为空表（no such table）时抓线上快照保构建通过', async () => {
+    process.env.NEXT_PHASE = 'phase-production-build';
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({
+      env: {
+        DB: {
+          prepare: vi.fn(() => {
+            throw new Error('no such table: Games');
+          }),
+        },
+      },
+    });
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        title: 'T',
+        slug: 't',
+        ai: { characters: {} },
+        scenes: { start: { id: 'start', nodes: [{ type: 'text', content: 'hi' }] } },
+      }),
+    });
+
+    const game = await getGameBySlug('t');
+
+    expect(fetchMock.mock.calls[0][0]).toBe('https://muistory.com/api/games/t');
+    expect(game?.scenes['start'].nodes).toHaveLength(1);
+  });
+
+  it('构建期线上也抓不到时返回 null（构建通过，靠重验证自愈）', async () => {
+    process.env.NEXT_PHASE = 'phase-production-build';
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({
+      env: {
+        DB: {
+          prepare: vi.fn(() => {
+            throw new Error('no such table: Games');
+          }),
+        },
+      },
+    });
+    fetchMock.mockRejectedValue(new Error('network down'));
+
+    expect(await getGameBySlug('t')).toBeNull();
+  });
+
+  it('构建期无 DB binding 时同样走线上回退', async () => {
+    process.env.NEXT_PHASE = 'phase-production-build';
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({ env: {} });
+    fetchMock.mockResolvedValue({ ok: false, status: 404 });
+
+    expect(await getGameBySlug('gone')).toBeNull();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('getGameBySlug 无 DB binding 时抛错而非返回 null', async () => {
