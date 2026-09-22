@@ -212,7 +212,7 @@ export default async function AiCreationInfographic() {
                 <span className="text-[11px] font-bold uppercase tracking-wider text-orange-400 bg-orange-500/20 px-2 py-0.5 rounded border border-orange-500/30">
                   限时福利
                 </span>
-                <h4 className="text-base sm:text-lg font-bold text-white">AI 辅助创作套件全面限时免费开放</h4>
+                <h4 className="text-base sm:text-lg font-bold text-white">AI 辅助创作套件 · 免费开始，订阅扩容</h4>
               </div>
               <p className="text-xs sm:text-sm text-stone-300 max-w-2xl">{t('aiStudio.freeBanner')}</p>
             </div>

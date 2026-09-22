@@ -51,3 +51,28 @@ pnpm run cf-typegen
 ```
 
 详见 [TESTING.md](TESTING.md) 里关于 `cloudflare-env.d.ts` 的说明。
+
+## Stripe 订阅（stripe-subscription）
+
+上线订阅前在 Stripe Dashboard 完成：
+
+1. 建 Product（建议两个：基础 / 专业）和 4 个 Recurring Price：
+   - `basic` 月付 $9.98、年付 $99.98
+   - `pro` 月付 $19.98、年付 $199.98
+2. 创建 **Restricted API Key**（推荐，权限含 Customers / Subscriptions / Checkout Sessions / Billing Portal），配置 secret：
+   - `wrangler secret put STRIPE_SECRET_KEY`
+   - `wrangler secret put STRIPE_WEBHOOK_SECRET`（Webhook 端点的 signing secret）
+3. 在 `wrangler.jsonc` vars（或 Dashboard vars）填入四个 Price ID 后重新 `pnpm --filter @mui-gamebook/app run cf-typegen`：
+   - `STRIPE_PRICE_BASIC_MONTHLY`
+   - `STRIPE_PRICE_BASIC_YEARLY`
+   - `STRIPE_PRICE_PRO_MONTHLY`
+   - `STRIPE_PRICE_PRO_YEARLY`
+4. 配置 Webhook 端点：`https://muistory.com/api/stripe/webhook`，事件：
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.updated`
+   - `customer.subscription.deleted`
+   - `invoice.paid`
+   - `invoice.payment_failed`
+5. Customer Portal 打开「取消订阅 / 更新支付方式」；升级降级 v1 不做站内 UI。
+6. 迁移数据库：`pnpm --filter @mui-gamebook/app run db:migrate:remote`（含 `0005_stripe_billing.sql`）。

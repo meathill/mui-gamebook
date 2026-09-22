@@ -16,8 +16,14 @@ vi.mock('@/lib/config', () => ({
   getConfig: vi.fn(),
 }));
 
+vi.mock('@/lib/billing', () => ({
+  getUsableSubscription: vi.fn(),
+  getPeriodUsage: vi.fn(),
+}));
+
 import { checkUserUsageLimit, getUserDailyUsage } from '@/lib/usage-limit';
 import { getConfig } from '@/lib/config';
+import { getUsableSubscription, getPeriodUsage } from '@/lib/billing';
 
 describe('getUserDailyUsage', () => {
   beforeEach(() => {
@@ -71,6 +77,7 @@ describe('getUserDailyUsage', () => {
 describe('checkUserUsageLimit', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (getUsableSubscription as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   });
 
   it('管理员用户无限制', async () => {
@@ -78,13 +85,15 @@ describe('checkUserUsageLimit', () => {
 
     const result = await checkUserUsageLimit('admin1');
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       allowed: true,
       currentUsage: 0,
       limit: Infinity,
       remaining: Infinity,
       message: '管理员用户，无限制',
+      planCode: 'admin',
     });
+    expect(getUsableSubscription).not.toHaveBeenCalled();
   });
 
   it('普通用户未超限', async () => {
@@ -95,6 +104,7 @@ describe('checkUserUsageLimit', () => {
 
     expect(result.allowed).toBe(true);
     expect(result.remaining).toBe(600);
+    expect(result.planCode).toBe('free');
   });
 
   it('用量恰好等于上限时判定为超限', async () => {
@@ -105,6 +115,45 @@ describe('checkUserUsageLimit', () => {
 
     expect(result.allowed).toBe(false);
     expect(result.remaining).toBe(0);
+  });
+
+  it('订阅用户按账单周期月包限额', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
+    const periodStart = new Date('2026-09-01T00:00:00.000Z');
+    const periodEnd = new Date('2026-10-01T00:00:00.000Z');
+    (getUsableSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
+      planCode: 'pro',
+      monthlyTokenLimit: 2_000_000,
+      currentPeriodStart: periodStart,
+      currentPeriodEnd: periodEnd,
+    });
+    (getPeriodUsage as ReturnType<typeof vi.fn>).mockResolvedValue(500_000);
+
+    const result = await checkUserUsageLimit('u1');
+
+    expect(result.allowed).toBe(true);
+    expect(result.limit).toBe(2_000_000);
+    expect(result.remaining).toBe(1_500_000);
+    expect(result.planCode).toBe('pro');
+    expect(result.periodStart).toEqual(periodStart);
+    expect(getPeriodUsage).toHaveBeenCalledWith('u1', periodStart, periodEnd);
+  });
+
+  it('订阅用户达到月包上限时拒绝', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
+    (getUsableSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
+      planCode: 'basic',
+      monthlyTokenLimit: 1_000_000,
+      currentPeriodStart: new Date('2026-09-01T00:00:00.000Z'),
+      currentPeriodEnd: new Date('2026-10-01T00:00:00.000Z'),
+    });
+    (getPeriodUsage as ReturnType<typeof vi.fn>).mockResolvedValue(1_000_000);
+
+    const result = await checkUserUsageLimit('u1');
+
+    expect(result.allowed).toBe(false);
+    expect(result.remaining).toBe(0);
+    expect(result.message).toContain('套餐上限');
   });
 
   it('[已知权衡] getConfig 异常时 fail-open 允许通过', async () => {

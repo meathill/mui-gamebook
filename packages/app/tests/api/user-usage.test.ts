@@ -13,9 +13,19 @@ vi.mock('@/lib/config', () => ({
   getConfig: vi.fn(),
 }));
 
+vi.mock('@/lib/billing', () => ({
+  getUserQuotaSnapshot: vi.fn(),
+  listSubscriptionsByUser: vi.fn(async () => []),
+  PLAN_DEFINITIONS: {
+    basic: { code: 'basic', name: '基础', monthlyPriceUsd: 9.98, yearlyPriceUsd: 99.98, monthlyTokenLimit: 1_000_000 },
+    pro: { code: 'pro', name: '专业', monthlyPriceUsd: 19.98, yearlyPriceUsd: 199.98, monthlyTokenLimit: 2_000_000 },
+  },
+}));
+
 import { GET } from '@/app/api/user/usage/route';
 import { getSession } from '@/lib/auth-server';
 import { getConfig } from '@/lib/config';
+import { getUserQuotaSnapshot } from '@/lib/billing';
 import { checkUserUsageLimit, getUserDailyUsage } from '@/lib/usage-limit';
 
 describe('GET /api/user/usage', () => {
@@ -39,6 +49,17 @@ describe('GET /api/user/usage', () => {
     });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ limit: 100000, remaining: 97000 });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [] });
+    (getUserQuotaSnapshot as ReturnType<typeof vi.fn>).mockResolvedValue({
+      planCode: 'free',
+      isSubscribed: false,
+      isUnlimited: false,
+      periodStart: null,
+      periodEnd: null,
+      periodUsage: 0,
+      periodLimit: null,
+      cancelAtPeriodEnd: false,
+      subscriptionStatus: null,
+    });
 
     const res = await GET();
 
@@ -54,6 +75,17 @@ describe('GET /api/user/usage', () => {
     (getUserDailyUsage as ReturnType<typeof vi.fn>).mockResolvedValue({ totalTokens: 0, lastUpdated: '' });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ limit: Infinity, remaining: Infinity });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: ['admin1'] });
+    (getUserQuotaSnapshot as ReturnType<typeof vi.fn>).mockResolvedValue({
+      planCode: 'admin',
+      isSubscribed: false,
+      isUnlimited: true,
+      periodStart: null,
+      periodEnd: null,
+      periodUsage: 0,
+      periodLimit: null,
+      cancelAtPeriodEnd: false,
+      subscriptionStatus: null,
+    });
 
     const res = await GET();
 

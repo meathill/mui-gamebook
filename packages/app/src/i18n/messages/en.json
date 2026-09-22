@@ -83,16 +83,16 @@
   "home": {
     "hero": {
       "title": "Interactive Fiction Online — Everyone Can Read It, Everyone Can Write It",
-      "freeBadge": "Limited-Time Offer · Full AI Creation Studio Free Access",
+      "freeBadge": "Start free · Subscribe for more AI credits",
       "subtitle": "State-of-the-art AI models + always-ready AI Chatbot co-pilot. Full multimodal AI tools are currently FREE for a limited time! Create interactive fiction with Markdown, generate art, music & voice, and publish everywhere.",
       "startCreating": "Start Creating",
       "browseStories": "Browse Interactive Fiction"
     },
     "aiStudio": {
-      "badge": "Full Multimodal AI Studio · Limited-Time Free",
+      "badge": "Full Multimodal AI Studio · Free tier + paid plans",
       "title": "Top-Tier AI Models + 24/7 Co-pilot",
       "subtitle": "Fully connected to all high-value AI capabilities for interactive storytelling. Generous compute out of the box — empower every story with art, music, video, and voice.",
-      "freeBanner": "Limited-time benefit: AI Story Co-pilot, Scene Art, Music & SFX, TTS, and Voice Cloning are all 100% free for a limited time upon registration!",
+      "freeBanner": "Try AI Story Co-pilot, Scene Art, Music & SFX, TTS, and Voice Cloning on the free tier. Subscribe to Basic or Pro for 1M / 2M M Tokens every month.",
       "freeCta": "Try AI Creation Tools for Free",
       "chatbot": {
         "tag": "Live Chat Co-pilot",
@@ -223,7 +223,7 @@
       },
       "pricing": {
         "question": "Is it free to use?",
-        "answer": "Core creation and publishing features are free forever. The multimodal AI creation suite (AI Story Co-pilot, illustrations, video, music, and voice acting) is currently 100% FREE for a limited time upon registration! We will also continue providing a generous free tier and support for personal API keys."
+        "answer": "Core creation and publishing features are free forever. The multimodal AI suite has a free tier; subscribe to Basic ($9.98/mo) or Pro ($19.98/mo) for 1M / 2M M Tokens per month. Annual billing saves about 17%. See the pricing page."
       },
       "export": {
         "question": "Can I export to other platforms?",
@@ -550,12 +550,12 @@
     "pageTitle": "How to Create Interactive Fiction - No-Code Guide to Self-Publishing",
     "pageDescription": "Want to create your own interactive fiction? MuiStory lets you write stories in Markdown, polish with AI, add branching and variables, and publish with one click — self-publishing to the web and beyond, no programming needed.",
     "heroTitle": "Creating interactive fiction is easier than you think",
-    "heroSubtitle": "Write your story in the Markdown you already know. Full multimodal AI tools are currently FREE for a limited time to polish prose, generate art, music and sound effects. Publish everywhere with one click.",
+    "heroSubtitle": "Write your story in the Markdown you already know. Multimodal AI tools polish prose, generate art, music and sound effects. Publish everywhere with one click. Start free, subscribe for more credits.",
     "workflowTitle": "The workflow",
     "step1Title": "Write your story in Markdown",
     "step1Content": "No programming required. Write your plot in familiar Markdown syntax; the editor autosaves and offers smart hints, designed specifically for interactive fiction.",
-    "step2Title": "AI-Assisted Creation (Limited-Time Free)",
-    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art, background music and character voices — currently 100% free.",
+    "step2Title": "AI-Assisted Creation",
+    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art, background music and character voices. Free tier included; subscribe for higher monthly credits.",
     "step3Title": "Add interactive elements",
     "step3Content": "Add branching choices, variable systems, conditional text, even embed minigames — make the reader a participant in the story.",
     "step4Title": "Publish with one click, self-publish",
