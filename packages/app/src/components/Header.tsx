@@ -37,6 +37,11 @@ export default function Header({ siteName }: HeaderProps) {
                 {t('games')}
               </Link>
               <Link
+                href="/pricing"
+                className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
+                {t('pricing')}
+              </Link>
+              <Link
                 href="/blog"
                 className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
                 {t('blog')}
