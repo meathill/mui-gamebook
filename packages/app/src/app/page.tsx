@@ -29,7 +29,7 @@ const FAQ_KEYS = ['whatIs', 'howCreate', 'pricing', 'export', 'aiRole'];
 
 const HOME_TITLE = '姆伊游戏书 — 在线互动小说 · 文字冒险创作 · Markdown 游戏书平台';
 const HOME_DESCRIPTION =
-  '姆伊游戏书是免费的在线互动小说与文字冒险制作平台。接入顶尖大模型与全模态 AI 辅助创作工具（生图/视频/音乐/配音/声音克隆）限时免费开放，内置随时恭候的 AI Chatbot 灵感副驾。用 Markdown 轻松创作文字冒险与互动小说，一键发布分享，海量作品即开即玩。';
+  '姆伊游戏书是免费的在线互动小说与文字冒险制作平台。接入顶尖大模型与全模态 AI 辅助创作工具（生图/视频/音乐/配音/声音克隆），内置随时恭候的 AI Chatbot 灵感副驾。免费开始创作，订阅可解锁更高算力。用 Markdown 轻松创作文字冒险与互动小说，一键发布分享，海量作品即开即玩。';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {

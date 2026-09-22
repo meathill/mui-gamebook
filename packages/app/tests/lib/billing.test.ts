@@ -41,6 +41,7 @@ import {
   ensureStripeCustomer,
   getActiveSubscription,
   getPeriodUsage,
+  getUsageWindow,
   getUsableSubscription,
   getUserQuotaSnapshot,
   isBillingInterval,
@@ -48,7 +49,61 @@ import {
   resolvePlanFromPriceId,
   resolvePriceId,
   upsertSubscription,
+  type SubscriptionRecord,
 } from '@/lib/billing';
+
+function makeSub(overrides: Partial<SubscriptionRecord> = {}): SubscriptionRecord {
+  return {
+    id: 1,
+    userId: 'u1',
+    stripeSubscriptionId: 'sub_1',
+    stripeCustomerId: 'cus_1',
+    stripePriceId: 'price_basic_y',
+    planCode: 'basic',
+    interval: 'year',
+    status: 'active',
+    monthlyTokenLimit: 1_000_000,
+    currentPeriodStart: new Date('2026-01-01T00:00:00.000Z'),
+    currentPeriodEnd: new Date('2027-01-01T00:00:00.000Z'),
+    cancelAtPeriodEnd: false,
+    ...overrides,
+  };
+}
+
+describe('getUsageWindow', () => {
+  it('月付窗口 = Stripe 账单周期', () => {
+    const sub = makeSub({
+      interval: 'month',
+      currentPeriodStart: new Date('2026-09-01T00:00:00.000Z'),
+      currentPeriodEnd: new Date('2026-10-01T00:00:00.000Z'),
+    });
+    const win = getUsageWindow(sub, new Date('2026-09-15T00:00:00.000Z'));
+    expect(win.start.toISOString()).toBe('2026-09-01T00:00:00.000Z');
+    expect(win.end.toISOString()).toBe('2026-10-01T00:00:00.000Z');
+  });
+
+  it('年付按月重置：9 月中使用落在 9/1–10/1 窗口', () => {
+    const sub = makeSub({
+      interval: 'year',
+      currentPeriodStart: new Date('2026-01-01T00:00:00.000Z'),
+      currentPeriodEnd: new Date('2027-01-01T00:00:00.000Z'),
+    });
+    const win = getUsageWindow(sub, new Date('2026-09-15T00:00:00.000Z'));
+    expect(win.start.toISOString()).toBe('2026-09-01T00:00:00.000Z');
+    expect(win.end.toISOString()).toBe('2026-10-01T00:00:00.000Z');
+  });
+
+  it('年付最后一个窗口不越过 currentPeriodEnd', () => {
+    const sub = makeSub({
+      interval: 'year',
+      currentPeriodStart: new Date('2026-01-15T00:00:00.000Z'),
+      currentPeriodEnd: new Date('2027-01-15T00:00:00.000Z'),
+    });
+    const win = getUsageWindow(sub, new Date('2027-01-10T00:00:00.000Z'));
+    expect(win.start.toISOString()).toBe('2026-12-15T00:00:00.000Z');
+    expect(win.end.toISOString()).toBe('2027-01-15T00:00:00.000Z');
+  });
+});
 
 const env = {
   STRIPE_PRICE_BASIC_MONTHLY: 'price_basic_m',

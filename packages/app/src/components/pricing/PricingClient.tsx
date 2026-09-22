@@ -84,6 +84,10 @@ export default function PricingClient({ isAuthenticated }: { isAuthenticated: bo
         body: JSON.stringify({ planCode, interval }),
       });
       const data = (await response.json()) as { url?: string; error?: string; code?: string };
+      if (response.status === 409 && data.code === 'ALREADY_SUBSCRIBED') {
+        window.location.href = '/my/billing';
+        return;
+      }
       if (!response.ok || !data.url) {
         setError(data.error || '创建支付会话失败');
         return;
@@ -144,7 +148,13 @@ export default function PricingClient({ isAuthenticated }: { isAuthenticated: bo
               {plan.highlight ? (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white">
                   <StarIcon className="w-3.5 h-3.5" />
-                  推荐
+                  热门
+                </div>
+              ) : null}
+              {interval === 'year' && plan.code !== 'free' ? (
+                <div
+                  className={`absolute -top-3 ${plan.highlight ? 'right-4' : 'left-4'} rounded-full bg-emerald-600 px-3 py-1 text-xs font-semibold text-white`}>
+                  推荐年付
                 </div>
               ) : null}
 
