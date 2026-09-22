@@ -787,10 +787,14 @@ isValidVoiceId(voiceId: string, provider): boolean
 - in-page 注册走 `document.modelContext`（无 polyfill 依赖，不支持的浏览器静默跳过）：
   `useWebMcpTools` hook，编辑器页全量（写操作经 `handleFunctionCall` 同一链路，含 undo），
   播放页经客户端小组件 `PlayWebMcpTools` 只挂只读（播放页是 ISR 服务端组件，不能直接注册）。
-- 后端 `POST /api/mcp` 为手写 JSON-RPC（`initialize/tools/list/tools/call/ping`），没引
-  `@modelcontextprotocol/sdk`——SDK 的 Node 依赖在 Workers 运行时是风险，当前体量手写更稳；
-  `initialize/list` 可匿名，`call` 需登录 + `getManagedGame` 鉴权，写操作与 CMS PUT 同落库路径，
-  `dryRun: true` 只返回结果与新 DSL 不写库（建议外部 Agent 先 dryRun）。
+- 后端 `POST /api/mcp`：**dual-era**（2026-09 本地 Agent 接入）。
+  - **Legacy 2025-03-26**：无 modern header 时走 `initialize` / `ping` / `tools/list` / `tools/call`，供 MiMoCode 等客户端。
+  - **Modern 2026-07-28**：带 `MCP-Protocol-Version` + `Mcp-Method`（`tools/call` 另需 `Mcp-Name`）与 `_meta` 时按无状态规范校验；`server/discover` 仍实现。
+  - 工具 = `WEBMCP_TOOLS`（剧本细粒度）+ `MCP_AGENT_TOOLS`（listGames/createGame/getGameInfo/updateGameMeta/setGameDsl/generateScript/generateImage）。Agent 工具**不要**塞进 chatbot/in-page。
+  - 鉴权 per-request：**better-auth API Key**（`Authorization: Bearer mgb_…`，`@better-auth/api-key`，用户在 `/my/api-keys` 创建）> cookie session > 遗留 `ADMIN_PASSWORD`（仅脚本）。API Key 绑定真实用户，可管理的只有自己的游戏，AI 用量也记在该用户。
+  - **drizzleAdapter 坑**：schema 对象的 **export 名**必须等于 better-auth 的 model 名（`apikey` 不是 `apiKey`），否则 `The model "apikey" was not found in the schema object`。字段名也要对齐插件 schema（如 `requestCount`，不是 `rateLimitCount`/`totalUsed`）。
+  - 本地接入：项目 `.mimocode/mimocode.jsonc` 指向生产 `https://muistory.com/api/mcp`，技能 `.mimocode/skills/mui-gamebook-mcp/`。**必须先部署**并跑 `db:migrate`（0003/0004 apikey）。
+  - in-page WebMCP / chatbot 语义仍以 `packages/webmcp` 为唯一源。
 
 ### Chatbot 参考图（≤4）
 - `ChatMessage.content: string | ChatContentPart[]`；Google=fetch→inlineData、OpenAI=`image_url` 直传 R2 URL、

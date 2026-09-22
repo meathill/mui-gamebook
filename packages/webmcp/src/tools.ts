@@ -56,6 +56,21 @@ export const WEBMCP_TOOLS: WebMcpTool[] = [
     },
   },
   {
+    name: 'setSceneImage',
+    description:
+      '设置场景配图：可写生成结果 url，和/或 imagePrompt、角色立绘 character。至少提供 url 或 imagePrompt 之一。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        sceneId: { type: 'string', description: '场景 ID' },
+        url: { type: 'string', description: '已生成图片 URL（generateImage 的返回值）' },
+        imagePrompt: { type: 'string', description: '图片生成 prompt' },
+        character: { type: 'string', description: '立绘角色 ID（可选）' },
+      },
+      required: ['sceneId'],
+    },
+  },
+  {
     name: 'addScene',
     description: '添加新场景',
     inputSchema: {
@@ -263,6 +278,7 @@ export const WEBMCP_TOOLS: WebMcpTool[] = [
         name: { type: 'string', description: '新名称（可选）' },
         description: { type: 'string', description: '新描述（可选）' },
         imagePrompt: { type: 'string', description: '新图片生成提示词（可选）' },
+        imageUrl: { type: 'string', description: '角色立绘/头像 URL（可选，generateImage 返回值）' },
       },
       required: ['id'],
     },
@@ -305,6 +321,7 @@ export const WEBMCP_OPERATION_PRIORITY: Record<string, number> = {
   updateScene: 3,
   updateSceneText: 3,
   updateSceneImagePrompt: 3,
+  setSceneImage: 3,
   renameScene: 3,
   updateChoice: 3,
   updateChoiceText: 3,
