@@ -66,6 +66,25 @@ describe('webmcp 纯核', () => {
     expect(results[0].ok).toBe(false);
   });
 
+  it('setSceneImage 可写 url 与 prompt', () => {
+    const game = makeGame();
+    const results = executeWebMcpBatch(game, [
+      {
+        name: 'setSceneImage',
+        args: { sceneId: 'start', url: 'https://cdn/x.png', imagePrompt: '雾林', character: 'hero' },
+      },
+    ]);
+    expect(results[0].ok).toBe(true);
+    const img = game.scenes['start'].nodes.find((n) => n.type === 'ai_image');
+    expect(img).toMatchObject({ url: 'https://cdn/x.png', prompt: '雾林', character: 'hero' });
+  });
+
+  it('updateCharacter 可写 image_url', () => {
+    const game = makeGame();
+    executeWebMcpBatch(game, [{ name: 'updateCharacter', args: { id: 'hero', imageUrl: 'https://cdn/hero.png' } }]);
+    expect(game.ai.characters?.['hero'].image_url).toBe('https://cdn/hero.png');
+  });
+
   it('变量值解析', () => {
     expect(parseVariableValue('true')).toBe(true);
     expect(parseVariableValue('42')).toBe(42);

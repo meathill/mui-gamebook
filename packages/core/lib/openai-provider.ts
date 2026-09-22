@@ -318,8 +318,8 @@ export class OpenAiProvider implements AiProvider {
           .filter((p) => (p.type === 'text' && p.text) || (p.type === 'image_url' && p.url))
           .map((p) =>
             p.type === 'image_url'
-              ? ({ type: 'image_url' as const, image_url: { url: p.url as string } })
-              : ({ type: 'text' as const, text: p.text as string }),
+              ? { type: 'image_url' as const, image_url: { url: p.url as string } }
+              : { type: 'text' as const, text: p.text as string },
           ),
       };
     });

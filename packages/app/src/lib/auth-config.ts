@@ -1,4 +1,5 @@
 import { betterAuth } from 'better-auth';
+import { apiKey } from '@better-auth/api-key';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../db/schema';
@@ -25,6 +26,23 @@ export function createAuth(env: CloudflareEnv) {
       provider: 'sqlite',
       schema: schema,
     }),
+    plugins: [
+      apiKey({
+        defaultPrefix: 'mgb_',
+        requireName: true,
+        enableSessionForAPIKeys: true,
+        // MCP / Agent 走标准 Authorization: Bearer；也兼容 x-api-key
+        customAPIKeyGetter: (ctx) => {
+          const req = ctx.request;
+          if (!req) return null;
+          const authorization = req.headers.get('Authorization');
+          if (authorization?.startsWith('Bearer ')) {
+            return authorization.slice('Bearer '.length).trim();
+          }
+          return req.headers.get('x-api-key');
+        },
+      }),
+    ],
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: false,

@@ -64,6 +64,41 @@ export const verification = sqliteTable('verification', {
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
 });
 
+/** better-auth apiKey 插件（用户级 API Key，供 MCP / Agent 使用）。
+ * 导出名必须是 `apikey`：drizzle adapter 按 model 名 `apikey` 在 schema 对象上取表。
+ */
+export const apikey = sqliteTable(
+  'apikey',
+  {
+    id: text('id').primaryKey(),
+    name: text('name'),
+    start: text('start'),
+    prefix: text('prefix'),
+    key: text('key').notNull(),
+    referenceId: text('reference_id').notNull(),
+    configId: text('config_id').notNull().default('default'),
+    refillInterval: integer('refill_interval'),
+    refillAmount: integer('refill_amount'),
+    lastRefillAt: integer('last_refill_at', { mode: 'timestamp' }),
+    enabled: integer('enabled', { mode: 'boolean' }).default(true),
+    rateLimitEnabled: integer('rate_limit_enabled', { mode: 'boolean' }).default(true),
+    rateLimitTimeWindow: integer('rate_limit_time_window'),
+    rateLimitMax: integer('rate_limit_max'),
+    requestCount: integer('request_count'),
+    lastRequest: integer('last_request', { mode: 'timestamp' }),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+    remaining: integer('remaining'),
+    metadata: text('metadata'),
+    permissions: text('permissions'),
+  },
+  (table) => ({
+    referenceIdIdx: index('apikey_reference_id_idx').on(table.referenceId),
+    keyIdx: index('apikey_key_idx').on(table.key),
+  }),
+);
+
 export const games = sqliteTable(
   'Games',
   {

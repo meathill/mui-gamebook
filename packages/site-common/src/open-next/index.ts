@@ -31,9 +31,7 @@ interface RevalidatingOptions {
 export function createRevalidatingOpenNextConfig(options: RevalidatingOptions = {}) {
   return defineCloudflareConfig({
     incrementalCache:
-      options.useR2Cache === false
-        ? 'dummy'
-        : withRegionalCache(r2IncrementalCache, { mode: 'long-lived' }),
+      options.useR2Cache === false ? 'dummy' : withRegionalCache(r2IncrementalCache, { mode: 'long-lived' }),
     enableCacheInterception: false,
     queue: memoryQueue,
     tagCache: options.tagCache ? d1NextTagCache : undefined,

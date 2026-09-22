@@ -131,6 +131,28 @@ export function executeWebMcpCall(game: Game, call: WebMcpCall): WebMcpResult {
       }
       return { ok: true, message: `已更新场景配图 prompt ${sceneId}` };
     }
+    case 'setSceneImage': {
+      const sceneId = requireString(args, 'sceneId');
+      const url = typeof args['url'] === 'string' ? (args['url'] as string) : undefined;
+      const imagePrompt = typeof args['imagePrompt'] === 'string' ? (args['imagePrompt'] as string) : undefined;
+      const character = typeof args['character'] === 'string' ? (args['character'] as string) : undefined;
+      if (!url && !imagePrompt) throw new Error('url 与 imagePrompt 至少提供一个');
+      const scene = getScene(game, sceneId);
+      const img = scene.nodes.find((n): n is Extract<SceneNode, { type: 'ai_image' }> => n.type === 'ai_image');
+      if (img) {
+        if (url) img.url = url;
+        if (imagePrompt) img.prompt = imagePrompt;
+        if (character) img.character = character;
+      } else {
+        scene.nodes.unshift({
+          type: 'ai_image',
+          prompt: imagePrompt || '',
+          ...(url ? { url } : {}),
+          ...(character ? { character } : {}),
+        });
+      }
+      return { ok: true, message: `已设置场景配图 ${sceneId}` };
+    }
     case 'deleteScene': {
       const sceneId = requireString(args, 'sceneId');
       if (!game.scenes[sceneId]) throw new Error(`场景不存在: ${sceneId}`);
@@ -298,6 +320,7 @@ export function executeWebMcpCall(game: Game, call: WebMcpCall): WebMcpResult {
       if (typeof args['name'] === 'string') chars[charId].name = args['name'] as string;
       if (typeof args['description'] === 'string') chars[charId].description = args['description'] as string;
       if (typeof args['imagePrompt'] === 'string') chars[charId].image_prompt = args['imagePrompt'] as string;
+      if (typeof args['imageUrl'] === 'string') chars[charId].image_url = args['imageUrl'] as string;
       return { ok: true, message: `已更新角色 ${charId}` };
     }
     case 'deleteCharacter': {
