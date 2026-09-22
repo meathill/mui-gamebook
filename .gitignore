@@ -14,3 +14,7 @@ demo
 dist
 .wrangler
 *.tsbuildinfo
+
+# 本地工具配置/计划，勿入库
+.mimocode/
+.zcode/

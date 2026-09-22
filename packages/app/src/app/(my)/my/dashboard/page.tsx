@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { TrendUpIcon, UsersIcon, StarIcon, GameControllerIcon } from '@phosphor-icons/react';
+import SubscriptionCard from '@/components/my/SubscriptionCard';
 
 interface GameAnalytics {
   id: number;
@@ -96,6 +97,8 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-gray-900">数据统计</h1>
         <p className="text-gray-500 mt-1">查看游戏的运营数据</p>
       </header>
+
+      <SubscriptionCard />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
