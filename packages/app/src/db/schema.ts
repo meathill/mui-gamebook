@@ -251,6 +251,57 @@ export const pendingOperations = sqliteTable(
   }),
 );
 
+// ========== 订阅计费 ==========
+
+/** 本地用户 ↔ Stripe Customer 映射 */
+export const stripeCustomers = sqliteTable(
+  'stripe_customers',
+  {
+    id: integer('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .unique()
+      .references(() => user.id),
+    stripeCustomerId: text('stripe_customer_id').notNull().unique(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  },
+  (table) => ({
+    userIdIdx: index('stripe_customers_user_id_idx').on(table.userId),
+  }),
+);
+
+/** 订阅记录；历史 canceled 保留，有效订阅取最新一条 */
+export const subscriptions = sqliteTable(
+  'subscriptions',
+  {
+    id: integer('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id),
+    stripeSubscriptionId: text('stripe_subscription_id').notNull().unique(),
+    stripeCustomerId: text('stripe_customer_id').notNull(),
+    stripePriceId: text('stripe_price_id').notNull(),
+    /** basic | pro */
+    planCode: text('plan_code').notNull(),
+    /** month | year */
+    interval: text('interval').notNull(),
+    status: text('status').notNull(),
+    /** 下发时快照，改价不影响已购用户 */
+    monthlyTokenLimit: integer('monthly_token_limit').notNull(),
+    currentPeriodStart: integer('current_period_start', { mode: 'timestamp' }).notNull(),
+    currentPeriodEnd: integer('current_period_end', { mode: 'timestamp' }).notNull(),
+    cancelAtPeriodEnd: integer('cancel_at_period_end', { mode: 'boolean' }).notNull().default(false),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  },
+  (table) => ({
+    userIdIdx: index('subscriptions_user_id_idx').on(table.userId),
+    statusIdx: index('subscriptions_status_idx').on(table.status),
+    userIdStatusIdx: index('subscriptions_user_id_status_idx').on(table.userId, table.status),
+  }),
+);
+
 // ========== 统计相关表 ==========
 
 // 游戏统计汇总表（从 KV 同步）

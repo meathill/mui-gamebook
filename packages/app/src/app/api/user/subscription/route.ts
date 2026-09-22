@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
-import { getUserDailyUsage, checkUserUsageLimit } from '@/lib/usage-limit';
 import { getConfig } from '@/lib/config';
-import { getUserQuotaSnapshot, listSubscriptionsByUser, PLAN_DEFINITIONS } from '@/lib/billing';
+import {
+  getUserQuotaSnapshot,
+  listSubscriptionsByUser,
+  PLAN_DEFINITIONS,
+  PLAN_TOKEN_UNIT_PRICE_USD,
+} from '@/lib/billing';
 
 /**
- * 获取当前用户的 AI 用量与订阅额度信息
+ * 当前用户订阅摘要
  */
 export async function GET() {
   try {
@@ -14,24 +18,17 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const userId = session.user.id;
     const config = await getConfig();
-    const [dailyUsage, usageCheck, quota, subscriptions] = await Promise.all([
-      getUserDailyUsage(userId),
-      checkUserUsageLimit(userId),
+    const userId = session.user.id;
+    const [quota, subscriptions] = await Promise.all([
       getUserQuotaSnapshot(userId, config.adminUserIds),
       listSubscriptionsByUser(userId),
     ]);
 
-    const isUnlimited = usageCheck.limit === Infinity;
     return NextResponse.json({
-      totalTokens: quota.isSubscribed ? quota.periodUsage : dailyUsage.totalTokens,
-      limit: isUnlimited ? null : usageCheck.limit,
-      remaining: isUnlimited ? null : usageCheck.remaining,
-      lastUpdated: dailyUsage.lastUpdated,
-      isUnlimited,
       planCode: quota.planCode,
       isSubscribed: quota.isSubscribed,
+      isUnlimited: quota.isUnlimited,
       periodStart: quota.periodStart?.toISOString() ?? null,
       periodEnd: quota.periodEnd?.toISOString() ?? null,
       periodUsage: quota.periodUsage,
@@ -39,6 +36,7 @@ export async function GET() {
       cancelAtPeriodEnd: quota.cancelAtPeriodEnd,
       subscriptionStatus: quota.subscriptionStatus,
       plans: PLAN_DEFINITIONS,
+      tokenUnitPriceUsd: PLAN_TOKEN_UNIT_PRICE_USD,
       subscriptions: subscriptions.map((item) => ({
         planCode: item.planCode,
         interval: item.interval,
@@ -49,7 +47,7 @@ export async function GET() {
       })),
     });
   } catch (e: unknown) {
-    console.error('获取用量信息失败:', e);
+    console.error('获取订阅信息失败:', e);
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
 }

@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { getConfig } from './config';
+import { getPeriodUsage, getUsableSubscription, type SubscriptionRecord } from './billing';
 
 function startOfTodayUtc(): Date {
   const now = new Date();
@@ -49,47 +50,72 @@ export interface UsageLimitCheckResult {
   limit: number;
   remaining: number;
   message?: string;
+  /** 订阅用户的账单周期；免费档为 null */
+  periodStart?: Date | null;
+  periodEnd?: Date | null;
+  planCode?: 'free' | 'admin' | 'basic' | 'pro';
+}
+
+function buildLimitResult(
+  allowed: boolean,
+  currentUsage: number,
+  limit: number,
+  message?: string,
+  extra?: Partial<UsageLimitCheckResult>,
+): UsageLimitCheckResult {
+  const remaining = limit === Infinity ? Infinity : Math.max(0, limit - currentUsage);
+  return {
+    allowed,
+    currentUsage,
+    limit,
+    remaining: allowed ? remaining : 0,
+    message,
+    ...extra,
+  };
 }
 
 /**
- * 检查用户是否可以继续使用 AI 服务
- * @returns 检查结果，包含是否允许继续使用的信息
+ * 检查用户是否可以继续使用 AI 服务。
+ * 优先级：管理员不限量 → 有效订阅按账单周期月包 → 免费档日额度。
  */
 export async function checkUserUsageLimit(userId: string): Promise<UsageLimitCheckResult> {
   try {
     const config = await getConfig();
 
-    // 检查是否是管理员用户
     if (config.adminUserIds.includes(userId)) {
-      return {
-        allowed: true,
-        currentUsage: 0,
-        limit: Infinity,
-        remaining: Infinity,
-        message: '管理员用户，无限制',
-      };
+      return buildLimitResult(true, 0, Infinity, '管理员用户，无限制', {
+        planCode: 'admin',
+        periodStart: null,
+        periodEnd: null,
+      });
+    }
+
+    const subscription = await getUsableSubscription(userId);
+    if (subscription) {
+      return checkSubscriptionUsage(userId, subscription);
     }
 
     const usage = await getUserDailyUsage(userId);
     const limit = config.dailyTokenLimit;
-    const remaining = Math.max(0, limit - usage.totalTokens);
-
     if (usage.totalTokens >= limit) {
-      return {
-        allowed: false,
-        currentUsage: usage.totalTokens,
+      return buildLimitResult(
+        false,
+        usage.totalTokens,
         limit,
-        remaining: 0,
-        message: `今日 AI 用量已达上限（${limit.toLocaleString()} tokens），请明天再试`,
-      };
+        `今日 AI 用量已达上限（${limit.toLocaleString()} tokens），请明天再试或订阅套餐`,
+        {
+          planCode: 'free',
+          periodStart: null,
+          periodEnd: null,
+        },
+      );
     }
 
-    return {
-      allowed: true,
-      currentUsage: usage.totalTokens,
-      limit,
-      remaining,
-    };
+    return buildLimitResult(true, usage.totalTokens, limit, undefined, {
+      planCode: 'free',
+      periodStart: null,
+      periodEnd: null,
+    });
   } catch (error) {
     console.error('[Usage Limit] 检查用量限制失败:', error);
     // 出错时默认允许使用，避免影响用户体验
@@ -101,4 +127,29 @@ export async function checkUserUsageLimit(userId: string): Promise<UsageLimitChe
       message: '用量检查失败，暂时放行',
     };
   }
+}
+
+async function checkSubscriptionUsage(
+  userId: string,
+  subscription: SubscriptionRecord,
+): Promise<UsageLimitCheckResult> {
+  const currentUsage = await getPeriodUsage(userId, subscription.currentPeriodStart, subscription.currentPeriodEnd);
+  const limit = subscription.monthlyTokenLimit;
+  const extra: Partial<UsageLimitCheckResult> = {
+    planCode: subscription.planCode,
+    periodStart: subscription.currentPeriodStart,
+    periodEnd: subscription.currentPeriodEnd,
+  };
+
+  if (currentUsage >= limit) {
+    return buildLimitResult(
+      false,
+      currentUsage,
+      limit,
+      `本周期 AI 用量已达套餐上限（${limit.toLocaleString()} tokens），请等待下个账单周期或升级套餐`,
+      extra,
+    );
+  }
+
+  return buildLimitResult(true, currentUsage, limit, undefined, extra);
 }

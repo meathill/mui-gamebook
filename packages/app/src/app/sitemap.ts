@@ -26,6 +26,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/interactive-fiction`, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${baseUrl}/how-to-play`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/create`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${baseUrl}/pricing`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/blog`, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${baseUrl}/about`, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${baseUrl}/contact`, changeFrequency: 'monthly', priority: 0.5 },
