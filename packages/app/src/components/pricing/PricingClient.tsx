@@ -28,7 +28,7 @@ const PLANS: PlanCard[] = [
   },
   {
     code: 'basic',
-    name: '基础',
+    name: 'Pro',
     monthlyPriceUsd: 9.98,
     yearlyPriceUsd: 99.98,
     monthlyTokenLimit: 1_000_000,
@@ -36,7 +36,7 @@ const PLANS: PlanCard[] = [
   },
   {
     code: 'pro',
-    name: '专业',
+    name: 'Pro+',
     monthlyPriceUsd: 19.98,
     yearlyPriceUsd: 199.98,
     monthlyTokenLimit: 2_000_000,

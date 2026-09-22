@@ -16,7 +16,10 @@ describe('PricingClient', () => {
   it('默认选中年付，并展示推荐年付', () => {
     render(<PricingClient isAuthenticated />);
 
-    expect(screen.getByRole('button', { name: '年付 · 省 17%' })).toHaveAttribute('class', expect.stringContaining('bg-stone-900'));
+    expect(screen.getByRole('button', { name: '年付 · 省 17%' })).toHaveAttribute(
+      'class',
+      expect.stringContaining('bg-stone-900'),
+    );
     expect(screen.getAllByText('推荐年付').length).toBeGreaterThan(0);
     expect(screen.getAllByText(/\/ 年/).length).toBeGreaterThan(0);
   });
