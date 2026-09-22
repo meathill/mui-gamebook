@@ -1,14 +1,20 @@
 ---
 feature: stripe-subscription
-status: in-progress
+status: delivered
 updated: 2026-09-22
 branch: feat/stripe-subscription
-commits: # filled at delivery
+commits: ae998f8930657ba2d562fd78a4d5d36bd01f4c05..5ff9c0bc5579c05a83685b8347b3bbe316b2cfdc
 ---
 
 # Stripe 订阅付款
 
 ## Report
+
+**What was built** — Stripe 订阅：基础 $9.98/月 · $99.98/年 → 每月 1M M Token；专业 $19.98/月 · $199.98/年 → 每月 2M。年付同档月度包、约 17% 折扣，定价页默认推荐年付。额度按月窗扣减：月付对齐 Stripe 账单周期，年付按周期起点对齐自然月滚动（`getUsageWindow`）。免费档保留日额度。Checkout（`mode: subscription`，不传 `payment_method_types`）+ Customer Portal + Webhook 同步 D1。`/pricing` 三列套餐；`/my/billing` 周期用量条 + Portal。文案从「限时免费」改为免费档 + 订阅扩容。
+
+**Verification** — `pnpm run format` PASS；`pnpm run typecheck` PASS；`pnpm test` PASS（1882+）；`pnpm --filter @mui-gamebook/app run build` PASS（`/pricing`、`/my/billing`）。独立 Review + 复审：critical 全清（年付月窗、webhook 空周期、T4 mock Stripe、T5 PricingClient UI 测试、残留文案）。
+
+**Journey log** — 年付曾误用 Stripe 全年 period 对月包计数（偏紧 12×），复审改为自然月窗；Stripe 18 类型里周期在 subscription item；`monthlyTokenLimit` 仅插入时写入以保改价不影响已购；多 CTA 按钮测试用 `getAllByRole`。
 
 ## [S1] Problem
 
