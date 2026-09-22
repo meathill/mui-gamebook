@@ -4,7 +4,7 @@
  */
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
-import { and, eq, gte, inArray, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 
 export type PlanCode = 'basic' | 'pro';
@@ -160,7 +160,7 @@ export async function getActiveSubscription(userId: string): Promise<Subscriptio
     .where(
       and(eq(schema.subscriptions.userId, userId), inArray(schema.subscriptions.status, ACTIVE_SUBSCRIPTION_STATUSES)),
     )
-    .orderBy(schema.subscriptions.currentPeriodEnd)
+    .orderBy(desc(schema.subscriptions.currentPeriodEnd))
     .limit(1);
   return row ? toSubscriptionRecord(row) : null;
 }
@@ -182,7 +182,7 @@ export async function getUsableSubscription(userId: string, now = new Date()): P
         gte(schema.subscriptions.currentPeriodEnd, now),
       ),
     )
-    .orderBy(schema.subscriptions.currentPeriodEnd)
+    .orderBy(desc(schema.subscriptions.currentPeriodEnd))
     .limit(1);
   return row ? toSubscriptionRecord(row) : null;
 }
@@ -241,7 +241,7 @@ export async function upsertSubscription(params: UpsertSubscriptionParams): Prom
         planCode: params.planCode,
         interval: params.interval,
         status: params.status,
-        monthlyTokenLimit: params.monthlyTokenLimit,
+        // monthlyTokenLimit 保持首次下发快照，改价不影响已购用户
         currentPeriodStart: params.currentPeriodStart,
         currentPeriodEnd: params.currentPeriodEnd,
         cancelAtPeriodEnd: params.cancelAtPeriodEnd,
@@ -265,6 +265,41 @@ export async function getPeriodUsage(userId: string, periodStart: Date, periodEn
       ),
     );
   return row?.total ?? 0;
+}
+
+function addMonths(date: Date, months: number): Date {
+  const next = new Date(date.getTime());
+  const day = next.getUTCDate();
+  next.setUTCMonth(next.getUTCMonth() + months);
+  // 处理 1/31 → 2/31 溢出回退到当月最后一天
+  if (next.getUTCDate() !== day) {
+    next.setUTCDate(0);
+  }
+  return next;
+}
+
+/**
+ * 用量统计窗口：月付用 Stripe 账单周期；年付等长周期按「周期起点对齐的自然月」滚动重置，
+ * 保证年付用户每月拿到与月付相同的 1M/2M 包，而不是全年共用一个月包。
+ */
+export function getUsageWindow(subscription: SubscriptionRecord, now = new Date()): { start: Date; end: Date } {
+  const { currentPeriodStart, currentPeriodEnd, interval } = subscription;
+  if (interval === 'month') {
+    return { start: currentPeriodStart, end: currentPeriodEnd };
+  }
+
+  let windowStart = currentPeriodStart;
+  for (;;) {
+    const nextStart = addMonths(windowStart, 1);
+    const windowEnd = nextStart > currentPeriodEnd ? currentPeriodEnd : nextStart;
+    if (now < windowEnd || windowStart >= currentPeriodEnd) {
+      return { start: windowStart, end: windowEnd };
+    }
+    windowStart = nextStart;
+    if (windowStart >= currentPeriodEnd) {
+      return { start: currentPeriodStart, end: currentPeriodEnd };
+    }
+  }
 }
 
 export interface UserQuotaSnapshot {
@@ -296,13 +331,14 @@ export async function getUserQuotaSnapshot(userId: string, adminUserIds: string[
 
   const sub = await getUsableSubscription(userId);
   if (sub) {
-    const periodUsage = await getPeriodUsage(userId, sub.currentPeriodStart, sub.currentPeriodEnd);
+    const window = getUsageWindow(sub);
+    const periodUsage = await getPeriodUsage(userId, window.start, window.end);
     return {
       planCode: sub.planCode,
       isSubscribed: true,
       isUnlimited: false,
-      periodStart: sub.currentPeriodStart,
-      periodEnd: sub.currentPeriodEnd,
+      periodStart: window.start,
+      periodEnd: window.end,
       periodUsage,
       periodLimit: sub.monthlyTokenLimit,
       cancelAtPeriodEnd: sub.cancelAtPeriodEnd,

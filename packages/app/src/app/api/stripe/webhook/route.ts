@@ -49,13 +49,20 @@ async function syncSubscriptionFromStripe(subscription: Stripe.Subscription, use
   }
 
   const plan = resolvePlanFromPriceId(env, priceId);
-  const planCode: PlanCode = plan?.planCode ?? 'basic';
-  const interval: BillingInterval = plan?.interval ?? 'month';
+  if (!plan) {
+    console.warn('[Stripe Webhook] 未知 Price ID，拒绝写入订阅', priceId, subscription.id);
+    return;
+  }
+  const planCode: PlanCode = plan.planCode;
+  const interval: BillingInterval = plan.interval;
   const planDef = getPlanDefinition(planCode);
   // Stripe 2025+ 周期字段在 subscription item 上
   const firstItem = subscription.items.data[0];
-  const periodStart = toDateFromUnix(firstItem?.current_period_start) ?? new Date();
-  const periodEnd = toDateFromUnix(firstItem?.current_period_end) ?? new Date();
+  // 周期缺失时不得把 start/end 都落成 now（会导致用量窗口恒空、额度永不扣减）
+  const fallbackStart = new Date();
+  const fallbackEnd = new Date(fallbackStart.getTime() + (interval === 'year' ? 365 : 30) * 24 * 60 * 60 * 1000);
+  const periodStart = toDateFromUnix(firstItem?.current_period_start) ?? fallbackStart;
+  const periodEnd = toDateFromUnix(firstItem?.current_period_end) ?? fallbackEnd;
 
   await upsertSubscription({
     userId,

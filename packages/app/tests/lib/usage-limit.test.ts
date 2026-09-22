@@ -19,6 +19,10 @@ vi.mock('@/lib/config', () => ({
 vi.mock('@/lib/billing', () => ({
   getUsableSubscription: vi.fn(),
   getPeriodUsage: vi.fn(),
+  getUsageWindow: (subscription: { currentPeriodStart: Date; currentPeriodEnd: Date }) => ({
+    start: subscription.currentPeriodStart,
+    end: subscription.currentPeriodEnd,
+  }),
 }));
 
 import { checkUserUsageLimit, getUserDailyUsage } from '@/lib/usage-limit';
@@ -123,6 +127,7 @@ describe('checkUserUsageLimit', () => {
     const periodEnd = new Date('2026-10-01T00:00:00.000Z');
     (getUsableSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
       planCode: 'pro',
+      interval: 'month',
       monthlyTokenLimit: 2_000_000,
       currentPeriodStart: periodStart,
       currentPeriodEnd: periodEnd,
@@ -143,6 +148,7 @@ describe('checkUserUsageLimit', () => {
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
     (getUsableSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
       planCode: 'basic',
+      interval: 'month',
       monthlyTokenLimit: 1_000_000,
       currentPeriodStart: new Date('2026-09-01T00:00:00.000Z'),
       currentPeriodEnd: new Date('2026-10-01T00:00:00.000Z'),

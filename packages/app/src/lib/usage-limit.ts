@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { getConfig } from './config';
-import { getPeriodUsage, getUsableSubscription, type SubscriptionRecord } from './billing';
+import { getPeriodUsage, getUsableSubscription, getUsageWindow, type SubscriptionRecord } from './billing';
 
 function startOfTodayUtc(): Date {
   const now = new Date();
@@ -133,12 +133,13 @@ async function checkSubscriptionUsage(
   userId: string,
   subscription: SubscriptionRecord,
 ): Promise<UsageLimitCheckResult> {
-  const currentUsage = await getPeriodUsage(userId, subscription.currentPeriodStart, subscription.currentPeriodEnd);
+  const window = getUsageWindow(subscription);
+  const currentUsage = await getPeriodUsage(userId, window.start, window.end);
   const limit = subscription.monthlyTokenLimit;
   const extra: Partial<UsageLimitCheckResult> = {
     planCode: subscription.planCode,
-    periodStart: subscription.currentPeriodStart,
-    periodEnd: subscription.currentPeriodEnd,
+    periodStart: window.start,
+    periodEnd: window.end,
   };
 
   if (currentUsage >= limit) {

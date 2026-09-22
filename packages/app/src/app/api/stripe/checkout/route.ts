@@ -4,9 +4,8 @@ import { getSession } from '@/lib/auth-server';
 import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import {
   ensureStripeCustomer,
-  getActiveSubscription,
-  getStripeCustomerId,
   getUsableSubscription,
+  getStripeCustomerId,
   getPlanDefinition,
   isBillingInterval,
   isPlanCode,
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '无效的套餐或周期' }, { status: 400 });
     }
 
-    const existing = await getActiveSubscription(session.user.id);
+    const existing = await getUsableSubscription(session.user.id);
     if (existing) {
       return NextResponse.json(
         { error: '你已有生效中的订阅，请在账单页管理', code: 'ALREADY_SUBSCRIBED' },
