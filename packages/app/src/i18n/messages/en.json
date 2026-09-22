@@ -92,7 +92,7 @@
       "badge": "Full Multimodal AI Studio · Free tier + paid plans",
       "title": "Top-Tier AI Models + 24/7 Co-pilot",
       "subtitle": "Fully connected to all high-value AI capabilities for interactive storytelling. Generous compute out of the box — empower every story with art, music, video, and voice.",
-      "freeBanner": "Try AI Story Co-pilot, Scene Art, Music & SFX, TTS, and Voice Cloning on the free tier. Subscribe to Basic or Pro for 1M / 2M M Tokens every month.",
+      "freeBanner": "Try AI Story Co-pilot, Scene Art, Music & SFX, TTS, and Voice Cloning on the free tier. Subscribe to Pro or Pro+ for 1M / 2M M Tokens every month.",
       "freeCta": "Try AI Creation Tools for Free",
       "chatbot": {
         "tag": "Live Chat Co-pilot",
@@ -223,7 +223,7 @@
       },
       "pricing": {
         "question": "Is it free to use?",
-        "answer": "Core creation and publishing features are free forever. The multimodal AI suite has a free tier; subscribe to Basic ($9.98/mo) or Pro ($19.98/mo) for 1M / 2M M Tokens per month. Annual billing saves about 17%. See the pricing page."
+        "answer": "Core creation and publishing features are free forever. The multimodal AI suite has a free tier; subscribe to Pro ($9.98/mo) or Pro+ ($19.98/mo) for 1M / 2M M Tokens per month. Annual billing saves about 17%. See the pricing page."
       },
       "export": {
         "question": "Can I export to other platforms?",

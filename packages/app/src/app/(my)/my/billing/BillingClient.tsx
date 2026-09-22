@@ -76,9 +76,9 @@ export default function BillingClient() {
 
   const planName =
     data?.planCode === 'pro'
-      ? '专业'
+      ? 'Pro+'
       : data?.planCode === 'basic'
-        ? '基础'
+        ? 'Pro'
         : data?.planCode === 'admin'
           ? '管理员'
           : '免费';
@@ -166,7 +166,7 @@ export default function BillingClient() {
 
           {!data.isSubscribed ? (
             <section className="rounded-2xl border border-dashed border-stone-300 p-6 text-sm text-stone-600">
-              订阅后可获得每月 1M（基础）或 2M（专业）M Token，年付与月付同额度、更便宜。
+              订阅后可获得每月 1M（Pro）或 2M（Pro+）M Token，年付与月付同额度、更便宜。
               <Link
                 href="/pricing"
                 className="ml-1 text-orange-600 font-medium hover:underline">
