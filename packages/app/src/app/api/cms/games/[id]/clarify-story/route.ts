@@ -42,7 +42,11 @@ export async function POST(req: Request, { params }: Props) {
   try {
     const permissions = await getUserAiPermissions(session.user);
     const providerType = resolveTextProvider(permissions, requestedProvider);
-    const provider = await createAiProvider(providerType);
+    const clientSessionId = req.headers.get('x-opencode-session') || req.headers.get('x-session-id') || undefined;
+    const provider = await createAiProvider(providerType, {
+      sessionId: clientSessionId,
+      gameId: id,
+    });
 
     // 这一步只是快速判断信息是否够用，不需要 DSL、也不需要 pro 级别的深度思考模型，
     // 用更轻量的 mimo-v2.5 即可；仅正式生成（generate-script）才用 mimo-v2.5-pro

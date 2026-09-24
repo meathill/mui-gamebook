@@ -56,6 +56,53 @@ describe('OpencodeProvider', () => {
     await expect(provider.generateText('你好')).rejects.toThrow('OpenCode 生成请求失败: 401 Unauthorized');
   });
 
+  it('构造时注入默认 session header，并在 generateText 请求中携带', async () => {
+    let capturedHeaders: Record<string, string> = {};
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
+      capturedHeaders = (init?.headers || {}) as Record<string, string>;
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: 'test' } }],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+    });
+
+    const provider = new OpencodeProvider('test-key');
+    expect(provider.sessionId).toMatch(/^ses_/);
+
+    await provider.generateText('hello');
+    expect(capturedHeaders['x-opencode-session']).toBe(provider.sessionId);
+    expect(capturedHeaders['x-session-id']).toBe(provider.sessionId);
+  });
+
+  it('显式传入 sessionId 时使用指定的 session header，并支持 options 覆盖', async () => {
+    let capturedHeaders: Record<string, string> = {};
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
+      capturedHeaders = (init?.headers || {}) as Record<string, string>;
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: 'test' } }],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+    });
+
+    const provider = new OpencodeProvider('test-key', {}, undefined, {}, 'game_42');
+    expect(provider.sessionId).toBe('game_42');
+
+    await provider.generateText('hello');
+    expect(capturedHeaders['x-opencode-session']).toBe('game_42');
+
+    await provider.generateText('hello override', { sessionId: 'custom_override_session' });
+    expect(capturedHeaders['x-opencode-session']).toBe('custom_override_session');
+    expect(capturedHeaders['x-session-id']).toBe('custom_override_session');
+  });
+
   it('不支持生图、视频与 TTS，明确报错', async () => {
     const provider = new OpencodeProvider('test-key');
     await expect(provider.generateImage()).rejects.toThrow('OpenCode 不支持图片生成');

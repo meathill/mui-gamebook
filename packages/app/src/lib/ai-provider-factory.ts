@@ -99,11 +99,17 @@ function resolveGatewayHeaders(token: string | undefined): Record<string, string
   return token ? { 'cf-aig-authorization': `Bearer ${token}` } : {};
 }
 
+export interface CreateAiProviderOptions {
+  sessionId?: string;
+  gameId?: string | number;
+}
+
 /**
  * 创建 AI 提供者
  * @param type 指定提供者类型，如不指定则使用配置中的默认文本提供者
+ * @param options 可选参数，包括 sessionId 与 gameId（用于 OpenCode 等服务端的 session header 注入）
  */
-export async function createAiProvider(type?: AiProviderType): Promise<AiProvider> {
+export async function createAiProvider(type?: AiProviderType, options?: CreateAiProviderOptions): Promise<AiProvider> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
 
@@ -114,7 +120,15 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
     if (!apiKey) {
       throw new Error('OPENCODE_API_KEY not configured');
     }
-    return new OpencodeProvider(apiKey, { text: config.opencodeTextModel }, config.opencodeBaseUrl);
+    const resolvedSessionId = options?.sessionId || (options?.gameId ? `game_${options.gameId}` : undefined);
+
+    return new OpencodeProvider(
+      apiKey,
+      { text: config.opencodeTextModel },
+      config.opencodeBaseUrl,
+      {},
+      resolvedSessionId,
+    );
   }
 
   if (providerType === 'mimo') {

@@ -166,4 +166,26 @@ describe('POST /api/cms/games/[id]/clarify-story', () => {
     expect(data).toEqual({ ready: true, questions: [] });
     expect(recordAiUsage).not.toHaveBeenCalled();
   });
+
+  it('从请求头透传 x-opencode-session 与 gameId 给 createAiProvider', async () => {
+    const generateText = vi.fn().mockResolvedValue({
+      text: '{"ready": true, "questions": []}',
+      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 },
+    });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', generateText });
+
+    const req = new Request('http://localhost/api/cms/games/42/clarify-story', {
+      method: 'POST',
+      headers: {
+        'x-opencode-session': 'custom_session_999',
+      },
+      body: JSON.stringify({ story: 'test' }),
+    });
+
+    await POST(req, makeParams('42'));
+    expect(createAiProvider).toHaveBeenCalledWith('mimo', {
+      sessionId: 'custom_session_999',
+      gameId: '42',
+    });
+  });
 });
