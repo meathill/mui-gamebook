@@ -47,21 +47,42 @@ interface OpenCodeStreamChunk {
 }
 
 export class OpencodeProvider extends OpenAiProvider {
+  readonly sessionId: string;
+
   constructor(
     apiKey: string,
     models: { text?: string } = {},
     baseURL: string = OPENCODE_DEFAULT_BASE_URL,
     headers: Record<string, string> = {},
+    sessionId?: string,
   ) {
-    super(apiKey, { text: models.text || OPENCODE_DEFAULT_TEXT_MODEL }, { baseURL, type: 'opencode', headers });
+    const resolvedSessionId =
+      sessionId || headers['x-opencode-session'] || headers['x-session-id'] || `ses_${crypto.randomUUID()}`;
+
+    const mergedHeaders: Record<string, string> = {
+      'x-opencode-session': resolvedSessionId,
+      'x-session-id': resolvedSessionId,
+      ...headers,
+    };
+
+    super(
+      apiKey,
+      { text: models.text || OPENCODE_DEFAULT_TEXT_MODEL },
+      { baseURL, type: 'opencode', headers: mergedHeaders },
+    );
+    this.sessionId = resolvedSessionId;
   }
 
   async generateText(
     prompt: string,
-    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string },
+    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string; sessionId?: string },
   ): Promise<TextGenerationResult> {
     const model = options?.model || this.models.text || OPENCODE_DEFAULT_TEXT_MODEL;
     console.log(`[OpenCode] Generating text with model: ${model}`);
+
+    const extraHeaders: Record<string, string> = options?.sessionId
+      ? { 'x-opencode-session': options.sessionId, 'x-session-id': options.sessionId }
+      : {};
 
     const response = await fetch(`${this.apiBaseUrl}/chat/completions`, {
       method: 'POST',
@@ -69,6 +90,7 @@ export class OpencodeProvider extends OpenAiProvider {
         Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
         ...this.gatewayHeaders,
+        ...extraHeaders,
       },
       body: JSON.stringify({
         model,
@@ -99,10 +121,14 @@ export class OpencodeProvider extends OpenAiProvider {
 
   async *generateTextStream(
     prompt: string,
-    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string },
+    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string; sessionId?: string },
   ): AsyncGenerator<TextStreamChunk, TextGenerationResult, void> {
     const model = options?.model || this.models.text || OPENCODE_DEFAULT_TEXT_MODEL;
     console.log(`[OpenCode] Streaming text with model: ${model}`);
+
+    const extraHeaders: Record<string, string> = options?.sessionId
+      ? { 'x-opencode-session': options.sessionId, 'x-session-id': options.sessionId }
+      : {};
 
     const response = await fetch(`${this.apiBaseUrl}/chat/completions`, {
       method: 'POST',
@@ -110,6 +136,7 @@ export class OpencodeProvider extends OpenAiProvider {
         Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
         ...this.gatewayHeaders,
+        ...extraHeaders,
       },
       body: JSON.stringify({
         model,

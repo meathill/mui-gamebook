@@ -7,7 +7,7 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!packages/parser/tests/golden/**"]
+    "includes": ["**", "!packages/parser/tests/golden/**", "!.worktrees/**"]
   },
   "formatter": {
     "attributePosition": "multiline",

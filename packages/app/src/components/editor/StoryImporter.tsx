@@ -2,6 +2,7 @@ import { LightbulbIcon, SparkleIcon, SpinnerIcon, XIcon } from '@phosphor-icons/
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDialog } from '@/components/Dialog';
 import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
+import { getGameSessionHeaders } from '@/lib/editor/game-session';
 
 type GenerationPhase = 'idle' | 'thinking' | 'writing' | 'correcting';
 
@@ -137,7 +138,10 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
     try {
       const res = await fetch(`/api/cms/games/${id}/clarify-story`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getGameSessionHeaders(id),
+        },
         body: JSON.stringify({ story: fullStory, provider: activeProvider }),
       });
       if (!res.ok) return { ready: true, questions: [] };
@@ -232,7 +236,10 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
 
       const res = await fetch(`/api/cms/games/${id}/generate-script`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getGameSessionHeaders(id),
+        },
         signal: abortRef.current.signal,
         body: JSON.stringify({
           story: finalStory,

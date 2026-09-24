@@ -66,9 +66,13 @@ export async function POST(req: Request, { params }: Props) {
   // 按用户权限解析文本提供者；创建失败（如密钥缺失）在进入 SSE 前返回 JSON 错误
   const permissions = await getUserAiPermissions(session.user);
   const providerType = resolveTextProvider(permissions, requestedProvider);
+  const clientSessionId = req.headers.get('x-opencode-session') || req.headers.get('x-session-id') || undefined;
   let provider: Awaited<ReturnType<typeof createAiProvider>>;
   try {
-    provider = await createAiProvider(providerType);
+    provider = await createAiProvider(providerType, {
+      sessionId: clientSessionId,
+      gameId: id,
+    });
   } catch (error) {
     console.error('Generate script provider init error:', error);
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });

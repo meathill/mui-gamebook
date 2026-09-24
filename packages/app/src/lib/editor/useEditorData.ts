@@ -7,6 +7,7 @@ import { pendingOperationsManager, isPlaceholderUrl, extractOperationId } from '
 import { loadDraft, clearDraft } from '@/hooks/useAutoSave';
 import { useDialog } from '@/components/Dialog';
 import { trackPublishStory } from '@mui-gamebook/site-common/utils';
+import { bindGameIdToSession, getGameSessionId } from '@/lib/editor/game-session';
 import type { Game } from '@mui-gamebook/parser/src/types';
 import type { Node, Edge } from '@xyflow/react';
 
@@ -95,6 +96,7 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
   // 加载游戏数据 + 草稿恢复检测
   useEffect(() => {
     if (!id) return;
+    getGameSessionId(id);
 
     fetch(`/api/cms/games/${id}`)
       .then(async (res) => {
@@ -220,6 +222,7 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
       if (saveResult.slug) {
         setSlug(saveResult.slug);
       }
+      bindGameIdToSession(id);
       // GA4 关键事件 publish_story：只在草稿→已发布的跃迁时上报一次。
       // 下架后重新发布会再次上报（新的跃迁）；已发布状态的普通保存不上报。
       const nowPublished = Boolean(gameToSave.published);
@@ -248,6 +251,7 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
       if (result.slug) {
         setSlug(result.slug);
       }
+      bindGameIdToSession(id);
       return true;
     } catch {
       return false;

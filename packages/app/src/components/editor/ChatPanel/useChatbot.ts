@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { getGameSessionHeaders } from '@/lib/editor/game-session';
 
 export interface Message {
   id: string;
@@ -75,7 +76,10 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
       try {
         const response = await fetch(`/api/cms/games/${gameId}/chat`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getGameSessionHeaders(gameId),
+          },
           body: JSON.stringify({
             message: content,
             context,

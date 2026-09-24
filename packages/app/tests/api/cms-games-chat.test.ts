@@ -182,4 +182,26 @@ describe('POST /api/cms/games/[id]/chat', () => {
     expect(events).toEqual([{ type: 'error', content: '网络超时' }]);
     expect(recordAiUsage).not.toHaveBeenCalled();
   });
+
+  it('从请求头透传 x-opencode-session 与 gameId 给 createAiProvider', async () => {
+    const chatWithTools = vi
+      .fn()
+      .mockResolvedValue({ text: 'ok', usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 } });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', chatWithTools });
+
+    const req = new Request('http://localhost/api/cms/games/66/chat', {
+      method: 'POST',
+      headers: {
+        'x-opencode-session': 'chat_session_888',
+      },
+      body: JSON.stringify(baseBody),
+    });
+
+    const res = await POST(req, makeParams('66'));
+    expect(res.status).toBe(200);
+    expect(createAiProvider).toHaveBeenCalledWith('mimo', {
+      sessionId: 'chat_session_888',
+      gameId: '66',
+    });
+  });
 });

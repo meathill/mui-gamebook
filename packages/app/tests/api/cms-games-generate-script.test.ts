@@ -249,4 +249,27 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     const [firstPassPrompt] = generateText.mock.calls[0];
     expect(firstPassPrompt).not.toContain('REVISED');
   });
+
+  it('从请求头透传 x-opencode-session 与 gameId 给 createAiProvider', async () => {
+    const generateText = vi.fn().mockResolvedValue({
+      text: VALID_SCRIPT,
+      usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
+    });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', generateText });
+
+    const req = new Request('http://localhost/api/cms/games/77/generate-script', {
+      method: 'POST',
+      headers: {
+        'x-opencode-session': 'custom_script_session',
+      },
+      body: JSON.stringify({ story: '一个关于英雄的故事' }),
+    });
+
+    const res = await POST(req, makeParams('77'));
+    expect(res.status).toBe(200);
+    expect(createAiProvider).toHaveBeenCalledWith('mimo', {
+      sessionId: 'custom_script_session',
+      gameId: '77',
+    });
+  });
 });

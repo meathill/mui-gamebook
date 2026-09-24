@@ -120,6 +120,32 @@ describe('ai-provider-factory', () => {
       'opencode-test',
       { text: 'deepseek-v4.1-flash' },
       BASE_CONFIG.opencodeBaseUrl,
+      {},
+      undefined,
+    );
+  });
+
+  it('OpenCode 支持通过 gameId 兜底生成 session，或直接透传 sessionId', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue(BASE_CONFIG);
+
+    // gameId 兜底
+    await createAiProvider('opencode', { gameId: 101 });
+    expect(opencodeCtor).toHaveBeenLastCalledWith(
+      'opencode-test',
+      { text: 'deepseek-v4.1-flash' },
+      BASE_CONFIG.opencodeBaseUrl,
+      {},
+      'game_101',
+    );
+
+    // sessionId 优先
+    await createAiProvider('opencode', { sessionId: 'ses_custom_abc', gameId: 101 });
+    expect(opencodeCtor).toHaveBeenLastCalledWith(
+      'opencode-test',
+      { text: 'deepseek-v4.1-flash' },
+      BASE_CONFIG.opencodeBaseUrl,
+      {},
+      'ses_custom_abc',
     );
   });
 
