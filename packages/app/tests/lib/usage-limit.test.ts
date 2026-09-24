@@ -16,6 +16,13 @@ vi.mock('@/lib/config', () => ({
   getConfig: vi.fn(),
 }));
 
+const { isAdminUserIdMock } = vi.hoisted(() => ({ isAdminUserIdMock: vi.fn() }));
+vi.mock('@/lib/admin', () => ({
+  isAdminUserId: isAdminUserIdMock,
+  isRootUser: vi.fn(),
+  isAdminUser: vi.fn(),
+}));
+
 vi.mock('@/lib/billing', () => ({
   getUsableSubscription: vi.fn(),
   getPeriodUsage: vi.fn(),
@@ -81,11 +88,13 @@ describe('getUserDailyUsage', () => {
 describe('checkUserUsageLimit', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    isAdminUserIdMock.mockResolvedValue(false);
     (getUsableSubscription as ReturnType<typeof vi.fn>).mockResolvedValue(null);
   });
 
   it('管理员用户无限制', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: ['admin1'], dailyTokenLimit: 1000 });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ dailyTokenLimit: 1000 });
+    isAdminUserIdMock.mockResolvedValue(true);
 
     const result = await checkUserUsageLimit('admin1');
 
@@ -101,7 +110,7 @@ describe('checkUserUsageLimit', () => {
   });
 
   it('普通用户未超限', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ dailyTokenLimit: 1000 });
     whereMock.mockResolvedValue([{ total: 400 }]);
 
     const result = await checkUserUsageLimit('u1');
@@ -112,7 +121,7 @@ describe('checkUserUsageLimit', () => {
   });
 
   it('用量恰好等于上限时判定为超限', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ dailyTokenLimit: 1000 });
     whereMock.mockResolvedValue([{ total: 1000 }]);
 
     const result = await checkUserUsageLimit('u1');
@@ -122,7 +131,7 @@ describe('checkUserUsageLimit', () => {
   });
 
   it('订阅用户按账单周期月包限额', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ dailyTokenLimit: 1000 });
     const periodStart = new Date('2026-09-01T00:00:00.000Z');
     const periodEnd = new Date('2026-10-01T00:00:00.000Z');
     (getUsableSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
@@ -145,7 +154,7 @@ describe('checkUserUsageLimit', () => {
   });
 
   it('订阅用户达到月包上限时拒绝', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ adminUserIds: [], dailyTokenLimit: 1000 });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ dailyTokenLimit: 1000 });
     (getUsableSubscription as ReturnType<typeof vi.fn>).mockResolvedValue({
       planCode: 'basic',
       interval: 'month',

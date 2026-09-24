@@ -2,6 +2,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { and, eq, gte, sql } from 'drizzle-orm';
 import * as schema from '@/db/schema';
+import { isAdminUserId } from './admin';
 import { getConfig } from './config';
 import { getPeriodUsage, getUsableSubscription, getUsageWindow, type SubscriptionRecord } from './billing';
 
@@ -82,7 +83,7 @@ export async function checkUserUsageLimit(userId: string): Promise<UsageLimitChe
   try {
     const config = await getConfig();
 
-    if (config.adminUserIds.includes(userId)) {
+    if (await isAdminUserId(userId)) {
       return buildLimitResult(true, 0, Infinity, '管理员用户，无限制', {
         planCode: 'admin',
         periodStart: null,

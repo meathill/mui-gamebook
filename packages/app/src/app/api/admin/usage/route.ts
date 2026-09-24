@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { isAdminUserId } from '@/lib/admin';
 import { getUserDailyUsage } from '@/lib/usage-limit';
 import { getConfig } from '@/lib/config';
 
@@ -24,14 +25,14 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: '缺少 userId 参数' }, { status: 400 });
     }
 
-    const [usage, config] = await Promise.all([getUserDailyUsage(userId), getConfig()]);
+    const [usage, config, isAdmin] = await Promise.all([getUserDailyUsage(userId), getConfig(), isAdminUserId(userId)]);
 
     return NextResponse.json({
       userId,
       usage,
       limit: config.dailyTokenLimit,
       remaining: Math.max(0, config.dailyTokenLimit - usage.totalTokens),
-      isAdmin: config.adminUserIds.includes(userId),
+      isAdmin,
     });
   } catch (e: unknown) {
     console.error('查询用量失败:', e);

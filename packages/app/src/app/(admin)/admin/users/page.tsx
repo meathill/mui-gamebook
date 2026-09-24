@@ -1,19 +1,22 @@
 'use client';
 
 import { MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react';
+import { formatPlanLabel, useUsersAdmin, USER_ROLE_OPTIONS } from '@/hooks/useUsersAdmin';
+import { authClient, isRootUserClient } from '@/lib/auth-client';
 import UserFormModal from '@/components/admin/UserFormModal';
 import UsersTable from '@/components/admin/UsersTable';
-import { useUsersAdmin } from '@/hooks/useUsersAdmin';
 
 export default function UsersPage() {
   const admin = useUsersAdmin();
+  const { data: session } = authClient.useSession();
+  const canGrantAdmin = isRootUserClient(session?.user.email);
 
   return (
     <div>
       <header className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">用户管理</h1>
-          <p className="text-gray-500 mt-1">管理系统用户和访问权限</p>
+          <p className="text-gray-500 mt-1">管理系统用户、套餐与访问权限</p>
         </div>
         <button
           onClick={admin.openCreate}
@@ -23,7 +26,7 @@ export default function UsersPage() {
         </button>
       </header>
 
-      {/* 搜索 */}
+      {/* 搜索与筛选 */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <form
           onSubmit={admin.handleSearch}
@@ -41,6 +44,18 @@ export default function UsersPage() {
               className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
             />
           </div>
+          <select
+            value={admin.list.filters.role ?? 'all'}
+            onChange={(e) => admin.list.setFilter('role', e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            {USER_ROLE_OPTIONS.map((option) => (
+              <option
+                key={option.value}
+                value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
           <button
             type="submit"
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700">
@@ -62,6 +77,9 @@ export default function UsersPage() {
         isLoading={admin.isLoading}
         pagination={admin.data?.pagination}
         page={admin.page}
+        activeSort={admin.list.sort}
+        order={admin.list.order}
+        onSort={admin.list.toggleSort}
         onPageChange={admin.setPage}
         onEdit={admin.openEdit}
         onPassword={admin.openPassword}
@@ -81,6 +99,11 @@ export default function UsersPage() {
         setFormPasswordConfirm={admin.setFormPasswordConfirm}
         formAiPermissions={admin.formAiPermissions}
         setFormAiPermissions={admin.setFormAiPermissions}
+        formIsAdmin={admin.formIsAdmin}
+        setFormIsAdmin={admin.setFormIsAdmin}
+        canGrantAdmin={canGrantAdmin}
+        isSelf={admin.editingUser?.id === session?.user.id}
+        planLabel={formatPlanLabel(admin.editingUser?.planCode)}
         activeMutation={admin.activeMutation}
         onClose={admin.closeModal}
         onCreateSubmit={admin.handleCreateSubmit}

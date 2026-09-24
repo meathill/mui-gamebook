@@ -23,6 +23,8 @@ function makeUser(overrides: Partial<UserItem> = {}): UserItem {
     createdAt: '2026-07-01T00:00:00.000Z',
     gameCount: 2,
     aiPermissions: null,
+    isAdmin: false,
+    planCode: null,
     ...overrides,
   };
 }
@@ -57,7 +59,7 @@ describe('useUsersAdmin', () => {
 
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/admin/users?page=1&limit=20');
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/users?page=1&limit=20&sort=createdAt&order=desc');
   });
 
   it('handleSearch 把 searchInput 提交为 search 并重置到第一页', async () => {
@@ -71,7 +73,9 @@ describe('useUsersAdmin', () => {
     expect(result.current.search).toBe('张三');
     expect(result.current.page).toBe(1);
     await waitFor(() =>
-      expect(fetchMock).toHaveBeenCalledWith('/api/admin/users?page=1&limit=20&search=%E5%BC%A0%E4%B8%89'),
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/admin/users?page=1&limit=20&sort=createdAt&order=desc&search=%E5%BC%A0%E4%B8%89',
+      ),
     );
   });
 
@@ -112,6 +116,8 @@ describe('useUsersAdmin', () => {
       expect(result.current.formAiPermissions).toEqual({
         providers: ['google'],
         canGenerateImage: true,
+        canGenerateTts: false,
+        canGenerateMusic: false,
         canGenerateVideo: false,
       });
     });

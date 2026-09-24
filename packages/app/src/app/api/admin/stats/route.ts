@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq, sql, desc } from 'drizzle-orm';
+import { asc, desc, eq, sql } from 'drizzle-orm';
 import * as schema from '@/db/schema';
+import { isAdminUser } from '@/lib/admin';
 import { getSession } from '@/lib/auth-server';
+import { parseListQuery } from '@/lib/list-query';
 
 interface GameAnalyticsResult {
   id: number;
@@ -17,10 +19,18 @@ interface GameAnalyticsResult {
   ratingCount: number;
 }
 
+/** 可排序字段：键 → drizzle 列 */
+const STATS_SORT_COLUMNS = {
+  openCount: sql`COALESCE(${schema.gameAnalytics.openCount}, 0)`,
+  completionCount: sql`COALESCE(${schema.gameAnalytics.completionCount}, 0)`,
+  avgRating: sql`COALESCE(${schema.gameAnalytics.ratingSum}, 0) * 1.0 / MAX(COALESCE(${schema.gameAnalytics.ratingCount}, 0), 1)`,
+  title: schema.games.title,
+} as const;
+
 /**
  * GET /api/admin/stats
- * 获取全站游戏的统计数据汇总，仅 root 用户可见
- * Query: ?page=1&limit=20
+ * 获取全站游戏的统计数据汇总，root 与内容管理员可见
+ * Query: ?page=1&limit=20&sort=openCount|completionCount|avgRating|title&order=asc|desc
  */
 export async function GET(request: Request) {
   try {
@@ -35,18 +45,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
-    // CheckIcon if user is root
-    if (session.user.email !== env.ROOT_USER_EMAIL) {
+    // root 或内容管理员
+    if (!isAdminUser(session.user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const db = drizzle(env.DB);
     const url = new URL(request.url);
 
-    // 分页参数
-    const page = parseInt(url.searchParams.get('page') || '1', 10);
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20', 10), 100);
-    const offset = (page - 1) * limit;
+    const query = parseListQuery(url, {
+      allowedSorts: Object.keys(STATS_SORT_COLUMNS),
+      defaultSort: 'openCount',
+    });
+    const sortColumn =
+      STATS_SORT_COLUMNS[query.sort as keyof typeof STATS_SORT_COLUMNS] ?? STATS_SORT_COLUMNS.openCount;
 
     // 获取所有游戏的统计数据
     const results = await db
@@ -63,9 +75,9 @@ export async function GET(request: Request) {
       })
       .from(schema.games)
       .leftJoin(schema.gameAnalytics, eq(schema.games.id, schema.gameAnalytics.gameId))
-      .orderBy(desc(schema.gameAnalytics.openCount))
-      .limit(limit)
-      .offset(offset);
+      .orderBy(query.order === 'asc' ? asc(sortColumn) : desc(sortColumn))
+      .limit(query.limit)
+      .offset(query.offset);
 
     // 计算衍生指标
     const analytics: GameAnalyticsResult[] = results.map((row) => ({
@@ -107,10 +119,10 @@ export async function GET(request: Request) {
         totalRatings: totals?.totalRatings || 0,
       },
       pagination: {
-        page,
-        limit,
+        page: query.page,
+        limit: query.limit,
         total: totalGames,
-        totalPages: Math.ceil(totalGames / limit),
+        totalPages: Math.ceil(totalGames / query.limit),
       },
     });
   } catch (error) {

@@ -36,6 +36,13 @@ vi.mock('drizzle-orm/d1', () => ({
   drizzle: vi.fn(() => dbMock),
 }));
 
+const { isAdminUserIdMock } = vi.hoisted(() => ({ isAdminUserIdMock: vi.fn() }));
+vi.mock('@/lib/admin', () => ({
+  isAdminUserId: isAdminUserIdMock,
+  isRootUser: vi.fn(),
+  isAdminUser: vi.fn(),
+}));
+
 import {
   PLAN_DEFINITIONS,
   ensureStripeCustomer,
@@ -149,6 +156,7 @@ describe('套餐常量', () => {
 describe('订阅读写', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    isAdminUserIdMock.mockResolvedValue(false);
   });
 
   it('getActiveSubscription 只取 active/trialing', async () => {
@@ -241,7 +249,8 @@ describe('订阅读写', () => {
   });
 
   it('管理员快照直接不限量', async () => {
-    const snapshot = await getUserQuotaSnapshot('admin1', ['admin1']);
+    isAdminUserIdMock.mockResolvedValue(true);
+    const snapshot = await getUserQuotaSnapshot('admin1');
     expect(snapshot.isUnlimited).toBe(true);
     expect(snapshot.planCode).toBe('admin');
     expect(dbMock.select).not.toHaveBeenCalled();

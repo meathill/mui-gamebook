@@ -31,14 +31,18 @@ export default function SubscriptionCard() {
   });
 
   if (isLoading) {
-    return (
-      <div className="bg-white rounded-lg shadow p-6 mb-8 text-sm text-gray-500">加载订阅信息中...</div>
-    );
+    return <div className="bg-white rounded-lg shadow p-6 mb-8 text-sm text-gray-500">加载订阅信息中...</div>;
   }
   if (!data) return null;
 
   const planName =
-    data.planCode === 'pro' ? 'Pro+' : data.planCode === 'basic' ? 'Pro' : data.planCode === 'admin' ? '管理员' : '免费';
+    data.planCode === 'pro'
+      ? 'Pro+'
+      : data.planCode === 'basic'
+        ? 'Pro'
+        : data.planCode === 'admin'
+          ? '管理员'
+          : '免费';
   const percent =
     data.periodLimit && data.periodLimit > 0
       ? Math.min(100, Math.round((data.periodUsage / data.periodLimit) * 100))
@@ -50,12 +54,15 @@ export default function SubscriptionCard() {
         <div>
           <p className="text-sm text-gray-500 mb-1">当前订阅</p>
           <p className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            {data.planCode === 'pro' ? <SparkleIcon size={24} className="text-orange-500" /> : null}
+            {data.planCode === 'pro' ? (
+              <SparkleIcon
+                size={24}
+                className="text-orange-500"
+              />
+            ) : null}
             {planName}
             {data.isUnlimited ? <span className="text-sm font-medium text-emerald-700">不限量</span> : null}
-            {data.cancelAtPeriodEnd ? (
-              <span className="text-sm font-medium text-amber-700">到期不续</span>
-            ) : null}
+            {data.cancelAtPeriodEnd ? <span className="text-sm font-medium text-amber-700">到期不续</span> : null}
           </p>
           <p className="text-sm text-gray-500 mt-1">
             {data.isSubscribed
@@ -91,7 +98,9 @@ export default function SubscriptionCard() {
       ) : (
         <p className="mt-4 text-sm text-gray-600">
           订阅 Pro / Pro+ 可获得每月 1M / 2M M Token。
-          <Link href="/pricing" className="ml-1 text-orange-600 font-medium hover:underline">
+          <Link
+            href="/pricing"
+            className="ml-1 text-orange-600 font-medium hover:underline">
             查看套餐 →
           </Link>
         </p>

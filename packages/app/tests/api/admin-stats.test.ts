@@ -23,6 +23,14 @@ vi.mock('@/lib/auth-server', () => ({
   getSession: vi.fn(),
 }));
 
+vi.mock('@/lib/admin', () => ({
+  isRootUser: vi.fn((email: string) => email === 'root@x.com'),
+  isAdminUser: vi.fn((user: { email?: string; isAdmin?: boolean } | null | undefined) =>
+    Boolean(user && (user.isAdmin === true || user.email === 'root@x.com')),
+  ),
+  isAdminUserId: vi.fn(),
+}));
+
 import { GET } from '@/app/api/admin/stats/route';
 import { getSession } from '@/lib/auth-server';
 
@@ -43,12 +51,25 @@ describe('GET /api/admin/stats', () => {
     expect(res.status).toBe(401);
   });
 
-  it('非 root 用户返回 403', async () => {
+  it('非管理员返回 403', async () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: 'user@x.com' } });
 
     const res = await GET(makeReq());
 
     expect(res.status).toBe(403);
+  });
+
+  it('内容管理员可以获取全站统计', async () => {
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({
+      user: { email: 'ca@x.com', isAdmin: true },
+    });
+    mockDb.offset.mockResolvedValueOnce([]);
+    mockDb.get.mockResolvedValueOnce({ totalOpens: 0, totalCompletions: 0, totalRatings: 0, totalRatingSum: 0 });
+    mockDb.get.mockResolvedValueOnce({ count: 0 });
+
+    const res = await GET(makeReq());
+
+    expect(res.status).toBe(200);
   });
 
   it('root 用户成功获取全站统计并计算衍生指标', async () => {

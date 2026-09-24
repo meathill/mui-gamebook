@@ -26,6 +26,18 @@ export function createAuth(env: CloudflareEnv) {
       provider: 'sqlite',
       schema: schema,
     }),
+    user: {
+      additionalFields: {
+        // 内容管理员标记：随 session 下发，省掉各路由按 id 回查。
+        // input: false —— 不能通过 better-auth 的注册/更新接口自行设置，只能在后台由 root 授予。
+        isAdmin: {
+          type: 'boolean',
+          required: false,
+          defaultValue: false,
+          input: false,
+        },
+      },
+    },
     plugins: [
       apiKey({
         defaultPrefix: 'mgb_',

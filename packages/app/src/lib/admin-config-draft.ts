@@ -1,9 +1,7 @@
 import type { AppConfig } from '@/lib/config';
 
-export type AdminConfigDraft = Omit<AppConfig, 'dailyTokenLimit' | 'adminUserIds' | 'videoWhitelist'> & {
+export type AdminConfigDraft = Omit<AppConfig, 'dailyTokenLimit'> & {
   dailyTokenLimit: string;
-  adminUserIds: string;
-  videoWhitelist: string;
 };
 
 export type ParseAdminConfigDraftResult =
@@ -20,8 +18,6 @@ export function createAdminConfigDraft(config: AppConfig): AdminConfigDraft {
   return {
     ...config,
     dailyTokenLimit: String(config.dailyTokenLimit ?? 100000),
-    adminUserIds: (config.adminUserIds || []).join('\n'),
-    videoWhitelist: (config.videoWhitelist || []).join('\n'),
   };
 }
 
@@ -37,21 +33,11 @@ export function parseAdminConfigDraft(draft: AdminConfigDraft): ParseAdminConfig
     };
   }
 
-  const { adminUserIds, videoWhitelist, ...otherFields } = draft;
   return {
     success: true,
     config: {
-      ...otherFields,
+      ...draft,
       dailyTokenLimit,
-      adminUserIds: parseMultilineList(adminUserIds),
-      videoWhitelist: parseMultilineList(videoWhitelist),
     },
   };
-}
-
-function parseMultilineList(value: string): string[] {
-  return value
-    .split(/\r\n?|\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
 }

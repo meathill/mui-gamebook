@@ -2,9 +2,13 @@ import { PRICING_FAQ } from '@/lib/pricing-content';
 
 export default function PricingFaq() {
   return (
-    <section className="max-w-3xl mx-auto px-4 pb-20" aria-labelledby="faq-title">
+    <section
+      className="max-w-3xl mx-auto px-4 pb-20"
+      aria-labelledby="faq-title">
       <div className="text-center mb-8">
-        <h2 id="faq-title" className="text-2xl sm:text-3xl font-extrabold text-stone-900 mb-2">
+        <h2
+          id="faq-title"
+          className="text-2xl sm:text-3xl font-extrabold text-stone-900 mb-2">
           常见问题
         </h2>
         <p className="text-stone-600">定价、额度、续订与取消的高频问题。</p>

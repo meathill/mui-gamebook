@@ -1,6 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
+import { checkAiServicePermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadTTS, type TTSVoiceName } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
@@ -21,6 +22,13 @@ export async function POST(req: Request, { params }: Params) {
   const { env: cfEnv } = getCloudflareContext();
   const ownedGame = await getManagedGame(drizzle(cfEnv.DB), Number(gameId), session);
   if (!ownedGame) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+
+  // 检查语音合成权限
+  const permissions = await getUserAiPermissions(session.user);
+  const ttsPermission = checkAiServicePermission(permissions, 'tts');
+  if (!ttsPermission.allowed) {
+    return NextResponse.json({ error: ttsPermission.message }, { status: 403 });
+  }
 
   try {
     const { characterId, voiceName, text } = (await req.json()) satisfies {

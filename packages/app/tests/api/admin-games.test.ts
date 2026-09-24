@@ -14,8 +14,14 @@ vi.mock('drizzle-orm/d1', () => ({
 vi.mock('@/lib/auth-server', () => ({
   getSession: vi.fn(),
 }));
-vi.mock('@/lib/config', () => ({
-  isRootUser: vi.fn(),
+const { isRootUserMock } = vi.hoisted(() => ({ isRootUserMock: vi.fn() }));
+vi.mock('@/lib/admin', () => ({
+  isRootUser: isRootUserMock,
+  // 双通道鉴权里 session 通道走 isAdminUser；测试通过 isRootUser 的 mock 间接控制它
+  isAdminUser: vi.fn((user: { email?: string } | null | undefined) =>
+    Boolean(user?.email && isRootUserMock(user.email)),
+  ),
+  isAdminUserId: vi.fn(),
 }));
 
 vi.mock('@/lib/public-cache', () => ({
@@ -26,7 +32,6 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { DELETE, GET, PATCH, PUT } from '@/app/api/admin/games/[slug]/route';
 import { getSession } from '@/lib/auth-server';
-import { isRootUser } from '@/lib/config';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
 
 describe('Admin Games API', () => {
@@ -53,7 +58,7 @@ describe('Admin Games API', () => {
     (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({ env: mockEnv });
     // 默认无 session（Bearer 通道单独测试）
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-    (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
+    isRootUserMock.mockReturnValue(false);
   });
 
   describe('GET /api/admin/games/[slug]', () => {
@@ -156,7 +161,7 @@ describe('Admin Games API', () => {
       (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({
         user: { id: 'root-1', email: 'root@example.com' },
       });
-      (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(true);
+      isRootUserMock.mockReturnValue(true);
 
       const mockDb = {
         select: vi.fn().mockReturnThis(),
@@ -176,7 +181,7 @@ describe('Admin Games API', () => {
       (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({
         user: { id: 'user-1', email: 'user@example.com' },
       });
-      (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      isRootUserMock.mockReturnValue(false);
 
       const req = new Request('http://localhost/api/admin/games/test-game');
       const res = await GET(req, { params: Promise.resolve({ slug: 'test-game' }) });

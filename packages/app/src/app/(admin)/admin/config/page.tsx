@@ -436,11 +436,42 @@ export default function AdminConfigPage() {
                     updateField('defaultSttProvider', e.target.value as AdminConfigDraft['defaultSttProvider'])
                   }
                   className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
-                  <option value="openai">OpenAI (Whisper)</option>
+                  <option value="openai">OpenAI</option>
                   <option value="google">Google GenAI</option>
+                  <option value="mimo">MiMo ASR</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">语音输入与录音转写引擎。</p>
               </div>
+
+              {formData.defaultSttProvider === 'openai' && (
+                <ConfigTextField
+                  label="OpenAI 语音识别模型"
+                  value={formData.openaiSttModel}
+                  onChange={(value) => updateField('openaiSttModel', value)}
+                  placeholder="whisper-1"
+                  hint="OpenAI 转写模型 ID"
+                />
+              )}
+
+              {formData.defaultSttProvider === 'google' && (
+                <ConfigTextField
+                  label="Google 语音识别模型"
+                  value={formData.googleSttModel}
+                  onChange={(value) => updateField('googleSttModel', value)}
+                  placeholder="gemini-3-flash-transcribe"
+                  hint="Google GenAI 转写模型 ID"
+                />
+              )}
+
+              {formData.defaultSttProvider === 'mimo' && (
+                <ConfigTextField
+                  label="MiMo 语音识别模型"
+                  value={formData.mimoSttModel}
+                  onChange={(value) => updateField('mimoSttModel', value)}
+                  placeholder="mimo-v2.5-asr"
+                  hint="小米 MiMo ASR 模型 ID，与 MiMo 文本/TTS 共用 MIMO_API_KEY 与 base URL"
+                />
+              )}
             </div>
           </section>
 
@@ -497,40 +528,6 @@ export default function AdminConfigPage() {
                 <p className="text-xs text-gray-500 mt-1">
                   普通用户每日可使用的标准计费 Token 上限（$1.00 USD = 1,000,000 Tokens）
                 </p>
-              </div>
-            </div>
-          </section>
-
-          {/* 9. 白名单与访问控制 */}
-          <section className="bg-white p-6 rounded-lg shadow">
-            <h2 className="text-lg font-semibold mb-4 border-b pb-2 flex items-center gap-2">
-              <span>🔒</span>
-              <span>访问控制</span>
-            </h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">视频生成白名单</label>
-                <textarea
-                  value={formData.videoWhitelist}
-                  onChange={(e) => updateField('videoWhitelist', e.target.value)}
-                  placeholder="每行一个邮箱地址"
-                  rows={4}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">只有白名单中的用户才能使用视频生成功能</p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">管理员用户 ID</label>
-                <textarea
-                  value={formData.adminUserIds}
-                  onChange={(e) => updateField('adminUserIds', e.target.value)}
-                  placeholder="每行一个用户 ID"
-                  rows={4}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-                />
-                <p className="text-xs text-gray-500 mt-1">管理员用户不受 Token 限制</p>
               </div>
             </div>
           </section>

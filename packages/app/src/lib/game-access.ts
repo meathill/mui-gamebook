@@ -1,19 +1,19 @@
 /**
  * 游戏访问控制
- * 游戏所有者或 root 管理员可管理（查看/编辑/生成）游戏
+ * 游戏所有者、root 或内容管理员可管理（查看/编辑/生成）游戏
  */
 
 import { eq } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import * as schema from '@/db/schema';
-import { isRootUser } from './config';
+import { isAdminUser } from './admin';
 
 export interface SessionLike {
-  user: { id: string; email: string };
+  user: { id: string; email: string; isAdmin?: boolean | null };
 }
 
 export function canManageGame(session: SessionLike, game: { ownerId: string | null }): boolean {
-  return game.ownerId === session.user.id || isRootUser(session.user.email);
+  return game.ownerId === session.user.id || isAdminUser(session.user);
 }
 
 /**

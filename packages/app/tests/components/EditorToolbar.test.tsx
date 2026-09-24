@@ -133,7 +133,7 @@ describe('EditorToolbar', () => {
     expect(onSave).toHaveBeenCalledTimes(1);
   });
 
-  it('预览链接拼接 previewUrl 和 slug', () => {
+  it('预览链接指向 /preview 路由（未发布/被封禁作品作者也能打开）', () => {
     render(
       <EditorToolbar
         {...baseProps}
@@ -142,6 +142,6 @@ describe('EditorToolbar', () => {
       />,
     );
 
-    expect(screen.getByTitle('预览').closest('a')).toHaveAttribute('href', 'https://muistory.com/play/my-game');
+    expect(screen.getByTitle('预览').closest('a')).toHaveAttribute('href', 'https://muistory.com/preview/my-game');
   });
 });

@@ -8,6 +8,11 @@ vi.mock('@/lib/usage-limit', () => ({
   checkUserUsageLimit: vi.fn(),
 }));
 
+vi.mock('@/lib/ai-permissions', () => ({
+  getUserAiPermissions: vi.fn(),
+  checkAiServicePermission: vi.fn(),
+}));
+
 vi.mock('@/lib/ai-service', () => ({
   generateAndUploadTTS: vi.fn(),
 }));
@@ -17,6 +22,7 @@ vi.mock('@/lib/ai-usage', () => ({
 }));
 
 import { POST } from '@/app/api/cms/assets/generate-tts/route';
+import { checkAiServicePermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadTTS } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
@@ -29,8 +35,22 @@ function makeReq(body: unknown) {
 describe('POST /api/cms/assets/generate-tts', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1', email: 'u1@test.com' } });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
+    (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ canGenerateTts: true });
+    (checkAiServicePermission as ReturnType<typeof vi.fn>).mockReturnValue({ allowed: true });
+  });
+
+  it('没有语音合成权限返回 403', async () => {
+    (checkAiServicePermission as ReturnType<typeof vi.fn>).mockReturnValue({
+      allowed: false,
+      message: '您没有权限使用语音合成功能',
+    });
+
+    const res = await POST(makeReq({ text: 't', gameId: '1' }));
+
+    expect(res.status).toBe(403);
+    expect(generateAndUploadTTS).not.toHaveBeenCalled();
   });
 
   it('未登录返回 401', async () => {

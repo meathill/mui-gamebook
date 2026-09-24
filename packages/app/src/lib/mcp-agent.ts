@@ -4,15 +4,16 @@
  */
 import { parse, stringify } from '@mui-gamebook/parser';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import { drizzle } from 'drizzle-orm/d1';
 import slugify from 'slugify';
 import * as schema from '@/db/schema';
+import { isAdminUser } from '@/lib/admin';
 import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
-import { getConfig, isRootUser } from '@/lib/config';
+import { getConfig } from '@/lib/config';
 import {
   buildCorrectionPrompt,
   buildGenerateScriptPrompt,
@@ -60,12 +61,13 @@ export async function resolveMcpActorUser(
   if (mode === 'session' && sessionUser?.id && sessionUser.email) {
     return { mode, user: sessionUser };
   }
-  const rootEmails =
-    process.env.ROOT_USER_EMAIL?.split(',')
-      .map((e) => e.trim().toLowerCase())
-      .filter(Boolean) || [];
-  for (const email of rootEmails) {
-    const row = await db.select().from(schema.user).where(eq(schema.user.email, email)).get();
+  const rootEmail = process.env.NEXT_PUBLIC_ROOT_USER_EMAIL?.trim();
+  if (rootEmail) {
+    const row = await db
+      .select()
+      .from(schema.user)
+      .where(eq(sql`LOWER(${schema.user.email})`, rootEmail.toLowerCase()))
+      .get();
     if (row?.id && row.email) return { mode: 'admin', user: { id: row.id, email: row.email } };
   }
   const first = await db.select().from(schema.user).limit(1);
@@ -350,7 +352,7 @@ export async function executeMcpAgentTool(
     const usageCheck = await checkUserUsageLimit(actor.user.id);
     if (!usageCheck.allowed) return fail(usageCheck.message || '今日 AI 额度已用尽');
     const permissions = await getUserAiPermissions(actor.user);
-    if (!permissions.canGenerateImage && !isRootUser(actor.user.email)) {
+    if (!permissions.canGenerateImage) {
       return fail('当前用户没有图片生成权限');
     }
     const fileName = `images/${gameId}/${Date.now()}.png`;

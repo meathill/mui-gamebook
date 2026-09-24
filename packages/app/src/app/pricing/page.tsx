@@ -17,14 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: TITLE,
     description: DESCRIPTION,
-    keywords: [
-      '互动小说定价',
-      'AI 创作订阅',
-      '姆伊游戏书 套餐',
-      'Pro Pro+',
-      'M Token',
-      '文字冒险 创作工具 价格',
-    ],
+    keywords: ['互动小说定价', 'AI 创作订阅', '姆伊游戏书 套餐', 'Pro Pro+', 'M Token', '文字冒险 创作工具 价格'],
     alternates: { canonical: '/pricing' },
     openGraph: {
       title: TITLE,

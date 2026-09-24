@@ -669,12 +669,22 @@ isValidVoiceId(voiceId: string, provider): boolean
 - 顺手修了两个死配置 bug：`ai-provider-factory.ts` 里 OpenAI/Google 分支之前漏传 `tts` 字段给 provider 构造函数，导致管理后台的「OpenAI TTS 模型」「Google TTS 模型」两个字段改了从来不生效（`GoogleAiProvider.generateTTS` 还硬编码了模型名，没读 `this.models.tts`）。已修复，新加的 `mimoTtsModel` 字段不会重蹈覆辙。
 - 删掉了从不生效的 `defaultTtsVoice` 配置字段（同上，从未被任何 TTS 调用读取）；各 provider 的默认音色现在由 `voice-config.ts` 的 `getDefaultVoice(provider)` 按当前 TTS provider 动态派生。
 
-### 按用户权限
+### 按用户权限（2026-09 重构：权限跟套餐绑定）
 
-- 存储：`user.ai_permissions` 列（JSON：`{providers, canGenerateImage, canGenerateVideo}`），null = 默认权限（仅 MiMo，无生图/生视频）。root 用户（`ROOT_USER_EMAIL`）全开。
-- 助手：`packages/app/src/lib/ai-permissions.ts`；管理入口：用户管理编辑弹窗。
-- 视频旧 `videoWhitelist`（KV 配置）保留为只读 fallback，等白名单用户权限落库后可删（见 TODO）。
-- better-auth 不感知该列（未声明 additionalFields），session shape 不变。
+- **两级管理员**，都在 `packages/app/src/lib/admin.ts`：
+  - **root**：由 `NEXT_PUBLIC_ROOT_USER_EMAIL` 指定的唯一账号（单值，不支持逗号分隔），可进系统配置与用户管理。
+    - **为什么用 `NEXT_PUBLIC_` 前缀**：服务端 `isRootUser`（`lib/admin.ts`）与客户端 `isRootUserClient`（`lib/auth-client.ts`）刻意读同一个变量，两边构建期内联成同一个字面量，绝不会出现「前端显示了后台入口、后端不放行」或反向的分歧——这类分歧用两个变量（一个 `NEXT_PUBLIC_`、一个服务端专用）必然会出现。`tests/lib/root-user-client.test.ts` 有一致性用例守着。
+    - **它是构建期变量**：Next 会把 `process.env.NEXT_PUBLIC_*` 静态内联进产物（**服务端 chunk 也内联**，不只是客户端），所以放 `wrangler.jsonc` 的 `vars` 里完全无效——改它必须重新构建部署。原先的 `ROOT_USER_EMAIL`（走 wrangler vars）已废弃。
+  - **内容管理员**：`user.is_admin` 列（迁移 `0006_user_admin.sql`），能进后台看全站统计、管游戏（含封禁/发布/删除），且不受 Token 限制；不能改系统配置、不能管理用户——避免管理员互相提权。只有 root 能在用户管理里授予/取消。
+  - 判定顺序统一为 root → is_admin → 普通用户；`isRootUser`/`isAdminUser` 从 `@/lib/admin` 导出，**不要再从 `@/lib/config` 导入**。
+- **权限解析优先级**（`packages/app/src/lib/ai-permissions.ts`）：
+  1. root 或内容管理员 → 全开
+  2. `user.ai_permissions` 非空 → 以管理员在用户管理里的显式勾选为准（一键「跟随套餐默认」可清回 null）
+  3. 否则按当前有效订阅套餐取默认：免费只有文本 / Pro 加生图+声音+音乐 / Pro+ 再加视频（`PLAN_AI_PERMISSIONS`）
+- 存储：`user.ai_permissions` 列，JSON 形状 `{providers, canGenerateImage, canGenerateTts, canGenerateMusic, canGenerateVideo}`，**null = 跟随套餐默认**。旧数据缺少的新字段一律按 false 处理，不给意外提权。
+- 门禁落点：生图在 `cms/assets/generate` 与 `generate-character-image`；TTS 在 `cms/assets/generate-tts` 与 `generate-voice-preview`；视频在 `cms/assets/generate-async`；统一走 `checkAiServicePermission(permissions, service)`。编辑器侧 `MediaAssetItem` 按权限禁用生成按钮（`useAiPermissions` 暴露四个 flag）。
+- **KV 里的 `videoWhitelist` 与 `adminUserIds` 已废弃**：字段从 `AppConfig` 删除，`getConfig()` 合并时用 `LEGACY_CONFIG_KEYS` 剔除 KV 里的历史存量，管理后台的「访问控制」区块一并删除。`videoWhitelist` 里的历史用户需要管理员在用户管理里单独勾选视频权限。
+- better-auth 通过 `user.additionalFields.isAdmin`（`input: false`）把该标记带进 session，客户端用 `isAdminSession()` 判后台入口；**不能通过注册/更新接口自行设置**。
 
 ### Secrets 与环境变量
 
@@ -689,9 +699,41 @@ isValidVoiceId(voiceId: string, provider): boolean
 
 ### 游戏访问控制
 
-- `packages/app/src/lib/game-access.ts`：`canManageGame`/`getManagedGame`（所有者或 root）。所有 cms 游戏路由统一走它，root 管理员可打开 `/my/edit/[id]` 编辑任意游戏。
+- `packages/app/src/lib/game-access.ts`：`canManageGame`/`getManagedGame`（所有者、root 或内容管理员）。所有 cms 游戏路由统一走它，管理员可打开 `/my/edit/[id]` 编辑任意游戏。
 - 例外：`register-ip` 保持 owner-only（IP 注册绑定所有者身份）。
-- `/api/admin/games/[slug]` 双通道鉴权：ADMIN_PASSWORD Bearer（脚本）或 root session（后台）。
+- `/api/admin/games/[slug]` 双通道鉴权：ADMIN_PASSWORD Bearer（脚本）或 root / 内容管理员 session（后台）。
+
+### drizzle 相关子查询的两个坑（2026-09 踩过）
+
+在 `` sql`...` `` 模板里写相关子查询（`(SELECT ... WHERE x = <外表列>)`）时有两个静默出错点，都**不报错、只出错数**：
+
+1. **必须手写表限定名**。drizzle 渲染 `${schema.user.id}` 得到的是**不带限定符**的 `"id"`，放进子查询后会优先绑定内层表的同名列：
+   - `(SELECT COUNT(*) FROM Games WHERE Games.owner_id = "id")` → 恒为 0（外层 `user.id` 根本没参与比较）
+   - `(SELECT SUM(open_count) FROM GameAnalytics WHERE game_id = "id")` → 每行都返回同一张表的合计值
+   正确写法是直接写 `user.id` / `Games.id`：`` sql`(SELECT COUNT(*) FROM Games WHERE Games.owner_id = user.id)` ``。
+   - **存量 bug**：用户管理的 `gameCount` 一直是 0，就是这么来的（本次一并修掉）。
+2. **表名以 `migrations/` 的建表语句为准**。本项目的表名不统一：`user`/`subscriptions` 是小写，`Games`/`GameAnalytics`/`GameContent` 是 PascalCase。SQLite 只对**纯大小写差异**不敏感，写错下划线（`game_analytics` ≠ `GameAnalytics`）会直接 `no such table`。
+
+守护测试见 `tests/lib/subquery-qualification.test.ts`；片段集中放在 `src/lib/admin-queries.ts`（单独成文件是为了能被测试直接 import，不被 route 的鉴权依赖拖住）。
+
+### 后台列表的排序与筛选（2026-09）
+
+- 共用件：`src/lib/list-query.ts`（`parseListQuery` 解析 `?page=&limit=&search=&sort=&order=`，排序键走**白名单映射到 drizzle 列**，非法键回退默认，不把用户输入拼进 SQL；`parseEnumFilter` 处理枚举筛选）、`src/hooks/useListQuery.ts`（前端状态，任何变更都重置到第一页）、`src/components/admin/PaginationBar.tsx`、`src/components/admin/SortableHeader.tsx`。
+- 覆盖：游戏管理（按标题/更新时间/打开数排序 + 状态筛选 全部/已发布/未发布/已封禁）、用户管理（按名称/邮箱/游戏数/注册时间排序 + 身份筛选）、全站统计（按标题/打开数/完成数/评分排序）。
+- 分页条原先在用户/游戏/统计三处各写一遍，已收敛到 `PaginationBar`。
+- 新增列表页时的固定改动面：API 侧定义 `*_SORT_COLUMNS` 白名单传给 `parseListQuery`，页面侧用 `useListQuery` + 两个共用组件。
+
+### 游戏 shadowban（封禁，2026-09）
+
+- 字段：`Games.shadow_banned`（迁移 `0007_game_shadow_ban.sql`），为真时作品从**所有公开入口**消失：目录、首页精选、标签页、相关推荐、计数、sitemap。
+- 语义：被封禁 ≠ 下架。`published` 仍是"作者是否发布"，`shadow_banned` 是"平台是否屏蔽"；作者自己和管理员仍能预览被封禁的作品。
+- **公开播放页 `/play/[slug]` 不给作者预览**（ISR `revalidate=3600`，读 session 会让整页失去缓存，见上文缓存章节）。作者预览走新增的 `/preview/[slug]`：
+  - `force-dynamic`，校验 `ownerId === session.user.id || isAdminUser(session.user)`，未发布与被封禁的作品都能打开
+  - `robots: noindex`，不参与 ISR 与 sitemap
+  - 编辑器工具栏的预览按钮指向它（顺带修掉了此前"未发布作品点预览打开 404"的老问题）
+- `getGameBySlug(slug, { includeShadowBanned: true })` 是预览路径的放行开关；公开路径不传，被封禁作品返回 null → 404。
+- `/api/games/[slug]` 对 owner 放行被封禁作品，但强制 `private, no-store` 缓存；匿名一律 404。
+- 后台游戏管理提供封禁/解封操作，操作后调 `revalidatePublicCatalog()` 清理 ISR。
 
 ### 大纲导入生成剧本
 
@@ -743,7 +785,7 @@ isValidVoiceId(voiceId: string, provider): boolean
   - **Image（生图）**：默认 `google`（Google GenAI / `gemini-3.1-flash-lite-image`），负责角色立绘与场景背景图。
   - **Video（生视频）**：默认 `google`（Google GenAI / `veo-3.1-fast-generate-preview`），负责场景视频生成。
   - **Music / SFX（音乐与音效）**：默认内置素材库，支持配置 `musicModel`（如 `suno-v4`）与 `sfxModel`（如 `eleven-sfx-v1`），预留 Suno / Udio / ElevenLabs / Stable Audio 接入。
-  - **STT（语音识别）**：默认 `openai`。
+  - **STT（语音识别）**：默认 `mimo`。三选一 openai/google/mimo，各自有独立模型字段（`openaiSttModel`/`googleSttModel`/`mimoSttModel`）。**目前只有配置、没有运行时消费方**：`resolveSttProviderType()` 无调用点，`AiProvider` 接口也没有转写方法——加模型字段是为了先把配置面补齐，真正做转写功能时需要一并补 provider 实现。
 - **管理后台 UI 重构（`/admin/config`）**：彻底摆脱按 Provider 分组的旧卡片结构，全面改为按**生成类型（Text, TTS, Image, Video, Music/SFX, STT）**分拆独立卡片，直观呈现每个生成类型的默认引擎及其对应模型配置。
 - **移除代码硬编码兜底**：所有模态与模型的基准值均声明在 `wrangler.jsonc` 的 `vars` 中，运行时由环境变量注入（`getEnvDefaults(env)`），KV 仅作为管理后台动态修改的覆盖层，彻底消除代码中分散的静态 fallback。
 

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
-import { getConfig } from '@/lib/config';
 import {
   getUserQuotaSnapshot,
   listSubscriptionsByUser,
@@ -18,12 +17,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const config = await getConfig();
     const userId = session.user.id;
-    const [quota, subscriptions] = await Promise.all([
-      getUserQuotaSnapshot(userId, config.adminUserIds),
-      listSubscriptionsByUser(userId),
-    ]);
+    const [quota, subscriptions] = await Promise.all([getUserQuotaSnapshot(userId), listSubscriptionsByUser(userId)]);
 
     return NextResponse.json({
       planCode: quota.planCode,

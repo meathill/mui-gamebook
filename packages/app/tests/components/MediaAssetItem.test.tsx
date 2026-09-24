@@ -27,6 +27,22 @@ vi.mock('@/hooks/useCmsConfig', () => ({
   ],
 }));
 
+// Mock 素材生成权限：默认全开，权限相关用例通过 permissionsMock 改写
+const { permissionsMock } = vi.hoisted(() => ({
+  permissionsMock: {
+    isLoading: false,
+    providers: ['google'] as string[],
+    canGenerateImage: true,
+    canGenerateTts: true,
+    canGenerateMusic: true,
+    canGenerateVideo: true,
+  },
+}));
+vi.mock('@/lib/editor/useAiPermissions', () => ({
+  AI_PROVIDER_LABELS: { opencode: 'OpenCode Go' },
+  useAiPermissions: () => permissionsMock,
+}));
+
 // Mock fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -138,6 +154,45 @@ describe('MediaAssetItem', () => {
       fireEvent.click(aiButton);
 
       expect(screen.getByPlaceholderText('输入 AI 生成提示词...')).toBeInTheDocument();
+    });
+
+    it('没有生图权限时禁用 AI 生成按钮并提示升级', () => {
+      permissionsMock.canGenerateImage = false;
+      try {
+        render(
+          <MediaAssetItem
+            asset={{ type: 'ai_image', prompt: '' }}
+            gameId="123"
+            variant="compact"
+            onAssetChange={vi.fn()}
+          />,
+          { wrapper: createWrapper() },
+        );
+
+        const aiButton = screen.getByTitle('当前套餐不含此生成能力，请升级或联系管理员开通');
+        expect(aiButton).toBeDisabled();
+      } finally {
+        permissionsMock.canGenerateImage = true;
+      }
+    });
+
+    it('没有视频权限时给出针对视频的提示', () => {
+      permissionsMock.canGenerateVideo = false;
+      try {
+        render(
+          <MediaAssetItem
+            asset={{ type: 'ai_video', prompt: '' }}
+            gameId="123"
+            variant="compact"
+            onAssetChange={vi.fn()}
+          />,
+          { wrapper: createWrapper() },
+        );
+
+        expect(screen.getByTitle('当前套餐不含视频生成，请升级或联系管理员开通')).toBeDisabled();
+      } finally {
+        permissionsMock.canGenerateVideo = true;
+      }
     });
 
     it('清空已有提示词后应该保持生成器、DOM 和焦点', () => {

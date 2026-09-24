@@ -12,15 +12,18 @@ vi.mock('@/lib/auth-server', () => ({
   getSession: vi.fn(),
 }));
 
-vi.mock('@/lib/config', () => ({
+vi.mock('@/lib/admin', () => ({
   isRootUser: vi.fn(),
+  isAdminUser: vi.fn((user: { email?: string; isAdmin?: boolean } | null | undefined) =>
+    Boolean(user && (user.isAdmin === true || user.email === 'root@example.com')),
+  ),
+  isAdminUserId: vi.fn(),
 }));
 
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { GET } from '@/app/api/admin/games/route';
 import { getSession } from '@/lib/auth-server';
-import { isRootUser } from '@/lib/config';
 
 const mockGames = [
   {
@@ -60,9 +63,8 @@ describe('GET /api/admin/games', () => {
     expect(res.status).toBe(403);
   });
 
-  it('非 root 用户返回 403', async () => {
+  it('非管理员返回 403', async () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: 'user@example.com' } });
-    (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
 
     const res = await GET(new Request('http://localhost/api/admin/games'));
     expect(res.status).toBe(403);
@@ -70,7 +72,6 @@ describe('GET /api/admin/games', () => {
 
   it('root 用户返回游戏列表（published 转布尔）与分页信息', async () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: 'root@example.com' } });
-    (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(true);
     mockDbWithRows(mockGames, 1);
 
     const res = await GET(new Request('http://localhost/api/admin/games?page=1&limit=20'));
@@ -90,11 +91,28 @@ describe('GET /api/admin/games', () => {
 
   it('支持搜索参数（走 where 条件）', async () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: 'root@example.com' } });
-    (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(true);
     const chain = mockDbWithRows([], 0);
 
     const res = await GET(new Request('http://localhost/api/admin/games?search=abc'));
     expect(res.status).toBe(200);
     expect(chain.where).toHaveBeenCalled();
+  });
+
+  it('支持排序与状态筛选参数', async () => {
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: 'root@example.com' } });
+    const chain = mockDbWithRows([], 0);
+
+    const res = await GET(new Request('http://localhost/api/admin/games?sort=openCount&order=asc&status=banned'));
+    expect(res.status).toBe(200);
+    expect(chain.orderBy).toHaveBeenCalled();
+    expect(chain.where).toHaveBeenCalled();
+  });
+
+  it('非法排序键回退默认排序，不报错', async () => {
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: 'root@example.com' } });
+    mockDbWithRows([], 0);
+
+    const res = await GET(new Request('http://localhost/api/admin/games?sort=DROP%20TABLE&order=sideways'));
+    expect(res.status).toBe(200);
   });
 });

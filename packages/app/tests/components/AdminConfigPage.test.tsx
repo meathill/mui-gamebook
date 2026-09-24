@@ -27,14 +27,12 @@ vi.mock('@phosphor-icons/react', () => ({
 
 const INITIAL_CONFIG: AppConfig = {
   dailyTokenLimit: 100000,
-  adminUserIds: ['admin-1'],
-  videoWhitelist: ['one@example.com'],
   defaultTextProvider: 'opencode',
   defaultAiProvider: 'opencode',
   defaultTtsProvider: 'mimo',
   defaultImageProvider: 'google',
   defaultVideoProvider: 'google',
-  defaultSttProvider: 'openai',
+  defaultSttProvider: 'mimo',
   defaultMusicProvider: 'internal',
   defaultSfxProvider: 'internal',
   musicModel: 'suno-v4',
@@ -45,13 +43,16 @@ const INITIAL_CONFIG: AppConfig = {
   googleImageModel: 'google-image',
   googleTtsModel: 'google-tts',
   googleVideoModel: 'google-video',
+  googleSttModel: 'google-stt',
   openaiTextModel: 'openai-text',
   openaiImageModel: 'openai-image',
   openaiTtsModel: 'openai-tts',
   openaiVideoModel: 'openai-video',
+  openaiSttModel: 'openai-stt',
   mimoTextModel: 'mimo-text',
   mimoBaseUrl: 'https://mimo.example.com/v1',
   mimoTtsModel: 'mimo-tts',
+  mimoSttModel: 'mimo-stt',
   anthropicTextModel: 'anthropic-text',
   cfAiGatewayBaseUrl: '',
 };
@@ -68,37 +69,37 @@ describe('AdminConfigPage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('保留多行字段与 Token 限制的原始草稿，dirty 时 query 更新不会覆盖', async () => {
+  it('保留模型字段与 Token 限制的原始草稿，dirty 时 query 更新不会覆盖', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(INITIAL_CONFIG));
     const { queryClient } = renderPage();
-    const whitelist = await screen.findByPlaceholderText('每行一个邮箱地址');
+    const sttModel = await screen.findByDisplayValue('mimo-stt');
     const tokenLimit = screen.getByLabelText('每日 Token 限制');
 
     act(() => {
       queryClient.setQueryData<AppConfig>(['admin-config'], {
         ...INITIAL_CONFIG,
         dailyTokenLimit: 750,
-        videoWhitelist: ['clean-sync@example.com'],
+        mimoSttModel: 'clean-sync-model',
       });
     });
     await waitFor(() => expect(tokenLimit).toHaveValue(750));
-    expect(whitelist).toHaveValue('clean-sync@example.com');
+    expect(sttModel).toHaveValue('clean-sync-model');
 
-    fireEvent.change(whitelist, { target: { value: ' First@Example.com \n\n second@example.com ' } });
+    fireEvent.change(sttModel, { target: { value: 'draft-model' } });
     fireEvent.change(tokenLimit, { target: { value: '' } });
 
-    expect(whitelist).toHaveValue(' First@Example.com \n\n second@example.com ');
+    expect(sttModel).toHaveValue('draft-model');
     expect(tokenLimit).toHaveValue(null);
 
     act(() => {
       queryClient.setQueryData<AppConfig>(['admin-config'], {
         ...INITIAL_CONFIG,
         dailyTokenLimit: 500,
-        videoWhitelist: ['server@example.com'],
+        mimoSttModel: 'server-model',
       });
     });
 
-    expect(whitelist).toHaveValue(' First@Example.com \n\n second@example.com ');
+    expect(sttModel).toHaveValue('draft-model');
     expect(tokenLimit).toHaveValue(null);
   });
 
@@ -106,8 +107,7 @@ describe('AdminConfigPage', () => {
     const authoritativeConfig: AppConfig = {
       ...INITIAL_CONFIG,
       dailyTokenLimit: 25,
-      adminUserIds: ['server-admin'],
-      videoWhitelist: ['server@example.com'],
+      mimoSttModel: 'server-model',
     };
     fetchMock
       .mockResolvedValueOnce(jsonResponse(INITIAL_CONFIG))
@@ -118,12 +118,7 @@ describe('AdminConfigPage', () => {
     const tokenLimit = await screen.findByLabelText('每日 Token 限制');
 
     fireEvent.change(tokenLimit, { target: { value: '0' } });
-    fireEvent.change(screen.getByPlaceholderText('每行一个邮箱地址'), {
-      target: { value: ' First@Example.com \n\nsecond@example.com\nFirst@Example.com ' },
-    });
-    fireEvent.change(screen.getByPlaceholderText('每行一个用户 ID'), {
-      target: { value: ' admin-a \n admin-a ' },
-    });
+    fireEvent.change(screen.getByDisplayValue('mimo-stt'), { target: { value: 'draft-model' } });
     fireEvent.click(screen.getByRole('button', { name: '保存配置' }));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
@@ -131,13 +126,11 @@ describe('AdminConfigPage', () => {
     expect(JSON.parse(request?.body as string)).toEqual({
       ...INITIAL_CONFIG,
       dailyTokenLimit: 0,
-      adminUserIds: ['admin-a', 'admin-a'],
-      videoWhitelist: ['First@Example.com', 'second@example.com', 'First@Example.com'],
+      mimoSttModel: 'draft-model',
     });
 
     await waitFor(() => expect(tokenLimit).toHaveValue(25));
-    expect(screen.getByPlaceholderText('每行一个邮箱地址')).toHaveValue('server@example.com');
-    expect(screen.getByPlaceholderText('每行一个用户 ID')).toHaveValue('server-admin');
+    expect(screen.getByDisplayValue('server-model')).toBeInTheDocument();
     expect(queryClient.getQueryData(['admin-config'])).toEqual(authoritativeConfig);
     expect(invalidateQueries).not.toHaveBeenCalled();
   });
@@ -154,14 +147,12 @@ describe('AdminConfigPage', () => {
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ error: '保存失败' }, false));
     fireEvent.change(tokenLimit, { target: { value: '42' } });
-    fireEvent.change(screen.getByPlaceholderText('每行一个用户 ID'), {
-      target: { value: ' draft-admin \n\n draft-admin-2 ' },
-    });
+    fireEvent.change(screen.getByDisplayValue('mimo-stt'), { target: { value: 'draft-model-2' } });
     fireEvent.click(screen.getByRole('button', { name: '保存配置' }));
 
     expect(await screen.findByText('保存失败，请重试')).toBeInTheDocument();
     expect(tokenLimit).toHaveValue(42);
-    expect(screen.getByPlaceholderText('每行一个用户 ID')).toHaveValue(' draft-admin \n\n draft-admin-2 ');
+    expect(screen.getByDisplayValue('draft-model-2')).toBeInTheDocument();
   });
 });
 

@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth-server';
 import { getUserDailyUsage, checkUserUsageLimit } from '@/lib/usage-limit';
-import { getConfig } from '@/lib/config';
 import { getUserQuotaSnapshot, listSubscriptionsByUser, PLAN_DEFINITIONS } from '@/lib/billing';
 
 /**
@@ -15,11 +14,10 @@ export async function GET() {
     }
 
     const userId = session.user.id;
-    const config = await getConfig();
     const [dailyUsage, usageCheck, quota, subscriptions] = await Promise.all([
       getUserDailyUsage(userId),
       checkUserUsageLimit(userId),
-      getUserQuotaSnapshot(userId, config.adminUserIds),
+      getUserQuotaSnapshot(userId),
       listSubscriptionsByUser(userId),
     ]);
 

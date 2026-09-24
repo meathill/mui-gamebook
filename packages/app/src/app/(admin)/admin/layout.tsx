@@ -1,6 +1,6 @@
 'use client';
 
-import { authClient, isRootUserClient } from '@/lib/auth-client';
+import { authClient, isAdminSession, isRootUserClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminNav from '@/components/admin/AdminNav';
@@ -9,14 +9,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
 
+  // root 与内容管理员都能进后台；用户管理/系统配置页由后端继续按 root 收紧
+  const canEnterAdmin = isAdminSession(session?.user);
+
   useEffect(() => {
     if (isPending) return;
     if (!session) {
       router.push('/sign-in');
-    } else if (!isRootUserClient(session.user.email)) {
+    } else if (!canEnterAdmin) {
       router.push('/my/dashboard');
     }
-  }, [isPending, session, router]);
+  }, [isPending, session, canEnterAdmin, router]);
 
   if (isPending) {
     return (
@@ -26,7 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!session || !isRootUserClient(session.user.email)) {
+  if (!session || !canEnterAdmin) {
     return null;
   }
 
@@ -40,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <h2 className="text-lg font-bold text-gray-900">管理后台</h2>
               </header>
 
-              <AdminNav />
+              <AdminNav isRoot={isRootUserClient(session.user.email)} />
             </div>
           </aside>
 

@@ -23,6 +23,7 @@ export async function GET() {
       defaultTtsProvider: config.defaultTtsProvider,
       defaultImageProvider: config.defaultImageProvider,
       defaultVideoProvider: config.defaultVideoProvider,
+      defaultSttProvider: config.defaultSttProvider,
       aiPermissions,
     });
   } catch (e: unknown) {

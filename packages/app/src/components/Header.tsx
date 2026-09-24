@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { authClient, isRootUserClient } from '@/lib/auth-client';
+import { authClient, isAdminSession } from '@/lib/auth-client';
 import UserDropdown from '@/components/admin/UserDropdown';
 
 interface HeaderProps {
@@ -59,7 +59,7 @@ export default function Header({ siteName }: HeaderProps) {
             ) : session ? (
               <UserDropdown
                 email={session?.user.email || ''}
-                isAdmin={isRootUserClient(session?.user.email)}
+                isAdmin={isAdminSession(session?.user)}
               />
             ) : (
               <Link

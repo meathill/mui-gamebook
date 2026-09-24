@@ -24,7 +24,7 @@ const PLANS: PlanCard[] = [
     monthlyPriceUsd: 0,
     yearlyPriceUsd: 0,
     monthlyTokenLimit: 0,
-    features: ['核心创作与发布永久免费', '每日 AI 体验额度', '社区作品无限畅玩', '未来可接个人 API Key'],
+    features: ['核心创作与发布永久免费', '文本 AI 与每日体验额度', '社区作品无限畅玩', '未来可接个人 API Key'],
   },
   {
     code: 'basic',
@@ -32,7 +32,7 @@ const PLANS: PlanCard[] = [
     monthlyPriceUsd: 9.98,
     yearlyPriceUsd: 99.98,
     monthlyTokenLimit: 1_000_000,
-    features: ['每月 1,000,000 M Token', 'AI 剧情副驾 / 剧本生成', '场景生图、TTS 与配音', '按账单周期自动重置'],
+    features: ['每月 1,000,000 M Token', 'AI 剧情副驾 / 剧本生成', '场景生图、配音与音乐音效', '按账单周期自动重置'],
   },
   {
     code: 'pro',
@@ -41,7 +41,7 @@ const PLANS: PlanCard[] = [
     yearlyPriceUsd: 199.98,
     monthlyTokenLimit: 2_000_000,
     highlight: true,
-    features: ['每月 2,000,000 M Token', '基础档全部能力', '更充足的批量创作算力', '适合连载 / 工作室高频产出'],
+    features: ['每月 2,000,000 M Token', 'Pro 全部能力', '视频生成（Veo / Sora）', '适合连载 / 工作室高频产出'],
   },
 ];
 

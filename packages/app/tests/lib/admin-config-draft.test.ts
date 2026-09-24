@@ -4,14 +4,12 @@ import type { AppConfig } from '@/lib/config';
 
 const CONFIG: AppConfig = {
   dailyTokenLimit: 100000,
-  adminUserIds: ['admin-1', 'admin-2'],
-  videoWhitelist: ['one@example.com', 'two@example.com'],
   defaultTextProvider: 'opencode',
   defaultAiProvider: 'opencode',
   defaultTtsProvider: 'mimo',
   defaultImageProvider: 'google',
   defaultVideoProvider: 'google',
-  defaultSttProvider: 'openai',
+  defaultSttProvider: 'mimo',
   defaultMusicProvider: 'internal',
   defaultSfxProvider: 'internal',
   musicModel: 'suno-v4',
@@ -22,33 +20,32 @@ const CONFIG: AppConfig = {
   googleImageModel: 'google-image',
   googleTtsModel: 'google-tts',
   googleVideoModel: 'google-video',
+  googleSttModel: 'google-stt',
   openaiTextModel: 'openai-text',
   openaiImageModel: 'openai-image',
   openaiTtsModel: 'openai-tts',
   openaiVideoModel: 'openai-video',
+  openaiSttModel: 'openai-stt',
   mimoTextModel: 'mimo-text',
   mimoBaseUrl: 'https://mimo.example.com/v1',
   mimoTtsModel: 'mimo-tts',
+  mimoSttModel: 'mimo-stt',
   anthropicTextModel: 'anthropic-text',
   cfAiGatewayBaseUrl: '',
 };
 
 describe('admin config draft', () => {
-  it('把数组和 Token 限制转换为可原样编辑的字符串', () => {
+  it('把 Token 限制转换为可原样编辑的字符串', () => {
     expect(createAdminConfigDraft(CONFIG)).toEqual({
       ...CONFIG,
       dailyTokenLimit: '100000',
-      adminUserIds: 'admin-1\nadmin-2',
-      videoWhitelist: 'one@example.com\ntwo@example.com',
     });
   });
 
-  it('只在提交时整理多行内容，并保留顺序、大小写和重复项', () => {
+  it('提交时把 Token 限制还原为数字', () => {
     const result = parseAdminConfigDraft({
       ...createAdminConfigDraft(CONFIG),
       dailyTokenLimit: '0',
-      adminUserIds: ' Admin-A \n\nadmin-a\n Admin-A ',
-      videoWhitelist: ' First@Example.com\r\n second@example.com \nFirst@Example.com',
     });
 
     expect(result).toEqual({
@@ -56,8 +53,6 @@ describe('admin config draft', () => {
       config: {
         ...CONFIG,
         dailyTokenLimit: 0,
-        adminUserIds: ['Admin-A', 'admin-a', 'Admin-A'],
-        videoWhitelist: ['First@Example.com', 'second@example.com', 'First@Example.com'],
       },
     });
   });

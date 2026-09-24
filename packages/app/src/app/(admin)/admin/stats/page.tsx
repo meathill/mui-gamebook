@@ -3,14 +3,10 @@
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import {
-  TrendUpIcon,
-  UsersIcon,
-  StarIcon,
-  GameControllerIcon,
-  CaretLeftIcon,
-  CaretRightIcon,
-} from '@phosphor-icons/react';
+import { TrendUpIcon, UsersIcon, StarIcon, GameControllerIcon } from '@phosphor-icons/react';
+import PaginationBar from '@/components/admin/PaginationBar';
+import SortableHeader from '@/components/admin/SortableHeader';
+import type { SortOrder } from '@/lib/list-query';
 
 interface GameAnalytics {
   id: number;
@@ -81,11 +77,15 @@ export default function GlobalStatsPage() {
 
   const page = parseInt(searchParams.get('page') || '1', 10);
   const limit = parseInt(searchParams.get('limit') || '20', 10);
+  // 排序状态放在 URL 上，刷新/分享链接后保持一致
+  const sort = searchParams.get('sort') || 'openCount';
+  const order: SortOrder = searchParams.get('order') === 'asc' ? 'asc' : 'desc';
 
   const { data, isLoading, error } = useQuery<AnalyticsResponse>({
-    queryKey: ['admin', 'stats', page, limit],
+    queryKey: ['admin', 'stats', page, limit, sort, order],
     queryFn: async () => {
-      const res = await fetch(`/api/admin/stats?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({ page: String(page), limit: String(limit), sort, order });
+      const res = await fetch(`/api/admin/stats?${params}`);
       if (!res.ok) {
         if (res.status === 403) throw new Error('Permission denied');
         throw new Error('Failed to fetch stats');
@@ -97,6 +97,16 @@ export default function GlobalStatsPage() {
   function handlePageChange(newPage: number) {
     const params = new URLSearchParams(searchParams);
     params.set('page', newPage.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  /** 同列再点切换升降序，换列回到该列默认方向 */
+  function handleSort(nextSort: string) {
+    const params = new URLSearchParams(searchParams);
+    const nextOrder = sort === nextSort && order === 'desc' ? 'asc' : 'desc';
+    params.set('sort', nextSort);
+    params.set('order', nextOrder);
+    params.set('page', '1');
     router.push(`${pathname}?${params.toString()}`);
   }
 
@@ -124,7 +134,7 @@ export default function GlobalStatsPage() {
     <div>
       <header className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">全站数据统计</h1>
-        <p className="text-gray-500 mt-1">查看所有游戏的运营数据概览（仅 Root 用户可见）</p>
+        <p className="text-gray-500 mt-1">查看所有游戏的运营数据概览（管理员可见）</p>
       </header>
 
       {/* Summary Cards */}
@@ -191,24 +201,43 @@ export default function GlobalStatsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    游戏
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    打开数
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    完成数
-                  </th>
+                  <SortableHeader
+                    label="游戏"
+                    sortKey="title"
+                    activeSort={sort}
+                    order={order}
+                    onSort={handleSort}
+                  />
+                  <SortableHeader
+                    label="打开数"
+                    sortKey="openCount"
+                    activeSort={sort}
+                    order={order}
+                    onSort={handleSort}
+                    align="right"
+                  />
+                  <SortableHeader
+                    label="完成数"
+                    sortKey="completionCount"
+                    activeSort={sort}
+                    order={order}
+                    onSort={handleSort}
+                    align="right"
+                  />
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     完成率
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     平均时长
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    评分
-                  </th>
+                  <SortableHeader
+                    label="评分"
+                    sortKey="avgRating"
+                    activeSort={sort}
+                    order={order}
+                    onSort={handleSort}
+                    align="right"
+                  />
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -261,28 +290,13 @@ export default function GlobalStatsPage() {
           </div>
         )}
 
-        {/* Pagination Controls */}
-        {pagination.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <button
-              onClick={() => handlePageChange(Math.max(1, pagination.page - 1))}
-              disabled={pagination.page === 1}
-              className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              <CaretLeftIcon size={16} />
-              上一页
-            </button>
-            <div className="text-sm text-gray-500">
-              第 {pagination.page} / {pagination.totalPages} 页
-            </div>
-            <button
-              onClick={() => handlePageChange(Math.min(pagination.totalPages, pagination.page + 1))}
-              disabled={pagination.page === pagination.totalPages}
-              className="flex items-center gap-1 px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
-              下一页
-              <CaretRightIcon size={16} />
-            </button>
-          </div>
-        )}
+        <PaginationBar
+          page={pagination.page}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          unit="个游戏"
+          onPageChange={(updater) => handlePageChange(updater(pagination.page))}
+        />
       </div>
     </div>
   );

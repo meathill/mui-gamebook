@@ -18,7 +18,7 @@ vi.mock('next/link', () => ({
 }));
 
 describe('AdminNav', () => {
-  it('渲染全部 4 个导航项', () => {
+  it('root 渲染全部 4 个导航项', () => {
     vi.mocked(usePathname).mockReturnValue('/admin/stats');
     render(<AdminNav />);
 
@@ -50,5 +50,15 @@ describe('AdminNav', () => {
     for (const label of ['全站统计', '用户管理', '游戏管理', '系统配置']) {
       expect(screen.getByText(label).closest('a')).not.toHaveClass('bg-blue-100');
     }
+  });
+
+  it('内容管理员（isRoot=false）看不到用户管理与系统配置', () => {
+    vi.mocked(usePathname).mockReturnValue('/admin/stats');
+    render(<AdminNav isRoot={false} />);
+
+    expect(screen.getByText('全站统计')).toBeInTheDocument();
+    expect(screen.getByText('游戏管理')).toBeInTheDocument();
+    expect(screen.queryByText('用户管理')).not.toBeInTheDocument();
+    expect(screen.queryByText('系统配置')).not.toBeInTheDocument();
   });
 });

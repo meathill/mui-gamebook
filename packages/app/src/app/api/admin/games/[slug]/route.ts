@@ -4,8 +4,8 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
+import { isAdminUser } from '@/lib/admin';
 import { getSession } from '@/lib/auth-server';
-import { isRootUser } from '@/lib/config';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
 
 type Props = {
@@ -13,7 +13,7 @@ type Props = {
 };
 
 /**
- * 验证管理员访问：ADMIN_PASSWORD Bearer（脚本通道）或 root 用户 session（后台通道）
+ * 验证管理员访问：ADMIN_PASSWORD Bearer（脚本通道）或 root / 内容管理员 session（后台通道）
  */
 async function validateAdminAccess(req: Request, env: { ADMIN_PASSWORD?: string }): Promise<boolean> {
   const secret = env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORD;
@@ -23,7 +23,7 @@ async function validateAdminAccess(req: Request, env: { ADMIN_PASSWORD?: string 
   }
 
   const session = await getSession();
-  return Boolean(session?.user?.email && isRootUser(session.user.email));
+  return Boolean(session?.user?.email && isAdminUser(session.user));
 }
 
 /**
@@ -53,6 +53,7 @@ export async function GET(req: Request, { params }: Props) {
     slug: game.slug,
     title: game.title,
     published: Boolean(game.published),
+    shadowBanned: Boolean(game.shadowBanned),
     content: content?.content || '',
   });
 }
@@ -114,7 +115,8 @@ export async function PUT(req: Request, { params }: Props) {
 
 /**
  * PATCH /api/admin/games/[slug]
- * 切换发布状态
+ * 切换发布状态或封禁（shadowban）状态
+ * Body: { published?: boolean; shadowBanned?: boolean }
  */
 export async function PATCH(req: Request, { params }: Props) {
   const { env } = getCloudflareContext();
@@ -124,10 +126,13 @@ export async function PATCH(req: Request, { params }: Props) {
   }
 
   const slug = (await params).slug;
-  const { published } = (await req.json()) as { published?: boolean };
+  const { published, shadowBanned } = (await req.json()) as {
+    published?: boolean;
+    shadowBanned?: boolean;
+  };
 
-  if (typeof published !== 'boolean') {
-    return NextResponse.json({ error: 'published 必须为布尔值' }, { status: 400 });
+  if (typeof published !== 'boolean' && typeof shadowBanned !== 'boolean') {
+    return NextResponse.json({ error: 'published 或 shadowBanned 必须为布尔值' }, { status: 400 });
   }
 
   const db = drizzle(env.DB);
@@ -137,10 +142,14 @@ export async function PATCH(req: Request, { params }: Props) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 });
   }
 
-  await db.update(schema.games).set({ published, updatedAt: new Date() }).where(eq(schema.games.id, game.id));
+  const updates: { published?: boolean; shadowBanned?: boolean; updatedAt: Date } = { updatedAt: new Date() };
+  if (typeof published === 'boolean') updates.published = published;
+  if (typeof shadowBanned === 'boolean') updates.shadowBanned = shadowBanned;
+
+  await db.update(schema.games).set(updates).where(eq(schema.games.id, game.id));
   revalidatePublicCatalog({ slug, tags: game.tags });
 
-  return NextResponse.json({ success: true, published });
+  return NextResponse.json({ success: true, published: updates.published, shadowBanned: updates.shadowBanned });
 }
 
 /**

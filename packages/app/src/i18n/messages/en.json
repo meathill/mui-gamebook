@@ -356,8 +356,7 @@
     "createFirst": "Create your first game to get started!",
     "globalSettings": "Global Settings",
     "aiProvider": "AI Provider",
-    "dailyTokenLimit": "Daily Token Limit",
-    "videoWhitelist": "Video Generation Whitelist"
+    "dailyTokenLimit": "Daily Token Limit"
   },
   "about": {
     "pageTitle": "About Us - MuiStory",
