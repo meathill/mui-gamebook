@@ -70,7 +70,7 @@ export default async function HeroSection() {
                 <span>
                   生图/音乐/配音{' '}
                   <span className="text-orange-600 font-semibold text-[11px] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200/60">
-                    免费开始
+                    Pro 起
                   </span>
                 </span>
               </div>

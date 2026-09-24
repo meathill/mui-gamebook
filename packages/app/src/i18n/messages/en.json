@@ -85,15 +85,15 @@
     "hero": {
       "title": "Interactive Fiction Online — Everyone Can Read It, Everyone Can Write It",
       "freeBadge": "Start free · Subscribe for more AI credits",
-      "subtitle": "State-of-the-art AI models + always-ready AI Chatbot co-pilot. Start free, subscribe for more AI credits. Create interactive fiction with Markdown, generate art, music & voice, and publish everywhere.",
+      "subtitle": "State-of-the-art AI models + always-ready AI Chatbot co-pilot. Start free; subscriptions unlock every capability plus more AI credits. Create interactive fiction with Markdown, generate art, music & voice, and publish everywhere.",
       "startCreating": "Start Creating",
       "browseStories": "Browse Interactive Fiction"
     },
     "aiStudio": {
-      "badge": "Full Multimodal AI Studio · Free tier + paid plans",
+      "badge": "Full Multimodal AI Studio · Free text + paid plans",
       "title": "Top-Tier AI Models + 24/7 Co-pilot",
       "subtitle": "Fully connected to all high-value AI capabilities for interactive storytelling. Generous compute out of the box — empower every story with art, music, video, and voice.",
-      "freeBanner": "Try AI Story Co-pilot, Scene Art, Music & SFX, TTS, and Voice Cloning on the free tier. Subscribe to Pro or Pro+ for 1M / 2M M Tokens every month.",
+      "freeBanner": "The free tier includes the AI Story Co-pilot and script generation (text models). Scene Art, Music & SFX, and TTS require Pro or above; video generation requires Pro+. Subscriptions unlock higher monthly M Token allowances.",
       "freeCta": "Try AI Creation Tools for Free",
       "chatbot": {
         "tag": "Live Chat Co-pilot",
@@ -224,7 +224,7 @@
       },
       "pricing": {
         "question": "Is it free to use?",
-        "answer": "Core creation and publishing features are free forever. The multimodal AI suite has a free tier; subscribe to Pro ($9.98/mo) or Pro+ ($19.98/mo) for 1M / 2M M Tokens per month. Annual billing saves about 17%. See the pricing page."
+        "answer": "Core creation and publishing features are free forever. Text AI (Story Co-pilot and script generation) is free; Scene Art, Music & SFX, and TTS require Pro or above, and video generation requires Pro+. Subscriptions include 1M / 2M M Tokens per billing cycle, with about 17% off on annual. See the pricing page."
       },
       "export": {
         "question": "Can I export to other platforms?",
@@ -550,12 +550,12 @@
     "pageTitle": "How to Create Interactive Fiction - No-Code Guide to Self-Publishing",
     "pageDescription": "Want to create your own interactive fiction? MuiStory lets you write stories in Markdown, polish with AI, add branching and variables, and publish with one click — self-publishing to the web and beyond, no programming needed.",
     "heroTitle": "Creating interactive fiction is easier than you think",
-    "heroSubtitle": "Write your story in the Markdown you already know. Multimodal AI tools polish prose, generate art, music and sound effects. Publish everywhere with one click. Start free, subscribe for more credits.",
+    "heroSubtitle": "Write your story in the Markdown you already know. Multimodal AI tools polish prose, generate art, music and sound effects. Publish everywhere with one click. Start free; subscriptions unlock every capability plus more credits.",
     "workflowTitle": "The workflow",
     "step1Title": "Write your story in Markdown",
     "step1Content": "No programming required. Write your plot in familiar Markdown syntax; the editor autosaves and offers smart hints, designed specifically for interactive fiction.",
     "step2Title": "AI-Assisted Creation",
-    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art, background music and character voices. Free tier included; subscribe for higher monthly credits.",
+    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art, background music and character voices. Text features are free; Scene Art, Music and TTS need Pro or above.",
     "step3Title": "Add interactive elements",
     "step3Content": "Add branching choices, variable systems, conditional text, even embed minigames — make the reader a participant in the story.",
     "step4Title": "Publish with one click, self-publish",
