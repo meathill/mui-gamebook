@@ -1,5 +1,4 @@
 import type {
-  AiProviderType,
   ImageProviderType,
   MusicProviderType,
   SfxProviderType,
@@ -12,8 +11,6 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export interface AppConfig {
   dailyTokenLimit: number;
-  adminUserIds: string[];
-  videoWhitelist: string[];
   /** 默认文本生成提供者 */
   defaultTextProvider: TextProviderType;
   /** 默认 AI 文本提供者别名（兼容旧接口） */
@@ -46,6 +43,8 @@ export interface AppConfig {
   googleTtsModel: string;
   /** Google AI 视频模型 */
   googleVideoModel: string;
+  /** Google AI 语音识别模型 */
+  googleSttModel: string;
   /** OpenAI 文本模型 */
   openaiTextModel: string;
   /** OpenAI 图片模型 */
@@ -54,12 +53,16 @@ export interface AppConfig {
   openaiTtsModel: string;
   /** OpenAI 视频模型 */
   openaiVideoModel: string;
+  /** OpenAI 语音识别模型 */
+  openaiSttModel: string;
   /** 小米 MiMo 文本模型 */
   mimoTextModel: string;
   /** 小米 MiMo base URL */
   mimoBaseUrl: string;
   /** 小米 MiMo TTS 模型 */
   mimoTtsModel: string;
+  /** 小米 MiMo 语音识别模型 */
+  mimoSttModel: string;
   /** Anthropic Claude 文本模型 */
   anthropicTextModel: string;
   /** Cloudflare AI Gateway 基础地址 */
@@ -67,6 +70,12 @@ export interface AppConfig {
 }
 
 const CONFIG_KEY = 'app:config';
+
+/**
+ * 已从 AppConfig 移除、但可能残留在 KV 里的字段。
+ * 合并时显式剔除，避免旧值重新进入配置对象。
+ */
+const LEGACY_CONFIG_KEYS = ['videoWhitelist', 'adminUserIds'] as const;
 
 /**
  * 从环境变量装配各模态的基准配置
@@ -79,8 +88,6 @@ export function getEnvDefaults(envMap?: unknown): AppConfig {
 
   return {
     dailyTokenLimit: Number(env.DAILY_TOKEN_LIMIT) || 100000,
-    adminUserIds: [],
-    videoWhitelist: [],
     defaultTextProvider,
     defaultAiProvider: defaultTextProvider,
     defaultTtsProvider: (env.DEFAULT_TTS_PROVIDER as TtsProviderType) || 'mimo',
@@ -97,13 +104,16 @@ export function getEnvDefaults(envMap?: unknown): AppConfig {
     googleImageModel: (env.GOOGLE_IMAGE_MODEL as string) || 'gemini-3.1-flash-lite-image',
     googleTtsModel: (env.GOOGLE_TTS_MODEL as string) || 'gemini-3.1-flash-tts-preview',
     googleVideoModel: (env.GOOGLE_VIDEO_MODEL as string) || 'veo-3.1-fast-generate-preview',
+    googleSttModel: (env.GOOGLE_STT_MODEL as string) || 'gemini-3-flash-transcribe',
     openaiTextModel: (env.OPENAI_TEXT_MODEL as string) || 'gpt-5.6-luna',
     openaiImageModel: (env.OPENAI_IMAGE_MODEL as string) || 'gpt-image-2.5-sunburst',
     openaiTtsModel: (env.OPENAI_TTS_MODEL as string) || 'gpt-4o-mini-tts',
     openaiVideoModel: (env.OPENAI_VIDEO_MODEL as string) || '',
+    openaiSttModel: (env.OPENAI_STT_MODEL as string) || 'whisper-1',
     mimoTextModel: (env.MIMO_TEXT_MODEL as string) || 'mimo-v2.5-pro',
     mimoBaseUrl: (env.MIMO_BASE_URL as string) || 'https://token-plan-cn.xiaomimimo.com/v1',
     mimoTtsModel: (env.MIMO_TTS_MODEL as string) || 'mimo-v2.5-tts',
+    mimoSttModel: (env.MIMO_STT_MODEL as string) || 'mimo-v2.5-asr',
     anthropicTextModel: (env.ANTHROPIC_TEXT_MODEL as string) || 'claude-sonnet-5',
     cfAiGatewayBaseUrl: (env.CF_AI_GATEWAY_BASE_URL as string) || '',
   };
@@ -126,12 +136,17 @@ export async function getConfig(): Promise<AppConfig> {
         (stored as { defaultAiProvider?: TextProviderType }).defaultAiProvider ||
         defaults.defaultTextProvider;
 
-      return {
+      const merged = {
         ...defaults,
         ...stored,
         defaultTextProvider: textProvider,
         defaultAiProvider: textProvider,
       };
+      for (const key of LEGACY_CONFIG_KEYS) {
+        delete (merged as Record<string, unknown>)[key];
+      }
+
+      return merged;
     }
 
     return defaults;
@@ -158,43 +173,4 @@ export async function updateConfig(config: Partial<AppConfig>): Promise<void> {
     console.error('[Config] 更新配置失败:', error);
     throw error;
   }
-}
-
-/**
- * 检查用户是否有权限生成视频
- * 只有白名单中的用户才能生成视频
- */
-export async function checkVideoGenerationPermission(userEmail: string | null | undefined): Promise<{
-  allowed: boolean;
-  message?: string;
-}> {
-  if (!userEmail) {
-    return { allowed: false, message: '无法获取用户邮箱' };
-  }
-
-  const config = await getConfig();
-
-  // 如果白名单为空，则不允许任何人使用
-  if (!config.videoWhitelist || config.videoWhitelist.length === 0) {
-    return { allowed: false, message: '视频生成功能暂未开放' };
-  }
-
-  // 检查用户邮箱是否在白名单中（不区分大小写）
-  const normalizedEmail = userEmail.toLowerCase();
-  const isAllowed = config.videoWhitelist.some((email) => email.toLowerCase() === normalizedEmail);
-
-  if (!isAllowed) {
-    return { allowed: false, message: '您没有权限使用视频生成功能' };
-  }
-
-  return { allowed: true };
-}
-
-/**
- * 检查用户是否是管理员（ROOT_USER）
- */
-export function isRootUser(userEmail: string | null | undefined): boolean {
-  if (!userEmail) return false;
-  const rootEmails = process.env.ROOT_USER_EMAIL?.split(',').map((e) => e.trim().toLowerCase()) || [];
-  return rootEmails.includes(userEmail.toLowerCase());
 }

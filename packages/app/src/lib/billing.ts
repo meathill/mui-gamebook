@@ -6,6 +6,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import * as schema from '@/db/schema';
+import { isAdminUserId } from './admin';
 
 export type PlanCode = 'basic' | 'pro';
 export type BillingInterval = 'month' | 'year';
@@ -314,8 +315,8 @@ export interface UserQuotaSnapshot {
   subscriptionStatus: SubscriptionStatus | null;
 }
 
-export async function getUserQuotaSnapshot(userId: string, adminUserIds: string[]): Promise<UserQuotaSnapshot> {
-  if (adminUserIds.includes(userId)) {
+export async function getUserQuotaSnapshot(userId: string): Promise<UserQuotaSnapshot> {
+  if (await isAdminUserId(userId)) {
     return {
       planCode: 'admin',
       isSubscribed: false,

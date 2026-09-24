@@ -3,7 +3,7 @@
 # 本地开发：cp .dev.vars.example .dev.vars 后填入真实值（.dev.vars 已 gitignore）
 # 生产部署：逐个执行 `wrangler secret put <NAME>`（在 packages/app 目录下）
 #
-# 非机密配置（模型名、ROOT_USER_EMAIL 等）在 wrangler.jsonc 的 vars 里，
+# 非机密配置（模型名、NEXT_PUBLIC_ROOT_USER_EMAIL（构建期变量，见 .env.example） 等）在 wrangler.jsonc 的 vars 里，
 # 运行时模型/网关配置优先走管理后台 /admin/config（存 KV）。
 # NEXT_PUBLIC_* 变量不在这里，见 .env.example（构建期变量，机制完全不同）。
 #

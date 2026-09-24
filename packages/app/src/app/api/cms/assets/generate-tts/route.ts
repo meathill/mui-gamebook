@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { checkAiServicePermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadTTS, type TTSVoiceName } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
@@ -7,6 +8,13 @@ import { checkUserUsageLimit } from '@/lib/usage-limit';
 export async function POST(req: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // 检查语音合成权限
+  const permissions = await getUserAiPermissions(session.user);
+  const ttsPermission = checkAiServicePermission(permissions, 'tts');
+  if (!ttsPermission.allowed) {
+    return NextResponse.json({ error: ttsPermission.message }, { status: 403 });
+  }
 
   // 检查用量限制
   const usageCheck = await checkUserUsageLimit(session.user.id);

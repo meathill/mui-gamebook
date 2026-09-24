@@ -16,55 +16,65 @@ vi.mock('drizzle-orm/d1', () => ({
   })),
 }));
 
-vi.mock('@/lib/config', () => ({
-  getConfig: vi.fn(),
+vi.mock('@/lib/admin', () => ({
   isRootUser: vi.fn(),
+  isAdminUser: vi.fn((user: { isAdmin?: boolean } | null | undefined) => user?.isAdmin === true),
+  isAdminUserId: vi.fn(),
 }));
 
+const { getUsableSubscriptionMock } = vi.hoisted(() => ({ getUsableSubscriptionMock: vi.fn() }));
+
+vi.mock('@/lib/billing', () => ({
+  getUsableSubscription: getUsableSubscriptionMock,
+}));
+
+import { isRootUser } from '@/lib/admin';
 import {
   ALL_TEXT_PROVIDERS,
-  checkVideoPermission,
-  DEFAULT_AI_PERMISSIONS,
+  checkAiServicePermission,
   getUserAiPermissions,
   parseAiPermissions,
+  PLAN_AI_PERMISSIONS,
   resolveTextProvider,
 } from '@/lib/ai-permissions';
-import { getConfig, isRootUser } from '@/lib/config';
+import { getUsableSubscription } from '@/lib/billing';
 
 describe('parseAiPermissions', () => {
-  it('null/undefined 回退默认权限', () => {
-    expect(parseAiPermissions(null)).toEqual(DEFAULT_AI_PERMISSIONS);
-    expect(parseAiPermissions(undefined)).toEqual(DEFAULT_AI_PERMISSIONS);
+  it('null/undefined/坏 JSON 表示未显式配置（跟随套餐）', () => {
+    expect(parseAiPermissions(null)).toBeNull();
+    expect(parseAiPermissions(undefined)).toBeNull();
+    expect(parseAiPermissions('{not json')).toBeNull();
   });
 
-  it('坏 JSON 回退默认权限', () => {
-    expect(parseAiPermissions('{not json')).toEqual(DEFAULT_AI_PERMISSIONS);
-  });
-
-  it('过滤未知 provider，空列表回退默认 providers', () => {
+  it('过滤未知 provider', () => {
     const parsed = parseAiPermissions(
       JSON.stringify({ providers: ['anthropic', 'gpt-x', 'mimo'], canGenerateImage: true }),
     );
-    expect(parsed.providers).toEqual(['anthropic', 'mimo']);
-    expect(parsed.canGenerateImage).toBe(true);
-    expect(parsed.canGenerateVideo).toBe(false);
+    expect(parsed?.providers).toEqual(['anthropic', 'mimo']);
+    expect(parsed?.canGenerateImage).toBe(true);
+  });
 
-    const empty = parseAiPermissions(JSON.stringify({ providers: ['unknown'] }));
-    expect(empty.providers).toEqual(['opencode']);
+  it('旧数据缺少的新字段按 false 处理，不意外提权', () => {
+    const parsed = parseAiPermissions(JSON.stringify({ providers: ['opencode'], canGenerateImage: true }));
+    expect(parsed?.canGenerateImage).toBe(true);
+    expect(parsed?.canGenerateTts).toBe(false);
+    expect(parsed?.canGenerateMusic).toBe(false);
+    expect(parsed?.canGenerateVideo).toBe(false);
   });
 
   it('非布尔 flag 视为 false', () => {
     const parsed = parseAiPermissions(JSON.stringify({ providers: ['opencode'], canGenerateImage: 'yes' }));
-    expect(parsed.canGenerateImage).toBe(false);
+    expect(parsed?.canGenerateImage).toBe(false);
   });
 });
 
 describe('getUserAiPermissions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getUsableSubscriptionMock.mockResolvedValue(null);
   });
 
-  it('root 用户拥有全部权限', async () => {
+  it('root 用户拥有全部权限，不查库', async () => {
     (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(true);
 
     const permissions = await getUserAiPermissions({ id: 'u1', email: 'root@example.com' });
@@ -74,28 +84,68 @@ describe('getUserAiPermissions', () => {
     expect(limitMock).not.toHaveBeenCalled();
   });
 
-  it('普通用户从 D1 读取并解析', async () => {
+  it('内容管理员（is_admin）同样全开', async () => {
     (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
-    limitMock.mockResolvedValue([
-      { aiPermissions: JSON.stringify({ providers: ['anthropic'], canGenerateImage: true }) },
-    ]);
+    limitMock.mockResolvedValue([{ aiPermissions: null, isAdmin: true }]);
 
-    const permissions = await getUserAiPermissions({ id: 'u2', email: 'user@example.com' });
-    expect(permissions.providers).toEqual(['anthropic']);
-    expect(permissions.canGenerateImage).toBe(true);
+    const permissions = await getUserAiPermissions({ id: 'u2', email: 'admin@example.com' });
+    expect(permissions).toEqual(PLAN_AI_PERMISSIONS.pro);
   });
 
-  it('无记录时回退默认权限', async () => {
+  it('显式配置优先于套餐默认', async () => {
     (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
-    limitMock.mockResolvedValue([]);
+    limitMock.mockResolvedValue([
+      { aiPermissions: JSON.stringify({ providers: ['anthropic'], canGenerateImage: true }), isAdmin: false },
+    ]);
 
     const permissions = await getUserAiPermissions({ id: 'u3', email: 'user@example.com' });
-    expect(permissions).toEqual(DEFAULT_AI_PERMISSIONS);
+    expect(permissions.providers).toEqual(['anthropic']);
+    expect(permissions.canGenerateImage).toBe(true);
+    expect(permissions.canGenerateVideo).toBe(false);
+  });
+
+  it('未配置时跟随订阅套餐：免费只有文本，Pro 加生图/声音/音乐，Pro+ 再加视频', async () => {
+    (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
+    limitMock.mockResolvedValue([{ aiPermissions: null, isAdmin: false }]);
+
+    getUsableSubscriptionMock.mockResolvedValue(null);
+    const free = await getUserAiPermissions({ id: 'u4', email: 'user@example.com' });
+    expect(free).toEqual(PLAN_AI_PERMISSIONS.free);
+    expect(free.canGenerateImage).toBe(false);
+    expect(free.canGenerateVideo).toBe(false);
+
+    getUsableSubscriptionMock.mockResolvedValue({ planCode: 'basic' });
+    const basic = await getUserAiPermissions({ id: 'u4', email: 'user@example.com' });
+    expect(basic.canGenerateImage).toBe(true);
+    expect(basic.canGenerateTts).toBe(true);
+    expect(basic.canGenerateMusic).toBe(true);
+    expect(basic.canGenerateVideo).toBe(false);
+
+    getUsableSubscriptionMock.mockResolvedValue({ planCode: 'pro' });
+    const pro = await getUserAiPermissions({ id: 'u4', email: 'user@example.com' });
+    expect(pro.canGenerateVideo).toBe(true);
+  });
+
+  it('显式配置里的 provider 全非法时，provider 回退套餐默认', async () => {
+    (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
+    limitMock.mockResolvedValue([
+      { aiPermissions: JSON.stringify({ providers: ['nope'], canGenerateImage: true }), isAdmin: false },
+    ]);
+
+    const permissions = await getUserAiPermissions({ id: 'u5', email: 'user@example.com' });
+    expect(permissions.providers).toEqual(ALL_TEXT_PROVIDERS);
+    expect(permissions.canGenerateImage).toBe(true);
   });
 });
 
 describe('resolveTextProvider', () => {
-  const permissions = { providers: ['mimo', 'anthropic'] as const, canGenerateImage: false, canGenerateVideo: false };
+  const permissions = {
+    providers: ['mimo', 'anthropic'] as ('mimo' | 'anthropic')[],
+    canGenerateImage: false,
+    canGenerateTts: false,
+    canGenerateMusic: false,
+    canGenerateVideo: false,
+  };
 
   it('请求的 provider 在许可列表内则使用', () => {
     expect(resolveTextProvider({ ...permissions, providers: [...permissions.providers] }, 'anthropic')).toBe(
@@ -110,40 +160,29 @@ describe('resolveTextProvider', () => {
 
   it('未请求时使用第一项；空列表兜底 opencode', () => {
     expect(resolveTextProvider({ ...permissions, providers: [...permissions.providers] })).toBe('mimo');
-    expect(resolveTextProvider({ providers: [], canGenerateImage: false, canGenerateVideo: false })).toBe('opencode');
+    expect(resolveTextProvider({ ...permissions, providers: [] })).toBe('opencode');
   });
 });
 
-describe('checkVideoPermission', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+describe('checkAiServicePermission', () => {
+  const base = {
+    providers: ['mimo'] as ('mimo' | 'anthropic')[],
+    canGenerateImage: false,
+    canGenerateTts: false,
+    canGenerateMusic: false,
+    canGenerateVideo: false,
+  };
+
+  it('对应 flag 为 true 时放行', () => {
+    expect(checkAiServicePermission(base, 'video').allowed).toBe(false);
+    expect(checkAiServicePermission({ ...base, canGenerateVideo: true }, 'video').allowed).toBe(true);
+    expect(checkAiServicePermission({ ...base, canGenerateTts: true }, 'tts').allowed).toBe(true);
+    expect(checkAiServicePermission({ ...base, canGenerateMusic: true }, 'music').allowed).toBe(true);
   });
 
-  it('canGenerateVideo 为 true 直接放行', async () => {
-    const result = await checkVideoPermission(
-      { email: 'a@b.com' },
-      { providers: ['mimo'], canGenerateImage: false, canGenerateVideo: true },
-    );
-    expect(result.allowed).toBe(true);
-    expect(getConfig).not.toHaveBeenCalled();
-  });
-
-  it('旧 videoWhitelist 命中作为过渡期 fallback', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ videoWhitelist: ['A@B.com'] });
-    const result = await checkVideoPermission(
-      { email: 'a@b.com' },
-      { providers: ['mimo'], canGenerateImage: false, canGenerateVideo: false },
-    );
-    expect(result.allowed).toBe(true);
-  });
-
-  it('两者都没有则拒绝', async () => {
-    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({ videoWhitelist: [] });
-    const result = await checkVideoPermission(
-      { email: 'a@b.com' },
-      { providers: ['mimo'], canGenerateImage: false, canGenerateVideo: false },
-    );
+  it('无权限时给出带服务名的提示', () => {
+    const result = checkAiServicePermission(base, 'image');
     expect(result.allowed).toBe(false);
-    expect(result.message).toContain('没有权限');
+    expect(result.message).toContain('图片生成');
   });
 });

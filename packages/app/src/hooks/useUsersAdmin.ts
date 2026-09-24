@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { parseUserAiPermissions } from '@/components/admin/UserAiPermissionsFields';
 import { useDialog } from '@/components/Dialog';
+import { useListQuery } from '@/hooks/useListQuery';
 import type { AiPermissions } from '@/lib/ai-permissions';
 
 export interface UserItem {
@@ -12,6 +13,10 @@ export interface UserItem {
   createdAt: string | number;
   gameCount: number;
   aiPermissions: string | null;
+  isAdmin: boolean;
+  /** 当前有效订阅套餐码（服务端附带），未订阅为 null */
+  planCode?: string | null;
+  subscriptionStatus?: string | null;
 }
 
 export interface UsersResponse {
@@ -26,16 +31,41 @@ export interface UsersResponse {
 
 export type ModalType = 'create' | 'edit' | 'password' | null;
 
+/** 用户列表的排序键白名单（与 /api/admin/users 的 GAME_SORT_COLUMNS 对应） */
+export const USER_SORT_OPTIONS = [
+  { value: 'createdAt', label: '注册时间' },
+  { value: 'gameCount', label: '游戏数' },
+  { value: 'email', label: '邮箱' },
+] as const;
+
+export const USER_ROLE_OPTIONS = [
+  { value: 'all', label: '全部' },
+  { value: 'admin', label: '管理员' },
+  { value: 'user', label: '普通用户' },
+] as const;
+
+const PLAN_LABELS: Record<string, string> = {
+  free: '免费档',
+  basic: 'Pro',
+  pro: 'Pro+',
+  admin: '管理员（不限量）',
+};
+
+export function formatPlanLabel(planCode: string | null | undefined): string {
+  return planCode ? (PLAN_LABELS[planCode] ?? planCode) : '免费档';
+}
+
 /**
- * 用户管理页的状态与操作：列表查询、分页/搜索、创建/编辑/改密/删除四个 mutation
+ * 用户管理页的状态与操作：列表查询、分页/搜索/排序/筛选，四个 mutation
  */
 export function useUsersAdmin() {
   const queryClient = useQueryClient();
   const dialog = useDialog();
-
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [searchInput, setSearchInput] = useState('');
+  const list = useListQuery({
+    defaultSort: 'createdAt',
+    defaultOrder: 'desc',
+    defaultFilters: { role: 'all' },
+  });
 
   const [modalType, setModalType] = useState<ModalType>(null);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
@@ -45,15 +75,14 @@ export function useUsersAdmin() {
   const [formEmail, setFormEmail] = useState('');
   const [formPassword, setFormPassword] = useState('');
   const [formPasswordConfirm, setFormPasswordConfirm] = useState('');
-  // null = 默认权限（仅 MiMo，无生图/生视频）
+  // null = 跟随套餐默认权限
   const [formAiPermissions, setFormAiPermissions] = useState<AiPermissions | null>(null);
+  const [formIsAdmin, setFormIsAdmin] = useState(false);
 
   const { data, isLoading } = useQuery<UsersResponse>({
-    queryKey: ['admin', 'users', page, search],
+    queryKey: ['admin', 'users', list.queryKey],
     queryFn: async () => {
-      const params = new URLSearchParams({ page: String(page), limit: '20' });
-      if (search) params.set('search', search);
-      const res = await fetch(`/api/admin/users?${params}`);
+      const res = await fetch(`/api/admin/users?${list.buildSearchParams()}`);
       if (!res.ok) throw new Error('Failed to fetch users');
       return res.json();
     },
@@ -87,6 +116,7 @@ export function useUsersAdmin() {
       name: string;
       email: string;
       aiPermissions: AiPermissions | null;
+      isAdmin: boolean;
     }) => {
       const res = await fetch(`/api/admin/users/${id}`, {
         method: 'PUT',
@@ -146,6 +176,7 @@ export function useUsersAdmin() {
     setFormPassword('');
     setFormPasswordConfirm('');
     setFormAiPermissions(null);
+    setFormIsAdmin(false);
   }
 
   function openCreate() {
@@ -161,6 +192,7 @@ export function useUsersAdmin() {
     setFormName(user.name);
     setFormEmail(user.email);
     setFormAiPermissions(parseUserAiPermissions(user.aiPermissions));
+    setFormIsAdmin(user.isAdmin === true);
     setModalType('edit');
   }
 
@@ -177,18 +209,6 @@ export function useUsersAdmin() {
     deleteMutation.mutate(user.id);
   }
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    setSearch(searchInput);
-    setPage(1);
-  }
-
-  function handleClearSearch() {
-    setSearch('');
-    setSearchInput('');
-    setPage(1);
-  }
-
   function handleCreateSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (formPassword !== formPasswordConfirm) {
@@ -201,7 +221,13 @@ export function useUsersAdmin() {
   function handleEditSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingUser) return;
-    updateMutation.mutate({ id: editingUser.id, name: formName, email: formEmail, aiPermissions: formAiPermissions });
+    updateMutation.mutate({
+      id: editingUser.id,
+      name: formName,
+      email: formEmail,
+      aiPermissions: formAiPermissions,
+      isAdmin: formIsAdmin,
+    });
   }
 
   function handlePasswordSubmit(e: React.FormEvent) {
@@ -220,11 +246,14 @@ export function useUsersAdmin() {
   return {
     data,
     isLoading,
-    page,
-    setPage,
-    search,
-    searchInput,
-    setSearchInput,
+    list,
+    page: list.page,
+    setPage: list.setPage,
+    search: list.search,
+    searchInput: list.searchInput,
+    setSearchInput: list.setSearchInput,
+    handleSearch: list.handleSearch,
+    handleClearSearch: list.handleClearSearch,
     modalType,
     editingUser,
     formName,
@@ -237,14 +266,14 @@ export function useUsersAdmin() {
     setFormPasswordConfirm,
     formAiPermissions,
     setFormAiPermissions,
+    formIsAdmin,
+    setFormIsAdmin,
     activeMutation,
     closeModal,
     openCreate,
     openEdit,
     openPassword,
     handleDelete,
-    handleSearch,
-    handleClearSearch,
     handleCreateSubmit,
     handleEditSubmit,
     handlePasswordSubmit,

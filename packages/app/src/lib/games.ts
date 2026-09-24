@@ -105,7 +105,7 @@ export async function getPublishedGames(options?: { limit?: number; offset?: num
       return applyGamesPaging(await fetchLiveGamesSnapshot(), options);
     }
 
-    let query = `SELECT slug, title, description, cover_image, tags, created_at, updated_at FROM Games WHERE published = 1 AND ${playableContentExists('Games')} ORDER BY updated_at DESC`;
+    let query = `SELECT slug, title, description, cover_image, tags, created_at, updated_at FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} ORDER BY updated_at DESC`;
 
     if (options?.limit) {
       query += ` LIMIT ${options.limit}`;
@@ -145,7 +145,7 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
     if (pinnedSlugs.length > 0) {
       const placeholders = pinnedSlugs.map(() => '?').join(', ');
       const { results } = (await DB.prepare(
-        `SELECT ${columns} FROM Games WHERE published = 1 AND ${playableContentExists('Games')} AND slug IN (${placeholders})`,
+        `SELECT ${columns} FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} AND slug IN (${placeholders})`,
       )
         .bind(...pinnedSlugs)
         .all()) as { results: GameRow[] };
@@ -154,7 +154,7 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
     }
 
     const { results: recent } = (await DB.prepare(
-      `SELECT ${columns} FROM Games WHERE published = 1 AND ${playableContentExists('Games')} ORDER BY updated_at DESC LIMIT ?`,
+      `SELECT ${columns} FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} ORDER BY updated_at DESC LIMIT ?`,
     )
       .bind(limit)
       .all()) as { results: GameRow[] };
@@ -203,7 +203,7 @@ export async function getPublishedGamesCount(): Promise<number> {
     if (!DB) return (await fetchLiveGamesSnapshot()).length;
 
     const result = await DB.prepare(
-      `SELECT COUNT(*) as count FROM Games WHERE published = 1 AND ${playableContentExists('Games')}`,
+      `SELECT COUNT(*) as count FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')}`,
     ).first<{
       count: number;
     }>();
@@ -227,7 +227,7 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
     // 获取所有已发布且可玩的游戏（除当前游戏外），然后在内存中按标签匹配排序
     const { results } = (await DB.prepare(
       `SELECT slug, title, description, cover_image, tags, created_at, updated_at
-       FROM Games WHERE published = 1 AND ${playableContentExists('Games')} AND slug != ?
+       FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} AND slug != ?
        ORDER BY updated_at DESC`,
     )
       .bind(currentSlug)
@@ -281,13 +281,18 @@ export type GameDetail = PlayableGame & {
 /**
  * 三态语义（调用方据此区分处理）：
  * - 正常 playable → GameDetail
- * - 真缺失（无记录/无正文/解析失败/未发布）→ null，调用方走 404
+ * - 真缺失（无记录/无正文/解析失败/未发布/被封禁）→ null，调用方走 404
  * - 运行时 D1 不可用或查询抛错 → throw，调用方走 500（不进 ISR 缓存，避免故障期全站误 404）
  * - 构建期（NEXT_PHASE=phase-production-build）：D1 可能直接抛错（无上下文），
  *   也可能连上一个空表（no such table），统一抓线上公开 API；抓不到则 null，
  *   保证构建通过，靠重验证自愈。
+ *
+ * options.includeShadowBanned：预览路径（作者/管理员）放行被封禁作品；公开路径不传。
  */
-export async function getGameBySlug(slug: string): Promise<GameDetail | null> {
+export async function getGameBySlug(
+  slug: string,
+  options?: { includeShadowBanned?: boolean },
+): Promise<GameDetail | null> {
   let cloudflareContext: { env: { DB: unknown } };
   try {
     cloudflareContext = getCloudflareContext() as { env: { DB: unknown } };
@@ -310,7 +315,7 @@ export async function getGameBySlug(slug: string): Promise<GameDetail | null> {
 
   try {
     let gameRecord = await DB.prepare(
-      `SELECT g.id, g.owner_id, g.published, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
+      `SELECT g.id, g.owner_id, g.published, g.shadow_banned, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
 FROM Games g
 LEFT JOIN GameContent c ON c.game_id = g.id
 LEFT JOIN user u ON u.id = g.owner_id
@@ -321,6 +326,7 @@ WHERE g.slug = ?`,
         id: number;
         owner_id: string | null;
         published: number;
+        shadow_banned: number;
         updated_at: number;
         content: string;
         author_name: string | null;
@@ -329,7 +335,7 @@ WHERE g.slug = ?`,
 
     if (!gameRecord && /^-?\d+$/.test(slug)) {
       gameRecord = await DB.prepare(
-        `SELECT g.id, g.owner_id, g.published, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
+        `SELECT g.id, g.owner_id, g.published, g.shadow_banned, g.updated_at, c.content, u.name AS author_name, u.image AS author_image
 FROM Games g
 LEFT JOIN GameContent c ON c.game_id = g.id
 LEFT JOIN user u ON u.id = g.owner_id
@@ -340,6 +346,7 @@ WHERE g.id = ?`,
           id: number;
           owner_id: string | null;
           published: number;
+          shadow_banned: number;
           updated_at: number;
           content: string;
           author_name: string | null;
@@ -358,6 +365,11 @@ WHERE g.id = ?`,
 
     const isPublished = gameRecord.published === 1 || result.data.published || !!result.data.subdomain;
     if (!isPublished) {
+      return null;
+    }
+
+    // shadowban：公开路径一律 404；预览路径（作者/管理员）显式放行
+    if (gameRecord.shadow_banned === 1 && !options?.includeShadowBanned) {
       return null;
     }
 
@@ -411,7 +423,7 @@ export async function getGamesByTag(
         `SELECT COUNT(DISTINCT g.id) as count
          FROM Games g
          INNER JOIN GameTags gt ON g.id = gt.game_id
-         WHERE g.published = 1 AND ${playableContentExists('g')} AND gt.tag = ?`,
+         WHERE g.published = 1 AND g.shadow_banned = 0 AND ${playableContentExists('g')} AND gt.tag = ?`,
       )
         .bind(tag)
         .first<{ count: number }>();
@@ -422,7 +434,7 @@ export async function getGamesByTag(
       let query = `SELECT g.slug, g.title, g.description, g.cover_image, g.tags, g.created_at, g.updated_at
                    FROM Games g
                    INNER JOIN GameTags gt ON g.id = gt.game_id
-                   WHERE g.published = 1 AND ${playableContentExists('g')} AND gt.tag = ?
+                   WHERE g.published = 1 AND g.shadow_banned = 0 AND ${playableContentExists('g')} AND gt.tag = ?
                    ORDER BY g.updated_at DESC`;
 
       if (options?.limit) {
@@ -449,7 +461,7 @@ export async function getGamesByTag(
     // 降级：获取所有已发布且可玩的游戏，然后在内存中筛选
     const { results } = (await DB.prepare(
       `SELECT slug, title, description, cover_image, tags, created_at, updated_at
-       FROM Games WHERE published = 1 AND ${playableContentExists('Games')}
+       FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')}
        ORDER BY updated_at DESC`,
     ).all()) as { results: GameRow[] };
 
@@ -502,7 +514,7 @@ export async function getAllTags(): Promise<{ tag: string; count: number }[]> {
     if (!DB) return countTags((await fetchLiveGamesSnapshot()).map((row) => row.tags));
 
     const { results } = (await DB.prepare(
-      `SELECT tags FROM Games WHERE published = 1 AND ${playableContentExists('Games')}`,
+      `SELECT tags FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')}`,
     ).all()) as {
       results: { tags: string | null }[];
     };

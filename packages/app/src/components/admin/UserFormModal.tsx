@@ -26,6 +26,14 @@ interface UserFormModalProps {
   setFormPasswordConfirm: (value: string) => void;
   formAiPermissions: AiPermissions | null;
   setFormAiPermissions: (value: AiPermissions | null) => void;
+  formIsAdmin: boolean;
+  setFormIsAdmin: (value: boolean) => void;
+  /** 当前登录者是 root：只有 root 能授予/取消管理员 */
+  canGrantAdmin: boolean;
+  /** 被编辑的用户就是当前登录者：不能取消自己的管理员权限 */
+  isSelf: boolean;
+  /** 该用户当前套餐名，用于权限区块的默认提示 */
+  planLabel: string;
   activeMutation: ActiveMutationLike;
   onClose: () => void;
   onCreateSubmit: (e: React.FormEvent) => void;
@@ -49,6 +57,11 @@ export default function UserFormModal({
   setFormPasswordConfirm,
   formAiPermissions,
   setFormAiPermissions,
+  formIsAdmin,
+  setFormIsAdmin,
+  canGrantAdmin,
+  isSelf,
+  planLabel,
   activeMutation,
   onClose,
   onCreateSubmit,
@@ -158,9 +171,31 @@ export default function UserFormModal({
                     required
                   />
                 </div>
+                {canGrantAdmin && (
+                  <div className="border-t border-gray-200 pt-4">
+                    <label className="flex items-start gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={formIsAdmin}
+                        disabled={isSelf}
+                        onChange={(e) => setFormIsAdmin(e.target.checked)}
+                        className="mt-0.5 rounded border-gray-300"
+                      />
+                      <span>
+                        内容管理员
+                        <span className="block text-xs text-gray-500">
+                          可进后台看统计、管理游戏，且不受 Token 限制；不能管理用户与系统配置。
+                          {isSelf && '（不能取消自己的管理员权限）'}
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                )}
+
                 <UserAiPermissionsFields
                   value={formAiPermissions}
                   onChange={setFormAiPermissions}
+                  planLabel={planLabel}
                 />
               </div>
               <div className="flex gap-3 justify-end mt-6">

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { checkVideoPermission, getUserAiPermissions } from '@/lib/ai-permissions';
+import { checkAiServicePermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { startAsyncVideoGeneration } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
@@ -20,9 +20,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: usageCheck.message }, { status: 429 });
   }
 
-  // 检查视频生成权限（按用户 flag，旧白名单作为过渡期 fallback）
+  // 检查视频生成权限
   const permissions = await getUserAiPermissions(session.user);
-  const videoPermission = await checkVideoPermission(session.user, permissions);
+  const videoPermission = checkAiServicePermission(permissions, 'video');
   if (!videoPermission.allowed) {
     return NextResponse.json({ error: videoPermission.message }, { status: 403 });
   }

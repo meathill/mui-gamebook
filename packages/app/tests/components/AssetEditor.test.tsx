@@ -15,6 +15,18 @@ vi.mock('@/hooks/useCmsConfig', () => ({
   getAspectRatios: () => [{ value: '1:1', label: '1:1' }],
 }));
 
+vi.mock('@/lib/editor/useAiPermissions', () => ({
+  AI_PROVIDER_LABELS: { opencode: 'OpenCode Go' },
+  useAiPermissions: () => ({
+    isLoading: false,
+    providers: ['google'],
+    canGenerateImage: true,
+    canGenerateTts: true,
+    canGenerateMusic: true,
+    canGenerateVideo: true,
+  }),
+}));
+
 const INITIAL_ASSETS: EditorSceneAsset[] = [
   { editorId: 'asset-a', asset: { type: 'ai_image', prompt: '' } },
   { editorId: 'asset-b', asset: { type: 'ai_image', prompt: '' } },

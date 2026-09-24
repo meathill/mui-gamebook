@@ -22,6 +22,8 @@ export const AI_PROVIDER_LABELS: Record<AiProviderType, string> = {
 const FALLBACK_PERMISSIONS: AiPermissions = {
   providers: ['opencode'],
   canGenerateImage: false,
+  canGenerateTts: false,
+  canGenerateMusic: false,
   canGenerateVideo: false,
 };
 
@@ -42,6 +44,8 @@ export function useAiPermissions() {
     isLoading,
     providers: permissions.providers,
     canGenerateImage: permissions.canGenerateImage,
+    canGenerateTts: permissions.canGenerateTts,
+    canGenerateMusic: permissions.canGenerateMusic,
     canGenerateVideo: permissions.canGenerateVideo,
   };
 }

@@ -13,10 +13,11 @@ export const COMPARE_ROWS: CompareRow[] = [
   { group: '算力', feature: '额度重置', free: '每日', basic: '每月账单周期', pro: '每月账单周期' },
   { group: '算力', feature: '年付优惠', free: '—', basic: '约 17%', pro: '约 17%' },
   { group: '创作能力', feature: 'Markdown 剧本与分支变量', free: true, basic: true, pro: true },
-  { group: '创作能力', feature: 'AI 剧情副驾 / 剧本生成', free: true, basic: true, pro: true },
-  { group: '创作能力', feature: '场景生图', free: true, basic: true, pro: true },
-  { group: '创作能力', feature: 'TTS 配音 / 音色', free: true, basic: true, pro: true },
-  { group: '创作能力', feature: '音乐与音效', free: true, basic: true, pro: true },
+  { group: '创作能力', feature: 'AI 剧情副驾 / 剧本生成（文本模型）', free: true, basic: true, pro: true },
+  { group: '创作能力', feature: '场景生图', free: false, basic: true, pro: true },
+  { group: '创作能力', feature: 'TTS 配音 / 音色', free: false, basic: true, pro: true },
+  { group: '创作能力', feature: '音乐与音效', free: false, basic: true, pro: true },
+  { group: '创作能力', feature: '视频生成（Veo / Sora）', free: false, basic: false, pro: true },
   { group: '创作能力', feature: '批量 / 高频创作算力', free: '有限', basic: '充足', pro: '最充足' },
   { group: '协作与发布', feature: '一键发布 Web / PWA', free: true, basic: true, pro: true },
   { group: '协作与发布', feature: '作品 OG 卡片与分享', free: true, basic: true, pro: true },
@@ -49,7 +50,7 @@ export const PRICING_FAQ: FaqItem[] = [
   {
     question: '免费档能做什么？',
     answer:
-      '免费档可使用 Markdown 创作、发布、游玩社区作品，并享每日 AI 体验额度（剧本生成、生图、TTS 等）。额度用完可等次日重置，或订阅升级。',
+      '免费档可使用 Markdown 创作、发布、游玩社区作品，并使用文本 AI（剧本生成、剧情副驾）与每日体验额度。场景生图、配音、音乐音效属于 Pro 及以上能力，视频生成属于 Pro+。额度用完可等次日重置，或订阅升级。',
   },
   {
     question: '可以取消订阅或升级吗？',
@@ -66,6 +67,7 @@ export const PRICING_FAQ: FaqItem[] = [
   },
   {
     question: '适合工作室或连载作者吗？',
-    answer: '适合。Pro+ 提供每月 2M M Token，覆盖高频剧本生成、批量生图与配音；年付更划算，可在「订阅账单」统一管理。',
+    answer:
+      '适合。Pro+ 提供每月 2M M Token 与视频生成能力，覆盖高频剧本生成、批量生图、配音与视频素材；年付更划算，可在「订阅账单」统一管理。',
   },
 ];

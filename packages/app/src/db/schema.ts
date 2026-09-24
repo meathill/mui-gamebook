@@ -8,8 +8,11 @@ export const user = sqliteTable('user', {
   image: text('image'),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
-  // 用户 AI 权限（JSON: { providers: string[], canGenerateImage: boolean, canGenerateVideo: boolean }），null = 默认权限
+  // 用户 AI 权限（JSON: { providers: string[], canGenerateImage: boolean, canGenerateTts, canGenerateMusic, canGenerateVideo }），
+  // null = 跟随订阅套餐的默认权限；root 用户（NEXT_PUBLIC_ROOT_USER_EMAIL）不受此字段约束
   aiPermissions: text('ai_permissions'),
+  // 管理员标记（内容管理员）：可进后台查看统计、管理游戏，且不受 Token 限制；只有 root 能授予
+  isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
 });
 
 export const session = sqliteTable(
@@ -110,6 +113,8 @@ export const games = sqliteTable(
     coverImage: text('cover_image'),
     tags: text('tags'), // JSON string
     published: integer('published', { mode: 'boolean' }).default(false),
+    // shadowban：为真时从目录/首页/标签/sitemap 等公开入口消失，仅作者与管理员可见（预览）
+    shadowBanned: integer('shadow_banned', { mode: 'boolean' }).notNull().default(false),
     ownerId: text('owner_id').references(() => user.id),
     // Story Protocol IP 注册信息
     ipId: text('ip_id'), // IP Asset ID

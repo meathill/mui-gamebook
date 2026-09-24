@@ -129,4 +129,33 @@ describe('GET /api/games/[slug]', () => {
 
     expect(res.status).toBe(200);
   });
+
+  it('已发布但被 shadowban 时对匿名访问返回 404', async () => {
+    mockDb.get
+      .mockResolvedValueOnce({ id: 1, slug: 'g', published: true, shadowBanned: true, ownerId: 'owner-1' })
+      .mockResolvedValueOnce({ content: VALID_CONTENT });
+
+    const res = await GET({} as Request, makeParams('g'));
+
+    expect(res.status).toBe(404);
+  });
+
+  it('已发布但被 shadowban 时作者仍可访问，走 private 缓存', async () => {
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'owner-1' } });
+    mockDb.get
+      .mockResolvedValueOnce({
+        id: 1,
+        slug: 'g',
+        published: true,
+        shadowBanned: true,
+        ownerId: 'owner-1',
+        title: '小红帽',
+      })
+      .mockResolvedValueOnce({ content: VALID_CONTENT });
+
+    const res = await GET({} as Request, makeParams('g'));
+
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Cache-Control')).toBe('private, no-store');
+  });
 });

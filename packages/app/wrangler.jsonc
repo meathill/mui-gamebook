@@ -79,6 +79,7 @@
   // 注意：NEXT_PUBLIC_* 变量不要放这里。它们由 Next.js 在构建期静态替换进产物，
   // 运行时读取的是打包时的字面量，Workers 的 env 绑定对它们不起作用。
   // 构建前请确保 .env（本地）或构建环境变量里已经填好，见 .env.example。
+  // 其中 NEXT_PUBLIC_ROOT_USER_EMAIL（root 管理员邮箱）必填：漏配会导致后台无人可进。
   "vars": {
     "ASSETS_PUBLIC_DOMAIN": "https://i.muistory.com",
     "COOKIE_DOMAIN": "",
@@ -87,7 +88,7 @@
     "DEFAULT_TTS_PROVIDER": "mimo",
     "DEFAULT_IMAGE_PROVIDER": "google",
     "DEFAULT_VIDEO_PROVIDER": "google",
-    "DEFAULT_STT_PROVIDER": "openai",
+    "DEFAULT_STT_PROVIDER": "mimo",
     "DEFAULT_MUSIC_PROVIDER": "internal",
     "DEFAULT_SFX_PROVIDER": "internal",
     "MUSIC_MODEL": "suno-v4",
@@ -105,10 +106,12 @@
     "OPENAI_TEXT_MODEL": "gpt-5.6-luna",
     "OPENAI_IMAGE_MODEL": "gpt-image-2.5-sunburst",
     "OPENAI_TTS_MODEL": "gpt-4o-mini-tts",
+    "OPENAI_STT_MODEL": "whisper-1",
+    "GOOGLE_STT_MODEL": "gemini-3-flash-transcribe",
+    "MIMO_STT_MODEL": "mimo-v2.5-asr",
     "ANTHROPIC_TEXT_MODEL": "claude-sonnet-5",
     "DAILY_TOKEN_LIMIT": "100000",
     "CF_AI_GATEWAY_BASE_URL": "https://gateway.ai.cloudflare.com/v1/fdc63eeea83ae8f5234357308b9a638b",
-    "ROOT_USER_EMAIL": "meathill@gmail.com",
     "RPC_PROVIDER_URL": "https://aeneid.storyrpc.io",
     "SENDER_EMAIL": "noreply@muistory.com",
     "TRUSTED_ORIGINS": "",

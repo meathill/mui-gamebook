@@ -34,7 +34,13 @@ vi.mock('@/lib/ai-usage', () => ({
   recordAiUsage: vi.fn(),
 }));
 
+vi.mock('@/lib/ai-permissions', () => ({
+  getUserAiPermissions: vi.fn(),
+  checkAiServicePermission: vi.fn(),
+}));
+
 import { POST } from '@/app/api/cms/games/[id]/generate-voice-preview/route';
+import { checkAiServicePermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadTTS } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
@@ -55,9 +61,11 @@ function makeParams(id = '1') {
 describe('POST /api/cms/games/[id]/generate-voice-preview', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1', email: 'u1@test.com' } });
     (getManagedGame as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1, ownerId: 'u1' });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
+    (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ canGenerateTts: true });
+    (checkAiServicePermission as ReturnType<typeof vi.fn>).mockReturnValue({ allowed: true });
     bucket.head.mockResolvedValue(null);
   });
 
