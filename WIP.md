@@ -1,5 +1,13 @@
 # WIP
 
+## Skills 页面（已完成，待部署）
+
+- 新增 `/skills`（列表）+ `/skills/setup`（MCP 配置）+ `/skills/create-game`（5 子 skill：世界观→角色→主线→分支→试玩后补媒体）
+- 内容单源：`packages/app/src/lib/skills/`（setup.ts / create-game.ts / index 注册表），页面展示与 `/api/skills/[slug]/skill-md` 下载共用同一字符串
+- setup 覆盖 OpenCode（`mcp` + `url`，备注 v2 的 `mcp.servers` 嵌套）与 Antigravity（`mcpServers` + `serverUrl`，`url` 会被忽略）；配置里只有 `<YOUR_API_KEY>` 占位符
+- sitemap 加三条静态页；页脚加「AI 技能」链接（`prefetch={false}`）；中英 i18n `skills` 命名空间；静态预渲染 + `revalidate 3600`
+- 测试 `tests/lib/skills-content.test.ts`（13 用例：frontmatter、客户端 schema、DSL 铁律落点、注册表、i18n key）；全量 170 文件 1358 用例绿，`next build` 通过
+
 ## 控制面板改名 + 用户自选 AI 模型（已完成，待部署）
 
 - 「数据统计」「工作台」统一改名「控制面板」；新增左侧导航「设定」（`/my/settings`）

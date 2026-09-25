@@ -78,6 +78,12 @@ export default function Footer() {
               {t('create')}
             </Link>
             <Link
+              href="/skills"
+              prefetch={false}
+              className="text-gray-500 hover:text-gray-700 text-sm">
+              {t('skills')}
+            </Link>
+            <Link
               href="/open"
               prefetch={false}
               className="text-gray-500 hover:text-gray-700 text-sm">
