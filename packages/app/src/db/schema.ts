@@ -17,6 +17,14 @@ export const user = sqliteTable('user', {
   // 均为空 = 跟随系统默认；仅付费用户（有效订阅/管理员/root）允许设置，免费用户锁定默认
   preferredTextProvider: text('preferred_text_provider'),
   preferredTextModel: text('preferred_text_model'),
+  // 图片/语音/视频自选模型（供应商 + 模型 ID，均为空 = 跟随系统默认；
+  // 仅付费用户可设置，且受 ai_permissions 里对应服务位约束）
+  preferredImageProvider: text('preferred_image_provider'),
+  preferredImageModel: text('preferred_image_model'),
+  preferredTtsProvider: text('preferred_tts_provider'),
+  preferredTtsModel: text('preferred_tts_model'),
+  preferredVideoProvider: text('preferred_video_provider'),
+  preferredVideoModel: text('preferred_video_model'),
 });
 
 export const session = sqliteTable(

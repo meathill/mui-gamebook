@@ -1,4 +1,9 @@
-import type { TextProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import type {
+  ImageProviderType,
+  TextProviderType,
+  TtsProviderType,
+  VideoProviderType,
+} from '@mui-gamebook/core/lib/ai-provider';
 
 export interface TextModelPreset {
   value: string;
@@ -52,6 +57,65 @@ export const DIRECT_TEXT_PROVIDERS: TextProviderType[] = ['openai', 'google', 'm
 
 /** 走 OpenCode 聚合网关的供应商（其它文本模型填这里） */
 export const AGGREGATED_TEXT_PROVIDERS: TextProviderType[] = ['opencode'];
+
+/** 可设偏好的模态 */
+export type AiModelModality = 'text' | 'image' | 'tts' | 'video';
+
+/** 各模态允许自选的供应商（与各 provider 实际能力对齐） */
+export const MODALITY_PROVIDERS: Record<AiModelModality, string[]> = {
+  text: ['opencode', 'mimo', 'anthropic', 'google', 'openai'],
+  image: ['google', 'openai'],
+  tts: ['mimo', 'google', 'openai'],
+  video: ['google', 'openai'],
+};
+
+export function isImageProviderType(value: unknown): value is ImageProviderType {
+  return typeof value === 'string' && (MODALITY_PROVIDERS.image as string[]).includes(value);
+}
+
+export function isTtsProviderType(value: unknown): value is TtsProviderType {
+  return typeof value === 'string' && (MODALITY_PROVIDERS.tts as string[]).includes(value);
+}
+
+export function isVideoProviderType(value: unknown): value is VideoProviderType {
+  return typeof value === 'string' && (MODALITY_PROVIDERS.video as string[]).includes(value);
+}
+
+export function isAiModelModality(value: unknown): value is AiModelModality {
+  return value === 'text' || value === 'image' || value === 'tts' || value === 'video';
+}
+
+/**
+ * 图片/语音/视频模型预设（第一项即系统默认，与 config.ts 的 env 默认保持一致）。
+ * OpenAI 视频（Sora）已下线、暂无可用模型，列表为空，前端直接走自定义输入。
+ */
+export const IMAGE_MODEL_PRESETS: Record<ImageProviderType, TextModelPreset[]> = {
+  google: [
+    { value: 'gemini-3.1-flash-lite-image', label: 'gemini-3.1-flash-lite-image（默认）' },
+    { value: 'gemini-3-pro-image', label: 'gemini-3-pro-image（高质量）' },
+  ],
+  openai: [
+    { value: 'gpt-image-2.5-sunburst', label: 'gpt-image-2.5-sunburst（默认）' },
+    { value: 'gpt-image-1', label: 'gpt-image-1' },
+  ],
+};
+
+export const TTS_MODEL_PRESETS: Record<TtsProviderType, TextModelPreset[]> = {
+  mimo: [{ value: 'mimo-v2.5-tts', label: 'mimo-v2.5-tts（默认）' }],
+  google: [{ value: 'gemini-3.1-flash-tts-preview', label: 'gemini-3.1-flash-tts-preview（默认）' }],
+  openai: [
+    { value: 'gpt-4o-mini-tts', label: 'gpt-4o-mini-tts（默认）' },
+    { value: 'gpt-4o-tts', label: 'gpt-4o-tts' },
+  ],
+};
+
+export const VIDEO_MODEL_PRESETS: Record<VideoProviderType, TextModelPreset[]> = {
+  google: [
+    { value: 'veo-3.1-fast-generate-preview', label: 'veo-3.1-fast-generate-preview（默认）' },
+    { value: 'veo-3.1-generate-preview', label: 'veo-3.1-generate-preview（高质量）' },
+  ],
+  openai: [],
+};
 
 const MODEL_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._\-/:]*$/;
 export const MAX_MODEL_ID_LENGTH = 128;

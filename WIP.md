@@ -15,6 +15,13 @@
 - chat / generate-script / clarify-story 三个文本路由经 `resolveEffectiveTextSelection` 解析实际 provider+model，用量记录改存真实模型 ID（TODO 相应项已勾掉）
 - 上线前跑一次迁移：`pnpm --filter @mui-gamebook/app run db:migrate:local`（或 `:remote`）执行 `0008_user_ai_model_preference.sql`（`user.preferred_text_provider/model`）
 
+## 全模态自选模型：图片/语音/视频（已完成，待部署）
+
+- root 可在设定页看到全部四个模态（文本/图片/语音/视频）并自选；图片与视频限 google/openai，TTS 为 mimo/google/openai
+- 图片/语音/视频三节按 `ai_permissions` 服务位 gating：无对应权限时显示锁定态；免费用户全部锁定
+- 生图（通用 + 角色）、TTS（通用 + 音色预览）、异步视频、小游戏（文本）六条路由全部接入用户偏好；`createAiProvider` 新增 image/tts/video 模型覆盖；MCP（mcp-agent）维持系统默认
+- 上线前跑迁移 `0009_user_ai_media_preference.sql`（`user.preferred_image/tts/video_provider/model` 六列），local 与 remote 都要跑
+
 ## MCP 鉴权升级为 API Key
 
 - 已实现 better-auth `@better-auth/api-key` + `/my/api-keys` + MCP Bearer 校验

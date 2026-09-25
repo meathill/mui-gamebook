@@ -104,6 +104,10 @@ export interface CreateAiProviderOptions {
   gameId?: string | number;
   /** 覆盖该 provider 默认文本模型的模型 ID（用户自选，仅付费用户经校验后传入） */
   textModel?: string;
+  /** 覆盖图片/语音合成/视频模型的模型 ID（同上） */
+  imageModel?: string;
+  ttsModel?: string;
+  videoModel?: string;
 }
 
 /**
@@ -141,7 +145,10 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
 
     return new MimoProvider(
       apiKey,
-      { text: options?.textModel || config.mimoTextModel, tts: config.mimoTtsModel },
+      {
+        text: options?.textModel || config.mimoTextModel,
+        tts: options?.ttsModel || config.mimoTtsModel,
+      },
       config.mimoBaseUrl,
     );
   }
@@ -163,16 +170,16 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
       AI_GATEWAY_MANAGED_KEY,
       {
         text: options?.textModel || config.openaiTextModel,
-        image: config.openaiImageModel,
-        video: config.openaiVideoModel,
-        tts: config.openaiTtsModel,
+        image: options?.imageModel || config.openaiImageModel,
+        video: options?.videoModel || config.openaiVideoModel,
+        tts: options?.ttsModel || config.openaiTtsModel,
       },
       { baseURL, headers: gatewayHeaders },
     );
   }
 
   if (providerType === 'google') {
-    return buildGoogleAiProvider(config, gatewayHeaders, options?.textModel);
+    return buildGoogleAiProvider(config, gatewayHeaders, options?.textModel, options);
   }
 
   throw new Error(`Unsupported AI provider: ${providerType as string}`);
@@ -192,6 +199,7 @@ function buildGoogleAiProvider(
   config: AppConfig,
   gatewayHeaders: Record<string, string>,
   textModelOverride?: string,
+  modelOverrides?: Pick<CreateAiProviderOptions, 'imageModel' | 'ttsModel' | 'videoModel'>,
 ): GoogleAiProvider {
   const apiBaseUrl = resolveGatewayBaseUrl(config, 'google-ai-studio');
   const genAI = new GoogleGenAI({
@@ -203,9 +211,9 @@ function buildGoogleAiProvider(
     AI_GATEWAY_MANAGED_KEY,
     {
       text: textModelOverride || config.googleTextModel,
-      image: config.googleImageModel,
-      video: config.googleVideoModel,
-      tts: config.googleTtsModel,
+      image: modelOverrides?.imageModel || config.googleImageModel,
+      video: modelOverrides?.videoModel || config.googleVideoModel,
+      tts: modelOverrides?.ttsModel || config.googleTtsModel,
     },
     { apiBaseUrl, headers: gatewayHeaders },
   );

@@ -5,11 +5,20 @@ import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
 import slugify from 'slugify';
 import * as schema from '@/db/schema';
+import type { ImageProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import { MODALITY_PROVIDERS } from '@/lib/ai-model-catalog';
 import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { getManagedGame } from '@/lib/game-access';
+import { getConfig } from '@/lib/config';
+import {
+  getDefaultImageModelForProvider,
+  getUserAiPreferences,
+  isPaidAiUser,
+  resolveEffectiveMediaSelection,
+} from '@/lib/user-ai-settings';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 type Props = {
@@ -63,11 +72,24 @@ export async function POST(req: Request, { params }: Props) {
       }
     }
 
-    // 生成角色头像
+    // 生成角色头像（付费用户可用自选图片模型）
     const fullPrompt = `${stylePrompt}character portrait, ${prompt}`;
     const gameSlug = slugify(game.slug || game.title, { lower: true });
     const fileName = `images/${gameSlug}/characters/${characterId}-${Date.now()}.png`;
-    const { url, usage, model } = await generateAndUploadImage(fullPrompt, fileName);
+    const config = await getConfig();
+    const [preferences, isPaid] = await Promise.all([
+      getUserAiPreferences(session.user.id),
+      isPaidAiUser(session.user),
+    ]);
+    const selection = resolveEffectiveMediaSelection({
+      allowedProviders: MODALITY_PROVIDERS.image as ImageProviderType[],
+      systemDefaultProvider: config.defaultImageProvider,
+      getSystemModel: (provider) => getDefaultImageModelForProvider(config, provider),
+      userPreference: preferences.image,
+      isPaid,
+      serviceAllowed: permissions.canGenerateImage,
+    });
+    const { url, usage, model } = await generateAndUploadImage(fullPrompt, fileName, undefined, selection);
 
     // 记录 AI 用量
     await recordAiUsage({
