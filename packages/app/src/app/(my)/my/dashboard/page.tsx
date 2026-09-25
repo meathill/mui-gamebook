@@ -94,7 +94,7 @@ export default function DashboardPage() {
   return (
     <div>
       <header className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">数据统计</h1>
+        <h1 className="text-2xl font-bold text-gray-900">控制面板</h1>
         <p className="text-gray-500 mt-1">查看游戏的运营数据</p>
       </header>
 

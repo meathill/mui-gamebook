@@ -22,8 +22,20 @@ vi.mock('@/lib/game-access', () => ({
 
 vi.mock('@/lib/ai-permissions', () => ({
   getUserAiPermissions: vi.fn(),
-  resolveTextProvider: vi.fn(),
 }));
+
+vi.mock('@/lib/config', () => ({
+  getConfig: vi.fn(),
+}));
+
+vi.mock('@/lib/user-ai-settings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/user-ai-settings')>();
+  return {
+    ...actual,
+    getUserAiModelPreference: vi.fn(),
+    isPaidAiUser: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/ai-provider-factory', () => ({
   createAiProvider: vi.fn(),
@@ -34,9 +46,11 @@ vi.mock('@/lib/ai-usage', () => ({
 }));
 
 import { POST } from '@/app/api/cms/games/[id]/chat/route';
-import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
@@ -64,11 +78,20 @@ const GOOD_IMAGES = [
 describe('POST /api/cms/games/[id]/chat 参考图校验', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1', email: 'u1@example.com' } });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
     (getManagedGame as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1, slug: 'test', title: 'test' });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['google'] });
-    (resolveTextProvider as ReturnType<typeof vi.fn>).mockReturnValue('google');
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultTextProvider: 'google',
+      mimoTextModel: 'mimo-v2.5-pro',
+      opencodeTextModel: 'deepseek-v4.1-flash',
+      googleTextModel: 'gemini-3.8-flash',
+      openaiTextModel: 'gpt-5.6-luna',
+      anthropicTextModel: 'claude-sonnet-5',
+    });
+    (getUserAiModelPreference as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
   });
 
   it('超过 4 张返回 400', async () => {

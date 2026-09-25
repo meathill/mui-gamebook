@@ -98,10 +98,11 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
   const [qaHistory, setQaHistory] = useState('');
   const [clarifyRound, setClarifyRound] = useState(0);
 
-  // 用户被授权多个 AI 时可切换，默认第一项（用户默认提供者）
-  const { providers } = useAiPermissions();
+  // 用户被授权多个 AI 时可切换，默认用户自选模型对应的供应商（付费），否则第一项
+  const { providers, userDefaultProvider, userDefaultModel } = useAiPermissions();
   const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const activeProvider = selectedProvider || providers[0];
+  const activeProvider = selectedProvider || userDefaultProvider || providers[0];
+  const activeModel = activeProvider === userDefaultProvider ? userDefaultModel : null;
 
   // 随机选择一个提示
   const randomPrompt = useMemo(() => {
@@ -142,7 +143,11 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
           'Content-Type': 'application/json',
           ...getGameSessionHeaders(id),
         },
-        body: JSON.stringify({ story: fullStory, provider: activeProvider }),
+        body: JSON.stringify({
+          story: fullStory,
+          provider: activeProvider,
+          ...(activeModel ? { model: activeModel } : {}),
+        }),
       });
       if (!res.ok) return { ready: true, questions: [] };
       const data = (await res.json()) as { ready?: boolean; questions?: string[] };
@@ -244,6 +249,7 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
         body: JSON.stringify({
           story: finalStory,
           provider: activeProvider,
+          ...(activeModel ? { model: activeModel } : {}),
           ...(mode === 'revise' && existingScript ? { existingScript } : {}),
         }),
       });

@@ -47,6 +47,8 @@ export interface ChatRequest {
   message: string;
   // 指定使用的 AI 提供者（须在用户许可列表内，否则回退用户默认）
   provider?: string;
+  /** 指定模型 ID（仅付费用户有效，须与最终 provider 匹配；免费用户静默忽略） */
+  model?: string;
   /** 参考图 R2 URL 列表（≤4，前端先上传再调用；后端校验归属） */
   images?: string[];
   context: {

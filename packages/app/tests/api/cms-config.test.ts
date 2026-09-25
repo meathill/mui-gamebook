@@ -12,10 +12,16 @@ vi.mock('@/lib/ai-permissions', () => ({
   getUserAiPermissions: vi.fn(),
 }));
 
+vi.mock('@/lib/user-ai-settings', () => ({
+  getUserAiModelPreference: vi.fn(),
+  isPaidAiUser: vi.fn(),
+}));
+
 import { GET } from '@/app/api/cms/config/route';
 import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { getSession } from '@/lib/auth-server';
 import { getConfig } from '@/lib/config';
+import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 
 describe('GET /api/cms/config', () => {
   beforeEach(() => {
@@ -38,10 +44,13 @@ describe('GET /api/cms/config', () => {
       defaultTtsProvider: 'google',
       defaultImageProvider: 'google',
       defaultVideoProvider: 'google',
+      defaultSttProvider: 'openai',
       dailyTokenLimit: 100000,
       adminUserIds: ['secret-admin-id'],
     });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['opencode'] });
+    (getUserAiModelPreference as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
 
     const res = await GET();
 
@@ -53,9 +62,60 @@ describe('GET /api/cms/config', () => {
       defaultTtsProvider: 'google',
       defaultImageProvider: 'google',
       defaultVideoProvider: 'google',
+      defaultSttProvider: 'openai',
       aiPermissions: { providers: ['opencode'] },
+      userDefaultAiProvider: null,
+      userDefaultAiModel: null,
     });
     expect(data.adminUserIds).toBeUndefined();
     expect(data.dailyTokenLimit).toBeUndefined();
+  });
+
+  it('付费用户自选模型随配置下发', async () => {
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultTextProvider: 'opencode',
+      defaultAiProvider: 'opencode',
+      defaultTtsProvider: 'google',
+      defaultImageProvider: 'google',
+      defaultVideoProvider: 'google',
+      defaultSttProvider: 'openai',
+    });
+    (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['opencode', 'openai'] });
+    (getUserAiModelPreference as ReturnType<typeof vi.fn>).mockResolvedValue({
+      provider: 'openai',
+      model: 'gpt-5-mini',
+    });
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+
+    const res = await GET();
+
+    const data = (await res.json()) as Record<string, unknown>;
+    expect(data.userDefaultAiProvider).toBe('openai');
+    expect(data.userDefaultAiModel).toBe('gpt-5-mini');
+  });
+
+  it('自选供应商不在许可内时不下发', async () => {
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultTextProvider: 'opencode',
+      defaultAiProvider: 'opencode',
+      defaultTtsProvider: 'google',
+      defaultImageProvider: 'google',
+      defaultVideoProvider: 'google',
+      defaultSttProvider: 'openai',
+    });
+    (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['opencode'] });
+    (getUserAiModelPreference as ReturnType<typeof vi.fn>).mockResolvedValue({
+      provider: 'openai',
+      model: 'gpt-5-mini',
+    });
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+
+    const res = await GET();
+
+    const data = (await res.json()) as Record<string, unknown>;
+    expect(data.userDefaultAiProvider).toBeNull();
+    expect(data.userDefaultAiModel).toBeNull();
   });
 });

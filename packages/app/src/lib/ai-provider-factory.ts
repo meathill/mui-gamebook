@@ -102,6 +102,8 @@ function resolveGatewayHeaders(token: string | undefined): Record<string, string
 export interface CreateAiProviderOptions {
   sessionId?: string;
   gameId?: string | number;
+  /** 覆盖该 provider 默认文本模型的模型 ID（用户自选，仅付费用户经校验后传入） */
+  textModel?: string;
 }
 
 /**
@@ -124,7 +126,7 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
 
     return new OpencodeProvider(
       apiKey,
-      { text: config.opencodeTextModel },
+      { text: options?.textModel || config.opencodeTextModel },
       config.opencodeBaseUrl,
       {},
       resolvedSessionId,
@@ -137,7 +139,11 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
       throw new Error('MIMO_API_KEY not configured');
     }
 
-    return new MimoProvider(apiKey, { text: config.mimoTextModel, tts: config.mimoTtsModel }, config.mimoBaseUrl);
+    return new MimoProvider(
+      apiKey,
+      { text: options?.textModel || config.mimoTextModel, tts: config.mimoTtsModel },
+      config.mimoBaseUrl,
+    );
   }
 
   const gatewayHeaders = resolveGatewayHeaders(env.CF_AI_GATEWAY_TOKEN || process.env.CF_AI_GATEWAY_TOKEN);
@@ -146,7 +152,7 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
     const baseURL = resolveGatewayBaseUrl(config, 'anthropic');
     return new ClaudeProvider(
       AI_GATEWAY_MANAGED_KEY,
-      { text: config.anthropicTextModel },
+      { text: options?.textModel || config.anthropicTextModel },
       { baseURL, headers: gatewayHeaders },
     );
   }
@@ -156,7 +162,7 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
     return new OpenAiProvider(
       AI_GATEWAY_MANAGED_KEY,
       {
-        text: config.openaiTextModel,
+        text: options?.textModel || config.openaiTextModel,
         image: config.openaiImageModel,
         video: config.openaiVideoModel,
         tts: config.openaiTtsModel,
@@ -166,7 +172,7 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
   }
 
   if (providerType === 'google') {
-    return buildGoogleAiProvider(config, gatewayHeaders);
+    return buildGoogleAiProvider(config, gatewayHeaders, options?.textModel);
   }
 
   throw new Error(`Unsupported AI provider: ${providerType as string}`);
@@ -182,7 +188,11 @@ export async function createGoogleAiProvider(): Promise<GoogleAiProvider> {
   return buildGoogleAiProvider(config, gatewayHeaders);
 }
 
-function buildGoogleAiProvider(config: AppConfig, gatewayHeaders: Record<string, string>): GoogleAiProvider {
+function buildGoogleAiProvider(
+  config: AppConfig,
+  gatewayHeaders: Record<string, string>,
+  textModelOverride?: string,
+): GoogleAiProvider {
   const apiBaseUrl = resolveGatewayBaseUrl(config, 'google-ai-studio');
   const genAI = new GoogleGenAI({
     apiKey: AI_GATEWAY_MANAGED_KEY,
@@ -192,7 +202,7 @@ function buildGoogleAiProvider(config: AppConfig, gatewayHeaders: Record<string,
     genAI,
     AI_GATEWAY_MANAGED_KEY,
     {
-      text: config.googleTextModel,
+      text: textModelOverride || config.googleTextModel,
       image: config.googleImageModel,
       video: config.googleVideoModel,
       tts: config.googleTtsModel,

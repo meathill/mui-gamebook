@@ -49,10 +49,11 @@ export default function ChatPanel({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // 用户被授权多个 AI 时可切换，默认第一项（用户默认提供者）
-  const { providers } = useAiPermissions();
+  // 用户被授权多个 AI 时可切换，默认用户自选模型对应的供应商（付费），否则第一项
+  const { providers, userDefaultProvider, userDefaultModel } = useAiPermissions();
   const [selectedProvider, setSelectedProvider] = useState<string>('');
-  const activeProvider = selectedProvider || providers[0];
+  const activeProvider = selectedProvider || userDefaultProvider || providers[0];
+  const activeModel = activeProvider === userDefaultProvider ? userDefaultModel : null;
 
   const { messages, loading, error, sendMessage, clearMessages, cancelRequest } = useChatbot({
     gameId,
@@ -76,11 +77,23 @@ export default function ChatPanel({
       e?.preventDefault();
       if ((!input.trim() && pendingImages.length === 0) || loading || uploading) return;
 
-      sendMessage(input.trim(), { dsl, story, characters, variables }, activeProvider, pendingImages);
+      sendMessage(input.trim(), { dsl, story, characters, variables }, activeProvider, pendingImages, activeModel);
       setInput('');
       setPendingImages([]);
     },
-    [input, loading, uploading, pendingImages, sendMessage, dsl, story, characters, variables, activeProvider],
+    [
+      input,
+      loading,
+      uploading,
+      pendingImages,
+      sendMessage,
+      dsl,
+      story,
+      characters,
+      variables,
+      activeProvider,
+      activeModel,
+    ],
   );
 
   const handleFiles = useCallback(

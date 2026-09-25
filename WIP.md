@@ -1,5 +1,12 @@
 # WIP
 
+## 控制面板改名 + 用户自选 AI 模型（已完成，待部署）
+
+- 「数据统计」「工作台」统一改名「控制面板」；新增左侧导航「设定」（`/my/settings`）
+- 付费用户（有效订阅/管理员/root）可在设定页自选文本供应商 + 具体模型：openai/google/mimo/anthropic 走原厂通道，opencode 走聚合网关（预设 + 自定义输入）；免费用户锁定系统默认
+- chat / generate-script / clarify-story 三个文本路由经 `resolveEffectiveTextSelection` 解析实际 provider+model，用量记录改存真实模型 ID（TODO 相应项已勾掉）
+- 上线前跑一次迁移：`pnpm --filter @mui-gamebook/app run db:migrate:local`（或 `:remote`）执行 `0008_user_ai_model_preference.sql`（`user.preferred_text_provider/model`）
+
 ## MCP 鉴权升级为 API Key
 
 - 已实现 better-auth `@better-auth/api-key` + `/my/api-keys` + MCP Bearer 校验

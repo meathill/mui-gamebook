@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { getSession } from '@/lib/auth-server';
 import { getConfig } from '@/lib/config';
+import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 
 /**
  * 获取 CMS 当前配置（用户级别，非管理员）
@@ -16,6 +17,13 @@ export async function GET() {
   try {
     const config = await getConfig();
     const aiPermissions = await getUserAiPermissions(session.user);
+    // 付费用户的自选模型作为编辑器默认（须仍在许可列表内，否则忽略）
+    const [preference, isPaid] = await Promise.all([
+      getUserAiModelPreference(session.user.id),
+      isPaidAiUser(session.user),
+    ]);
+    const userDefaultAi =
+      isPaid && preference && aiPermissions.providers.includes(preference.provider) ? preference : null;
 
     return NextResponse.json({
       defaultTextProvider: config.defaultTextProvider,
@@ -25,6 +33,8 @@ export async function GET() {
       defaultVideoProvider: config.defaultVideoProvider,
       defaultSttProvider: config.defaultSttProvider,
       aiPermissions,
+      userDefaultAiProvider: userDefaultAi?.provider ?? null,
+      userDefaultAiModel: userDefaultAi?.model ?? null,
     });
   } catch (e: unknown) {
     console.error('获取配置失败:', e);
