@@ -1,4 +1,10 @@
-import type { AiProviderType, AiUsageInfo } from '@mui-gamebook/core/lib/ai-provider';
+import type {
+  AiProviderType,
+  AiUsageInfo,
+  ImageProviderType,
+  TtsProviderType,
+  VideoProviderType,
+} from '@mui-gamebook/core/lib/ai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import {
   createAiProvider,
@@ -94,19 +100,22 @@ export async function generateAndUploadImage(
     aspectRatio?: string;
     referenceImages?: string[];
   },
+  /** 用户自选的图片供应商+模型（已解析，付费偏好或系统默认）；缺省走系统默认 */
+  selection?: { provider: ImageProviderType; model: string },
 ): Promise<GenerateImageResult> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
 
-  // 生图使用独立的 Image Provider（默认 Google）
-  const imageProviderType = await resolveImageProviderType();
-  const provider = await createAiProvider(imageProviderType);
+  // 生图使用独立的 Image Provider（默认 Google），付费用户可用自选覆盖
+  const imageProviderType = selection?.provider ?? (await resolveImageProviderType());
+  const provider = await createAiProvider(imageProviderType, selection ? { imageModel: selection.model } : undefined);
   const { buffer, type, usage } = await provider.generateImage(prompt, {
     aspectRatio: options?.aspectRatio,
     referenceImages: options?.referenceImages,
   });
 
-  const model = imageProviderType === 'google' ? config.googleImageModel : config.openaiImageModel;
+  const model =
+    selection?.model ?? (imageProviderType === 'google' ? config.googleImageModel : config.openaiImageModel);
 
   // 根据实际 mimeType 修正文件扩展名
   const finalFileName = fixFileExtension(fileName, type);
@@ -136,17 +145,20 @@ export async function generateAndUploadImage(
 export async function startAsyncVideoGeneration(
   prompt: string,
   configParams?: { durationSeconds?: number; aspectRatio?: string },
+  /** 用户自选的视频供应商+模型（已解析）；缺省走系统默认 */
+  selection?: { provider: VideoProviderType; model: string },
 ): Promise<StartVideoGenerationResult> {
   const config = await getConfig();
-  const videoProviderType = await resolveVideoProviderType();
-  const provider = await createAiProvider(videoProviderType);
+  const videoProviderType = selection?.provider ?? (await resolveVideoProviderType());
+  const provider = await createAiProvider(videoProviderType, selection ? { videoModel: selection.model } : undefined);
 
   if (!provider.startVideoGeneration) {
     throw new Error('当前 AI 提供者不支持视频生成');
   }
 
   const { operationName, usage } = await provider.startVideoGeneration(prompt, configParams);
-  const model = videoProviderType === 'google' ? config.googleVideoModel : config.openaiVideoModel;
+  const model =
+    selection?.model ?? (videoProviderType === 'google' ? config.googleVideoModel : config.openaiVideoModel);
 
   return {
     operationName,
@@ -229,12 +241,14 @@ export async function generateAndStoreMiniGame(
   name: string,
   variables?: Record<string, string>,
   providerType?: AiProviderType,
+  /** 用户自选的文本模型（已解析）；传入时覆盖 provider 默认模型 */
+  textModel?: string,
 ): Promise<GenerateMiniGameResult> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
 
   const activeProviderType = providerType || (await resolveTextProviderType());
-  const provider = await createAiProvider(activeProviderType);
+  const provider = await createAiProvider(activeProviderType, textModel ? { textModel } : undefined);
   const { code, usage } = await provider.generateMiniGame(prompt, variables);
 
   // 存储到数据库
@@ -258,7 +272,7 @@ export async function generateAndStoreMiniGame(
     mimo: config.mimoTextModel,
     anthropic: config.anthropicTextModel,
   };
-  const model = modelMap[activeProviderType] || activeProviderType;
+  const model = textModel ?? modelMap[activeProviderType] ?? activeProviderType;
 
   // 返回访问 URL
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
@@ -294,12 +308,14 @@ export async function generateAndUploadTTS(
   text: string,
   fileName: string,
   voiceName?: TTSVoiceName,
+  /** 用户自选的 TTS 供应商+模型（已解析）；缺省走系统默认 */
+  selection?: { provider: TtsProviderType; model: string },
 ): Promise<GenerateTTSResult> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
 
-  const ttsProviderType = await resolveTtsProviderType();
-  const provider = await createAiProvider(ttsProviderType);
+  const ttsProviderType = selection?.provider ?? (await resolveTtsProviderType());
+  const provider = await createAiProvider(ttsProviderType, selection ? { ttsModel: selection.model } : undefined);
 
   if (!provider.generateTTS) {
     throw new Error('当前 AI 提供者不支持 TTS');
@@ -343,7 +359,7 @@ export async function generateAndUploadTTS(
     google: config.googleTtsModel,
     openai: config.openaiTtsModel,
   };
-  const model = modelMap[ttsProviderType] || ttsProviderType;
+  const model = selection?.model ?? modelMap[ttsProviderType] ?? ttsProviderType;
 
   return {
     url: `${publicDomain}/${finalFileName}`,

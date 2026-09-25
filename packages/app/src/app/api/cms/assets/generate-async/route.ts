@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
+import type { VideoProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import { MODALITY_PROVIDERS } from '@/lib/ai-model-catalog';
 import { checkAiServicePermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { startAsyncVideoGeneration } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import {
+  getDefaultVideoModelForProvider,
+  getUserAiPreferences,
+  isPaidAiUser,
+  resolveEffectiveMediaSelection,
+} from '@/lib/user-ai-settings';
 import { createPendingOperation, generatePlaceholderUrl } from '@/lib/pending-operations';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
@@ -37,8 +46,21 @@ export async function POST(req: Request) {
     if (!prompt || !gameId) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
 
     if (type === 'ai_video') {
-      // 启动异步视频生成
-      const { operationName, usage, model, provider } = await startAsyncVideoGeneration(prompt, config);
+      // 启动异步视频生成（付费用户可用自选视频模型）
+      const appConfig = await getConfig();
+      const [preferences, isPaid] = await Promise.all([
+        getUserAiPreferences(session.user.id),
+        isPaidAiUser(session.user),
+      ]);
+      const selection = resolveEffectiveMediaSelection({
+        allowedProviders: MODALITY_PROVIDERS.video as VideoProviderType[],
+        systemDefaultProvider: appConfig.defaultVideoProvider,
+        getSystemModel: (provider) => getDefaultVideoModelForProvider(appConfig, provider),
+        userPreference: preferences.video,
+        isPaid,
+        serviceAllowed: videoPermission.allowed,
+      });
+      const { operationName, usage, model, provider } = await startAsyncVideoGeneration(prompt, config, selection);
 
       // 记录 AI 用量
       await recordAiUsage({

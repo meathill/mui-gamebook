@@ -1,9 +1,16 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { NextResponse } from 'next/server';
-import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndStoreMiniGame } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import {
+  getDefaultTextModelForProvider,
+  getUserAiPreferences,
+  isPaidAiUser,
+  resolveEffectiveTextSelection,
+} from '@/lib/user-ai-settings';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 import { formatDateTime } from '@mui-gamebook/site-common/utils';
 
@@ -81,11 +88,13 @@ export async function POST(req: Request) {
       name,
       variables,
       provider: requestedProvider,
+      model: requestedModel,
     } = (await req.json()) as {
       prompt: string;
       name?: string;
       variables?: Record<string, string>;
       provider?: string;
+      model?: string;
     };
 
     if (!prompt) {
@@ -94,14 +103,29 @@ export async function POST(req: Request) {
 
     const minigameName = name || `小游戏 ${formatDateTime(new Date())}`;
 
-    // 按用户权限解析文本提供者
+    // 按用户权限 + 自选模型解析实际 provider/model
+    const appConfig = await getConfig();
     const permissions = await getUserAiPermissions(session.user);
+    const [preferences, isPaid] = await Promise.all([
+      getUserAiPreferences(session.user.id),
+      isPaidAiUser(session.user),
+    ]);
+    const selection = resolveEffectiveTextSelection({
+      permissionsProviders: permissions.providers,
+      systemDefaultProvider: appConfig.defaultTextProvider,
+      getSystemModel: (provider) => getDefaultTextModelForProvider(appConfig, provider),
+      userPreference: preferences.text,
+      isPaid,
+      requestedProvider,
+      requestedModel,
+    });
     const { id, url, usage, model } = await generateAndStoreMiniGame(
       prompt,
       session.user.id,
       minigameName,
       variables,
-      resolveTextProvider(permissions, requestedProvider),
+      selection.provider,
+      selection.model,
     );
 
     // 记录 AI 用量

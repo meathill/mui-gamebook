@@ -31,6 +31,19 @@ vi.mock('@/lib/ai-permissions', () => ({
   getUserAiPermissions: vi.fn(),
 }));
 
+vi.mock('@/lib/config', () => ({
+  getConfig: vi.fn(),
+}));
+
+vi.mock('@/lib/user-ai-settings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/user-ai-settings')>();
+  return {
+    ...actual,
+    getUserAiPreferences: vi.fn(),
+    isPaidAiUser: vi.fn(),
+  };
+});
+
 vi.mock('@/lib/ai-service', () => ({
   generateAndUploadImage: vi.fn(),
 }));
@@ -44,6 +57,8 @@ import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import { getUserAiPreferences, isPaidAiUser } from '@/lib/user-ai-settings';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
@@ -65,6 +80,18 @@ describe('POST /api/cms/games/[id]/generate-character-image', () => {
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ canGenerateImage: true });
     (getManagedGame as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1, slug: 'my-game', title: '我的游戏' });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultImageProvider: 'google',
+      googleImageModel: 'gemini-3.1-flash-lite-image',
+      openaiImageModel: 'gpt-image-2.5-sunburst',
+    });
+    (getUserAiPreferences as ReturnType<typeof vi.fn>).mockResolvedValue({
+      text: null,
+      image: null,
+      tts: null,
+      video: null,
+    });
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
     mockDb.get.mockResolvedValue(null);
   });
 
@@ -122,6 +149,8 @@ describe('POST /api/cms/games/[id]/generate-character-image', () => {
     expect(generateAndUploadImage).toHaveBeenCalledWith(
       'watercolor style, character portrait, 微笑的少年',
       expect.stringContaining('images/my-game/characters/c1-'),
+      undefined,
+      { provider: 'google', model: 'gemini-3.1-flash-lite-image', isCustom: false },
     );
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
@@ -142,7 +171,12 @@ describe('POST /api/cms/games/[id]/generate-character-image', () => {
 
     await POST(makeReq({ characterId: 'c1', prompt: '微笑的少年' }), makeParams());
 
-    expect(generateAndUploadImage).toHaveBeenCalledWith('character portrait, 微笑的少年', expect.any(String));
+    expect(generateAndUploadImage).toHaveBeenCalledWith(
+      'character portrait, 微笑的少年',
+      expect.any(String),
+      undefined,
+      { provider: 'google', model: 'gemini-3.1-flash-lite-image', isCustom: false },
+    );
   });
 
   it('生成失败时返回 500', async () => {
