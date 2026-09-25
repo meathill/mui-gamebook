@@ -15,6 +15,7 @@ import {
   FaqSection,
   GameCard,
   WorkflowSection,
+  SkillsSection,
   CtaSection,
   BlogPreviewSection,
   AiCreationInfographic,
@@ -109,6 +110,9 @@ export default async function Home() {
 
       {/* 创作流程 */}
       <WorkflowSection />
+
+      {/* Agent Skills */}
+      <SkillsSection />
 
       {/* 精选作品 */}
       {games.length > 0 && (

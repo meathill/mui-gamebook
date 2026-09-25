@@ -42,6 +42,12 @@ export default function Header({ siteName }: HeaderProps) {
                 {t('pricing')}
               </Link>
               <Link
+                href="/skills"
+                prefetch={false}
+                className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
+                {t('skills')}
+              </Link>
+              <Link
                 href="/blog"
                 className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
                 {t('blog')}
