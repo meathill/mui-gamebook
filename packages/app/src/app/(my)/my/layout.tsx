@@ -35,7 +35,7 @@ export default function MyLayout({ children }: { children: React.ReactNode }) {
           <aside className="w-56 flex-shrink-0">
             <div className="sticky top-6">
               <header className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-bold text-gray-900">工作台</h2>
+                <h2 className="text-lg font-bold text-gray-900">控制面板</h2>
                 <CreateGameModal />
               </header>
 

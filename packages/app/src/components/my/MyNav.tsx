@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { SquaresFourIcon, GameControllerIcon, KeyIcon, CreditCardIcon } from '@phosphor-icons/react';
+import { SquaresFourIcon, GameControllerIcon, KeyIcon, CreditCardIcon, GearSixIcon } from '@phosphor-icons/react';
 
 interface NavItem {
   href: string;
@@ -11,10 +11,11 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/my/dashboard', label: '数据统计', icon: <SquaresFourIcon size={20} /> },
+  { href: '/my/dashboard', label: '控制面板', icon: <SquaresFourIcon size={20} /> },
   { href: '/my/games', label: '游戏管理', icon: <GameControllerIcon size={20} /> },
   { href: '/my/api-keys', label: 'API 密钥', icon: <KeyIcon size={20} /> },
   { href: '/my/billing', label: '订阅账单', icon: <CreditCardIcon size={20} /> },
+  { href: '/my/settings', label: '设定', icon: <GearSixIcon size={20} /> },
 ];
 
 export default function MyNav() {

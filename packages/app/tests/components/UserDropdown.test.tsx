@@ -43,7 +43,7 @@ describe('UserDropdown', () => {
 
     openMenu(screen.getByRole('button'));
 
-    expect(screen.getByText('数据统计')).toBeInTheDocument();
+    expect(screen.getByText('控制面板')).toBeInTheDocument();
     expect(screen.queryByText('管理后台')).not.toBeInTheDocument();
   });
 

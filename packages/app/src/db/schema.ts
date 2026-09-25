@@ -13,6 +13,10 @@ export const user = sqliteTable('user', {
   aiPermissions: text('ai_permissions'),
   // 管理员标记（内容管理员）：可进后台查看统计、管理游戏，且不受 Token 限制；只有 root 能授予
   isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  // 用户自选文本模型：preferred_text_provider 为 5 种文本供应商之一，preferred_text_model 为具体模型 ID；
+  // 均为空 = 跟随系统默认；仅付费用户（有效订阅/管理员/root）允许设置，免费用户锁定默认
+  preferredTextProvider: text('preferred_text_provider'),
+  preferredTextModel: text('preferred_text_model'),
 });
 
 export const session = sqliteTable(

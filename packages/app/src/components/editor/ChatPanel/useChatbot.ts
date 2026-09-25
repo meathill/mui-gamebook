@@ -44,7 +44,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
   messagesRef.current = messages;
 
   const sendMessage = useCallback(
-    async (content: string, context: ChatContext, provider?: string, images?: string[]) => {
+    async (content: string, context: ChatContext, provider?: string, images?: string[], model?: string | null) => {
       if (!content.trim() && (!images || images.length === 0)) return;
       if (loading) return;
 
@@ -85,6 +85,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
             context,
             history,
             provider,
+            ...(model ? { model } : {}),
             ...(images && images.length > 0 ? { images } : {}),
           }),
           signal: abortControllerRef.current.signal,

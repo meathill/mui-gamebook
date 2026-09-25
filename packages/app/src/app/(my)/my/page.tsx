@@ -12,7 +12,7 @@ export default function MyPage() {
 
   return (
     <div className="flex items-center justify-center h-64">
-      <div className="text-gray-500">正在跳转到数据统计...</div>
+      <div className="text-gray-500">正在跳转到控制面板...</div>
     </div>
   );
 }
