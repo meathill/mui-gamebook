@@ -690,6 +690,12 @@ isValidVoiceId(voiceId: string, provider): boolean
 
 - Workers secrets（`.dev.vars` 本地 / `wrangler secret put` 生产）：`MIMO_API_KEY` 必需；`GOOGLE_API_KEY`/`OPENAI_API_KEY` 仅视频下载需要，可选；其余见 `packages/app/.dev.vars.example`。**不再需要 `ANTHROPIC_API_KEY`**（密钥存在 AI Gateway）。
 - Next 构建期变量（`NEXT_PUBLIC_*`）：**必须直接用 `process.env.X` 读取，不能用 `getCloudflareContext().env.X`**——Next 编译器只对 `process.env.NEXT_PUBLIC_*` 做静态字面量替换，替换发生在构建时，Workers 的 `env` 绑定对它完全不起作用（即使 wrangler.jsonc 的 `vars` 里写了同名变量也没用）。本地跑 `pnpm --filter @mui-gamebook/app exec node --experimental-strip-types scripts/setup-local-env.ts` 生成 `.env`（不会覆盖已存在的），或手动 `cp .env.example .env` 填值；`next build`/`opennextjs-cloudflare build` 前必须有值，否则打进产物的就是 `undefined`。清单见 `packages/app/.env.example`。
+
+### stripe-node 在 Workers 里必须用 fetch client（线上 checkout 500 根因）
+
+- `new Stripe(key)` 默认用 `NodeHttpClient`（node:https），在 workerd 里所有 API 调用直接抛错 → `/api/stripe/checkout` 全量 500。修复：`getStripe()` 传 `httpClient: Stripe.createFetchHttpClient()`（`src/lib/stripe.ts`）。**以后凡是在 Worker 里 new 第三方 SDK，先查它有没有 edge/fetch 模式，不要默认构造。**
+- 同文件 webhook 的同步 `webhooks.constructEvent` 依赖 Node crypto，Workers 里同样不可用，改 `await constructEventAsync(...)`（SubtleCrypto）。`tests/api/stripe-billing.test.ts` 的 mock 也要跟着从 `constructEvent` 换成 `constructEventAsync`。
+- 排错 checkout 500 的 checklist：① 上面两处修了且已部署 ② `wrangler secret list` 确认生产有 `STRIPE_SECRET_KEY`（缺失时 `getStripe` 直接 throw）③ price ID 在 wrangler vars 里（`STRIPE_PRICE_*`）。
 - `wrangler.jsonc` 的 `vars` 只放真正的 Workers 运行时变量（服务端 `process.env.X` 会被 OpenNext 从 Workers `env` 绑定桥接过去，这是 non-`NEXT_PUBLIC_` 变量能用 `process.env` 读取的原因）；`NEXT_PUBLIC_*` 不要放这里，会误导人以为改它能生效。
 - **d.ts 类型（2026-07 修正）**：`packages/app/env.d.ts`（手写 secret 类型补充）已删除；`cloudflare-env.d.ts` 由 `wrangler types`（`pnpm --filter @mui-gamebook/app run cf-typegen`）生成，已从 git 移除、加入 `.gitignore`。secret 的类型来源**不是**本机 `.dev.vars`，而是 `wrangler.jsonc` 里的 `secrets.required` 字段——按 wrangler 官方设计，这个字段"replaces .dev.vars/.env/process.env inference for type generation"，所以任何机器（包括没有 `.dev.vars` 的 CI 构建机）跑 `cf-typegen` 都会生成一致、正确的类型，**不依赖本机 `.dev.vars` 的内容**。新增一个 secret 时，两处都要改：`wrangler secret put <NAME>`（实际值）+ `wrangler.jsonc` 的 `secrets.required` 数组里加上名字（类型声明，不含值，可以放心提交 git）。mdx 模块声明搬到了 `packages/app/src/types/mdx.d.ts`（与 Cloudflare 类型无关，独立保留）。
   - **踩过的坑**：一开始只让 `secrets` 三个字段+MIMO+网关 token 落地，但漏了这条——CI 构建机没有 `.dev.vars`，之前设想"部署前手动跑一次 cf-typegen"完全不成立（人跑的是本机，CI 跑的是它自己的干净环境），导致 `ADMIN_PASSWORD` 这类只在窄类型参数里出现的 secret，在 CI 上因为「传入的 `Cloudflare.Env` 和目标类型没有任何字段重叠」触发 TS 的 weak-type 检测报错。`secrets.required` 才是对的、可移植的修法。

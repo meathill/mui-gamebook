@@ -142,7 +142,29 @@ describe('skills i18n', () => {
   });
 
   it('footer.skills 中英齐备', () => {
-    expect((zhMessages as { footer: Record<string, string> }).footer.skills).toBeTruthy();
-    expect((enMessages as { footer: Record<string, string> }).footer.skills).toBeTruthy();
+    expect((zhMessages as unknown as { footer: Record<string, string> }).footer.skills).toBeTruthy();
+    expect((enMessages as unknown as { footer: Record<string, string> }).footer.skills).toBeTruthy();
+  });
+
+  it('header 入口与首页 section 文案中英齐备', () => {
+    for (const messages of [zhMessages, enMessages]) {
+      const m = messages as unknown as {
+        header: Record<string, string>;
+        home: {
+          skillsSection: {
+            title: string;
+            subtitle: string;
+            setup: { title: string };
+            create: { title: string };
+            cta: string;
+          };
+        };
+      };
+      expect(m.header.skills).toBeTruthy();
+      expect(m.home.skillsSection.title).toBeTruthy();
+      expect(m.home.skillsSection.setup.title).toBeTruthy();
+      expect(m.home.skillsSection.create.title).toBeTruthy();
+      expect(m.home.skillsSection.cta).toBeTruthy();
+    }
   });
 });

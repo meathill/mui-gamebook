@@ -1,6 +1,11 @@
 # WIP
 
-## Skills 页面（已完成，待部署）
+## Skills 入口补齐 + Stripe Workers 兼容修复（已完成，待部署）
+
+- Header 主导航加「AI 技能」链接（定价之后，`prefetch={false}`）；首页 `WorkflowSection` 后新增深色 `SkillsSection`（setup / create 双卡片进 `/skills/*`）
+- Stripe checkout 500 根因：stripe-node 默认 `NodeHttpClient` 在 workerd 里发不出请求。`getStripe()` 改传 `httpClient: Stripe.createFetchHttpClient()`；webhook 同步 `constructEvent`（依赖 Node crypto）改 `constructEventAsync`；billing 测试 mock 同步跟进
+- 上线后若仍 500：`wrangler secret list` 查生产 `STRIPE_SECRET_KEY` 是否存在（缺失也 throw），price ID 见 wrangler vars
+- 测试 171 文件 1377 用例绿，`next build` 通过；教训已记 DEV_NOTE「stripe-node 在 Workers 里必须用 fetch client」
 
 - 新增 `/skills`（列表）+ `/skills/setup`（MCP 配置）+ `/skills/create-game`（5 子 skill：世界观→角色→主线→分支→试玩后补媒体）
 - 内容单源：`packages/app/src/lib/skills/`（setup.ts / create-game.ts / index 注册表），页面展示与 `/api/skills/[slug]/skill-md` 下载共用同一字符串

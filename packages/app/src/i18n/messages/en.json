@@ -23,7 +23,8 @@
     "blog": "Blog",
     "admin": "Dashboard",
     "signIn": "Sign In",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "skills": "Skills"
   },
   "footer": {
     "copyright": "© {year} MuiStory. All rights reserved.",
@@ -243,7 +244,20 @@
     },
     "gameLibrary": "Game Library",
     "noCover": "No Cover",
-    "noGames": "No published stories yet, please check back later!"
+    "noGames": "No published stories yet, please check back later!",
+    "skillsSection": {
+      "title": "Turn your AI agent into a creative assistant",
+      "subtitle": "Copy a skill to OpenCode or Antigravity and it will set up MCP and build high-quality games with you.",
+      "setup": {
+        "title": "Configure MCP",
+        "description": "Set up once: API key, client config, connection check — your agent talks to your library directly."
+      },
+      "create": {
+        "title": "Game creation",
+        "description": "Full 5-step flow: worldview → characters → plot → branches → media after playtesting."
+      },
+      "cta": "View skills"
+    }
   },
   "games": {
     "pageTitle": "Interactive Fiction Games - All Stories",

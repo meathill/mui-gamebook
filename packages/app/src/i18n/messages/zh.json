@@ -23,7 +23,8 @@
     "blog": "博客",
     "admin": "管理后台",
     "signIn": "登录",
-    "signOut": "退出"
+    "signOut": "退出",
+    "skills": "AI 技能"
   },
   "footer": {
     "copyright": "© {year} 姆伊游戏书. 保留所有权利.",
@@ -243,7 +244,20 @@
     },
     "gameLibrary": "游戏库",
     "noCover": "暂无封面",
-    "noGames": "暂无已发布的游戏，请稍后再来！"
+    "noGames": "暂无已发布的游戏，请稍后再来！",
+    "skillsSection": {
+      "title": "把 AI Agent 变成你的创作助手",
+      "subtitle": "复制一段 skill 给 OpenCode 或 Antigravity，它就能帮你配好 MCP、一步步做出高质量游戏。",
+      "setup": {
+        "title": "配置 MCP",
+        "description": "一次配好，Agent 长期直连你的游戏库：建 API Key、写客户端配置、验证连接。"
+      },
+      "create": {
+        "title": "游戏创作",
+        "description": "5 步全流程：世界观 → 角色 → 主线 → 分支 → 试玩后再补媒体。"
+      },
+      "cta": "看看 skill"
+    }
   },
   "games": {
     "pageTitle": "互动小说游戏 - 全部作品",
