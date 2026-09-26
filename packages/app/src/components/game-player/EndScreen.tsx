@@ -3,14 +3,20 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import ShareButton from '@/components/ShareButton';
+import RatingWidget from './RatingWidget';
 
 interface EndScreenProps {
   title: string;
   shareUrl: string;
   onRestart: (noConfirm?: boolean) => void;
+  /** 游戏 slug：传了才渲染打分区（结局邀请打分入口） */
+  slug?: string;
+  /** SSR 透出的均分初值，客户端挂载后会重新拉取最新值 */
+  avgRating?: number;
+  ratingCount?: number;
 }
 
-export default function EndScreen({ title, shareUrl, onRestart }: EndScreenProps) {
+export default function EndScreen({ title, shareUrl, onRestart, slug, avgRating, ratingCount }: EndScreenProps) {
   const t = useTranslations('game');
 
   return (
@@ -29,6 +35,14 @@ export default function EndScreen({ title, shareUrl, onRestart }: EndScreenProps
           {t('backToLibrary')}
         </Link>
       </div>
+      {/* 打分邀请：任意结局（通关/死亡）到达即展示 */}
+      {slug && (
+        <RatingWidget
+          slug={slug}
+          initialAvg={avgRating}
+          initialCount={ratingCount}
+        />
+      )}
       {/* 分享提示 */}
       <div className="mt-6 pt-6 border-t border-gray-200">
         <p className="text-sm text-gray-500 mb-3">{t('sharePrompt')}</p>

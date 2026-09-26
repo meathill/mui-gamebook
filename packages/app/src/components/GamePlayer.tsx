@@ -37,7 +37,7 @@ export default function GamePlayer({
   authorName,
   updatedAt,
 }: {
-  game: PlayableGame & { id?: number };
+  game: PlayableGame & { id?: number; avgRating?: number; ratingCount?: number };
   slug: string;
   authorName?: string;
   updatedAt?: string;
@@ -250,6 +250,8 @@ export default function GamePlayer({
         onRestart={handleRestartFromTitle}
         authorName={authorName}
         updatedAt={updatedAt}
+        avgRating={game.avgRating}
+        ratingCount={game.ratingCount}
       />
     );
   }
@@ -390,6 +392,9 @@ export default function GamePlayer({
                   title={game.title}
                   shareUrl={shareUrl}
                   onRestart={resetToTitle}
+                  slug={slug}
+                  avgRating={game.avgRating}
+                  ratingCount={game.ratingCount}
                 />
               )}
             </div>

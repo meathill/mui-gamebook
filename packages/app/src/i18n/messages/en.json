@@ -317,7 +317,21 @@
     "relatedGames": "More Games",
     "byAuthor": "By {name}",
     "updatedAt": "Updated {date}",
-    "howToPlay": "How do interactive novels work?"
+    "howToPlay": "How do interactive novels work?",
+    "rateTitle": "Rate this story",
+    "ratePrompt": "Enjoyed it? Leave a rating",
+    "yourRating": "Your rating",
+    "alreadyRated": "You rated {stars} stars",
+    "averageRating": "Average {avg}",
+    "ratingCount": "{count} ratings",
+    "noRatings": "No ratings yet — be the first",
+    "rateSuccess": "Rating saved, thanks!",
+    "writeReview": "Write a review",
+    "reviewPlaceholder": "Share your thoughts (optional, max 500 chars)",
+    "submitReview": "Submit review",
+    "skipReview": "Skip",
+    "loginToReview": "Sign in to write a review",
+    "goToLogin": "Sign in"
   },
   "share": {
     "share": "Share",
