@@ -23,7 +23,8 @@
     "blog": "Blog",
     "admin": "Dashboard",
     "signIn": "Sign In",
-    "signOut": "Sign Out"
+    "signOut": "Sign Out",
+    "skills": "Skills"
   },
   "footer": {
     "copyright": "© {year} MuiStory. All rights reserved.",
@@ -33,7 +34,8 @@
     "interactiveFiction": "Interactive Fiction",
     "howToPlay": "How to Play",
     "create": "Create",
-    "open": "Open Source"
+    "open": "Open Source",
+    "skills": "Skills"
   },
   "open": {
     "pageTitle": "Open Source & Self-Hosting",
@@ -85,15 +87,15 @@
     "hero": {
       "title": "Interactive Fiction Online — Everyone Can Read It, Everyone Can Write It",
       "freeBadge": "Start free · Subscribe for more AI credits",
-      "subtitle": "State-of-the-art AI models + always-ready AI Chatbot co-pilot. Start free, subscribe for more AI credits. Create interactive fiction with Markdown, generate art, music & voice, and publish everywhere.",
+      "subtitle": "State-of-the-art AI models + always-ready AI Chatbot co-pilot. Start free; subscriptions unlock every capability plus more AI credits. Create interactive fiction with Markdown, generate art, music & voice, and publish everywhere.",
       "startCreating": "Start Creating",
       "browseStories": "Browse Interactive Fiction"
     },
     "aiStudio": {
-      "badge": "Full Multimodal AI Studio · Free tier + paid plans",
+      "badge": "Full Multimodal AI Studio · Free text + paid plans",
       "title": "Top-Tier AI Models + 24/7 Co-pilot",
       "subtitle": "Fully connected to all high-value AI capabilities for interactive storytelling. Generous compute out of the box — empower every story with art, music, video, and voice.",
-      "freeBanner": "Try AI Story Co-pilot, Scene Art, Music & SFX, TTS, and Voice Cloning on the free tier. Subscribe to Pro or Pro+ for 1M / 2M M Tokens every month.",
+      "freeBanner": "The free tier includes the AI Story Co-pilot and script generation (text models). Scene Art, Music & SFX, and TTS require Pro or above; video generation requires Pro+. Subscriptions unlock higher monthly M Token allowances.",
       "freeCta": "Try AI Creation Tools for Free",
       "chatbot": {
         "tag": "Live Chat Co-pilot",
@@ -224,7 +226,7 @@
       },
       "pricing": {
         "question": "Is it free to use?",
-        "answer": "Core creation and publishing features are free forever. The multimodal AI suite has a free tier; subscribe to Pro ($9.98/mo) or Pro+ ($19.98/mo) for 1M / 2M M Tokens per month. Annual billing saves about 17%. See the pricing page."
+        "answer": "Core creation and publishing features are free forever. Text AI (Story Co-pilot and script generation) is free; Scene Art, Music & SFX, and TTS require Pro or above, and video generation requires Pro+. Subscriptions include 1M / 2M M Tokens per billing cycle, with about 17% off on annual. See the pricing page."
       },
       "export": {
         "question": "Can I export to other platforms?",
@@ -242,7 +244,20 @@
     },
     "gameLibrary": "Game Library",
     "noCover": "No Cover",
-    "noGames": "No published stories yet, please check back later!"
+    "noGames": "No published stories yet, please check back later!",
+    "skillsSection": {
+      "title": "Turn your AI agent into a creative assistant",
+      "subtitle": "Copy a skill to OpenCode or Antigravity and it will set up MCP and build high-quality games with you.",
+      "setup": {
+        "title": "Configure MCP",
+        "description": "Set up once: API key, client config, connection check — your agent talks to your library directly."
+      },
+      "create": {
+        "title": "Game creation",
+        "description": "Full 5-step flow: worldview → characters → plot → branches → media after playtesting."
+      },
+      "cta": "View skills"
+    }
   },
   "games": {
     "pageTitle": "Interactive Fiction Games - All Stories",
@@ -356,8 +371,7 @@
     "createFirst": "Create your first game to get started!",
     "globalSettings": "Global Settings",
     "aiProvider": "AI Provider",
-    "dailyTokenLimit": "Daily Token Limit",
-    "videoWhitelist": "Video Generation Whitelist"
+    "dailyTokenLimit": "Daily Token Limit"
   },
   "about": {
     "pageTitle": "About Us - MuiStory",
@@ -551,12 +565,12 @@
     "pageTitle": "How to Create Interactive Fiction - No-Code Guide to Self-Publishing",
     "pageDescription": "Want to create your own interactive fiction? MuiStory lets you write stories in Markdown, polish with AI, add branching and variables, and publish with one click — self-publishing to the web and beyond, no programming needed.",
     "heroTitle": "Creating interactive fiction is easier than you think",
-    "heroSubtitle": "Write your story in the Markdown you already know. Multimodal AI tools polish prose, generate art, music and sound effects. Publish everywhere with one click. Start free, subscribe for more credits.",
+    "heroSubtitle": "Write your story in the Markdown you already know. Multimodal AI tools polish prose, generate art, music and sound effects. Publish everywhere with one click. Start free; subscriptions unlock every capability plus more credits.",
     "workflowTitle": "The workflow",
     "step1Title": "Write your story in Markdown",
     "step1Content": "No programming required. Write your plot in familiar Markdown syntax; the editor autosaves and offers smart hints, designed specifically for interactive fiction.",
     "step2Title": "AI-Assisted Creation",
-    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art, background music and character voices. Free tier included; subscribe for higher monthly credits.",
+    "step2Content": "The AI assistant polishes prose, improves dialogue and checks plot consistency. It can also generate scene art, background music and character voices. Text features are free; Scene Art, Music and TTS need Pro or above.",
     "step3Title": "Add interactive elements",
     "step3Content": "Add branching choices, variable systems, conditional text, even embed minigames — make the reader a participant in the story.",
     "step4Title": "Publish with one click, self-publish",
@@ -573,5 +587,51 @@
     "ctaCreate": "Start creating",
     "ctaBrowse": "See what others have made",
     "backToHub": "What is interactive fiction?"
+  },
+  "skills": {
+    "pageTitle": "Skills - Turn your AI agent into a creative assistant",
+    "pageDescription": "Copy a skill prompt to your AI agent (OpenCode / Antigravity) and it will configure MCP or create interactive fiction games with you.",
+    "heroTitle": "Skill packs for AI agents",
+    "heroSubtitle": "Copy one prompt to your AI agent and it knows how to help. More creation and usage skills are on the way.",
+    "setupCardTitle": "Configure MCP",
+    "setupCardDesc": "Connect OpenCode or Antigravity to MuiStory locally: create an API key, write the client config, verify the connection. Once and done.",
+    "setupCardMeta": "1 skill · 2 clients",
+    "createCardTitle": "Game creation",
+    "createCardDesc": "5 sub-skills walk your agent through the full high-quality flow: worldview → characters → plot → branches → media after playtesting.",
+    "createCardMeta": "5 sub-skills · simple commands",
+    "comingTitle": "More skills coming",
+    "comingDesc": "Usage and creation skills will land here over time.",
+    "openSkill": "Open skill",
+    "downloadMd": "Download SKILL.md",
+    "copyPrompt": "Copy prompt",
+    "copied": "Copied",
+    "copyConfig": "Copy config",
+    "backToSkills": "Back to Skills",
+    "setupPageTitle": "Configure MCP - Connect your AI agent to MuiStory",
+    "setupPageDescription": "Copy the setup skill to OpenCode or Antigravity and your agent will configure the Mui Gamebook remote MCP locally: API key, client config, connection check.",
+    "setupHeroTitle": "Configure MCP",
+    "setupHeroSubtitle": "Three steps: grab an API key → copy the config for your client → verify with listGames. Or paste the prompt below and let the agent do it.",
+    "step1Title": "Step 1: Create an API key",
+    "step1Content": "Sign in at muistory.com → dashboard → API keys, and create a key (mgb_ prefix). The full key shows only once — copy it immediately; you can revoke it anytime. AI usage is billed to the key owner.",
+    "apiKeysLink": "Create an API key",
+    "step2Title": "Step 2: Copy the config for your client",
+    "step2Content": "Replace the Bearer placeholder with your real key. OpenCode: mind the nesting difference (v1 flat mcp, v2 mcp.servers). Antigravity: the remote field must be serverUrl.",
+    "step3Title": "Step 3: Verify the connection",
+    "step3Content": "Start a fresh conversation so the config hot-reloads, confirm mui-gamebook is connected, then call listGames. Fix issues before creating games.",
+    "step4Title": "Troubleshooting",
+    "step4Content": "Unauthorized = wrong or expired key, revoke and recreate it. Empty tool list = timeout too short or endpoint not deployed; raise timeout to 120000. API keys only manage their owner's games.",
+    "promptTitle": "Prompt to paste to your agent",
+    "promptDesc": "Copy this to your AI agent (OpenCode / Antigravity) and it will finish the three steps above for its own client.",
+    "opencodeNote": "v2 nests mui-gamebook under mcp.servers with identical fields; check the version first when it fails.",
+    "antigravityNote": "Remote connections require the serverUrl field; url / httpUrl are ignored. Or edit via … → MCP Servers → View raw config in the IDE.",
+    "createPageTitle": "Game creation skills - High-quality games in 5 steps",
+    "createPageDescription": "5 sub-skills walk your AI agent through creation: worldview, characters, main plot, branches, then media after playtesting. Simple commands, high-quality games.",
+    "createHeroTitle": "Game creation",
+    "createHeroSubtitle": "Order is the workflow: worldview → characters → plot → branches → media after playtesting. Media costs money and dies on rewrites, so it always comes last.",
+    "toolsLabel": "Tools used",
+    "doneLabel": "Done when",
+    "downloadPack": "Download full SKILL.md",
+    "downloadStep": "Download this step's SKILL.md",
+    "orderNote": "Run in order, no skipping; pass each step's done-criteria before moving on."
   }
 }

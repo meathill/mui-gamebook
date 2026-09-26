@@ -22,8 +22,20 @@ vi.mock('@/lib/game-access', () => ({
 
 vi.mock('@/lib/ai-permissions', () => ({
   getUserAiPermissions: vi.fn(),
-  resolveTextProvider: vi.fn(),
 }));
+
+vi.mock('@/lib/config', () => ({
+  getConfig: vi.fn(),
+}));
+
+vi.mock('@/lib/user-ai-settings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/user-ai-settings')>();
+  return {
+    ...actual,
+    getUserAiModelPreference: vi.fn(),
+    isPaidAiUser: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/ai-provider-factory', () => ({
   createAiProvider: vi.fn(),
@@ -34,10 +46,12 @@ vi.mock('@/lib/ai-usage', () => ({
 }));
 
 import { POST } from '@/app/api/cms/games/[id]/chat/route';
-import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
@@ -61,11 +75,20 @@ async function readSseEvents(res: Response): Promise<Array<Record<string, unknow
 describe('POST /api/cms/games/[id]/chat', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1', email: 'u1@example.com' } });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
     (getManagedGame as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1, ownerId: 'u1' });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
-    (resolveTextProvider as ReturnType<typeof vi.fn>).mockReturnValue('mimo');
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultTextProvider: 'mimo',
+      mimoTextModel: 'mimo-v2.5-pro',
+      opencodeTextModel: 'deepseek-v4.1-flash',
+      googleTextModel: 'gemini-3.8-flash',
+      openaiTextModel: 'gpt-5.6-luna',
+      anthropicTextModel: 'claude-sonnet-5',
+    });
+    (getUserAiModelPreference as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
   });
 
   const baseBody = { message: '帮我加一个场景', context: {}, history: [] };
@@ -181,5 +204,61 @@ describe('POST /api/cms/games/[id]/chat', () => {
     const events = await readSseEvents(res);
     expect(events).toEqual([{ type: 'error', content: '网络超时' }]);
     expect(recordAiUsage).not.toHaveBeenCalled();
+  });
+
+  it('从请求头透传 x-opencode-session 与 gameId 给 createAiProvider', async () => {
+    const chatWithTools = vi
+      .fn()
+      .mockResolvedValue({ text: 'ok', usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 } });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', chatWithTools });
+
+    const req = new Request('http://localhost/api/cms/games/66/chat', {
+      method: 'POST',
+      headers: {
+        'x-opencode-session': 'chat_session_888',
+      },
+      body: JSON.stringify(baseBody),
+    });
+
+    const res = await POST(req, makeParams('66'));
+    expect(res.status).toBe(200);
+    expect(createAiProvider).toHaveBeenCalledWith('mimo', {
+      sessionId: 'chat_session_888',
+      gameId: '66',
+      textModel: 'mimo-v2.5-pro',
+    });
+  });
+
+  it('付费用户自选模型透传给 createAiProvider 并记录真实模型', async () => {
+    (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({
+      providers: ['mimo', 'openai'],
+    });
+    (getUserAiModelPreference as ReturnType<typeof vi.fn>).mockResolvedValue({
+      provider: 'openai',
+      model: 'gpt-5-mini',
+    });
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    const chatWithTools = vi.fn().mockResolvedValue({
+      text: 'ok',
+      usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
+    });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'openai', chatWithTools });
+
+    const res = await POST(makeReq(baseBody), makeParams());
+
+    expect(createAiProvider).toHaveBeenCalledWith('openai', {
+      sessionId: undefined,
+      gameId: '1',
+      textModel: 'gpt-5-mini',
+    });
+    const events = await readSseEvents(res);
+    expect(events).toEqual([{ type: 'text', content: 'ok' }, { type: 'done' }]);
+    expect(recordAiUsage).toHaveBeenCalledWith({
+      userId: 'u1',
+      type: 'chat',
+      model: 'gpt-5-mini',
+      usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
+      gameId: 1,
+    });
   });
 });

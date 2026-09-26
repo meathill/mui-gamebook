@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
 import { createAuth } from '@/lib/auth-config';
 import { getSession } from '@/lib/auth-server';
-import { isRootUser } from '@/lib/config';
+import { isRootUser } from '@/lib/admin';
 
 type Props = {
   params: Promise<{ id: string }>;

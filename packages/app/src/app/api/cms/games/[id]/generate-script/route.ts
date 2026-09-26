@@ -1,7 +1,7 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
-import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
@@ -15,6 +15,12 @@ import {
 } from '@/lib/editor/generate-script';
 import { getManagedGame } from '@/lib/game-access';
 import { getConfig } from '@/lib/config';
+import {
+  getDefaultTextModelForProvider,
+  getUserAiModelPreference,
+  isPaidAiUser,
+  resolveEffectiveTextSelection,
+} from '@/lib/user-ai-settings';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 type Props = {
@@ -50,10 +56,12 @@ export async function POST(req: Request, { params }: Props) {
   const {
     story,
     provider: requestedProvider,
+    model: requestedModel,
     existingScript,
   } = (await req.json()) as {
     story: string;
     provider?: string;
+    model?: string;
     existingScript?: string;
   };
   if (!story) return NextResponse.json({ error: 'Story is required' }, { status: 400 });
@@ -63,12 +71,31 @@ export async function POST(req: Request, { params }: Props) {
   const game = await getManagedGame(drizzle(env.DB), Number(id), session);
   if (!game) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
 
-  // 按用户权限解析文本提供者；创建失败（如密钥缺失）在进入 SSE 前返回 JSON 错误
+  // 按用户权限 + 自选模型解析实际 provider/model；创建失败（如密钥缺失）在进入 SSE 前返回 JSON 错误
+  const config = await getConfig();
   const permissions = await getUserAiPermissions(session.user);
-  const providerType = resolveTextProvider(permissions, requestedProvider);
+  const [userPreference, isPaid] = await Promise.all([
+    getUserAiModelPreference(session.user.id),
+    isPaidAiUser(session.user),
+  ]);
+  const selection = resolveEffectiveTextSelection({
+    permissionsProviders: permissions.providers,
+    systemDefaultProvider: config.defaultTextProvider,
+    getSystemModel: (provider) => getDefaultTextModelForProvider(config, provider),
+    userPreference,
+    isPaid,
+    requestedProvider,
+    requestedModel,
+  });
+  const providerType = selection.provider;
+  const clientSessionId = req.headers.get('x-opencode-session') || req.headers.get('x-session-id') || undefined;
   let provider: Awaited<ReturnType<typeof createAiProvider>>;
   try {
-    provider = await createAiProvider(providerType);
+    provider = await createAiProvider(providerType, {
+      sessionId: clientSessionId,
+      gameId: id,
+      textModel: selection.model,
+    });
   } catch (error) {
     console.error('Generate script provider init error:', error);
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
@@ -135,21 +162,11 @@ export async function POST(req: Request, { params }: Props) {
           }
         }
 
-        const config = await getConfig();
-        const modelMap: Record<string, string> = {
-          opencode: config.opencodeTextModel,
-          google: config.googleTextModel,
-          openai: config.openaiTextModel,
-          mimo: config.mimoTextModel,
-          anthropic: config.anthropicTextModel,
-        };
-        const modelName = modelMap[providerType] || providerType;
-
-        // 记录 AI 用量（两次调用合计）
+        // 记录 AI 用量（两次调用合计，存真实模型 ID）
         await recordAiUsage({
           userId: session.user.id,
           type: 'text_generation',
-          model: modelName,
+          model: selection.model,
           usage: totalUsage,
           gameId: Number(id),
         });

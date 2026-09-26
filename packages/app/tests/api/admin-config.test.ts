@@ -4,14 +4,20 @@ vi.mock('@/lib/auth-server', () => ({
   getSession: vi.fn(),
 }));
 
+vi.mock('@/lib/admin', () => ({
+  isRootUser: vi.fn(),
+  isAdminUser: vi.fn(),
+  isAdminUserId: vi.fn(),
+}));
+
 vi.mock('@/lib/config', () => ({
   getConfig: vi.fn(),
   updateConfig: vi.fn(),
-  isRootUser: vi.fn(),
 }));
 
 import { GET, PUT } from '@/app/api/admin/config/route';
-import { getConfig, isRootUser, updateConfig } from '@/lib/config';
+import { isRootUser } from '@/lib/admin';
+import { getConfig, updateConfig } from '@/lib/config';
 import { getSession } from '@/lib/auth-server';
 
 describe('GET /api/admin/config', () => {

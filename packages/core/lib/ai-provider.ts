@@ -144,8 +144,8 @@ export interface TTSResult {
  * - opencode: OpenCode Go（OpenAI 兼容协议，主打 DeepSeek 文本/代码生成）
  * - mimo: 小米 MiMo（OpenAI 兼容协议，支持文本/TTS）
  * - anthropic: Anthropic Claude（仅文本/工具调用）
- * - google: Google GenAI（文本/生图/视频/TTS）
- * - openai: OpenAI（文本/生图/视频/TTS）
+ * - google: Google GenAI（文本/生图/视频/TTS/语音识别）
+ * - openai: OpenAI（文本/生图/视频/TTS/语音识别）
  */
 export type AiProviderType = 'opencode' | 'google' | 'openai' | 'mimo' | 'anthropic';
 
@@ -154,7 +154,7 @@ export type TextProviderType = 'opencode' | 'mimo' | 'anthropic' | 'google' | 'o
 export type TtsProviderType = 'mimo' | 'google' | 'openai';
 export type ImageProviderType = 'google' | 'openai';
 export type VideoProviderType = 'google' | 'openai';
-export type SttProviderType = 'openai' | 'google';
+export type SttProviderType = 'openai' | 'google' | 'mimo';
 export type MusicProviderType = 'internal' | 'suno' | 'udio' | 'elevenlabs';
 export type SfxProviderType = 'internal' | 'elevenlabs' | 'stable-audio';
 

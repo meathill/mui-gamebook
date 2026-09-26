@@ -7,6 +7,7 @@ import Button from '@/components/Button';
 import { useDialog } from '@/components/Dialog';
 import MiniGameSelector from '../MiniGameSelector';
 import { useCmsConfig, getAspectRatios } from '@/hooks/useCmsConfig';
+import { useAiPermissions } from '@/lib/editor/useAiPermissions';
 import { buildEnhancedImagePrompt } from '@/lib/ai-prompt-builder';
 import type { MediaAssetItemProps } from './types';
 import TypeIcon from './TypeIcon';
@@ -38,6 +39,7 @@ export default function MediaAssetItem({
   const hasAutoOpenedGeneratorRef = useRef(shouldAutoOpenGenerator);
   const dialog = useDialog();
   const { data: cmsConfig } = useCmsConfig();
+  const aiPermissions = useAiPermissions();
   const aspectRatios = getAspectRatios(cmsConfig?.defaultImageProvider || cmsConfig?.defaultAiProvider);
 
   useEffect(() => {
@@ -55,6 +57,16 @@ export default function MediaAssetItem({
 
   const hasContent = assetUrl && !assetUrl.startsWith('prompt:') && !assetUrl.startsWith('pending://');
   const isPending = assetUrl?.startsWith('pending://');
+
+  // 按素材类型检查 AI 生成权限，无权限时禁用生成入口（服务端仍会兜底 403）
+  const canGenerate =
+    isMinigame ||
+    (isImage && aiPermissions.canGenerateImage) ||
+    (isAudio && aiPermissions.canGenerateTts) ||
+    (isVideo && aiPermissions.canGenerateVideo);
+  const permissionHint = isVideo
+    ? '当前套餐不含视频生成，请升级或联系管理员开通'
+    : '当前套餐不含此生成能力，请升级或联系管理员开通';
 
   function getAcceptType() {
     if (isImage) return 'image/*';
@@ -231,7 +243,8 @@ export default function MediaAssetItem({
                   variant="ghost"
                   color="violet"
                   onClick={() => setShowGenerator(!showGenerator)}
-                  disabled={isGenerating}>
+                  disabled={isGenerating || !canGenerate}
+                  title={canGenerate ? undefined : permissionHint}>
                   AI 生成
                 </Button>
               </div>
@@ -311,9 +324,9 @@ export default function MediaAssetItem({
             variant="ghost"
             color="violet"
             size="sm"
-            disabled={isGenerating}
+            disabled={isGenerating || !canGenerate}
             onClick={() => setShowGenerator(!showGenerator)}
-            title="AI 生成素材">
+            title={canGenerate ? 'AI 生成素材' : permissionHint}>
             <SparkleIcon size={14} />
           </Button>
           {showDelete && onAssetDelete && (

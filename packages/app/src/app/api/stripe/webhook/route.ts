@@ -107,7 +107,8 @@ export async function POST(request: Request) {
   let event: Stripe.Event;
   try {
     const stripe = getStripe(env);
-    event = stripe.webhooks.constructEvent(rawBody, signature, getStripeWebhookSecret(env));
+    // 同步 constructEvent 依赖 Node crypto，Workers 里不可用；必须用 SubtleCrypto 的异步版
+    event = await stripe.webhooks.constructEventAsync(rawBody, signature, getStripeWebhookSecret(env));
   } catch (error) {
     console.error('[Stripe Webhook] 验签失败:', error);
     return NextResponse.json({ error: 'Webhook 验签失败' }, { status: 400 });

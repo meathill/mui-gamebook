@@ -12,6 +12,19 @@ vi.mock('@/lib/ai-permissions', () => ({
   getUserAiPermissions: vi.fn(),
 }));
 
+vi.mock('@/lib/config', () => ({
+  getConfig: vi.fn(),
+}));
+
+vi.mock('@/lib/user-ai-settings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/user-ai-settings')>();
+  return {
+    ...actual,
+    getUserAiPreferences: vi.fn(),
+    isPaidAiUser: vi.fn(),
+  };
+});
+
 vi.mock('@/lib/ai-service', () => ({
   generateAndUploadImage: vi.fn(),
 }));
@@ -25,6 +38,8 @@ import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import { getUserAiPreferences, isPaidAiUser } from '@/lib/user-ai-settings';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 function makeReq(body: unknown) {
@@ -37,6 +52,18 @@ describe('POST /api/cms/assets/generate', () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ canGenerateImage: true });
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultImageProvider: 'google',
+      googleImageModel: 'gemini-3.1-flash-lite-image',
+      openaiImageModel: 'gpt-image-2.5-sunburst',
+    });
+    (getUserAiPreferences as ReturnType<typeof vi.fn>).mockResolvedValue({
+      text: null,
+      image: null,
+      tts: null,
+      video: null,
+    });
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
   });
 
   it('未登录返回 401', async () => {
@@ -91,6 +118,42 @@ describe('POST /api/cms/assets/generate', () => {
       userId: 'u1',
       type: 'image_generation',
       model: 'google',
+      usage: { promptTokens: 5, completionTokens: 0, totalTokens: 5 },
+    });
+  });
+
+  it('付费用户自选图片模型透传给生成函数', async () => {
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultImageProvider: 'google',
+      googleImageModel: 'gemini-3.1-flash-lite-image',
+      openaiImageModel: 'gpt-image-2.5-sunburst',
+    });
+    (getUserAiPreferences as ReturnType<typeof vi.fn>).mockResolvedValue({
+      text: null,
+      image: { provider: 'openai', model: 'gpt-image-1' },
+      tts: null,
+      video: null,
+    });
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+    (generateAndUploadImage as ReturnType<typeof vi.fn>).mockResolvedValue({
+      url: 'https://cdn.x.com/images/1/123.png',
+      usage: { promptTokens: 5, completionTokens: 0, totalTokens: 5 },
+      model: 'gpt-image-1',
+    });
+
+    const res = await POST(makeReq({ prompt: '小红帽', gameId: '1', type: 'ai_image' }));
+
+    expect(res.status).toBe(200);
+    expect(generateAndUploadImage).toHaveBeenCalledWith(
+      '小红帽',
+      expect.any(String),
+      { aspectRatio: undefined, referenceImages: undefined },
+      { provider: 'openai', model: 'gpt-image-1', isCustom: true },
+    );
+    expect(recordAiUsage).toHaveBeenCalledWith({
+      userId: 'u1',
+      type: 'image_generation',
+      model: 'gpt-image-1',
       usage: { promptTokens: 5, completionTokens: 0, totalTokens: 5 },
     });
   });

@@ -2,13 +2,19 @@
 
 import { KeyIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react';
 import { formatDate } from '@mui-gamebook/site-common/utils';
-import type { UserItem, UsersResponse } from '@/hooks/useUsersAdmin';
+import PaginationBar from '@/components/admin/PaginationBar';
+import SortableHeader from '@/components/admin/SortableHeader';
+import { formatPlanLabel, type UserItem, type UsersResponse } from '@/hooks/useUsersAdmin';
+import type { SortOrder } from '@/lib/list-query';
 
 interface UsersTableProps {
   users: UserItem[] | undefined;
   isLoading: boolean;
   pagination: UsersResponse['pagination'] | undefined;
   page: number;
+  activeSort: string;
+  order: SortOrder;
+  onSort: (sortKey: string) => void;
   onPageChange: (updater: (page: number) => number) => void;
   onEdit: (user: UserItem) => void;
   onPassword: (user: UserItem) => void;
@@ -16,13 +22,16 @@ interface UsersTableProps {
 }
 
 /**
- * 用户列表表格 + 分页
+ * 用户列表表格 + 排序表头 + 分页
  */
 export default function UsersTable({
   users,
   isLoading,
   pagination,
   page,
+  activeSort,
+  order,
+  onSort,
   onPageChange,
   onEdit,
   onPassword,
@@ -39,10 +48,36 @@ export default function UsersTable({
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">名称</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">邮箱</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">游戏数</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">注册时间</th>
+                <SortableHeader
+                  label="名称"
+                  sortKey="name"
+                  activeSort={activeSort}
+                  order={order}
+                  onSort={onSort}
+                />
+                <SortableHeader
+                  label="邮箱"
+                  sortKey="email"
+                  activeSort={activeSort}
+                  order={order}
+                  onSort={onSort}
+                />
+                <SortableHeader
+                  label="游戏数"
+                  sortKey="gameCount"
+                  activeSort={activeSort}
+                  order={order}
+                  onSort={onSort}
+                  align="right"
+                />
+                <SortableHeader
+                  label="注册时间"
+                  sortKey="createdAt"
+                  activeSort={activeSort}
+                  order={order}
+                  onSort={onSort}
+                />
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">身份</th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">操作</th>
               </tr>
             </thead>
@@ -55,6 +90,16 @@ export default function UsersTable({
                   <td className="px-6 py-4 text-sm text-gray-500">{user.email}</td>
                   <td className="px-6 py-4 text-sm text-gray-900 text-right">{user.gameCount}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{formatDate(user.createdAt)}</td>
+                  <td className="px-6 py-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1.5">
+                      {user.isAdmin && (
+                        <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-xs">管理员</span>
+                      )}
+                      <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-xs">
+                        {formatPlanLabel(user.planCode)}
+                      </span>
+                    </div>
+                  </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
@@ -84,27 +129,14 @@ export default function UsersTable({
         </div>
       )}
 
-      {/* Pagination */}
-      {pagination && pagination.totalPages > 1 && (
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-          <span className="text-sm text-gray-500">
-            共 {pagination.total} 个用户，第 {pagination.page} / {pagination.totalPages} 页
-          </span>
-          <div className="flex gap-2">
-            <button
-              onClick={() => onPageChange((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50">
-              上一页
-            </button>
-            <button
-              onClick={() => onPageChange((p) => Math.min(pagination.totalPages, p + 1))}
-              disabled={page >= pagination.totalPages}
-              className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50">
-              下一页
-            </button>
-          </div>
-        </div>
+      {pagination && (
+        <PaginationBar
+          page={page}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          unit="个用户"
+          onPageChange={onPageChange}
+        />
       )}
     </div>
   );

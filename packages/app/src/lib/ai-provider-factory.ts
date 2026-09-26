@@ -99,11 +99,23 @@ function resolveGatewayHeaders(token: string | undefined): Record<string, string
   return token ? { 'cf-aig-authorization': `Bearer ${token}` } : {};
 }
 
+export interface CreateAiProviderOptions {
+  sessionId?: string;
+  gameId?: string | number;
+  /** 覆盖该 provider 默认文本模型的模型 ID（用户自选，仅付费用户经校验后传入） */
+  textModel?: string;
+  /** 覆盖图片/语音合成/视频模型的模型 ID（同上） */
+  imageModel?: string;
+  ttsModel?: string;
+  videoModel?: string;
+}
+
 /**
  * 创建 AI 提供者
  * @param type 指定提供者类型，如不指定则使用配置中的默认文本提供者
+ * @param options 可选参数，包括 sessionId 与 gameId（用于 OpenCode 等服务端的 session header 注入）
  */
-export async function createAiProvider(type?: AiProviderType): Promise<AiProvider> {
+export async function createAiProvider(type?: AiProviderType, options?: CreateAiProviderOptions): Promise<AiProvider> {
   const { env } = getCloudflareContext();
   const config = await getConfig();
 
@@ -114,7 +126,15 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
     if (!apiKey) {
       throw new Error('OPENCODE_API_KEY not configured');
     }
-    return new OpencodeProvider(apiKey, { text: config.opencodeTextModel }, config.opencodeBaseUrl);
+    const resolvedSessionId = options?.sessionId || (options?.gameId ? `game_${options.gameId}` : undefined);
+
+    return new OpencodeProvider(
+      apiKey,
+      { text: options?.textModel || config.opencodeTextModel },
+      config.opencodeBaseUrl,
+      {},
+      resolvedSessionId,
+    );
   }
 
   if (providerType === 'mimo') {
@@ -123,7 +143,14 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
       throw new Error('MIMO_API_KEY not configured');
     }
 
-    return new MimoProvider(apiKey, { text: config.mimoTextModel, tts: config.mimoTtsModel }, config.mimoBaseUrl);
+    return new MimoProvider(
+      apiKey,
+      {
+        text: options?.textModel || config.mimoTextModel,
+        tts: options?.ttsModel || config.mimoTtsModel,
+      },
+      config.mimoBaseUrl,
+    );
   }
 
   const gatewayHeaders = resolveGatewayHeaders(env.CF_AI_GATEWAY_TOKEN || process.env.CF_AI_GATEWAY_TOKEN);
@@ -132,7 +159,7 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
     const baseURL = resolveGatewayBaseUrl(config, 'anthropic');
     return new ClaudeProvider(
       AI_GATEWAY_MANAGED_KEY,
-      { text: config.anthropicTextModel },
+      { text: options?.textModel || config.anthropicTextModel },
       { baseURL, headers: gatewayHeaders },
     );
   }
@@ -142,17 +169,17 @@ export async function createAiProvider(type?: AiProviderType): Promise<AiProvide
     return new OpenAiProvider(
       AI_GATEWAY_MANAGED_KEY,
       {
-        text: config.openaiTextModel,
-        image: config.openaiImageModel,
-        video: config.openaiVideoModel,
-        tts: config.openaiTtsModel,
+        text: options?.textModel || config.openaiTextModel,
+        image: options?.imageModel || config.openaiImageModel,
+        video: options?.videoModel || config.openaiVideoModel,
+        tts: options?.ttsModel || config.openaiTtsModel,
       },
       { baseURL, headers: gatewayHeaders },
     );
   }
 
   if (providerType === 'google') {
-    return buildGoogleAiProvider(config, gatewayHeaders);
+    return buildGoogleAiProvider(config, gatewayHeaders, options?.textModel, options);
   }
 
   throw new Error(`Unsupported AI provider: ${providerType as string}`);
@@ -168,7 +195,12 @@ export async function createGoogleAiProvider(): Promise<GoogleAiProvider> {
   return buildGoogleAiProvider(config, gatewayHeaders);
 }
 
-function buildGoogleAiProvider(config: AppConfig, gatewayHeaders: Record<string, string>): GoogleAiProvider {
+function buildGoogleAiProvider(
+  config: AppConfig,
+  gatewayHeaders: Record<string, string>,
+  textModelOverride?: string,
+  modelOverrides?: Pick<CreateAiProviderOptions, 'imageModel' | 'ttsModel' | 'videoModel'>,
+): GoogleAiProvider {
   const apiBaseUrl = resolveGatewayBaseUrl(config, 'google-ai-studio');
   const genAI = new GoogleGenAI({
     apiKey: AI_GATEWAY_MANAGED_KEY,
@@ -178,10 +210,10 @@ function buildGoogleAiProvider(config: AppConfig, gatewayHeaders: Record<string,
     genAI,
     AI_GATEWAY_MANAGED_KEY,
     {
-      text: config.googleTextModel,
-      image: config.googleImageModel,
-      video: config.googleVideoModel,
-      tts: config.googleTtsModel,
+      text: textModelOverride || config.googleTextModel,
+      image: modelOverrides?.imageModel || config.googleImageModel,
+      video: modelOverrides?.videoModel || config.googleVideoModel,
+      tts: modelOverrides?.ttsModel || config.googleTtsModel,
     },
     { apiBaseUrl, headers: gatewayHeaders },
   );

@@ -6,7 +6,7 @@ import AdminLayout from '@/app/(admin)/admin/layout';
 import MyLayout from '@/app/(my)/my/layout';
 
 interface SessionState {
-  data: { user: { id: string; email: string } } | null;
+  data: { user: { id: string; email: string; isAdmin?: boolean } } | null;
   isPending: boolean;
 }
 
@@ -123,6 +123,16 @@ describe('AdminLayout 权限守卫', () => {
   it('root 用户渲染后台内容', () => {
     vi.stubEnv('NEXT_PUBLIC_ROOT_USER_EMAIL', 'root@example.com');
     sessionState.data = { user: { id: 'u1', email: 'root@example.com' } };
+
+    renderWithRouter(<AdminLayout>{<div>后台内容</div>}</AdminLayout>);
+
+    expect(screen.getByText('后台内容')).toBeInTheDocument();
+    expect(pushSpy).not.toHaveBeenCalled();
+  });
+
+  it('内容管理员（session.user.isAdmin）也能渲染后台内容', () => {
+    vi.stubEnv('NEXT_PUBLIC_ROOT_USER_EMAIL', 'root@example.com');
+    sessionState.data = { user: { id: 'ca-1', email: 'ca@example.com', isAdmin: true } };
 
     renderWithRouter(<AdminLayout>{<div>后台内容</div>}</AdminLayout>);
 

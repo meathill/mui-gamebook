@@ -144,12 +144,24 @@ describe('StoryImporter', () => {
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
       '/api/cms/games/game-1/clarify-story',
-      expect.objectContaining({ body: JSON.stringify({ story: STORY, provider: 'mimo' }) }),
+      expect.objectContaining({
+        body: JSON.stringify({ story: STORY, provider: 'mimo' }),
+        headers: expect.objectContaining({
+          'x-opencode-session': 'game_game-1',
+          'x-session-id': 'game_game-1',
+        }),
+      }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
       '/api/cms/games/game-1/generate-script',
-      expect.objectContaining({ body: JSON.stringify({ story: STORY, provider: 'mimo' }) }),
+      expect.objectContaining({
+        body: JSON.stringify({ story: STORY, provider: 'mimo' }),
+        headers: expect.objectContaining({
+          'x-opencode-session': 'game_game-1',
+          'x-session-id': 'game_game-1',
+        }),
+      }),
     );
   });
 

@@ -8,6 +8,8 @@ import type { AiPermissions } from '@/lib/ai-permissions';
 interface CmsConfigResponse {
   defaultAiProvider: AiProviderType;
   aiPermissions: AiPermissions;
+  userDefaultAiProvider?: AiProviderType | null;
+  userDefaultAiModel?: string | null;
 }
 
 /** 提供者的用户可读名称 */
@@ -22,6 +24,8 @@ export const AI_PROVIDER_LABELS: Record<AiProviderType, string> = {
 const FALLBACK_PERMISSIONS: AiPermissions = {
   providers: ['opencode'],
   canGenerateImage: false,
+  canGenerateTts: false,
+  canGenerateMusic: false,
   canGenerateVideo: false,
 };
 
@@ -37,11 +41,20 @@ export function useAiPermissions() {
   });
 
   const permissions = data?.aiPermissions ?? FALLBACK_PERMISSIONS;
+  // 用户自选默认（仅付费用户有值）：编辑器各处的 provider 下拉默认选中它
+  const userDefaultProvider =
+    data?.userDefaultAiProvider && permissions.providers.includes(data.userDefaultAiProvider)
+      ? data.userDefaultAiProvider
+      : null;
 
   return {
     isLoading,
     providers: permissions.providers,
     canGenerateImage: permissions.canGenerateImage,
+    canGenerateTts: permissions.canGenerateTts,
+    canGenerateMusic: permissions.canGenerateMusic,
     canGenerateVideo: permissions.canGenerateVideo,
+    userDefaultProvider,
+    userDefaultModel: data?.userDefaultAiModel ?? null,
   };
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { isRootUser } from '@/lib/admin';
 import { getSession } from '@/lib/auth-server';
-import { getConfig, updateConfig, isRootUser, type AppConfig } from '@/lib/config';
+import { getConfig, updateConfig, type AppConfig } from '@/lib/config';
 
 /**
  * 获取全局配置

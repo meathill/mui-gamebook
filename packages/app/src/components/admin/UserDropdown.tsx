@@ -48,7 +48,7 @@ export default function UserDropdown({ email, isAdmin }: UserDropdownProps) {
             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer outline-none"
             onSelect={() => router.push('/my/dashboard')}>
             <SquaresFourIcon size={16} />
-            数据统计
+            控制面板
           </DropdownMenu.Item>
 
           <DropdownMenu.Item

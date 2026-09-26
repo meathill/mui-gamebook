@@ -22,8 +22,20 @@ vi.mock('@/lib/game-access', () => ({
 
 vi.mock('@/lib/ai-permissions', () => ({
   getUserAiPermissions: vi.fn(),
-  resolveTextProvider: vi.fn(),
 }));
+
+vi.mock('@/lib/config', () => ({
+  getConfig: vi.fn(),
+}));
+
+vi.mock('@/lib/user-ai-settings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/user-ai-settings')>();
+  return {
+    ...actual,
+    getUserAiModelPreference: vi.fn(),
+    isPaidAiUser: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/ai-provider-factory', () => ({
   createAiProvider: vi.fn(),
@@ -34,10 +46,12 @@ vi.mock('@/lib/ai-usage', () => ({
 }));
 
 import { POST } from '@/app/api/cms/games/[id]/generate-script/route';
-import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
@@ -97,11 +111,20 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ text: () => Promise.resolve('# DSL SPEC placeholder') }));
-    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1', email: 'u1@example.com' } });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
     (getManagedGame as ReturnType<typeof vi.fn>).mockResolvedValue({ id: 1, ownerId: 'u1' });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
-    (resolveTextProvider as ReturnType<typeof vi.fn>).mockReturnValue('mimo');
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultTextProvider: 'mimo',
+      mimoTextModel: 'mimo-v2.5-pro',
+      opencodeTextModel: 'deepseek-v4.1-flash',
+      googleTextModel: 'gemini-3.8-flash',
+      openaiTextModel: 'gpt-5.6-luna',
+      anthropicTextModel: 'claude-sonnet-5',
+    });
+    (getUserAiModelPreference as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
   });
 
   it('未登录返回 401', async () => {
@@ -248,5 +271,29 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     await readSseEvents(res);
     const [firstPassPrompt] = generateText.mock.calls[0];
     expect(firstPassPrompt).not.toContain('REVISED');
+  });
+
+  it('从请求头透传 x-opencode-session 与 gameId 给 createAiProvider', async () => {
+    const generateText = vi.fn().mockResolvedValue({
+      text: VALID_SCRIPT,
+      usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
+    });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', generateText });
+
+    const req = new Request('http://localhost/api/cms/games/77/generate-script', {
+      method: 'POST',
+      headers: {
+        'x-opencode-session': 'custom_script_session',
+      },
+      body: JSON.stringify({ story: '一个关于英雄的故事' }),
+    });
+
+    const res = await POST(req, makeParams('77'));
+    expect(res.status).toBe(200);
+    expect(createAiProvider).toHaveBeenCalledWith('mimo', {
+      sessionId: 'custom_script_session',
+      gameId: '77',
+      textModel: 'mimo-v2.5-pro',
+    });
   });
 });

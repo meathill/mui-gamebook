@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import { authClient, isRootUserClient } from '@/lib/auth-client';
+import { authClient, isAdminSession } from '@/lib/auth-client';
 import UserDropdown from '@/components/admin/UserDropdown';
 
 interface HeaderProps {
@@ -42,6 +42,12 @@ export default function Header({ siteName }: HeaderProps) {
                 {t('pricing')}
               </Link>
               <Link
+                href="/skills"
+                prefetch={false}
+                className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
+                {t('skills')}
+              </Link>
+              <Link
                 href="/blog"
                 className="text-gray-600 hover:text-gray-900 text-sm font-medium transition-colors">
                 {t('blog')}
@@ -59,7 +65,7 @@ export default function Header({ siteName }: HeaderProps) {
             ) : session ? (
               <UserDropdown
                 email={session?.user.email || ''}
-                isAdmin={isRootUserClient(session?.user.email)}
+                isAdmin={isAdminSession(session?.user)}
               />
             ) : (
               <Link

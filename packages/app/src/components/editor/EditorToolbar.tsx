@@ -122,9 +122,9 @@ export default function EditorToolbar({
           </button>
         )}
 
-        {/* 预览 */}
+        {/* 预览：走 /preview 动态路由，未发布/被封禁的作品作者也能打开 */}
         <a
-          href={`${previewUrl || ''}/play/${slug}`}
+          href={`${previewUrl || ''}/preview/${slug}`}
           target="_blank"
           rel="noopener noreferrer"
           className="p-1.5 text-gray-500 hover:bg-gray-100 rounded border border-gray-200"

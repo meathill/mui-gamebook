@@ -11,7 +11,7 @@ vi.mock('@/lib/stripe', () => ({
     checkout: { sessions: { create: sessionsCreate } },
     billingPortal: { sessions: { create: portalCreate } },
     subscriptions: { retrieve: subscriptionsRetrieve },
-    webhooks: { constructEvent },
+    webhooks: { constructEventAsync: constructEvent },
   })),
   getStripeWebhookSecret: vi.fn(() => 'whsec_test'),
 }));

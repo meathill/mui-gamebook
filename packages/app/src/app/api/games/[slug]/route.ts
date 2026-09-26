@@ -67,6 +67,11 @@ export async function GET(request: Request, { params }: Props) {
     return NextResponse.json({ error: 'Game not found' }, { status: 404 });
   }
 
+  // 被封禁的作品对所有人隐藏；作者自己仍可拿到（用于编辑器/预览），但走 private 缓存
+  if (game.shadowBanned && !isOwner) {
+    return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+  }
+
   // Ensure metadata is consistent with DB
   const finalGame = {
     ...result.data,
@@ -79,6 +84,7 @@ export async function GET(request: Request, { params }: Props) {
     slug: game.slug, // Inject slug for frontend use
   };
 
-  const cacheControl = isPublished && !isOwner ? PUBLISHED_GAME_CACHE_CONTROL : PRIVATE_GAME_CACHE_CONTROL;
+  const cacheControl =
+    isPublished && !isOwner && !game.shadowBanned ? PUBLISHED_GAME_CACHE_CONTROL : PRIVATE_GAME_CACHE_CONTROL;
   return NextResponse.json(finalGame, { headers: { 'Cache-Control': cacheControl } });
 }

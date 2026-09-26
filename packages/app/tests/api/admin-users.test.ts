@@ -16,8 +16,10 @@ vi.mock('@/lib/auth-server', () => ({
 }));
 
 // Mock config
-vi.mock('@/lib/config', () => ({
+vi.mock('@/lib/admin', () => ({
   isRootUser: vi.fn(),
+  isAdminUser: vi.fn(),
+  isAdminUserId: vi.fn(),
 }));
 
 // Mock auth-config
@@ -31,13 +33,13 @@ import { PUT as PUT_PASSWORD } from '@/app/api/admin/users/[id]/password/route';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { getSession } from '@/lib/auth-server';
-import { isRootUser } from '@/lib/config';
+import { isRootUser } from '@/lib/admin';
 import { createAuth } from '@/lib/auth-config';
 
 describe('Admin Users API', () => {
   const mockEnv = {
     DB: {},
-    ROOT_USER_EMAIL: 'admin@test.com',
+    NEXT_PUBLIC_ROOT_USER_EMAIL: 'admin@test.com',
   };
 
   const mockSession = {
@@ -78,6 +80,7 @@ describe('Admin Users API', () => {
         select: vi.fn().mockReturnThis(),
         from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
+        orderBy: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
         offset: vi.fn().mockResolvedValue(mockUsers),
         get: vi.fn().mockResolvedValue({ count: 1 }),

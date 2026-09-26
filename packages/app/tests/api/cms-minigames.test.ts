@@ -14,8 +14,20 @@ vi.mock('@/lib/usage-limit', () => ({
 
 vi.mock('@/lib/ai-permissions', () => ({
   getUserAiPermissions: vi.fn(),
-  resolveTextProvider: vi.fn(),
 }));
+
+vi.mock('@/lib/config', () => ({
+  getConfig: vi.fn(),
+}));
+
+vi.mock('@/lib/user-ai-settings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/user-ai-settings')>();
+  return {
+    ...actual,
+    getUserAiPreferences: vi.fn(),
+    isPaidAiUser: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/ai-service', () => ({
   generateAndStoreMiniGame: vi.fn(),
@@ -26,10 +38,12 @@ vi.mock('@/lib/ai-usage', () => ({
 }));
 
 import { POST } from '@/app/api/cms/minigames/route';
-import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
+import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndStoreMiniGame } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import { getUserAiPreferences, isPaidAiUser } from '@/lib/user-ai-settings';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 function makeReq(body: unknown) {
@@ -70,10 +84,24 @@ describe('POST /api/cms/minigames', () => {
   });
 
   it('成功路径：生成并记录用量', async () => {
-    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1', email: 'u1@example.com' } });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
-    (resolveTextProvider as ReturnType<typeof vi.fn>).mockReturnValue('mimo');
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultTextProvider: 'mimo',
+      mimoTextModel: 'mimo-v2.5-pro',
+      opencodeTextModel: 'deepseek-v4.1-flash',
+      googleTextModel: 'gemini-3.8-flash',
+      openaiTextModel: 'gpt-5.6-luna',
+      anthropicTextModel: 'claude-sonnet-5',
+    });
+    (getUserAiPreferences as ReturnType<typeof vi.fn>).mockResolvedValue({
+      text: null,
+      image: null,
+      tts: null,
+      video: null,
+    });
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
     (generateAndStoreMiniGame as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 42,
       url: 'https://x.com/api/cms/minigames/42',
@@ -86,7 +114,14 @@ describe('POST /api/cms/minigames', () => {
     expect(res.status).toBe(200);
     const data = (await res.json()) as { id: number; url: string; name: string };
     expect(data).toEqual({ id: 42, url: 'https://x.com/api/cms/minigames/42', name: '魁地奇' });
-    expect(generateAndStoreMiniGame).toHaveBeenCalledWith('点击金色飞贼', 'u1', '魁地奇', undefined, 'mimo');
+    expect(generateAndStoreMiniGame).toHaveBeenCalledWith(
+      '点击金色飞贼',
+      'u1',
+      '魁地奇',
+      undefined,
+      'mimo',
+      'mimo-v2.5-pro',
+    );
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'minigame_generation',
@@ -96,10 +131,24 @@ describe('POST /api/cms/minigames', () => {
   });
 
   it('生成失败时返回 500', async () => {
-    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1', email: 'u1@example.com' } });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
-    (resolveTextProvider as ReturnType<typeof vi.fn>).mockReturnValue('mimo');
+    (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
+      defaultTextProvider: 'mimo',
+      mimoTextModel: 'mimo-v2.5-pro',
+      opencodeTextModel: 'deepseek-v4.1-flash',
+      googleTextModel: 'gemini-3.8-flash',
+      openaiTextModel: 'gpt-5.6-luna',
+      anthropicTextModel: 'claude-sonnet-5',
+    });
+    (getUserAiPreferences as ReturnType<typeof vi.fn>).mockResolvedValue({
+      text: null,
+      image: null,
+      tts: null,
+      video: null,
+    });
+    (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(false);
     (generateAndStoreMiniGame as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('AI 挂了'));
 
     const res = await POST(makeReq({ prompt: 'p' }));

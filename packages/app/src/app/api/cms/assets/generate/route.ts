@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
+import type { ImageProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import { MODALITY_PROVIDERS } from '@/lib/ai-model-catalog';
 import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
+import {
+  getDefaultImageModelForProvider,
+  getUserAiPreferences,
+  isPaidAiUser,
+  resolveEffectiveMediaSelection,
+} from '@/lib/user-ai-settings';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 export async function POST(req: Request) {
@@ -36,10 +45,29 @@ export async function POST(req: Request) {
     }
 
     const fileName = `images/${gameId}/${Date.now()}.png`;
-    const { url, usage, model } = await generateAndUploadImage(prompt, fileName, {
-      aspectRatio,
-      referenceImages,
+    // 付费用户可用自选图片模型，否则走系统默认
+    const config = await getConfig();
+    const [preferences, isPaid] = await Promise.all([
+      getUserAiPreferences(session.user.id),
+      isPaidAiUser(session.user),
+    ]);
+    const selection = resolveEffectiveMediaSelection({
+      allowedProviders: MODALITY_PROVIDERS.image as ImageProviderType[],
+      systemDefaultProvider: config.defaultImageProvider,
+      getSystemModel: (provider) => getDefaultImageModelForProvider(config, provider),
+      userPreference: preferences.image,
+      isPaid,
+      serviceAllowed: permissions.canGenerateImage,
     });
+    const { url, usage, model } = await generateAndUploadImage(
+      prompt,
+      fileName,
+      {
+        aspectRatio,
+        referenceImages,
+      },
+      selection,
+    );
 
     // 记录 AI 用量
     await recordAiUsage({

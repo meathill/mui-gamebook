@@ -1,10 +1,20 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
+import type { TtsProviderType } from '@mui-gamebook/core/lib/ai-provider';
+import { MODALITY_PROVIDERS } from '@/lib/ai-model-catalog';
+import { checkAiServicePermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { generateAndUploadTTS, type TTSVoiceName } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { getManagedGame } from '@/lib/game-access';
+import { getConfig } from '@/lib/config';
+import {
+  getDefaultTtsModelForProvider,
+  getUserAiPreferences,
+  isPaidAiUser,
+  resolveEffectiveMediaSelection,
+} from '@/lib/user-ai-settings';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 interface Params {
@@ -21,6 +31,13 @@ export async function POST(req: Request, { params }: Params) {
   const { env: cfEnv } = getCloudflareContext();
   const ownedGame = await getManagedGame(drizzle(cfEnv.DB), Number(gameId), session);
   if (!ownedGame) return NextResponse.json({ error: 'Game not found' }, { status: 404 });
+
+  // 检查语音合成权限
+  const permissions = await getUserAiPermissions(session.user);
+  const ttsPermission = checkAiServicePermission(permissions, 'tts');
+  if (!ttsPermission.allowed) {
+    return NextResponse.json({ error: ttsPermission.message }, { status: 403 });
+  }
 
   try {
     const { characterId, voiceName, text } = (await req.json()) satisfies {
@@ -69,8 +86,21 @@ export async function POST(req: Request, { params }: Params) {
 
     console.log(`[Voice Preview] Generating new preview: ${cacheFileName}`);
 
-    // 生成 TTS 并上传（带缓存文件名）
-    const { url, usage, model } = await generateAndUploadTTS(text, cacheFileName, voiceName as TTSVoiceName);
+    // 生成 TTS 并上传（带缓存文件名；付费用户可用自选 TTS 模型）
+    const config = await getConfig();
+    const [preferences, isPaid] = await Promise.all([
+      getUserAiPreferences(session.user.id),
+      isPaidAiUser(session.user),
+    ]);
+    const selection = resolveEffectiveMediaSelection({
+      allowedProviders: MODALITY_PROVIDERS.tts as TtsProviderType[],
+      systemDefaultProvider: config.defaultTtsProvider,
+      getSystemModel: (provider) => getDefaultTtsModelForProvider(config, provider),
+      userPreference: preferences.tts,
+      isPaid,
+      serviceAllowed: ttsPermission.allowed,
+    });
+    const { url, usage, model } = await generateAndUploadTTS(text, cacheFileName, voiceName as TTSVoiceName, selection);
 
     // 记录 AI 用量（缓存命中分支在上面提前 return，不会走到这里，不会重复记账）
     await recordAiUsage({

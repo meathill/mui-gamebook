@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
+import { getGameSessionHeaders } from '@/lib/editor/game-session';
 
 export interface Message {
   id: string;
@@ -43,7 +44,7 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
   messagesRef.current = messages;
 
   const sendMessage = useCallback(
-    async (content: string, context: ChatContext, provider?: string, images?: string[]) => {
+    async (content: string, context: ChatContext, provider?: string, images?: string[], model?: string | null) => {
       if (!content.trim() && (!images || images.length === 0)) return;
       if (loading) return;
 
@@ -75,12 +76,16 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
       try {
         const response = await fetch(`/api/cms/games/${gameId}/chat`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...getGameSessionHeaders(gameId),
+          },
           body: JSON.stringify({
             message: content,
             context,
             history,
             provider,
+            ...(model ? { model } : {}),
             ...(images && images.length > 0 ? { images } : {}),
           }),
           signal: abortControllerRef.current.signal,

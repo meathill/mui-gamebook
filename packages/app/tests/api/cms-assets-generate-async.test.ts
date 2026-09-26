@@ -10,7 +10,7 @@ vi.mock('@/lib/usage-limit', () => ({
 
 vi.mock('@/lib/ai-permissions', () => ({
   getUserAiPermissions: vi.fn(),
-  checkVideoPermission: vi.fn(),
+  checkAiServicePermission: vi.fn(),
 }));
 
 vi.mock('@/lib/ai-service', () => ({
@@ -27,7 +27,7 @@ vi.mock('@/lib/pending-operations', () => ({
 }));
 
 import { POST } from '@/app/api/cms/assets/generate-async/route';
-import { checkVideoPermission, getUserAiPermissions } from '@/lib/ai-permissions';
+import { checkAiServicePermission, getUserAiPermissions } from '@/lib/ai-permissions';
 import { startAsyncVideoGeneration } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
@@ -47,7 +47,7 @@ describe('POST /api/cms/assets/generate-async', () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { id: 'u1' } });
     (checkUserUsageLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ canGenerateVideo: true });
-    (checkVideoPermission as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: true });
+    (checkAiServicePermission as ReturnType<typeof vi.fn>).mockReturnValue({ allowed: true });
   });
 
   it('未登录返回 401', async () => {
@@ -67,7 +67,7 @@ describe('POST /api/cms/assets/generate-async', () => {
   });
 
   it('没有视频生成权限返回 403', async () => {
-    (checkVideoPermission as ReturnType<typeof vi.fn>).mockResolvedValue({ allowed: false, message: '没有权限' });
+    (checkAiServicePermission as ReturnType<typeof vi.fn>).mockReturnValue({ allowed: false, message: '没有权限' });
 
     const res = await POST(makeReq({ prompt: 'p', gameId: '1', type: 'ai_video' }));
 
