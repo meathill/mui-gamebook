@@ -1,0 +1,468 @@
+<!-- AI生成 -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>兰香如故·性转逆后宫｜命定测试</title>
+  <style>
+    :root {
+      --paper: #f7f1e5;
+      --ink: #2c2417;
+      --muted: #6b5e4a;
+      --plum: #8b3a5c;
+      --jade: #2f5d62;
+      --gold: #c4a35a;
+      --card: #fffaf0;
+      --line: #e4d8c0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top, #fff8ea 0%, var(--paper) 55%, #efe4cf 100%);
+      min-height: 100vh;
+      line-height: 1.65;
+    }
+    .wrap {
+      max-width: 420px;
+      margin: 0 auto;
+      padding: 20px 16px 48px;
+    }
+    .brand {
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      text-align: center;
+      letter-spacing: 0.12em;
+      margin-bottom: 14px;
+    }
+    .brand .tag {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--plum);
+      border: 1px solid var(--plum);
+      border-radius: 999px;
+      padding: 2px 10px;
+      letter-spacing: 0.2em;
+      margin-bottom: 10px;
+    }
+    .brand h1 {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .brand p {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px 18px;
+      box-shadow: 0 10px 30px rgba(44, 36, 23, 0.06);
+    }
+    .hidden { display: none !important; }
+    .ornament {
+      text-align: center;
+      color: var(--gold);
+      letter-spacing: 0.4em;
+      font-size: 12px;
+      margin: 8px 0 14px;
+    }
+    .lead {
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      font-size: 15px;
+      color: var(--ink);
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .btn {
+      display: block;
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 14px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--plum), #a84d6e);
+      color: #fffaf0;
+      letter-spacing: 0.12em;
+      margin-top: 12px;
+    }
+    .btn.secondary {
+      background: transparent;
+      color: var(--jade);
+      border: 1px solid var(--jade);
+    }
+    .btn.ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+    }
+    .q-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+    .q-head .num {
+      font-family: "Songti SC", "STSong", serif;
+      color: var(--plum);
+      font-size: 13px;
+      letter-spacing: 0.15em;
+    }
+    .q-title {
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .opt {
+      width: 100%;
+      text-align: left;
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px 14px;
+      margin-bottom: 10px;
+      font-size: 15px;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .opt:hover, .opt:active {
+      border-color: var(--plum);
+      background: #fff5f0;
+    }
+    .opt small {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .card-avatar {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-family: "Songti SC", "STSong", serif;
+      font-size: 42px;
+      color: #fffaf0;
+      background: linear-gradient(145deg, var(--jade), var(--plum));
+      border: 3px solid var(--gold);
+    }
+    .result-name {
+      text-align: center;
+      font-family: "Songti SC", "STSong", "Noto Serif SC", serif;
+      font-size: 26px;
+      margin-bottom: 4px;
+    }
+    .result-title {
+      text-align: center;
+      color: var(--plum);
+      font-size: 13px;
+      letter-spacing: 0.18em;
+      margin-bottom: 12px;
+    }
+    .result-line {
+      font-family: "Songti SC", "STSong", serif;
+      text-align: center;
+      color: var(--jade);
+      margin-bottom: 14px;
+    }
+    .tips {
+      background: #f4ecdc;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .tips strong { color: var(--ink); }
+    .story {
+      font-size: 14px;
+      color: var(--ink);
+      margin-bottom: 14px;
+    }
+    .story p { margin-bottom: 10px; }
+    .share-box {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px dashed var(--gold);
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      background: #fffdf8;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .topics {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .progress {
+      height: 3px;
+      background: var(--line);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .progress i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--plum));
+      width: 0;
+      transition: width 0.25s ease;
+    }
+  </style>
+</head>
+<body>
+<p data-aigc-mark="1" style="margin:0 0 8px;font-size:10px;line-height:1.3;color:#6b6560;font-weight:400;">AI生成</p>
+
+  <div class="wrap">
+    <header class="brand">
+      <div class="tag">兰香如故 · VIBECODING</div>
+      <h1>性转逆后宫</h1>
+      <p>四场宅门风波 · 测你的命定之人</p>
+    </header>
+
+    <section id="intro" class="panel">
+      <div class="ornament">— 兰 —</div>
+      <p class="lead">你是顶替亡女入府的许兰香。<br />冷面嫡长子、腹黑新贵、温柔游医、爽利商帮少东——<br />谁会为你的选择改变态度？</p>
+      <p class="tips"><strong>玩法：</strong>4 题匹配测试 + 1 段微剧情。完整宅门线（四事件 / 30+ 场景 / 多结局）可跳转试玩。</p>
+      <button class="btn" id="btn-start">开始测试</button>
+      <button class="btn secondary" id="btn-go-game">直接去玩完整版</button>
+    </section>
+
+    <section id="quiz" class="panel hidden">
+      <div class="progress"><i id="bar"></i></div>
+      <div class="q-head">
+        <span class="num" id="q-num"></span>
+        <span class="num">凭直觉作答</span>
+      </div>
+      <h2 class="q-title" id="q-title"></h2>
+      <div id="q-opts"></div>
+    </section>
+
+    <section id="result" class="panel hidden">
+      <div class="card-avatar" id="r-glyph">楼</div>
+      <h2 class="result-name" id="r-name"></h2>
+      <div class="result-title" id="r-title"></div>
+      <p class="result-line" id="r-line"></p>
+      <div class="tips" id="r-tip"></div>
+      <div class="story" id="micro"></div>
+      <div class="share-box" id="share"></div>
+      <button class="btn" id="btn-game">进入完整宅门线</button>
+      <button class="btn secondary" id="btn-copy">复制分享文案</button>
+      <button class="btn ghost" id="btn-again">再测一次</button>
+      <p class="topics">#兰香如故vibecoding世界 #兰香如故 #vibecoding #小红书vibecoding大赛</p>
+    </section>
+  </div>
+
+  <script>
+    // 完整游戏地址：MCP 发布后替换 slug
+    const PLAY_URL = "https://muistory.com/play/lanxiang-otome";
+
+    const HEROES = {
+      jinlou: {
+        glyph: "楼",
+        name: "林锦楼",
+        title: "冷面嫡长子 · 如故兰香",
+        line: "「退婚是林家的债。这一回，我站在你这边。」",
+        tip: "攻略提示：少讨好，多要公道。他会为「愧」动容，为「硬」折腰。HE 关键：洗冤证据 + 原谅旧约。",
+      },
+      xingtang: {
+        glyph: "棠",
+        name: "赵星棠",
+        title: "新贵公子 · 棋盘真心",
+        line: "「我算计过你。算丢的，是自己。」",
+        tip: "攻略提示：识破他的局，再给他台阶。HE 关键：揭穿试探 + 留住绣样信物。",
+      },
+      cuique: {
+        glyph: "雀",
+        name: "杜翠雀",
+        title: "江湖游医 · 药香如故",
+        line: "「故人绣法，我不敢早认。往后药方，都写你。」",
+        tip: "攻略提示：主动问身世，允许他坦白。HE 关键：共享秘密。",
+      },
+      guihua: {
+        glyph: "桂",
+        name: "薛桂花",
+        title: "商帮少东 · 桂花载酒",
+        line: "「公道讨回来了。人，我也想讨一个。」",
+        tip: "攻略提示：并肩办事，少绕弯子。HE 关键：握紧翻案证据。",
+      },
+    };
+
+    const QUESTIONS = [
+      {
+        title: "秋纹逼你跪下舔地，你？",
+        options: [
+          { text: "先跪下，把这笔账记在心里", hint: "隐忍待机", scores: { jinlou: 1, cuique: 1 } },
+          { text: "顶回去：我赔水，不赔尊严", hint: "锋芒外露", scores: { guihua: 2, jinlou: 1 } },
+          { text: "借力打力，让管事妈妈看见账目", hint: "以智破局", scores: { xingtang: 2, guihua: 1 } },
+          { text: "什么都不求，自己担下责罚", hint: "独力自渡", scores: { cuique: 1, guihua: 1 } },
+        ],
+      },
+      {
+        title: "灯会人潮里，你先靠近谁？",
+        options: [
+          { text: "外书房那位冷面主子", hint: "向秩序要庇护", scores: { jinlou: 2 } },
+          { text: "摇扇说灯谜的赵家公子", hint: "向变数要情报", scores: { xingtang: 2 } },
+          { text: "西市施药的青衫游医", hint: "向温柔要真相", scores: { cuique: 2 } },
+          { text: "风尘仆仆的商帮少东", hint: "向江湖要同盟", scores: { guihua: 2 } },
+        ],
+      },
+      {
+        title: "替身身份将暴露，你最想要？",
+        options: [
+          { text: "有人按府规，公道断一断", rules: true, scores: { jinlou: 2, guihua: 1 } },
+          { text: "有人把水搅浑，先活下来", scores: { xingtang: 2 } },
+          { text: "有人认出故人绣法，轻声护你", scores: { cuique: 2 } },
+          { text: "有人拍案：这证，我帮你追到底", scores: { guihua: 2 } },
+        ],
+      },
+      {
+        title: "沈冤将雪，你如何收梢？",
+        options: [
+          { text: "与他并肩立在林家堂前", scores: { jinlou: 2 } },
+          { text: "看他弃了棋局，真心落地", scores: { xingtang: 2 } },
+          { text: "随他离开宅门，开一间药庐", scores: { cuique: 2 } },
+          { text: "上船下江南，江上定情", scores: { guihua: 2 } },
+        ],
+      },
+    ];
+
+    const MICRO = {
+      jinlou: {
+        text: "梅树下风雪落满他肩。他把兰草结系回你腕上：「旧约如故。」",
+        choices: [
+          { label: "「看你明日站在哪边。」", echo: "他喉结一动，郑重颔首。" },
+          { label: "「原谅难处，不原谅退婚书。」", echo: "他收手，却把伞倾向你。" },
+        ],
+      },
+      xingtang: {
+        text: "他收起折扇，掌心是一枚被体温焐热的棋子：「这一局我认输。」",
+        choices: [
+          { label: "「余生，请你执子。」", echo: "他笑了，笑意终于不再算计。" },
+          { label: "「先清你赵家门户。」", echo: "他挑眉，眼底燃起真正的兴趣。" },
+        ],
+      },
+      cuique: {
+        text: "药箱打开，底层压着故人留你的半张绣样：「守秘是罪，我认。」",
+        choices: [
+          { label: "「一起开药庐。」", echo: "他指尖轻颤，药香忽然很近。" },
+          { label: "「先把该说的话说完。」", echo: "他一句句，把旧事摊开。" },
+        ],
+      },
+      guihua: {
+        text: "船头风大，他抛来一坛桂花酒：「事了。你上船吗？」",
+        choices: [
+          { label: "「上。」", echo: "船笛长鸣，像把夜雨都吹散。" },
+          { label: "「先讨公道，再讨人。」", echo: "他大笑：「爽快！都依你。」" },
+        ],
+      },
+    };
+
+    const state = { step: 0, scores: { jinlou: 0, xingtang: 0, cuique: 0, guihua: 0 }, winner: null };
+
+    function show(id) {
+      for (const el of ["intro", "quiz", "result"]) {
+        document.getElementById(el).classList.toggle("hidden", el !== id);
+      }
+    }
+
+    function renderQuestion() {
+      const q = QUESTIONS[state.step];
+      document.getElementById("q-num").textContent = `第 ${state.step + 1} / ${QUESTIONS.length} 题`;
+      document.getElementById("q-title").textContent = q.title;
+      document.getElementById("bar").style.width = `${(state.step / QUESTIONS.length) * 100}%`;
+      const box = document.getElementById("q-opts");
+      box.innerHTML = "";
+      q.options.forEach((opt) => {
+        const btn = document.createElement("button");
+        btn.className = "opt";
+        btn.innerHTML = `${opt.text}${opt.hint ? `<small>${opt.hint}</small>` : ""}`;
+        btn.onclick = function onClick() {
+          for (const [k, v] of Object.entries(opt.scores || {})) state.scores[k] += v;
+          state.step += 1;
+          if (state.step >= QUESTIONS.length) finishQuiz();
+          else renderQuestion();
+        };
+        box.appendChild(btn);
+      });
+    }
+
+    function pickWinner() {
+      return Object.entries(state.scores).sort((a, b) => b[1] - a[1])[0][0];
+    }
+
+    function finishQuiz() {
+      state.winner = pickWinner();
+      const h = HEROES[state.winner];
+      const m = MICRO[state.winner];
+      document.getElementById("bar").style.width = "100%";
+      document.getElementById("r-glyph").textContent = h.glyph;
+      document.getElementById("r-name").textContent = `命定 · ${h.name}`;
+      document.getElementById("r-title").textContent = h.title;
+      document.getElementById("r-line").textContent = h.line;
+      document.getElementById("r-tip").textContent = h.tip;
+
+      const micro = document.getElementById("micro");
+      micro.innerHTML = "";
+      const p = document.createElement("p");
+      p.textContent = `微剧情｜${m.text}`;
+      micro.appendChild(p);
+      m.choices.forEach((c) => {
+        const btn = document.createElement("button");
+        btn.className = "opt";
+        btn.textContent = c.label;
+        btn.onclick = function onPick() {
+          const echo = document.createElement("p");
+          echo.style.color = "var(--jade)";
+          echo.textContent = c.echo;
+          micro.appendChild(echo);
+          btn.disabled = true;
+          btn.style.opacity = "0.55";
+        };
+        micro.appendChild(btn);
+      });
+
+      const share = `我在《兰香如故·性转逆后宫》测出命定是「${h.name}」——${h.title}\n${h.line}\n#兰香如故vibecoding世界 #兰香如故 #vibecoding #小红书vibecoding大赛`;
+      document.getElementById("share").textContent = share;
+      show("result");
+    }
+
+    function openGame() {
+      window.open(PLAY_URL, "_blank", "noopener,noreferrer");
+    }
+
+    document.getElementById("btn-start").onclick = function onStart() {
+      state.step = 0;
+      state.scores = { jinlou: 0, xingtang: 0, cuique: 0, guihua: 0 };
+      show("quiz");
+      renderQuestion();
+    };
+    document.getElementById("btn-go-game").onclick = openGame;
+    document.getElementById("btn-game").onclick = openGame;
+    document.getElementById("btn-again").onclick = function again() {
+      state.step = 0;
+      state.scores = { jinlou: 0, xingtang: 0, cuique: 0, guihua: 0 };
+      show("intro");
+    };
+    document.getElementById("btn-copy").onclick = async function copyShare() {
+      const text = document.getElementById("share").textContent;
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("btn-copy").textContent = "已复制";
+      } catch (e) {
+        document.getElementById("btn-copy").textContent = "请长按选中复制";
+      }
+    };
+  </script>
+</body>
+</html>

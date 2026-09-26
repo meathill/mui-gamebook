@@ -18,3 +18,6 @@ dist
 # 本地工具配置/计划，勿入库
 .mimocode/
 .zcode/
+
+# 兰香参赛工具：生成图不入库（本地/CDN）
+sites/lanxiang-xhs-tool/assets/
