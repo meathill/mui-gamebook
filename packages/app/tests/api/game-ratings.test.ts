@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // drizzle 链式 mock：select/from/where/groupBy/orderBy/limit/offset/get/all，
 // insert/values、update/set 与 delete/where 均为 thenable 链（await 非 thenable 对象直接返回）
-function chainable() {
-  const c: Record<string, unknown> = {};
+function chainable(): Record<string, ReturnType<typeof vi.fn>> {
+  const c: Record<string, ReturnType<typeof vi.fn>> = {};
   for (const k of ['select', 'from', 'where', 'groupBy', 'orderBy', 'limit', 'offset', 'set', 'values', 'leftJoin'])
     c[k] = vi.fn(() => c);
   c.get = vi.fn();
@@ -11,7 +11,7 @@ function chainable() {
   return c;
 }
 
-const mockDb = {
+const mockDb: Record<string, ReturnType<typeof vi.fn>> = {
   ...chainable(),
   insert: vi.fn(),
   update: vi.fn(),
@@ -136,9 +136,7 @@ describe('GET /api/games/[slug]/ratings', () => {
         { rating: 5, count: 1 },
         { rating: 4, count: 1 },
       ]) // 分布
-      .mockResolvedValueOnce([
-        { id: 1, rating: 5, content: '神作', userName: '阿木', pinned: true, createdAt: 1 },
-      ]); // 列表
+      .mockResolvedValueOnce([{ id: 1, rating: 5, content: '神作', userName: '阿木', pinned: true, createdAt: 1 }]); // 列表
     const res = await GET(makeGetReq(), makeParams());
     expect(res.status).toBe(200);
     const data = (await res.json()) as {

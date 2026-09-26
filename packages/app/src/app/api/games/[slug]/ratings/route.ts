@@ -135,7 +135,9 @@ export async function POST(request: Request, { params }: Props) {
         .set({ rating, content: content || null, updatedAt: now })
         .where(eq(schema.gameRatings.id, existing.id));
     } else {
-      await db.insert(schema.gameRatings).values({ gameId: game.id, userId, rating, content: content || null, createdAt: now, updatedAt: now });
+      await db
+        .insert(schema.gameRatings)
+        .values({ gameId: game.id, userId, rating, content: content || null, createdAt: now, updatedAt: now });
     }
   } else {
     await db.insert(schema.gameRatings).values({ gameId: game.id, rating, createdAt: now, updatedAt: now });
@@ -158,7 +160,10 @@ export async function GET(request: Request, { params }: Props) {
   }
 
   const url = new URL(request.url);
-  const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT, 1), MAX_LIMIT);
+  const limit = Math.min(
+    Math.max(parseInt(url.searchParams.get('limit') || String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT, 1),
+    MAX_LIMIT,
+  );
   const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10) || 0, 0);
 
   const db = drizzle(env.DB);
@@ -196,11 +201,12 @@ export async function GET(request: Request, { params }: Props) {
 
   let myRating: { rating: number; content: string | null } | null = null;
   if (userId) {
-    myRating = await db
-      .select({ rating: schema.gameRatings.rating, content: schema.gameRatings.content })
-      .from(schema.gameRatings)
-      .where(and(eq(schema.gameRatings.gameId, game.id), eq(schema.gameRatings.userId, userId)))
-      .get();
+    myRating =
+      (await db
+        .select({ rating: schema.gameRatings.rating, content: schema.gameRatings.content })
+        .from(schema.gameRatings)
+        .where(and(eq(schema.gameRatings.gameId, game.id), eq(schema.gameRatings.userId, userId)))
+        .get()) ?? null;
   }
 
   return NextResponse.json({

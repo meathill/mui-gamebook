@@ -3,7 +3,15 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { PlusIcon, TrashIcon, PencilSimpleIcon, EyeIcon, LockIcon, GlobeIcon } from '@phosphor-icons/react';
+import {
+  PlusIcon,
+  TrashIcon,
+  PencilSimpleIcon,
+  EyeIcon,
+  LockIcon,
+  GlobeIcon,
+  ChatCircleIcon,
+} from '@phosphor-icons/react';
 import ImageIcon from 'next/image';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
@@ -141,6 +149,12 @@ export default function GamesPage() {
                   className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded"
                   title="编辑">
                   <PencilSimpleIcon size={18} />
+                </Link>
+                <Link
+                  href={`/my/games/${game.id}/ratings`}
+                  className="p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded"
+                  title="评价管理">
+                  <ChatCircleIcon size={18} />
                 </Link>
                 <button
                   onClick={() => handleDelete(game.id)}

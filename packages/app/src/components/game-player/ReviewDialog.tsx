@@ -17,7 +17,15 @@ interface ReviewDialogProps {
 /**
  * 打分后的留言弹窗：可选写详细评价，未登录写评价时提示去登录
  */
-export default function ReviewDialog({ open, rating, submitting, loginRequired, error, onClose, onSubmit }: ReviewDialogProps) {
+export default function ReviewDialog({
+  open,
+  rating,
+  submitting,
+  loginRequired,
+  error,
+  onClose,
+  onSubmit,
+}: ReviewDialogProps) {
   const t = useTranslations('game');
   const [content, setContent] = useState('');
 

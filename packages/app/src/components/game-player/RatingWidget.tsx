@@ -45,8 +45,9 @@ export default function RatingWidget({ slug, initialAvg, initialCount }: RatingW
     let cancelled = false;
     fetch(`/api/games/${encodeURIComponent(slug)}/ratings`)
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!data || cancelled) return;
+      .then((raw: unknown) => {
+        if (!raw || typeof raw !== 'object' || cancelled) return;
+        const data = raw as { avg?: unknown; count?: unknown; myRating?: { rating?: unknown } };
         if (typeof data.avg === 'number') setAvg(data.avg);
         if (typeof data.count === 'number') setCount(data.count);
         if (data.myRating && typeof data.myRating.rating === 'number') {
