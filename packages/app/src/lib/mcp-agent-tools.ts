@@ -36,6 +36,10 @@ export const MCP_AGENT_TOOLS: WebMcpTool[] = [
       type: 'object',
       properties: {
         title: { type: 'string', description: '游戏标题' },
+        slug: {
+          type: 'string',
+          description: '可选可读 slug（小写字母/数字/连字符）；省略则由标题 slugify + 时间戳后缀',
+        },
         content: { type: 'string', description: '初始 DSL（可选；省略则用默认模板）' },
         description: { type: 'string', description: '简介（可选）' },
         ownerId: { type: 'string', description: '所有者用户 ID（可选；管理员 Bearer 可指定，否则落到 root/首个用户）' },
@@ -45,11 +49,12 @@ export const MCP_AGENT_TOOLS: WebMcpTool[] = [
   },
   {
     name: 'updateGameMeta',
-    description: '更新游戏元数据：标题/简介/背景故事/标签/封面/发布状态',
+    description: '更新游戏元数据：slug/标题/简介/背景故事/标签/封面/发布状态',
     inputSchema: {
       type: 'object',
       properties: {
         gameId: { type: 'integer', description: '游戏 ID' },
+        slug: { type: 'string', description: '新 slug（可选；小写字母/数字/连字符）' },
         title: { type: 'string' },
         description: { type: 'string' },
         backgroundStory: { type: 'string' },
