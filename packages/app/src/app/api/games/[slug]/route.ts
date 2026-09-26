@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
-import { eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 import { parse } from '@mui-gamebook/parser';
 import { getSession } from '@/lib/auth-server';
@@ -73,6 +73,23 @@ export async function GET(request: Request, { params }: Props) {
   }
 
   // Ensure metadata is consistent with DB
+  // 评分聚合独立查询：旧库无表时失败也不影响详情主体
+  let avgRating: number | undefined;
+  let ratingCount = 0;
+  try {
+    const agg = await db
+      .select({
+        avg: sql<number | null>`AVG(${schema.gameRatings.rating})`,
+        count: sql<number>`COUNT(*)`,
+      })
+      .from(schema.gameRatings)
+      .where(and(eq(schema.gameRatings.gameId, game.id), eq(schema.gameRatings.hidden, false)))
+      .get();
+    if (typeof agg?.avg === 'number') avgRating = agg.avg;
+    if (typeof agg?.count === 'number') ratingCount = agg.count;
+  } catch {
+    // 旧库无表时静默降级为无评分
+  }
   const finalGame = {
     ...result.data,
     title: game.title,
@@ -82,6 +99,8 @@ export async function GET(request: Request, { params }: Props) {
     tags: game.tags ? JSON.parse(game.tags) : [],
     published: game.published,
     slug: game.slug, // Inject slug for frontend use
+    avgRating,
+    ratingCount,
   };
 
   const cacheControl =

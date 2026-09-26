@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -316,6 +316,33 @@ export const subscriptions = sqliteTable(
     userIdIdx: index('subscriptions_user_id_idx').on(table.userId),
     statusIdx: index('subscriptions_status_idx').on(table.status),
     userIdStatusIdx: index('subscriptions_user_id_status_idx').on(table.userId, table.status),
+  }),
+);
+
+// ========== 评分与评价 ==========
+
+// 玩家评分表：匿名可打星（user_id 为空），登录才可留言（content 非空要求登录，由 API 层校验）。
+// SQLite UNIQUE 允许多个 NULL：匿名行不受唯一约束（去重靠客户端 localStorage），
+// 登录用户同一游戏只有一行（upsert 改分不重复计数）。
+export const gameRatings = sqliteTable(
+  'GameRatings',
+  {
+    id: integer('id').primaryKey(),
+    gameId: integer('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+    rating: integer('rating').notNull(),
+    content: text('content'),
+    // 创作者管理：隐藏后不计入均分、不在公开列表出现；置顶排最前
+    hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
+    pinned: integer('pinned', { mode: 'boolean' }).notNull().default(false),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+  },
+  (table) => ({
+    gameIdIdx: index('game_ratings_game_id_idx').on(table.gameId),
+    gameIdUserIdUnique: uniqueIndex('game_ratings_game_id_user_id_unique').on(table.gameId, table.userId),
   }),
 );
 
