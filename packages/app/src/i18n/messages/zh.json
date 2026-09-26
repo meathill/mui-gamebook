@@ -326,6 +326,7 @@
     "ratingCount": "{count} 人已评",
     "noRatings": "还没有人评分，快来抢首评",
     "rateSuccess": "已记录你的评分，谢谢！",
+    "reviewRestored": "登录前写的评价已自动提交，谢谢！",
     "writeReview": "写评价",
     "reviewPlaceholder": "写下你的感受（可选，最多 500 字）",
     "submitReview": "提交评价",

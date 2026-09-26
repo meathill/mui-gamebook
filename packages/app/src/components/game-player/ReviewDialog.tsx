@@ -10,6 +10,10 @@ interface ReviewDialogProps {
   submitting: boolean;
   loginRequired: boolean;
   error: string | null;
+  /** 登录前写的草稿，弹窗首次挂载时回填 */
+  initialContent?: string;
+  /** 去登录的跳转地址（带跳回） */
+  loginHref?: string;
   onClose: () => void;
   onSubmit: (content: string) => void;
 }
@@ -23,11 +27,13 @@ export default function ReviewDialog({
   submitting,
   loginRequired,
   error,
+  initialContent = '',
+  loginHref = '/sign-in',
   onClose,
   onSubmit,
 }: ReviewDialogProps) {
   const t = useTranslations('game');
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(initialContent);
 
   if (!open) return null;
 
@@ -51,7 +57,7 @@ export default function ReviewDialog({
           <div className="text-center py-4">
             <p className="text-sm text-gray-600 mb-4">{t('loginToReview')}</p>
             <Link
-              href="/sign-in"
+              href={loginHref}
               className="inline-block px-6 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-full font-medium">
               {t('goToLogin')}
             </Link>

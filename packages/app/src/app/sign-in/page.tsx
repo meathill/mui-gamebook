@@ -8,6 +8,18 @@ import { trackLogin, trackSignUp } from '@mui-gamebook/site-common/utils';
 
 type Mode = 'signIn' | 'signUp';
 
+/**
+ * 登录成功后的回跳地址：只允许站内相对路径，防止开放重定向。
+ * 不合法或缺失时回退到首页。
+ */
+export function getSafeRedirect(search: string): string {
+  const redirect = new URLSearchParams(search).get('redirect');
+  if (redirect && redirect.startsWith('/') && !redirect.startsWith('//')) {
+    return redirect;
+  }
+  return '/';
+}
+
 export default function SignInPage() {
   const [mode, setMode] = useState<Mode>('signIn');
   const [name, setName] = useState('');
@@ -34,7 +46,7 @@ export default function SignInPage() {
         } else {
           // GA4 推荐事件：同一 _ga cookie 下与登录前的 start_reading 串起同一伪用户
           trackLogin();
-          router.push('/');
+          router.push(getSafeRedirect(window.location.search));
           router.refresh();
         }
       } else {
@@ -48,7 +60,7 @@ export default function SignInPage() {
         } else {
           // GA4 推荐事件（建议标为关键事件）：自然流量 → 注册的转化终点之一
           trackSignUp();
-          router.push('/');
+          router.push(getSafeRedirect(window.location.search));
           router.refresh();
         }
       }
