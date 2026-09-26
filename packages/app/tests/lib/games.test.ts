@@ -314,5 +314,34 @@ title: "测试作品"
       expect(game).not.toBeNull();
       expect(game?.title).toBe('测试作品');
     });
+
+    it('透出评分均分与条数', async () => {
+      mockGameRecord();
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          first: vi.fn().mockResolvedValue({ avg_rating: 4.5, rating_count: 2 }),
+        }),
+      });
+
+      const game = await getGameBySlug('test-game');
+
+      expect(game?.avgRating).toBe(4.5);
+      expect(game?.ratingCount).toBe(2);
+    });
+
+    it('评分聚合查询失败时静默降级，不影响详情主体', async () => {
+      mockGameRecord();
+      mockDB.prepare.mockReturnValueOnce({
+        bind: vi.fn().mockReturnValue({
+          first: vi.fn().mockRejectedValue(new Error('no such table: GameRatings')),
+        }),
+      });
+
+      const game = await getGameBySlug('test-game');
+
+      expect(game).not.toBeNull();
+      expect(game?.avgRating).toBeUndefined();
+      expect(game?.ratingCount).toBe(0);
+    });
   });
 });

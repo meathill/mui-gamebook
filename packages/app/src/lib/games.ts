@@ -31,6 +31,22 @@ function playableContentExists(gamesAlias: string) {
   return `EXISTS (SELECT 1 FROM GameContent c WHERE c.game_id = ${gamesAlias}.id AND c.content IS NOT NULL AND TRIM(c.content) != '')`;
 }
 
+/**
+ * 评分聚合列（标量子查询）：只统计未被创作者隐藏的评分。
+ * GameRatings 表不存在的旧库上整个查询会抛错，调用方外层 catch 统一兜底。
+ */
+function ratingColumns(gamesAlias: string) {
+  return `(SELECT AVG(rating) FROM GameRatings WHERE hidden = 0 AND game_id = ${gamesAlias}.id) AS avg_rating, (SELECT COUNT(*) FROM GameRatings WHERE hidden = 0 AND game_id = ${gamesAlias}.id) AS rating_count`;
+}
+
+/** 把行里的 avg_rating/rating_count 归一化为 avgRating/ratingCount */
+function pickRating(row: { avg_rating?: number | null; rating_count?: number | null }) {
+  return {
+    avgRating: typeof row.avg_rating === 'number' ? row.avg_rating : undefined,
+    ratingCount: typeof row.rating_count === 'number' ? row.rating_count : 0,
+  };
+}
+
 /** 构建期抓线上公开 API 的分页大小（与 /api/games 上限对齐） */
 const LIVE_SNAPSHOT_PAGE_SIZE = 100;
 
@@ -105,7 +121,7 @@ export async function getPublishedGames(options?: { limit?: number; offset?: num
       return applyGamesPaging(await fetchLiveGamesSnapshot(), options);
     }
 
-    let query = `SELECT slug, title, description, cover_image, tags, created_at, updated_at FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} ORDER BY updated_at DESC`;
+    let query = `SELECT slug, title, description, cover_image, tags, created_at, updated_at, ${ratingColumns('Games')} FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} ORDER BY updated_at DESC`;
 
     if (options?.limit) {
       query += ` LIMIT ${options.limit}`;
@@ -119,6 +135,7 @@ export async function getPublishedGames(options?: { limit?: number; offset?: num
     return results.map((row: GameRow) => ({
       ...row,
       tags: safeParseTags(row.tags),
+      ...pickRating(row),
     }));
   } catch (e) {
     console.error('Failed to fetch from D1:', e);
@@ -140,7 +157,7 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
       return pickFeatured(await fetchLiveGamesSnapshot(), pinnedSlugs, limit);
     }
 
-    const columns = 'slug, title, description, cover_image, tags, created_at, updated_at';
+    const columns = `slug, title, description, cover_image, tags, created_at, updated_at, ${ratingColumns('Games')}`;
     let pinned: GameRow[] = [];
     if (pinnedSlugs.length > 0) {
       const placeholders = pinnedSlugs.map(() => '?').join(', ');
@@ -172,6 +189,7 @@ export async function getFeaturedGames(options: { pinnedSlugs: string[]; limit: 
     return merged.map((row) => ({
       ...row,
       tags: safeParseTags(row.tags),
+      ...pickRating(row),
     }));
   } catch (e) {
     console.error('Failed to fetch featured games:', e);
@@ -226,7 +244,7 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
 
     // 获取所有已发布且可玩的游戏（除当前游戏外），然后在内存中按标签匹配排序
     const { results } = (await DB.prepare(
-      `SELECT slug, title, description, cover_image, tags, created_at, updated_at
+      `SELECT slug, title, description, cover_image, tags, created_at, updated_at, ${ratingColumns('Games')}
        FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} AND slug != ?
        ORDER BY updated_at DESC`,
     )
@@ -249,7 +267,7 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
       .filter((g) => g.matchCount > 0)
       .sort((a, b) => b.matchCount - a.matchCount)
       .slice(0, limit)
-      .map(({ matchCount: _, ...rest }) => rest);
+      .map(({ matchCount: _, ...rest }) => ({ ...rest, ...pickRating(rest) }));
   } catch (e) {
     console.error('Failed to get related games:', e);
     return getRelatedGamesFromLive(currentSlug, tags, limit);
@@ -276,6 +294,10 @@ export type GameDetail = PlayableGame & {
   authorName?: string;
   authorImage?: string;
   updatedAt?: string;
+  /** 公开评分均分（无评分/旧库时为 undefined） */
+  avgRating?: number;
+  /** 计入均分的评分条数 */
+  ratingCount?: number;
 };
 
 /**
@@ -377,12 +399,28 @@ WHERE g.id = ?`,
     const timestamp = Number(gameRecord.updated_at);
     const updatedAt =
       timestamp > 0 ? new Date(timestamp < 1e12 ? timestamp * 1000 : timestamp).toISOString() : undefined;
+    // 评分聚合独立查询：GameRatings 表不存在的旧库上失败也不影响详情主体
+    let avgRating: number | undefined;
+    let ratingCount = 0;
+    try {
+      const agg = await DB.prepare(
+        `SELECT AVG(rating) AS avg_rating, COUNT(*) AS rating_count FROM GameRatings WHERE hidden = 0 AND game_id = ?`,
+      )
+        .bind(gameRecord.id)
+        .first<{ avg_rating: number | null; rating_count: number }>();
+      if (typeof agg?.avg_rating === 'number') avgRating = agg.avg_rating;
+      if (typeof agg?.rating_count === 'number') ratingCount = agg.rating_count;
+    } catch {
+      // 旧库无表时静默降级为无评分
+    }
     return {
       ...toPlayableGame(result.data),
       id: gameRecord.id,
       authorName: gameRecord.author_name ?? undefined,
       authorImage: gameRecord.author_image ?? undefined,
       updatedAt,
+      avgRating,
+      ratingCount,
     };
   } catch (e) {
     // 查询失败：构建期抓线上快照保构建通过；运行时向上抛走 500，不误缓存 404
@@ -431,7 +469,7 @@ export async function getGamesByTag(
       const total = countResult?.count ?? 0;
 
       // 分页查询
-      let query = `SELECT g.slug, g.title, g.description, g.cover_image, g.tags, g.created_at, g.updated_at
+      let query = `SELECT g.slug, g.title, g.description, g.cover_image, g.tags, g.created_at, g.updated_at, ${ratingColumns('g')}
                    FROM Games g
                    INNER JOIN GameTags gt ON g.id = gt.game_id
                    WHERE g.published = 1 AND g.shadow_banned = 0 AND ${playableContentExists('g')} AND gt.tag = ?
@@ -450,6 +488,7 @@ export async function getGamesByTag(
         games: results.map((row) => ({
           ...row,
           tags: safeParseTags(row.tags),
+          ...pickRating(row),
         })),
         total,
       };
@@ -460,7 +499,7 @@ export async function getGamesByTag(
 
     // 降级：获取所有已发布且可玩的游戏，然后在内存中筛选
     const { results } = (await DB.prepare(
-      `SELECT slug, title, description, cover_image, tags, created_at, updated_at
+      `SELECT slug, title, description, cover_image, tags, created_at, updated_at, ${ratingColumns('Games')}
        FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')}
        ORDER BY updated_at DESC`,
     ).all()) as { results: GameRow[] };
@@ -482,6 +521,7 @@ export async function getGamesByTag(
       games: paginatedGames.map((row) => ({
         ...row,
         tags: safeParseTags(row.tags),
+        ...pickRating(row),
       })),
       total,
     };
