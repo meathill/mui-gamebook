@@ -262,6 +262,18 @@
         "title": "游戏创作",
         "description": "5 步全流程：世界观 → 角色 → 主线 → 分支 → 试玩后再补媒体。"
       },
+      "upgrade": {
+        "title": "剧本管理与升级",
+        "description": "诊断旧作短板，用最新大模型扩写剧情、深造分支，安全 dryRun 翻新。"
+      },
+      "minigame": {
+        "title": "小游戏创作",
+        "description": "打造解谜、QTE与轻对战，通过变量回传深度驱动后续剧情分支。"
+      },
+      "validate": {
+        "title": "剧本逻辑校验",
+        "description": "排查缺失入口、死局卡关、悬空跳转与变量语法报错，安全干跑修复。"
+      },
       "cta": "看看 skill"
     }
   },
@@ -621,6 +633,15 @@
     "createCardTitle": "游戏创作",
     "createCardDesc": "5 个子 skill 带 Agent 走完高质量创作全流程：世界观 → 角色 → 主线 → 分支 → 试玩后再补媒体。",
     "createCardMeta": "5 个子 skill · 简单命令",
+    "upgradeCardTitle": "剧本管理与升级",
+    "upgradeCardDesc": "用最新大模型诊断已有剧本短板，扩写剧情深度，新增多结局分支与变量机制，安全重构翻新。",
+    "upgradeCardMeta": "5 步升级法 · 安全 dryRun",
+    "minigameCardTitle": "小游戏创作",
+    "minigameCardDesc": "为剧情节点打造沉浸式互动小游戏：解谜、QTE、轻对战、密码锁，打通变量回传与主线分支。",
+    "minigameCardMeta": "5 步闭环 · 宿主引擎联动",
+    "validateCardTitle": "剧本逻辑校验与死局排查",
+    "validateCardDesc": "全面体检剧本拓扑与逻辑：排查缺失入口、悬空跳转、死局卡关、未声明变量与语法报错，安全干跑修复。",
+    "validateCardMeta": "全链路体检 · 预防卡关",
     "comingTitle": "更多 skill 筹备中",
     "comingDesc": "使用与创作相关的 skill 会逐步上架到这里。",
     "openSkill": "打开 skill",
@@ -654,6 +675,24 @@
     "doneLabel": "完成标准",
     "downloadPack": "下载全流程 SKILL.md",
     "downloadStep": "下载本步 SKILL.md",
-    "orderNote": "按顺序执行，不要跳步；每步做完按完成标准验收，通过后再继续。"
+    "orderNote": "按顺序执行，不要跳步；每步做完按完成标准验收，通过后再继续。",
+    "upgradePageTitle": "剧本管理与升级 Skill - 用新模型翻新已有游戏",
+    "upgradePageDescription": "用最新大模型升级已有游戏剧本：诊断旧剧本短板、保留已有视觉素材、新模型扩写重构、语法与死局校验、平滑落库。",
+    "upgradeHeroTitle": "剧本管理与升级",
+    "upgradeHeroSubtitle": "旧作焕新：体检诊断 → 对齐策略 → 新模型扩写 → dryRun 校验 → 增补媒体。保护已有资产，不让线上作品失效。",
+    "upgradeOrderNote": "升级前建议先阅读现有剧本并做 dryRun 校验；若原剧本已发布，务必确保 published 状态保持一致。",
+    "downloadUpgradePack": "下载升级指南 SKILL.md",
+    "minigamePageTitle": "小游戏创作 Skill - 为互动小说打造嵌入式小游戏",
+    "minigamePageDescription": "为互动小说剧情节点制作高沉浸感小游戏：设计玩法契约、编写标准 ES 模块代码、uploadAsset 部署、DSL 场景挂接。",
+    "minigameHeroTitle": "小游戏创作",
+    "minigameHeroSubtitle": "突破纯文本选择：把剧情高潮做成可玩小游戏，通过变量回传深度影响主线走向与结局。",
+    "minigameOrderNote": "小游戏代码必须包含 init, onComplete, destroy 接口；必须提供跳过/兜底按钮，防止玩家卡关。",
+    "downloadMinigamePack": "下载小游戏指南 SKILL.md",
+    "validatePageTitle": "剧本逻辑校验与死局排查 Skill - 排查卡关与语法错误",
+    "validatePageDescription": "为互动小说进行全链路质量排查：缺失入口、悬空引用、死局卡关、未声明变量与角色一致性，给出修复建议与安全 dryRun 闭环。",
+    "validateHeroTitle": "剧本逻辑校验与死局排查",
+    "validateHeroSubtitle": "全方位体检：拓扑图扫描 → 选项死局检查 → 语法与变量审计 → 诊断报告与一键干跑修复，杜绝上线后翻车。",
+    "validateOrderNote": "校验时建议先通读诊断报告，优先处理阻断性错误（悬空场景、死局）；任何修复需先经 dryRun 验证无误后再写库。",
+    "downloadValidatePack": "下载逻辑校验 SKILL.md"
   }
 }
