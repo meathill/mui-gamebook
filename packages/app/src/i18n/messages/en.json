@@ -326,6 +326,7 @@
     "ratingCount": "{count} ratings",
     "noRatings": "No ratings yet — be the first",
     "rateSuccess": "Rating saved, thanks!",
+    "reviewRestored": "Your pre-login review was submitted automatically, thanks!",
     "writeReview": "Write a review",
     "reviewPlaceholder": "Share your thoughts (optional, max 500 chars)",
     "submitReview": "Submit review",
