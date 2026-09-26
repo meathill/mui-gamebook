@@ -2,6 +2,22 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import type { PlayableGame, PlayableScene, PlayableSceneNode } from '@mui-gamebook/parser/src/types';
+import cloudflareImageLoader from '../../../image-loader';
+
+/** 预加载档位：与 next.config deviceSizes 中档对齐，命中率最高 */
+export const PRELOAD_WIDTH = 1280;
+
+/**
+ * 拼出与实际显示同源的变换 URL（dev 下 loader 回退原图，保持一致）。
+ * 显示层走 /cdn-cgi/image，预加载必须预同一个 URL，否则浏览器缓存 key 不同等于白预。
+ */
+export function buildPreloadUrl(url: string): string {
+  try {
+    return cloudflareImageLoader({ src: url, width: PRELOAD_WIDTH });
+  } catch {
+    return url;
+  }
+}
 
 /**
  * 从场景节点中提取所有媒体 URL
@@ -30,13 +46,16 @@ export function extractMediaUrls(nodes: PlayableSceneNode[]): string[] {
 }
 
 /**
- * 获取场景中所有可能的下一个场景 ID
+ * 获取场景中所有可能的下一个场景 ID（选项 + 块级重定向，终局分流也覆盖）
  */
 export function getNextSceneIds(scene: PlayableScene): string[] {
   const ids: string[] = [];
 
   for (const node of scene.nodes) {
     if (node.type === 'choice' && node.nextSceneId) {
+      ids.push(node.nextSceneId);
+    }
+    if (node.type === 'redirect' && node.nextSceneId) {
       ids.push(node.nextSceneId);
     }
   }
@@ -77,14 +96,14 @@ export function collectPreloadUrls(
 }
 
 /**
- * 预加载图片
+ * 预加载图片（显示层同源 URL，暖 CF 变换缓存）
  */
 function preloadImage(url: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => resolve();
     img.onerror = () => reject(new Error(`Failed to preload image: ${url}`));
-    img.src = url;
+    img.src = buildPreloadUrl(url);
   });
 }
 

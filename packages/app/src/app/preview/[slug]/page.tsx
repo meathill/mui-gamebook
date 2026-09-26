@@ -82,7 +82,18 @@ export default async function PreviewPage({ params }: Props) {
         <GamePlayerImmersive
           game={game}
           slug={slug}
+          authorName={game.authorName}
+          updatedAt={game.updatedAt}
         />
+      ) : game.title_layout === 'fullscreen' ? (
+        <div className="flex flex-col grow">
+          <GamePlayer
+            game={game}
+            slug={slug}
+            authorName={game.authorName}
+            updatedAt={game.updatedAt}
+          />
+        </div>
       ) : (
         <main className="min-h-screen bg-neutral-100 sm:py-12">
           <div className="max-w-3xl mx-auto px-4 sm:px-0">

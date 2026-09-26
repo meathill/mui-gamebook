@@ -28,6 +28,12 @@
   },
   "footer": {
     "copyright": "© {year} 姆伊游戏书. 保留所有权利.",
+    "tagline": "在线互动小说，人人能读、人人能写。",
+    "groups": {
+      "read": "读故事",
+      "create": "开始创作",
+      "support": "支持"
+    },
     "privacy": "隐私政策",
     "terms": "服务条款",
     "contact": "联系我们",
@@ -291,6 +297,7 @@
   },
   "game": {
     "loading": "加载中...",
+    "comments": "评论",
     "startAdventure": "开始冒险",
     "continueAdventure": "继续冒险",
     "restartFromStart": "重新开始",

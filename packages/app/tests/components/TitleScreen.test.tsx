@@ -157,4 +157,63 @@ describe('TitleScreen', () => {
 
     expect(screen.getByText('Back to Library').closest('a')).toHaveAttribute('href', '/');
   });
+
+  it('title_layout=fullscreen 时渲染全屏毛玻璃版式（传统白卡标记缺席）', () => {
+    const { container } = renderWithProviders(
+      <TitleScreen
+        game={{ ...baseGame, title_layout: 'fullscreen', tags: ['悬疑'] }}
+        hasSave={false}
+        onStart={vi.fn()}
+        onRestart={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: '迷失之城' })).toBeInTheDocument();
+    expect(screen.getByText('悬疑')).toBeInTheDocument();
+    expect(screen.getByText('Start Adventure')).toBeInTheDocument();
+    // 毛玻璃卡：白字 + backdrop-blur + 白色半透明边框
+    expect(container.querySelector('.backdrop-blur-xl')).toBeInTheDocument();
+  });
+
+  it('传入 authorName/updatedAt 时渲染作者行（全屏与传统版皆可）', () => {
+    const { rerender } = renderWithProviders(
+      <TitleScreen
+        game={{ ...baseGame, title_layout: 'fullscreen' }}
+        hasSave={false}
+        onStart={vi.fn()}
+        onRestart={vi.fn()}
+        authorName="作者甲"
+        updatedAt="2026-09-01T00:00:00.000Z"
+      />,
+    );
+    expect(screen.getByText(/作者甲/)).toBeInTheDocument();
+
+    rerender(
+      <NextIntlClientProvider
+        messages={messages}
+        locale="en">
+        <TitleScreen
+          game={baseGame}
+          hasSave={false}
+          onStart={vi.fn()}
+          onRestart={vi.fn()}
+          authorName="作者甲"
+        />
+      </NextIntlClientProvider>,
+    );
+    expect(screen.getByText(/作者甲/)).toBeInTheDocument();
+  });
+
+  it('不传作者信息时不渲染作者行（经典播放页已有，不重复）', () => {
+    renderWithProviders(
+      <TitleScreen
+        game={baseGame}
+        hasSave={false}
+        onStart={vi.fn()}
+        onRestart={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByText(/作者/)).not.toBeInTheDocument();
+  });
 });

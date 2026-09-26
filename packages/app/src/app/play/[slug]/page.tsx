@@ -152,8 +152,9 @@ export default async function PlayPage({ params }: Props) {
   const { breadcrumbLd, gameLd } = buildGameJsonLd(game, slug);
 
   if (game.display_mode === 'immersive') {
+    const isFullscreenTitle = game.title_layout === 'fullscreen';
     return (
-      <>
+      <div className={isFullscreenTitle ? 'flex flex-col grow' : 'min-h-screen bg-neutral-100 sm:py-12'}>
         <JsonLd data={breadcrumbLd} />
         <JsonLd data={gameLd} />
         <PlayWebMcpTools
@@ -161,93 +162,154 @@ export default async function PlayPage({ params }: Props) {
           title={game.title}
           sceneIds={Object.keys(game.scenes)}
         />
+        {/* 全屏标题自带封面，此时面包屑会悬在白条上，改由卡内作者行 + JSON-LD 承担 SEO */}
+        {!isFullscreenTitle && (
+          <nav
+            aria-label="面包屑"
+            className="play-extras max-w-3xl mx-auto w-full px-4 sm:px-0 py-3 sm:pt-0 text-sm text-gray-500">
+            <ol className="flex items-center gap-1.5 flex-wrap">
+              <li>
+                <Link
+                  href="/"
+                  className="hover:text-gray-900 transition-colors">
+                  首页
+                </Link>
+              </li>
+              <li aria-hidden="true">›</li>
+              <li>
+                <Link
+                  href="/games"
+                  className="hover:text-gray-900 transition-colors">
+                  互动小说
+                </Link>
+              </li>
+              <li aria-hidden="true">›</li>
+              <li
+                className="text-gray-900 truncate max-w-[16rem]"
+                aria-current="page">
+                《{game.title}》
+              </li>
+            </ol>
+          </nav>
+        )}
         <GamePlayerImmersive
           game={game}
           slug={slug}
+          authorName={game.authorName}
+          updatedAt={game.updatedAt}
         />
-      </>
+
+        {/* 相关游戏推荐：只在标题态展示，进游戏后折叠（见 globals.css .play-extras） */}
+        {game.tags && game.tags.length > 0 && (
+          <div className="play-extras max-w-5xl mx-auto px-4 sm:px-0 w-full">
+            <RelatedGames
+              currentSlug={slug}
+              tags={game.tags}
+            />
+          </div>
+        )}
+      </div>
     );
   }
 
+  const isFullscreenTitle = game.title_layout === 'fullscreen';
+
   return (
-    <main className="min-h-screen bg-neutral-100 sm:py-12">
+    <main className={isFullscreenTitle ? 'flex flex-col grow' : 'min-h-screen bg-neutral-100 sm:py-12'}>
       <JsonLd data={breadcrumbLd} />
       <JsonLd data={gameLd} />
 
-      <div className="max-w-3xl mx-auto">
-        <PlayWebMcpTools
-          slug={slug}
-          title={game.title}
-          sceneIds={Object.keys(game.scenes)}
-        />
-        {/* 面包屑：关键词锚文本链回首页与作品库 */}
-        <nav
-          aria-label="面包屑"
-          className="px-4 sm:px-0 py-3 sm:pt-0 text-sm text-gray-500">
-          <ol className="flex items-center gap-1.5 flex-wrap">
-            <li>
-              <Link
-                href="/"
-                className="hover:text-gray-900 transition-colors">
-                首页
-              </Link>
-            </li>
-            <li aria-hidden="true">›</li>
-            <li>
-              <Link
-                href="/games"
-                className="hover:text-gray-900 transition-colors">
-                互动小说
-              </Link>
-            </li>
-            <li aria-hidden="true">›</li>
-            <li
-              className="text-gray-900 truncate max-w-[16rem]"
-              aria-current="page">
-              《{game.title}》
-            </li>
-          </ol>
-        </nav>
-
-        {/* 作品元信息：作者、更新时间、玩法入口（issue #14） */}
-        {(game.authorName || game.updatedAt) && (
-          <div className="px-4 sm:px-0 pb-4 flex items-center gap-4 flex-wrap text-sm text-gray-500">
-            {game.authorName && (
-              <span className="flex items-center gap-1.5">
-                <UserIcon
-                  size={15}
-                  className="text-gray-400"
-                />
-                {t('byAuthor', { name: game.authorName })}
-              </span>
-            )}
-            {game.updatedAt && (
-              <span className="flex items-center gap-1.5">
-                <ClockIcon
-                  size={15}
-                  className="text-gray-400"
-                />
-                {t('updatedAt', { date: formatLongDate(game.updatedAt) })}
-              </span>
-            )}
-            <Link
-              href="/how-to-play"
-              className="flex items-center gap-1.5 text-orange-600 hover:text-orange-700 font-medium transition-colors ms-auto">
-              <QuestionIcon
-                size={15}
-                weight="fill"
-              />
-              {t('howToPlay')}
-            </Link>
-          </div>
-        )}
-        <div className="bg-white sm:shadow-xl sm:rounded-2xl overflow-hidden">
+      {isFullscreenTitle ? (
+        <>
+          <PlayWebMcpTools
+            slug={slug}
+            title={game.title}
+            sceneIds={Object.keys(game.scenes)}
+          />
+          {/* 标题态全屏直出（GamePlayer 内 TitleScreen 自带版式），游玩态自带白卡 */}
           <GamePlayer
             game={game}
             slug={slug}
+            authorName={game.authorName}
+            updatedAt={game.updatedAt}
           />
+        </>
+      ) : (
+        <div className="max-w-3xl mx-auto">
+          <PlayWebMcpTools
+            slug={slug}
+            title={game.title}
+            sceneIds={Object.keys(game.scenes)}
+          />
+          {/* 面包屑：关键词锚文本链回首页与作品库 */}
+          <nav
+            aria-label="面包屑"
+            className="px-4 sm:px-0 py-3 sm:pt-0 text-sm text-gray-500">
+            <ol className="flex items-center gap-1.5 flex-wrap">
+              <li>
+                <Link
+                  href="/"
+                  className="hover:text-gray-900 transition-colors">
+                  首页
+                </Link>
+              </li>
+              <li aria-hidden="true">›</li>
+              <li>
+                <Link
+                  href="/games"
+                  className="hover:text-gray-900 transition-colors">
+                  互动小说
+                </Link>
+              </li>
+              <li aria-hidden="true">›</li>
+              <li
+                className="text-gray-900 truncate max-w-[16rem]"
+                aria-current="page">
+                《{game.title}》
+              </li>
+            </ol>
+          </nav>
+
+          {/* 作品元信息：作者、更新时间、玩法入口（issue #14） */}
+          {(game.authorName || game.updatedAt) && (
+            <div className="px-4 sm:px-0 pb-4 flex items-center gap-4 flex-wrap text-sm text-gray-500">
+              {game.authorName && (
+                <span className="flex items-center gap-1.5">
+                  <UserIcon
+                    size={15}
+                    className="text-gray-400"
+                  />
+                  {t('byAuthor', { name: game.authorName })}
+                </span>
+              )}
+              {game.updatedAt && (
+                <span className="flex items-center gap-1.5">
+                  <ClockIcon
+                    size={15}
+                    className="text-gray-400"
+                  />
+                  {t('updatedAt', { date: formatLongDate(game.updatedAt) })}
+                </span>
+              )}
+              <Link
+                href="/how-to-play"
+                className="flex items-center gap-1.5 text-orange-600 hover:text-orange-700 font-medium transition-colors ms-auto">
+                <QuestionIcon
+                  size={15}
+                  weight="fill"
+                />
+                {t('howToPlay')}
+              </Link>
+            </div>
+          )}
+          <div className="bg-white sm:shadow-xl sm:rounded-2xl overflow-hidden">
+            <GamePlayer
+              game={game}
+              slug={slug}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 评论系统 */}
       <div className="max-w-5xl mx-auto px-4 sm:px-0">

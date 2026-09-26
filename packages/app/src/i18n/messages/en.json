@@ -28,6 +28,12 @@
   },
   "footer": {
     "copyright": "© {year} MuiStory. All rights reserved.",
+    "tagline": "Interactive fiction everyone can read and write.",
+    "groups": {
+      "read": "Read",
+      "create": "Create",
+      "support": "Support"
+    },
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
     "contact": "Contact Us",
@@ -291,6 +297,7 @@
   },
   "game": {
     "loading": "Loading...",
+    "comments": "Comments",
     "startAdventure": "Start Adventure",
     "continueAdventure": "Continue",
     "restartFromStart": "Start Over",

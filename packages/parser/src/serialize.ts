@@ -32,6 +32,7 @@ function buildFrontMatter(game: Game): Record<string, unknown> {
   if (game.tags && game.tags.length > 0) frontMatter.tags = game.tags;
   if (game.published) frontMatter.published = true;
   if (game.display_mode) frontMatter.display_mode = game.display_mode;
+  if (game.title_layout) frontMatter.title_layout = game.title_layout;
   if (game.text_box_position) frontMatter.text_box_position = game.text_box_position;
   if (game.typewriter_speed) frontMatter.typewriter_speed = game.typewriter_speed;
   if (game.site_template) frontMatter.site_template = game.site_template;

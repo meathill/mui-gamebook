@@ -24,6 +24,7 @@ cover_image: https://i.muistory.com/images/-7180/cover-1790087585812.png
 cover_prompt: Ming dynasty mansion romantic reverse harem key art, painterly
 published: false
 display_mode: immersive
+title_layout: fullscreen
 text_box_position: bottom
 typewriter_speed: 35
 state:

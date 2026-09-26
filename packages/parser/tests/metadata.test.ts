@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../src';
+import { stringify } from '../src/serialize';
+import { toPlayableGame } from '../src/utils';
 import { Game } from '../src/types';
 
 describe('metadata parser', () => {
@@ -172,6 +174,40 @@ cover_aspect_ratio: "3:2"
       expect(result.data.cover_image).toBe('https://example.com/cover.png');
       expect(result.data.cover_prompt).toBe('一个幻想风格的城堡');
       expect(result.data.cover_aspect_ratio).toBe('3:2');
+    }
+  });
+
+  it('should parse title_layout and keep it through stringify roundtrip', () => {
+    const source = `---
+title: "全屏标题游戏"
+title_layout: fullscreen
+---
+# start
+游戏开始。
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.title_layout).toBe('fullscreen');
+    expect(toPlayableGame(result.data).title_layout).toBe('fullscreen');
+    const reparsed = parse(stringify(result.data));
+    expect(reparsed.success).toBe(true);
+    if (reparsed.success) {
+      expect(reparsed.data.title_layout).toBe('fullscreen');
+    }
+  });
+
+  it('title_layout 缺省时为 undefined（调用方按 classic 渲染）', () => {
+    const source = `---
+title: "传统标题游戏"
+---
+# start
+游戏开始。
+`;
+    const result = parse(source);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.title_layout).toBeUndefined();
     }
   });
 });

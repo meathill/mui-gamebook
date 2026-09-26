@@ -22,9 +22,11 @@ const nextConfig: NextConfig = {
   images: {
     loader: 'custom',
     loaderFile: './image-loader.ts',
-    // 上限 1920：漏写 sizes 时最大也只到 1920，不会再出现 width=3840（Ahrefs 超大图治理）
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [128, 256, 384, 512, 640],
+    // 严格 3 档：768（手机/卡片）、1280（笔记本/预加载）、1920（桌面全屏封顶，
+    // Ahrefs width=3840 超大图治理）。全站 next/image 都有 sizes，imageSizes 置空，
+    // 档位越少 CF 变换缓存命中率越高
+    deviceSizes: [768, 1280, 1920],
+    imageSizes: [],
     remotePatterns: [
       {
         protocol: 'https',

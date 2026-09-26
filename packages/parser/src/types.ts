@@ -152,6 +152,13 @@ export interface Scene {
 export type DisplayMode = 'classic' | 'immersive';
 
 /**
+ * 标题页版式
+ * - classic: 传统（封面条 + 白底内容卡）
+ * - fullscreen: 全屏（封面全屏底 + 居中毛玻璃卡）
+ */
+export type TitleLayout = 'classic' | 'fullscreen';
+
+/**
  * 沉浸模式下文字框位置
  */
 export type TextBoxPosition = 'bottom' | 'center' | 'top';
@@ -186,6 +193,7 @@ export interface Game {
 
   // 播放模式
   display_mode?: DisplayMode;
+  title_layout?: TitleLayout;
   text_box_position?: TextBoxPosition;
   typewriter_speed?: number; // 毫秒/字，默认 40
 
@@ -259,6 +267,7 @@ export interface PlayableGame {
   cover_image?: string;
   tags?: string[];
   display_mode?: DisplayMode;
+  title_layout?: TitleLayout;
   text_box_position?: TextBoxPosition;
   typewriter_speed?: number;
   site_template?: SiteTemplate;
