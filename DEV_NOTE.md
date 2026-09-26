@@ -857,3 +857,12 @@ isValidVoiceId(voiceId: string, provider): boolean
   只计字不预览），思考原文收进 `<details>` 折叠，Mimo/Opencode 有真 reasoning 才展开有内容，
   其他三家只显示阶段——全 provider 体验一致。另补了取消按钮（AbortController，取消不弹错）与
   追问轮次显示。不做轮询/D1 job、不持久化思考。
+
+## better-auth API Key 默认限流把 MCP 打挂（2026-09）
+
+- **现象**：`mgb_` Key 连续 `tools/call` 约 10 次后全部 `40101`，`initialize`/`tools/list` 仍 200；换新 Key 再来一轮又挂。
+- **根因**：`@better-auth/api-key` 默认 `rateLimit.maxRequests = 10`、`timeWindow = 24h`。超限抛 `RATE_LIMITED`，`resolveMcpAuth` 旧实现 `.catch(() => null)` 吞成 401。
+- **修复**：
+  - `auth-config.ts` 显式配置 `rateLimit: { timeWindow: 60_000, maxRequests: 120 }`（**写入创建时的 key 行**，老 key 仍 10/天，要重建）
+  - `resolveMcpAuth` 返回 `{ auth, error }`，限流映射 `429 + 40129`，不再伪装成未授权
+- **排查口诀**：MCP 上传/写库“莫名 401”先看是不是整把 key 全挂；`tools/list` 通而 `tools/call` 死 → 查 apikey 表 `rateLimitMax`/`requestCount`。

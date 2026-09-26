@@ -50,31 +50,48 @@ describe('resolveMcpAuth', () => {
   it('有效 API Key 映射到对应用户 session 形态', async () => {
     verifyApiKey.mockResolvedValue({ valid: true, key: { referenceId: 'u-1' } });
     mockDb.get.mockResolvedValue({ id: 'u-1', email: 'me@x.com' });
-    const auth = await resolveMcpAuth(makeReq('Bearer mgb_live_xxx'));
-    expect(auth).toEqual({
-      mode: 'session',
-      session: { user: { id: 'u-1', email: 'me@x.com' } },
+    const resolved = await resolveMcpAuth(makeReq('Bearer mgb_live_xxx'));
+    expect(resolved).toEqual({
+      auth: {
+        mode: 'session',
+        session: { user: { id: 'u-1', email: 'me@x.com' } },
+      },
+      error: null,
     });
   });
 
-  it('无效 Key 且非 ADMIN_PASSWORD 返回 null', async () => {
-    const auth = await resolveMcpAuth(makeReq('Bearer not-a-key'));
-    expect(auth).toBeNull();
+  it('无效 Key 且非 ADMIN_PASSWORD 返回 unauthorized', async () => {
+    const resolved = await resolveMcpAuth(makeReq('Bearer not-a-key'));
+    expect(resolved).toEqual({ auth: null, error: 'unauthorized' });
   });
 
   it('遗留 ADMIN_PASSWORD 仍可用，标记 admin', async () => {
-    const auth = await resolveMcpAuth(makeReq('Bearer admin-secret'));
-    expect(auth).toEqual({ mode: 'admin' });
+    const resolved = await resolveMcpAuth(makeReq('Bearer admin-secret'));
+    expect(resolved).toEqual({ auth: { mode: 'admin' }, error: null });
   });
 
   it('无 Bearer 时回退 cookie session', async () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: { id: 'u-2', email: 'cookie@x.com' },
     });
-    const auth = await resolveMcpAuth(makeReq());
-    expect(auth).toEqual({
-      mode: 'session',
-      session: { user: { id: 'u-2', email: 'cookie@x.com' } },
+    const resolved = await resolveMcpAuth(makeReq());
+    expect(resolved).toEqual({
+      auth: {
+        mode: 'session',
+        session: { user: { id: 'u-2', email: 'cookie@x.com' } },
+      },
+      error: null,
     });
+  });
+
+  it('API Key 限流时返回 rate-limited 而非 unauthorized', async () => {
+    verifyApiKey.mockRejectedValue(
+      Object.assign(new Error('rate limited'), {
+        status: 429,
+        body: { code: 'RATE_LIMITED' },
+      }),
+    );
+    const resolved = await resolveMcpAuth(makeReq('Bearer mgb_live_xxx'));
+    expect(resolved).toEqual({ auth: null, error: 'rate-limited' });
   });
 });
