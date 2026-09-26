@@ -3,9 +3,12 @@ import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import {
   ArrowRightIcon,
+  ArrowsCounterClockwiseIcon,
   DownloadSimpleIcon,
   PlugsConnectedIcon,
   GameControllerIcon,
+  PuzzlePieceIcon,
+  ShieldCheckIcon,
 } from '@phosphor-icons/react/dist/ssr';
 import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import JsonLd from '@/components/JsonLd';
@@ -50,6 +53,30 @@ export default async function SkillsPage() {
       title: t('createCardTitle'),
       desc: t('createCardDesc'),
       meta: t('createCardMeta'),
+    },
+    {
+      href: '/skills/upgrade-game',
+      download: '/api/skills/upgrade-game/skill-md',
+      icon: ArrowsCounterClockwiseIcon,
+      title: t('upgradeCardTitle'),
+      desc: t('upgradeCardDesc'),
+      meta: t('upgradeCardMeta'),
+    },
+    {
+      href: '/skills/create-minigame',
+      download: '/api/skills/create-minigame/skill-md',
+      icon: PuzzlePieceIcon,
+      title: t('minigameCardTitle'),
+      desc: t('minigameCardDesc'),
+      meta: t('minigameCardMeta'),
+    },
+    {
+      href: '/skills/validate-game',
+      download: '/api/skills/validate-game/skill-md',
+      icon: ShieldCheckIcon,
+      title: t('validateCardTitle'),
+      desc: t('validateCardDesc'),
+      meta: t('validateCardMeta'),
     },
   ];
 

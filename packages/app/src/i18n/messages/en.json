@@ -262,6 +262,18 @@
         "title": "Game creation",
         "description": "Full 5-step flow: worldview → characters → plot → branches → media after playtesting."
       },
+      "upgrade": {
+        "title": "Manage & Upgrade",
+        "description": "Diagnose old drafts, rewrite with next-gen models, and expand branches with safe dryRun."
+      },
+      "minigame": {
+        "title": "Mini-game Creation",
+        "description": "Build puzzles and QTEs that feed variables back into your narrative branches."
+      },
+      "validate": {
+        "title": "Script Validation",
+        "description": "Detect missing entrypoints, dead-end lockouts, dangling links, and syntax bugs."
+      },
       "cta": "View skills"
     }
   },
@@ -621,6 +633,15 @@
     "createCardTitle": "Game creation",
     "createCardDesc": "5 sub-skills walk your agent through the full high-quality flow: worldview → characters → plot → branches → media after playtesting.",
     "createCardMeta": "5 sub-skills · simple commands",
+    "upgradeCardTitle": "Manage & Upgrade",
+    "upgradeCardDesc": "Diagnose weak spots in existing games and upgrade them with next-gen AI models: deeper plot, branching endings, and variables.",
+    "upgradeCardMeta": "5-step upgrade · Safe dryRun",
+    "minigameCardTitle": "Mini-game Creation",
+    "minigameCardDesc": "Craft interactive mini-games for scene climaxes: puzzles, QTEs, light battles, and keypad locks with branching variable hooks.",
+    "minigameCardMeta": "5-step loop · Host engine hooks",
+    "validateCardTitle": "Script Validation & QA",
+    "validateCardDesc": "Thoroughly audit game topology and logic: detect missing start scenes, dangling targets, dead ends, undeclared variables, and syntax bugs.",
+    "validateCardMeta": "Full-chain QA · Dead-end proof",
     "comingTitle": "More skills coming",
     "comingDesc": "Usage and creation skills will land here over time.",
     "openSkill": "Open skill",
@@ -654,6 +675,24 @@
     "doneLabel": "Done when",
     "downloadPack": "Download full SKILL.md",
     "downloadStep": "Download this step's SKILL.md",
-    "orderNote": "Run in order, no skipping; pass each step's done-criteria before moving on."
+    "orderNote": "Run in order, no skipping; pass each step's done-criteria before moving on.",
+    "upgradePageTitle": "Game Upgrade Skill - Modernize Existing Games with New AI Models",
+    "upgradePageDescription": "Upgrade existing interactive stories using next-gen AI: diagnose flaws, preserve assets, expand branches, and validate safely.",
+    "upgradeHeroTitle": "Manage & Upgrade",
+    "upgradeHeroSubtitle": "Bring old stories to life: diagnose → plan → rewrite with new model → dryRun verify → enrich media without breaking published games.",
+    "upgradeOrderNote": "Always run dryRun verification before writing back; preserve published: true to keep live links working.",
+    "downloadUpgradePack": "Download Upgrade SKILL.md",
+    "minigamePageTitle": "Mini-game Creation Skill - Build Embedded Games for Interactive Fiction",
+    "minigamePageDescription": "Create high-immersion mini-games for story climaxes: design mechanics, write standard ES modules, deploy via uploadAsset, and link DSL branches.",
+    "minigameHeroTitle": "Mini-game Creation",
+    "minigameHeroSubtitle": "Beyond text choices: turn climaxes into playable moments with variable feedback driving story branches and endings.",
+    "minigameOrderNote": "Mini-game modules must export init, onComplete, and destroy, and always include a skip/fallback option to prevent player lockouts.",
+    "downloadMinigamePack": "Download Mini-game SKILL.md",
+    "validatePageTitle": "Game Script Validation Skill - Fix Dead Ends & Syntax Bugs",
+    "validatePageDescription": "Full-chain QA for interactive gamebooks: check missing entrypoints, dangling links, dead-end lockouts, undeclared variables, and safe dryRun fixes.",
+    "validateHeroTitle": "Script Validation & QA",
+    "validateHeroSubtitle": "Comprehensive audit: topology scanning → dead-end detection → syntax & variable checks → report and safe dryRun fixes before going live.",
+    "validateOrderNote": "Always review the diagnostic report first, fixing blocking errors like dangling scenes and dead ends before warning items.",
+    "downloadValidatePack": "Download Validation SKILL.md"
   }
 }

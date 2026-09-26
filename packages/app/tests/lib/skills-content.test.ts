@@ -90,8 +90,80 @@ describe('create-game skill', () => {
   });
 });
 
+describe('upgrade-game skill', () => {
+  it('SKILL.md 有 frontmatter 且包含关键流程与核心工具', async () => {
+    const { UPGRADE_GAME_SKILL_MD, UPGRADE_GAME_PROMPT, UPGRADE_GAME_STEPS } = await import(
+      '@/lib/skills/upgrade-game'
+    );
+    expectFrontmatter(UPGRADE_GAME_SKILL_MD, 'mui-gamebook-upgrade-game');
+    expect(UPGRADE_GAME_SKILL_MD).toContain('listGames');
+    expect(UPGRADE_GAME_SKILL_MD).toContain('getDsl');
+    expect(UPGRADE_GAME_SKILL_MD).toContain('setGameDsl');
+    expect(UPGRADE_GAME_SKILL_MD).toContain('dryRun');
+    expect(UPGRADE_GAME_SKILL_MD).toContain('useExisting');
+    expect(UPGRADE_GAME_SKILL_MD).toContain('published');
+
+    expect(UPGRADE_GAME_PROMPT.length).toBeGreaterThan(50);
+    expect(UPGRADE_GAME_STEPS.length).toBeGreaterThanOrEqual(4);
+    for (const step of UPGRADE_GAME_STEPS) {
+      expect(step.slug).toBeTruthy();
+      expect(step.title).toBeTruthy();
+      expect(step.tools.length).toBeGreaterThan(0);
+      expect(step.doneCriteria.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('create-minigame skill', () => {
+  it('SKILL.md 有 frontmatter 且包含小游戏生命周期协议与关键工具', async () => {
+    const { CREATE_MINIGAME_SKILL_MD, CREATE_MINIGAME_PROMPT, CREATE_MINIGAME_STEPS } = await import(
+      '@/lib/skills/create-minigame'
+    );
+    expectFrontmatter(CREATE_MINIGAME_SKILL_MD, 'mui-gamebook-create-minigame');
+    expect(CREATE_MINIGAME_SKILL_MD).toContain('init');
+    expect(CREATE_MINIGAME_SKILL_MD).toContain('onComplete');
+    expect(CREATE_MINIGAME_SKILL_MD).toContain('destroy');
+    expect(CREATE_MINIGAME_SKILL_MD).toContain('minigame:');
+    expect(CREATE_MINIGAME_SKILL_MD).toContain('variables');
+    expect(CREATE_MINIGAME_SKILL_MD).toContain('uploadAsset');
+
+    expect(CREATE_MINIGAME_PROMPT.length).toBeGreaterThan(50);
+    expect(CREATE_MINIGAME_STEPS.length).toBeGreaterThanOrEqual(4);
+    for (const step of CREATE_MINIGAME_STEPS) {
+      expect(step.slug).toBeTruthy();
+      expect(step.title).toBeTruthy();
+      expect(step.tools.length).toBeGreaterThan(0);
+      expect(step.doneCriteria.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('validate-game skill', () => {
+  it('SKILL.md 有 frontmatter 且包含逻辑校验关键维度与核心工具', async () => {
+    const { VALIDATE_GAME_SKILL_MD, VALIDATE_GAME_PROMPT, VALIDATE_GAME_STEPS } = await import(
+      '@/lib/skills/validate-game'
+    );
+    expectFrontmatter(VALIDATE_GAME_SKILL_MD, 'mui-gamebook-validate-game');
+    expect(VALIDATE_GAME_SKILL_MD).toContain('# start');
+    expect(VALIDATE_GAME_SKILL_MD).toContain('getDsl');
+    expect(VALIDATE_GAME_SKILL_MD).toContain('setGameDsl');
+    expect(VALIDATE_GAME_SKILL_MD).toContain('dryRun');
+    expect(VALIDATE_GAME_SKILL_MD).toContain('死局');
+    expect(VALIDATE_GAME_SKILL_MD).toContain('悬空');
+
+    expect(VALIDATE_GAME_PROMPT.length).toBeGreaterThan(50);
+    expect(VALIDATE_GAME_STEPS.length).toBeGreaterThanOrEqual(4);
+    for (const step of VALIDATE_GAME_STEPS) {
+      expect(step.slug).toBeTruthy();
+      expect(step.title).toBeTruthy();
+      expect(step.tools.length).toBeGreaterThan(0);
+      expect(step.doneCriteria.length).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('skills 注册表', () => {
-  it('下载 slug 全覆盖：setup + 全量包 + 5 子 skill', () => {
+  it('下载 slug 全覆盖：setup + 全量包 + 5 子 skill + upgrade-game + create-minigame + validate-game', () => {
     expect(listSkillDownloadSlugs()).toEqual([
       'setup',
       'create-game',
@@ -100,6 +172,9 @@ describe('skills 注册表', () => {
       'create-game-plot',
       'create-game-branches',
       'create-game-media',
+      'upgrade-game',
+      'create-minigame',
+      'validate-game',
     ]);
     for (const slug of listSkillDownloadSlugs()) {
       const d = getSkillDownload(slug);
@@ -119,6 +194,15 @@ describe('skills i18n', () => {
     'heroTitle',
     'setupCardTitle',
     'createCardTitle',
+    'upgradeCardTitle',
+    'upgradeCardDesc',
+    'upgradeCardMeta',
+    'minigameCardTitle',
+    'minigameCardDesc',
+    'minigameCardMeta',
+    'validateCardTitle',
+    'validateCardDesc',
+    'validateCardMeta',
     'comingTitle',
     'openSkill',
     'downloadMd',
@@ -156,6 +240,8 @@ describe('skills i18n', () => {
             subtitle: string;
             setup: { title: string };
             create: { title: string };
+            upgrade: { title: string };
+            minigame: { title: string };
             cta: string;
           };
         };
@@ -164,6 +250,8 @@ describe('skills i18n', () => {
       expect(m.home.skillsSection.title).toBeTruthy();
       expect(m.home.skillsSection.setup.title).toBeTruthy();
       expect(m.home.skillsSection.create.title).toBeTruthy();
+      expect(m.home.skillsSection.upgrade.title).toBeTruthy();
+      expect(m.home.skillsSection.minigame.title).toBeTruthy();
       expect(m.home.skillsSection.cta).toBeTruthy();
     }
   });

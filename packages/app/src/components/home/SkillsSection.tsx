@@ -1,10 +1,20 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { ArrowRightIcon, PlugsConnectedIcon, GameControllerIcon } from '@phosphor-icons/react/dist/ssr';
+import {
+  ArrowRightIcon,
+  ArrowsCounterClockwiseIcon,
+  PlugsConnectedIcon,
+  GameControllerIcon,
+  PuzzlePieceIcon,
+  ShieldCheckIcon,
+} from '@phosphor-icons/react/dist/ssr';
 
 const cards = [
   { key: 'setup', href: '/skills/setup', icon: PlugsConnectedIcon },
   { key: 'create', href: '/skills/create-game', icon: GameControllerIcon },
+  { key: 'upgrade', href: '/skills/upgrade-game', icon: ArrowsCounterClockwiseIcon },
+  { key: 'minigame', href: '/skills/create-minigame', icon: PuzzlePieceIcon },
+  { key: 'validate', href: '/skills/validate-game', icon: ShieldCheckIcon },
 ] as const;
 
 export default async function SkillsSection() {
@@ -18,7 +28,7 @@ export default async function SkillsSection() {
           <p className="mt-3 text-stone-300 max-w-2xl mx-auto">{t('skillsSection.subtitle')}</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {cards.map(({ key, href, icon: Icon }) => (
             <Link
               key={key}
