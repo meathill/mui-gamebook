@@ -38,6 +38,7 @@ const APP_ERROR_FORBIDDEN = 40103;
 const APP_ERROR_GAME_NOT_FOUND = 40104;
 const APP_ERROR_SCRIPT_INVALID = 50001;
 const APP_ERROR_INVALID_ORIGIN = 40301;
+const APP_ERROR_RATE_LIMITED = 40129;
 
 function rpcOk(id: JsonRpcRequest['id'], result: Record<string, unknown>, modern: boolean) {
   return NextResponse.json({
@@ -253,8 +254,13 @@ export async function POST(req: Request) {
     return rpcError(404, id, -32601, `Method not found: ${method ?? ''}`);
   }
 
-  const auth = await resolveMcpAuth(req);
-  if (!auth) return rpcError(401, id, APP_ERROR_UNAUTHORIZED, 'Unauthorized');
+  const resolved = await resolveMcpAuth(req);
+  if (!resolved.auth) {
+    if (resolved.error === 'rate-limited') {
+      return rpcError(429, id, APP_ERROR_RATE_LIMITED, 'API key rate limited');
+    }
+    return rpcError(401, id, APP_ERROR_UNAUTHORIZED, 'Unauthorized');
+  }
 
-  return handleToolsCall(id, params, auth, modern);
+  return handleToolsCall(id, params, resolved.auth, modern);
 }

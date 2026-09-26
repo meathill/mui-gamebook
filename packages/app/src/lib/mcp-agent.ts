@@ -204,7 +204,15 @@ export async function executeMcpAgentTool(
       if (!target) return fail(`ownerId 用户不存在: ${String(args.ownerId)}`);
       ownerId = target.id;
     }
-    const slug = `${slugify(title, { lower: true, strict: true })}-${Date.now().toString().slice(-4)}`;
+    const customSlug = typeof args.slug === 'string' ? args.slug.trim() : '';
+    if (customSlug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(customSlug)) {
+      return fail('slug 仅允许小写字母/数字/连字符');
+    }
+    if (customSlug) {
+      const existing = await db.select().from(schema.games).where(eq(schema.games.slug, customSlug)).get();
+      if (existing) return fail(`slug 已被占用: ${customSlug}`);
+    }
+    const slug = customSlug || `${slugify(title, { lower: true, strict: true })}-${Date.now().toString().slice(-4)}`;
     const content =
       typeof args.content === 'string' && args.content.trim()
         ? args.content
@@ -257,9 +265,21 @@ export async function executeMcpAgentTool(
 
   if (toolName === 'updateGameMeta') {
     const tags = Array.isArray(args.tags) ? (args.tags as string[]) : undefined;
+    let nextSlug = game.slug;
+    if (typeof args.slug === 'string' && args.slug.trim()) {
+      nextSlug = args.slug.trim();
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(nextSlug)) {
+        return fail('slug 仅允许小写字母/数字/连字符');
+      }
+      if (nextSlug !== game.slug) {
+        const existing = await db.select().from(schema.games).where(eq(schema.games.slug, nextSlug)).get();
+        if (existing) return fail(`slug 已被占用: ${nextSlug}`);
+      }
+    }
     await db
       .update(schema.games)
       .set({
+        ...(nextSlug !== game.slug ? { slug: nextSlug } : {}),
         ...(typeof args.title === 'string' ? { title: args.title } : {}),
         ...(typeof args.description === 'string' ? { description: args.description } : {}),
         ...(typeof args.backgroundStory === 'string' ? { backgroundStory: args.backgroundStory } : {}),
@@ -269,13 +289,14 @@ export async function executeMcpAgentTool(
         updatedAt: new Date(),
       })
       .where(eq(schema.games.id, gameId));
-    if (typeof args.published === 'boolean' || tags) {
+    if (typeof args.published === 'boolean' || tags || nextSlug !== game.slug) {
       revalidatePublicCatalog({
-        slug: game.slug,
+        slug: nextSlug,
         tags: tags ?? (game.tags ? (JSON.parse(game.tags) as string[]) : []),
       });
+      if (nextSlug !== game.slug) revalidatePublicCatalog({ slug: game.slug });
     }
-    return ok('元数据已更新', { gameId, slug: game.slug });
+    return ok('元数据已更新', { gameId, slug: nextSlug });
   }
 
   if (toolName === 'setGameDsl') {

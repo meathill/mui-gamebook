@@ -23,37 +23,59 @@ async function resolveApiKeyActor(
   db: DrizzleD1Database<typeof schema>,
   env: CloudflareEnv,
   token: string,
-): Promise<McpAuth | null> {
+): Promise<McpAuthResolution> {
   const auth = createAuth(env);
-  const verified = await auth.api.verifyApiKey({ body: { key: token } });
-  if (!verified.valid || !verified.key?.referenceId) return null;
+  let verified: Awaited<ReturnType<typeof auth.api.verifyApiKey>>;
+  try {
+    verified = await auth.api.verifyApiKey({ body: { key: token } });
+  } catch (e) {
+    const err = e as { status?: number; body?: { code?: string } };
+    if (err?.status === 429 || err?.body?.code === 'RATE_LIMITED') {
+      return { auth: null, error: 'rate-limited' };
+    }
+    return { auth: null, error: 'unauthorized' };
+  }
+  if (!verified.valid || !verified.key?.referenceId) return { auth: null, error: 'unauthorized' };
   const user = await db.select().from(schema.user).where(eq(schema.user.id, verified.key.referenceId)).get();
-  if (!user?.id || !user.email) return null;
+  if (!user?.id || !user.email) return { auth: null, error: 'unauthorized' };
   return {
-    mode: 'session',
-    session: { user: { id: user.id, email: user.email } },
+    auth: {
+      mode: 'session',
+      session: { user: { id: user.id, email: user.email } },
+    },
+    error: null,
   };
 }
 
-export async function resolveMcpAuth(req: Request): Promise<McpAuth | null> {
+export type McpAuthError = 'unauthorized' | 'rate-limited';
+export type McpAuthResolution = { auth: McpAuth | null; error: McpAuthError | null };
+
+export async function resolveMcpAuth(req: Request): Promise<McpAuthResolution> {
   const { env } = getCloudflareContext();
   const token = readBearerToken(req);
 
   if (token) {
-    const viaApiKey = await resolveApiKeyActor(getDb(), env, token).catch(() => null);
-    if (viaApiKey) return viaApiKey;
+    const viaApiKey = await resolveApiKeyActor(getDb(), env, token).catch(() => ({
+      auth: null,
+      error: 'unauthorized' as const,
+    }));
+    if (viaApiKey.auth) return viaApiKey;
+    if (viaApiKey.error === 'rate-limited') return viaApiKey;
     if (isBearerAdmin(req, env as { ADMIN_PASSWORD?: string })) {
-      return { mode: 'admin' };
+      return { auth: { mode: 'admin' }, error: null };
     }
-    return null;
+    return { auth: null, error: 'unauthorized' };
   }
 
   const session = await getSession();
   if (session?.user?.id && session.user.email) {
     return {
-      mode: 'session',
-      session: { user: { id: session.user.id, email: session.user.email } },
+      auth: {
+        mode: 'session',
+        session: { user: { id: session.user.id, email: session.user.email } },
+      },
+      error: null,
     };
   }
-  return null;
+  return { auth: null, error: 'unauthorized' };
 }

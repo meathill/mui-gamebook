@@ -43,6 +43,14 @@ export function createAuth(env: CloudflareEnv) {
         defaultPrefix: 'mgb_',
         requireName: true,
         enableSessionForAPIKeys: true,
+        // 列表页要展示密钥末几位，创建时写入 metadata.tail
+        enableMetadata: true,
+        // better-auth 默认 10 次/24h，MCP/Agent 连续 tools/call 会把整把 key 打挂
+        rateLimit: {
+          enabled: true,
+          timeWindow: 60_000,
+          maxRequests: 120,
+        },
         // MCP / Agent 走标准 Authorization: Bearer；也兼容 x-api-key
         customAPIKeyGetter: (ctx) => {
           const req = ctx.request;
