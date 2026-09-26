@@ -27,8 +27,9 @@ const WORLDVIEW_BODY = `## 目标
 
 1. 追问用户三件事（一次问完）：题材与时代、主角身份与目标、基调（轻松/悬疑/恐怖/治愈）与目标篇幅（场景数 5 / 15 / 30 档）。
 2. 输出世界观文档：时代地点、社会规则、核心冲突、关键势力/地点名词表（要求：名词全局唯一写法，后续场景只许用表里的词）。
-3. \`createGame\` 建游戏（title 必填），再 \`generateScript(gameId + story=世界观文档, dryRun: true)\` 生成骨架并展示给用户确认，满意再去掉 dryRun 落库。
+3. \`createGame\` 建游戏（title 必填；**建议传 \`slug\`**：小写英文/数字/连字符，如 \`lanxiang-otome\`。中文标题 slugify 会得到 \`-7180\` 这类空前缀 slug），再 \`generateScript(gameId + story=世界观文档, dryRun: true)\` 生成骨架并展示给用户确认，满意再去掉 dryRun 落库。
 4. frontmatter 必须有 \`title\` / \`state\` / \`ai\`；首场景必须是 \`# start\`。
+5. \`createGame\` 回包是「说明文字 + JSON」混合文本，解析时抽数组花括号里的 \`id\` / \`slug\`。
 
 ## 完成标准
 
@@ -76,8 +77,8 @@ const BRANCHES_BODY = `## 目标
 ## 流程
 
 1. 先定变量表（\`addVariable\`）：好感/属性用数字（带 visible/label，进度条给 max），关键道具用布尔。变量名英文 snake_case，中文亦可但首字符不能是数字。
-2. 选项写法：\`* [文案] -> 场景ID (if: 条件) (set: 变量 = 表达式)\`；多条件逗号分隔是 AND，\`or\` 是 OR；赋值必须带 \`=\`（\`(set: courage + 10)\` 非法）。
-3. 按状态自动分流用块级重定向（顶层 \`-> 目标 (if: 条件)\`，按序首命中生效，无条件行兜底），替代一堆同名选项。
+2. 选项写法：\`* [文案] -> 场景ID (if: 条件) (set: 变量 = 表达式)\`；多条件逗号分隔是 AND，\`or\` 是 OR；**比较用 \`==\`，赋值才用 \`=\`**（\`(if: has_token = true)\` 非法，应写 \`(if: has_token == true)\`；\`(set: courage + 10)\` 非法，应写 \`(set: courage = courage + 10)\`）。
+3. 按状态自动分流用块级重定向（顶层 \`-> 目标 (if: 条件)\`，按序**首个条件命中**生效，无条件行兜底）。多线结局并列时，把更高优先级写在前面，或后序线对优先者用严格 \`>\`（\`favor_b > favor_a\`），避免并列被先写的 BE 抢走。
 4. 高风险变量（如生命值）给 \`trigger\`（如 \`条件 <= 0 → game_over\`），并用 \`{{变量}}\` / \`{{ if }}…{{ else }}…{{ /if }}\` 做动态文本（条件块必须在同一段落内）。
 
 ## 铁律（死局检查，每次改完自查）
@@ -98,16 +99,17 @@ const MEDIA_BODY = `## 目标
 1. 先问用户确认：文字版已定稿？配图风格关键词（沿用 \`ai.style.image\`，全书统一只定一次）。
 2. 按场景优先级逐个生图：封面 > start 场景 > 结局/关键场景 > 其他。\`generateImage(gameId + prompt)\` 拿到 URL 后用 \`setSceneImage\` 挂进场景（写 url 和/或 imagePrompt）；角色立绘用 \`updateCharacter imageUrl\`。
 3. prompt 写法：场景内容 + \`@角色ID\` 引用（自动带入 image_prompt 与参考图）；\`character\` / \`characters\` 字段声明出镜角色。
-4. 自画素材用 \`uploadAsset\`（base64/data URL，type=cover|character|scene）再挂接。配音/视频需求大时走编辑器或批量工具，本 skill 只覆盖挂接方法。
+4. 自画素材用 \`uploadAsset\`（**\`gameId\` + \`data\` base64/data URL**，不是 gameSlug；type=cover|character|scene，角色再带 \`characterId\`）再挂接。若 \`updateCharacter imageUrl\` 偶发 401，可把 \`image_url\` 写进 DSL 的 \`ai.characters\` 后 \`setGameDsl\` 同步。批量图：先全部 \`uploadAsset\`，再把 URL 写回剧本并 \`setGameDsl\`。配音/视频需求大时走编辑器或批量工具。
 
 ## 铁律
 
 - 一图一场景：素材块是场景标题后**第一个** \`\`\`yaml 代码块里的 \`image:\` 键；未知键原样保留，别手写场景级 frontmatter。
 - 同一角色在不同场景的 image_prompt 保持一致，外貌才不会漂移。
+- **\`setGameDsl\` 会用 frontmatter 覆盖 \`published\`**：若脚本里是 \`published: false\`，整篇替换后线上会变未发布（\`/play/<slug>\` 404）。替换后务必再 \`updateGameMeta(published: true)\`，或把 frontmatter 写成 \`published: true\`。
 
 ## 完成标准
 
-封面 + start + 结局图就位并在播放页可见；其余按用户预算补。补完用 \`updateGameMeta(published: true)\` 发布，播放页 \`/play/<slug>\`。`;
+封面 + start + 结局图就位并在播放页**实际打开可见**（curl/浏览器 200）；其余按用户预算补。补完用 \`updateGameMeta(published: true)\` 发布，播放页 \`/play/<slug>\`（可读 slug 可用 \`updateGameMeta({ slug })\` 修改）。`;
 
 function makeStep(
   slug: string,

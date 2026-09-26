@@ -44,10 +44,36 @@ export function buildAntigravityConfig(apiKeyPlaceholder = '<YOUR_API_KEY>'): st
   );
 }
 
+/** Claude Code / Cursor / Windsurf / 通用 MCP 客户端常见的 mcpServers 形态 */
+export function buildGenericMcpConfig(apiKeyPlaceholder = '<YOUR_API_KEY>'): string {
+  return JSON.stringify(
+    {
+      mcpServers: {
+        'mui-gamebook': {
+          url: MCP_ENDPOINT,
+          headers: { Authorization: `Bearer ${apiKeyPlaceholder}` },
+        },
+      },
+    },
+    null,
+    2,
+  );
+}
+
+export function buildClaudeCodeCommand(apiKeyPlaceholder = '<YOUR_API_KEY>'): string {
+  return `claude mcp add --transport http mui-gamebook ${MCP_ENDPOINT} \\\n  --header "Authorization: Bearer ${apiKeyPlaceholder}"`;
+}
+
 export const OPENCODE_CONFIG_PATHS = ['项目级：<项目根>/opencode.json', '全局：~/.config/opencode/opencode.json'];
 export const ANTIGRAVITY_CONFIG_PATHS = [
   '全局：~/.gemini/config/mcp_config.json',
   '工作区级：<项目根>/.agents/mcp_config.json',
+];
+export const GENERIC_MCP_CONFIG_PATHS = [
+  'Claude Code：~/.claude.json 或项目 .mcp.json（mcpServers）',
+  'Cursor：~/.cursor/mcp.json 或项目 .cursor/mcp.json',
+  'MiMoCode：.mimocode/mimocode.jsonc 的 mcp 节',
+  '通用：任何支持 Streamable HTTP + Header 鉴权的 MCP 客户端',
 ];
 
 export const SETUP_SKILL_MD = `---
@@ -93,15 +119,17 @@ ${buildAntigravityConfig()}
 
 ### 4. 排错
 
-- \`Unauthorized\`：key 错了或过期了，让用户去「API 密钥」页吊销重建。
+- \`Unauthorized\` / \`40101\`：key 错了或过期了，让用户去「API 密钥」页吊销重建。
+- **连调约 10 次后整把 key 突然全 401**：多半是 better-auth 限流（旧 key 默认 10 次/24h；新版 key 默认 120 次/分钟，超限回 **429 / 40129**）。停一会儿或**新建 key**；老 key 的额度写死在创建当时，要换新 key 才享受新配额。
 - 连上但工具为空：超时太短或端点未部署，timeout 拉到 120000 重试。
 - 只能管理**自己的**游戏，AI 用量记在 key 主人名下；可在网页随时吊销。
 
 ## 写操作约定（配好后长期有效）
 
 - 每次 \`tools/call\` 都要鉴权；写操作（除 \`listGames\` / \`createGame\` 外）要传 \`arguments.gameId\`。
-- 改剧本先 \`dryRun: true\` 预览，满意再落库。
-- DSL 铁律：首场景必须是 \`# start\`；选项 \`-> 场景ID\`；每个场景至少一个无条件选项兜底。
+- 改剧本先 \`dryRun: true\` 预览，满意再落库。**\`setGameDsl\` 会按 frontmatter 覆盖 \`published\`**，整篇替换后记得再 \`updateGameMeta(published: true)\`。
+- \`createGame\` / \`updateGameMeta\` 可传 \`slug\`（小写字母/数字/连字符）；中文标题自动生成的 slug 常是 \`-1234\` 这种，建议建游时就指定可读 slug。
+- DSL 铁律：首场景必须是 \`# start\`；选项 \`-> 场景ID\`；每个场景至少一个无条件选项兜底；对白 speaker 必须是 \`ai.characters\` 里的 **ID**（\`@jinlou:\` 而不是 \`@林锦楼:\`）。
 - 细节以 \`tools/list\` 返回的 inputSchema 为准。
 `;
 
