@@ -4,9 +4,9 @@ status: delivered
 updated: 2026-09-22
 branch: feat/lanxiang-otome
 commits: 9bf4017..working-tree
-slug: -7180
+slug: lanxiang-otome
 gameId: 131
-playUrl: https://muistory.com/play/-7180
+playUrl: https://muistory.com/play/lanxiang-otome
 ---
 
 # 兰香如故·性转逆后宫
