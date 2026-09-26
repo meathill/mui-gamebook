@@ -1,5 +1,8 @@
 export { default as TitleScreen } from './TitleScreen';
 export { default as EndScreen } from './EndScreen';
+export { default as RatingWidget } from './RatingWidget';
+export { default as RatingSummary } from './RatingSummary';
+export { default as ReviewDialog } from './ReviewDialog';
 export { default as VariableIndicator } from './VariableIndicator';
 export { default as MiniGamePlayer } from './MiniGamePlayer';
 export { default as SceneNodes } from './SceneNodes';

@@ -317,7 +317,21 @@
     "relatedGames": "更多推荐",
     "byAuthor": "作者：{name}",
     "updatedAt": "更新于 {date}",
-    "howToPlay": "互动小说怎么玩？"
+    "howToPlay": "互动小说怎么玩？",
+    "rateTitle": "为这个故事打分",
+    "ratePrompt": "喜欢这个故事吗？打个分吧",
+    "yourRating": "你的评分",
+    "alreadyRated": "你打了 {stars} 星",
+    "averageRating": "平均 {avg} 分",
+    "ratingCount": "{count} 人已评",
+    "noRatings": "还没有人评分，快来抢首评",
+    "rateSuccess": "已记录你的评分，谢谢！",
+    "writeReview": "写评价",
+    "reviewPlaceholder": "写下你的感受（可选，最多 500 字）",
+    "submitReview": "提交评价",
+    "skipReview": "跳过",
+    "loginToReview": "写评价需要先登录",
+    "goToLogin": "去登录"
   },
   "share": {
     "share": "分享",

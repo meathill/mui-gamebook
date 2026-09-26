@@ -52,7 +52,7 @@ export default function GamePlayerImmersive({
   authorName,
   updatedAt,
 }: {
-  game: PlayableGame & { id?: number };
+  game: PlayableGame & { id?: number; avgRating?: number; ratingCount?: number };
   slug: string;
   authorName?: string;
   updatedAt?: string;
@@ -225,6 +225,8 @@ export default function GamePlayerImmersive({
           onRestart={handleRestartFromTitle}
           authorName={authorName}
           updatedAt={updatedAt}
+          avgRating={game.avgRating}
+          ratingCount={game.ratingCount}
         />
         <CommentDialog postId={slug} />
       </>
@@ -290,6 +292,9 @@ export default function GamePlayerImmersive({
               title={game.title}
               shareUrl={shareUrl}
               onRestart={resetToTitle}
+              slug={slug}
+              avgRating={game.avgRating}
+              ratingCount={game.ratingCount}
             />
           </div>
         </div>

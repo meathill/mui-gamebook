@@ -5,6 +5,7 @@ import ImageIcon from 'next/image';
 import { useState } from 'react';
 import type { ParsedGameRow } from '@/types';
 import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../../image-loader';
+import RatingSummary from '@/components/game-player/RatingSummary';
 
 interface GameCardProps {
   game: ParsedGameRow;
@@ -37,7 +38,15 @@ export default function GameCard({ game }: GameCardProps) {
               {game.title}
             </h3>
           </Link>
-          <p className="text-gray-600 text-sm line-clamp-2 mb-3 flex-1">{game.description}</p>
+          <p className="text-gray-600 text-sm line-clamp-2 mb-2 flex-1">{game.description}</p>
+          {(game.ratingCount ?? 0) > 0 && (
+            <div className="text-xs text-gray-500 mb-2">
+              <RatingSummary
+                avg={game.avgRating}
+                count={game.ratingCount}
+              />
+            </div>
+          )}
           <div className="flex flex-wrap gap-1.5 mt-auto">
             {game.tags?.map((tag: string) => (
               <Link

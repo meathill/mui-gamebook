@@ -7,6 +7,7 @@ import PlayWebMcpTools from '@/components/PlayWebMcpTools';
 import RelatedGames from '@/components/RelatedGames';
 import Comment from '@/components/Comment';
 import JsonLd from '@/components/JsonLd';
+import RatingSummary from '@/components/game-player/RatingSummary';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { UserIcon, ClockIcon, QuestionIcon } from '@phosphor-icons/react/dist/ssr';
@@ -52,6 +53,16 @@ function buildGameJsonLd(game: GameForLd, slug: string) {
     dateModified: game.updatedAt || undefined,
     author: game.authorName ? { '@type': 'Person', name: game.authorName } : undefined,
     publisher: { '@type': 'Organization', name: '姆伊游戏书', url: baseUrl },
+    aggregateRating:
+      game.ratingCount && game.ratingCount > 0 && typeof game.avgRating === 'number'
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: Number(game.avgRating.toFixed(1)),
+            ratingCount: game.ratingCount,
+            bestRating: 5,
+            worstRating: 1,
+          }
+        : undefined,
   };
   return { breadcrumbLd, gameLd };
 }
@@ -291,6 +302,10 @@ export default async function PlayPage({ params }: Props) {
                   {t('updatedAt', { date: formatLongDate(game.updatedAt) })}
                 </span>
               )}
+              <RatingSummary
+                avg={game.avgRating}
+                count={game.ratingCount}
+              />
               <Link
                 href="/how-to-play"
                 className="flex items-center gap-1.5 text-orange-600 hover:text-orange-700 font-medium transition-colors ms-auto">

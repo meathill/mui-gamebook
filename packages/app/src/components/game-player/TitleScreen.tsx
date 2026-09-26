@@ -10,6 +10,7 @@ import { formatLongDate } from '@mui-gamebook/site-common/utils';
 import type { PlayableGame } from '@mui-gamebook/parser/src/types';
 import ShareButton from '@/components/ShareButton';
 import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../../image-loader';
+import RatingSummary from './RatingSummary';
 
 interface TitleScreenProps {
   game: PlayableGame;
@@ -22,9 +23,21 @@ interface TitleScreenProps {
   /** 作者与更新时间（沉浸模式标题页用；经典模式由播放页单独渲染，不传即不显示） */
   authorName?: string;
   updatedAt?: string;
+  /** 评分均分与条数（详情接口透出，不传即不显示） */
+  avgRating?: number;
+  ratingCount?: number;
 }
 
-export default function TitleScreen({ game, hasSave, onStart, onRestart, authorName, updatedAt }: TitleScreenProps) {
+export default function TitleScreen({
+  game,
+  hasSave,
+  onStart,
+  onRestart,
+  authorName,
+  updatedAt,
+  avgRating,
+  ratingCount,
+}: TitleScreenProps) {
   // 不用 location.href：播放页把视图状态放进了 hash，分享出去的链接不该带上 #settings 之类
   const shareUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
   const t = useTranslations('game');
@@ -79,6 +92,10 @@ export default function TitleScreen({ game, hasSave, onStart, onRestart, authorN
                   {t('updatedAt', { date: formatLongDate(updatedAt) })}
                 </span>
               )}
+              <RatingSummary
+                avg={avgRating}
+                count={ratingCount}
+              />
               <Link
                 href="/how-to-play"
                 className="flex items-center gap-1.5 text-orange-300 hover:text-orange-200 font-medium transition-colors">
@@ -187,6 +204,10 @@ export default function TitleScreen({ game, hasSave, onStart, onRestart, authorN
                 {t('updatedAt', { date: formatLongDate(updatedAt) })}
               </span>
             )}
+            <RatingSummary
+              avg={avgRating}
+              count={ratingCount}
+            />
           </div>
         )}
         {game.backgroundStory ? (
