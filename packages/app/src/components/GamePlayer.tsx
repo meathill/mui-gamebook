@@ -31,7 +31,17 @@ import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 // classic 播放器没有叠加面板，注册空表让 #settings 之类归一成 intro，不会莫名把人塞进游戏
 const NO_PANELS: readonly GamePanel[] = [];
 
-export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?: number }; slug: string }) {
+export default function GamePlayer({
+  game,
+  slug,
+  authorName,
+  updatedAt,
+}: {
+  game: PlayableGame & { id?: number };
+  slug: string;
+  authorName?: string;
+  updatedAt?: string;
+}) {
   const route = useGameHashRoute(NO_PANELS);
   const isPlaying = route.view === 'play';
   const [minigameCompleted, setMinigameCompleted] = useState(false);
@@ -238,6 +248,8 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
         hasSave={hasSave}
         onStart={() => route.goToView('play')}
         onRestart={handleRestartFromTitle}
+        authorName={authorName}
+        updatedAt={updatedAt}
       />
     );
   }
@@ -263,118 +275,124 @@ export default function GamePlayer({ game, slug }: { game: PlayableGame & { id?:
   const shareUrl = typeof window !== 'undefined' ? window.location.origin + window.location.pathname : '';
 
   return (
-    <div className="flex flex-col min-h-dvh sm:min-h-[600px]">
-      {/* Header */}
-      <div className="bg-white border-b p-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sticky top-0 z-10 bg-opacity-90 backdrop-blur-sm">
-        <h1 className="text-lg font-bold truncate text-gray-800">{game.title}</h1>
-        <div className="flex justify-center">
-          <AudioControls
-            audioPlayer={audioPlayer}
-            hasAudio={hasAudioThisScene}
-          />
-        </div>
-        <div className="flex gap-2 text-sm items-center justify-end">
-          <ShareButton
-            title={game.title}
-            url={shareUrl}
-          />
-          {/* 回标题页，保留存档；销毁进度的入口只留标题页的「重新开始」和结局页的「再玩一次」 */}
-          <Button
-            variant="ghost"
-            color="gray"
-            onClick={() => route.goToView('intro')}>
-            {t('backToTitle')}
-          </Button>
-        </div>
-      </div>
-
-      {/* 可见变量状态栏 */}
-      {visibleVariables.length > 0 && (
-        <div className="bg-gray-50 border-b px-4 py-2">
-          <div className="max-w-2xl mx-auto grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
-            {visibleVariables.map(({ key, meta }) => (
-              <VariableIndicator
-                key={key}
-                varKey={key}
-                meta={meta}
-                currentValue={runtimeState[key]}
-              />
-            ))}
+    <div
+      className={
+        game.title_layout === 'fullscreen' ? 'mx-auto w-full max-w-3xl my-6 sm:my-8 px-4 sm:px-0' : 'contents'
+      }>
+      <div
+        className={`flex flex-col min-h-dvh sm:min-h-[600px] ${game.title_layout === 'fullscreen' ? 'bg-white sm:shadow-xl sm:rounded-2xl overflow-hidden' : ''}`}>
+        {/* Header */}
+        <div className="bg-white border-b p-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sticky top-0 z-10 bg-opacity-90 backdrop-blur-sm">
+          <h1 className="text-lg font-bold truncate text-gray-800">{game.title}</h1>
+          <div className="flex justify-center">
+            <AudioControls
+              audioPlayer={audioPlayer}
+              hasAudio={hasAudioThisScene}
+            />
+          </div>
+          <div className="flex gap-2 text-sm items-center justify-end">
+            <ShareButton
+              title={game.title}
+              url={shareUrl}
+            />
+            {/* 回标题页，保留存档；销毁进度的入口只留标题页的「重新开始」和结局页的「再玩一次」 */}
+            <Button
+              variant="ghost"
+              color="gray"
+              onClick={() => route.goToView('intro')}>
+              {t('backToTitle')}
+            </Button>
           </div>
         </div>
-      )}
 
-      {/* ImageIcon and Content Container - 移动端时文本叠加在图片上 */}
-      <div className="relative flex-1 sm:flex-none sm:block overflow-hidden">
-        {/* Persistent ImageIcon Display */}
-        {currentImageUrl && (
-          <div className="w-full sm:relative absolute inset-0 overflow-hidden bg-gray-100">
-            <Image
-              src={sceneImgError ? PLACEHOLDER_COVER : resolveCoverSrc(currentImageUrl)}
-              alt={game.title ? `${game.title} 场景插画` : '场景插画'}
-              width={1200}
-              height={675}
-              className={`w-full h-full object-cover sm:h-auto sm:object-contain transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}
-              onLoad={() => setImageLoading(false)}
-              onError={() => {
-                setSceneImgError(true);
-                setImageLoading(false);
-              }}
-              onClick={handleImageClick}
-              sizes="(max-width: 640px) 100vw, 1200px"
-              priority
-            />
-            {/* 移动端渐变遮罩，提升文字可读性 */}
-            <div
-              className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent sm:hidden transition-opacity duration-300 ${textVisible ? 'opacity-100' : 'opacity-0'}`}
-            />
-            {/* 移动端文本隐藏时的提示 */}
-            {!textVisible && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm sm:hidden">
-                点击显示文字
-              </div>
-            )}
+        {/* 可见变量状态栏 */}
+        {visibleVariables.length > 0 && (
+          <div className="bg-gray-50 border-b px-4 py-2">
+            <div className="max-w-2xl mx-auto grid grid-cols-3 sm:flex sm:flex-wrap gap-2">
+              {visibleVariables.map(({ key, meta }) => (
+                <VariableIndicator
+                  key={key}
+                  varKey={key}
+                  meta={meta}
+                  currentValue={runtimeState[key]}
+                />
+              ))}
+            </div>
           </div>
         )}
 
-        {/* Scene Content - 移动端文本层，mt-auto 让短内容贴底 */}
-        <div
-          ref={contentRef}
-          onScroll={handleScroll}
-          onTouchStart={handleUserInteraction}
-          onWheel={handleUserInteraction}
-          className={`relative z-10 p-4 md:p-8 max-w-2xl mx-auto w-full flex flex-col overflow-y-auto transition-opacity duration-300 ${currentImageUrl ? 'absolute bottom-0 left-0 right-0 h-[50dvh] sm:static sm:h-auto sm:inset-auto' : ''} ${textVisible ? 'opacity-100' : 'opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto'}`}>
-          <div className="mt-auto space-y-2 sm:mt-0 sm:space-y-6">
-            <SceneNodes
-              nodes={currentScene.nodes}
-              characters={game.characters}
-              runtimeState={runtimeState}
-              hasMinigame={hasMinigame}
-              minigameCompleted={minigameCompleted}
-              hasReadAll={hasReadAll}
-              hasImage={!!currentImageUrl}
-              audioPlayer={audioPlayer}
-              onChoice={handleChoice}
-              onMiniGameComplete={handleMiniGameComplete}
-            />
-
-            {/* 块级重定向：读完点「继续」按当前状态路由（DSL v2） */}
-            {canContinue && (
-              <button
-                className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md flex items-center gap-3 ${currentImageUrl ? 'bg-white/90 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100'} hover:border-orange-400 hover:bg-orange-50`}
-                onClick={handleContinue}>
-                <span className="font-medium text-amber-800 group-hover:text-orange-700 text-lg flex-1">继续</span>
-              </button>
-            )}
-
-            {/* End Screen */}
-            {showEndScreen && (
-              <EndScreen
-                title={game.title}
-                shareUrl={shareUrl}
-                onRestart={resetToTitle}
+        {/* ImageIcon and Content Container - 移动端时文本叠加在图片上 */}
+        <div className="relative flex-1 sm:flex-none sm:block overflow-hidden">
+          {/* Persistent ImageIcon Display */}
+          {currentImageUrl && (
+            <div className="w-full sm:relative absolute inset-0 overflow-hidden bg-gray-100">
+              <Image
+                src={sceneImgError ? PLACEHOLDER_COVER : resolveCoverSrc(currentImageUrl)}
+                alt={game.title ? `${game.title} 场景插画` : '场景插画'}
+                width={1200}
+                height={675}
+                className={`w-full h-full object-cover sm:h-auto sm:object-contain transition-opacity duration-700 ease-in-out ${imageLoading ? 'opacity-50 blur-sm' : 'opacity-100 blur-0'}`}
+                onLoad={() => setImageLoading(false)}
+                onError={() => {
+                  setSceneImgError(true);
+                  setImageLoading(false);
+                }}
+                onClick={handleImageClick}
+                sizes="(max-width: 640px) 100vw, 1200px"
+                priority
               />
-            )}
+              {/* 移动端渐变遮罩，提升文字可读性 */}
+              <div
+                className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent sm:hidden transition-opacity duration-300 ${textVisible ? 'opacity-100' : 'opacity-0'}`}
+              />
+              {/* 移动端文本隐藏时的提示 */}
+              {!textVisible && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm sm:hidden">
+                  点击显示文字
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Scene Content - 移动端文本层，mt-auto 让短内容贴底 */}
+          <div
+            ref={contentRef}
+            onScroll={handleScroll}
+            onTouchStart={handleUserInteraction}
+            onWheel={handleUserInteraction}
+            className={`relative z-10 p-4 md:p-8 max-w-2xl mx-auto w-full flex flex-col overflow-y-auto transition-opacity duration-300 ${currentImageUrl ? 'absolute bottom-0 left-0 right-0 h-[50dvh] sm:static sm:h-auto sm:inset-auto' : ''} ${textVisible ? 'opacity-100' : 'opacity-0 pointer-events-none sm:opacity-100 sm:pointer-events-auto'}`}>
+            <div className="mt-auto space-y-2 sm:mt-0 sm:space-y-6">
+              <SceneNodes
+                nodes={currentScene.nodes}
+                characters={game.characters}
+                runtimeState={runtimeState}
+                hasMinigame={hasMinigame}
+                minigameCompleted={minigameCompleted}
+                hasReadAll={hasReadAll}
+                hasImage={!!currentImageUrl}
+                audioPlayer={audioPlayer}
+                onChoice={handleChoice}
+                onMiniGameComplete={handleMiniGameComplete}
+              />
+
+              {/* 块级重定向：读完点「继续」按当前状态路由（DSL v2） */}
+              {canContinue && (
+                <button
+                  className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md flex items-center gap-3 ${currentImageUrl ? 'bg-white/90 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100'} hover:border-orange-400 hover:bg-orange-50`}
+                  onClick={handleContinue}>
+                  <span className="font-medium text-amber-800 group-hover:text-orange-700 text-lg flex-1">继续</span>
+                </button>
+              )}
+
+              {/* End Screen */}
+              {showEndScreen && (
+                <EndScreen
+                  title={game.title}
+                  shareUrl={shareUrl}
+                  onRestart={resetToTitle}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>

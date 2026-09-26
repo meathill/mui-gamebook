@@ -19,6 +19,7 @@ import { useDialog } from '@/components/Dialog';
 import Button from '@/components/Button';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import TitleScreen from './TitleScreen';
+import CommentDialog from './CommentDialog';
 import EndScreen from './EndScreen';
 import ImmersiveBackground from './ImmersiveBackground';
 import ImmersiveTextBox from './ImmersiveTextBox';
@@ -26,6 +27,7 @@ import ImmersiveMenu from './ImmersiveMenu';
 import CommentDrawer from './CommentDrawer';
 import FloatingVariablePanel from './FloatingVariablePanel';
 import { useImmersiveMode } from './hooks/useImmersiveMode';
+import { usePreload } from './usePreload';
 import { type GamePanel, useGameHashRoute } from './hooks/useGameHashRoute';
 
 const POSITION_STORAGE_KEY = 'immersive_text_pos';
@@ -44,7 +46,17 @@ function isProseNode(
   return node.type === 'text' || node.type === 'dialogue';
 }
 
-export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame & { id?: number }; slug: string }) {
+export default function GamePlayerImmersive({
+  game,
+  slug,
+  authorName,
+  updatedAt,
+}: {
+  game: PlayableGame & { id?: number };
+  slug: string;
+  authorName?: string;
+  updatedAt?: string;
+}) {
   const route = useGameHashRoute(PANELS);
   const isPlaying = route.view === 'play';
   // 只有真正进入游戏才锁滚动、藏 header/footer；标题页保持普通页面
@@ -83,6 +95,9 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
     handleChoice,
     handleContinue,
   } = gamePlayer;
+
+  // 预加载选项指向场景的变换后图片（与实际显示同 URL，暖 CF 缓存）
+  usePreload(game, currentSceneId);
 
   // 加载保存的阅读器位置偏好
   useEffect(() => {
@@ -199,14 +214,20 @@ export default function GamePlayerImmersive({ game, slug }: { game: PlayableGame
   }, [showEndScreen]);
 
   // 不额外挡 isLoaded：让 SSR 首屏直接落到下面的标题页分支，带上真实标题和简介，而不是空的"加载中"
+  // 评论只在标题态以 dialog 承载，进游戏即卸载，不进全屏层
   if (!isPlaying) {
     return (
-      <TitleScreen
-        game={game}
-        hasSave={hasSave}
-        onStart={() => route.goToView('play')}
-        onRestart={handleRestartFromTitle}
-      />
+      <>
+        <TitleScreen
+          game={game}
+          hasSave={hasSave}
+          onStart={() => route.goToView('play')}
+          onRestart={handleRestartFromTitle}
+          authorName={authorName}
+          updatedAt={updatedAt}
+        />
+        <CommentDialog postId={slug} />
+      </>
     );
   }
 

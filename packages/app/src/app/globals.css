@@ -24,6 +24,10 @@ html[data-immersive="true"] header,
 html[data-immersive="true"] footer {
   display: none !important;
 }
+/* 播放页标题态附加块（面包屑/评论/推荐）：进游戏后折叠，保证沉浸式全屏不被盖住 */
+html[data-immersive="true"] .play-extras {
+  display: none !important;
+}
 html[data-immersive="true"] body {
   background: #000;
   overflow: hidden;

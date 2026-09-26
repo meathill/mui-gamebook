@@ -1,20 +1,21 @@
 'use client';
 
-import type { DisplayMode, Game, SiteTemplate, TextBoxPosition } from '@mui-gamebook/parser/src/types';
+import type { DisplayMode, Game, SiteTemplate, TextBoxPosition, TitleLayout } from '@mui-gamebook/parser/src/types';
 import TypewriterSpeedField from './TypewriterSpeedField';
 
 type GameFieldChange = (field: string, value: string | number | boolean | Record<string, unknown>) => void;
 
 interface PlaybackModeSectionProps {
-  game: Pick<Game, 'display_mode' | 'text_box_position' | 'typewriter_speed'>;
+  game: Pick<Game, 'display_mode' | 'title_layout' | 'text_box_position' | 'typewriter_speed'>;
   onChange: GameFieldChange;
 }
 
 /**
- * 播放模式设置：展示方式（经典/沉浸）+ 沉浸模式专属的文字框位置与逐字速度
+ * 播放模式设置：展示方式（经典/沉浸）+ 标题页模版（传统/全屏）+ 沉浸模式专属的文字框位置与逐字速度
  */
 export function PlaybackModeSection({ game, onChange }: PlaybackModeSectionProps) {
   const currentMode = game.display_mode || 'classic';
+  const currentTitleLayout = game.title_layout || 'classic';
 
   return (
     <div className="p-4 bg-amber-50 rounded-lg border border-amber-100 space-y-3">
@@ -34,6 +35,29 @@ export function PlaybackModeSection({ game, onChange }: PlaybackModeSectionProps
               onClick={() => onChange('display_mode', opt.value)}
               className={`flex-1 px-3 py-2 text-sm rounded border transition ${
                 currentMode === opt.value
+                  ? 'bg-amber-600 text-white border-amber-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
+              }`}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="block text-xs text-amber-800 mb-1">标题页模版</label>
+        <div className="flex gap-2">
+          {(
+            [
+              { value: 'classic', label: '传统（封面条 + 内容卡）' },
+              { value: 'fullscreen', label: '全屏（封面底 + 毛玻璃卡）' },
+            ] as { value: TitleLayout; label: string }[]
+          ).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onChange('title_layout', opt.value)}
+              className={`flex-1 px-3 py-2 text-sm rounded border transition ${
+                currentTitleLayout === opt.value
                   ? 'bg-amber-600 text-white border-amber-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-amber-400'
               }`}>

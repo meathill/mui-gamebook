@@ -26,6 +26,7 @@
 - **`tags`** (可选): 一个用于分类的标签列表。
 - **`published`** (可选): 布尔值，标记游戏是否已发布。默认为 `false`。
 - **`display_mode`** (可选): 播放模式，`classic`（默认，经典模式）或 `immersive`（沉浸模式）。
+- **`title_layout`** (可选): 标题页版式，`classic`（默认，封面条 + 白底内容卡）或 `fullscreen`（全屏封面底 + 居中毛玻璃卡，header/footer 保留，footer 需滚屏可见）。
 - **`text_box_position`** (可选): 沉浸模式下文字框位置，`bottom`（默认）/ `center` / `top`。
 - **`typewriter_speed`** (可选): 沉浸模式打字机速度，单位毫秒/字，默认 `40`。
 - **`site_template`** (可选): 站点模版，`default`（默认）或 `visual-novel`（视觉小说模版，带路线图、多存档、设置界面）。

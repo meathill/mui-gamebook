@@ -155,6 +155,7 @@ export function toPlayableGame(game: Game): PlayableGame {
     cover_image: game.cover_image,
     tags: game.tags,
     display_mode: game.display_mode,
+    title_layout: game.title_layout,
     text_box_position: game.text_box_position,
     typewriter_speed: game.typewriter_speed,
     site_template: game.site_template,

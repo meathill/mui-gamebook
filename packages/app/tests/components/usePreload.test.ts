@@ -1,6 +1,16 @@
-import { describe, it, expect } from 'vitest';
-import { extractMediaUrls, getNextSceneIds, collectPreloadUrls } from '@/components/game-player/usePreload';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  buildPreloadUrl,
+  extractMediaUrls,
+  getNextSceneIds,
+  collectPreloadUrls,
+  PRELOAD_WIDTH,
+} from '@/components/game-player/usePreload';
 import type { PlayableGame, PlayableScene, PlayableSceneNode } from '@mui-gamebook/parser/src/types';
+
+vi.mock('../../image-loader', () => ({
+  default: ({ src, width }: { src: string; width: number }) => `/cdn-cgi/image/width=${width}/${src}`,
+}));
 
 function createMockGame(scenes: Record<string, PlayableScene>): PlayableGame {
   return {
@@ -101,6 +111,28 @@ describe('getNextSceneIds', () => {
 
     const ids = getNextSceneIds(scene);
     expect(ids).toEqual([]);
+  });
+
+  it('应该收集块级重定向指向的场景（终局分流也预加载）', () => {
+    const scene: PlayableScene = {
+      id: 'resolve',
+      nodes: [
+        { type: 'choice', text: '去A', nextSceneId: 'scene-a' },
+        { type: 'redirect', nextSceneId: 'end_he' },
+        { type: 'redirect', nextSceneId: 'end_be', condition: 'flag' },
+      ],
+    };
+
+    expect(getNextSceneIds(scene)).toEqual(['scene-a', 'end_he', 'end_be']);
+  });
+});
+
+describe('buildPreloadUrl', () => {
+  it('预加载与显示层同源（1280 档变换 URL），避免缓存 key 错位白预', () => {
+    expect(PRELOAD_WIDTH).toBe(1280);
+    expect(buildPreloadUrl('https://i.muistory.com/images/1/cover.png')).toBe(
+      '/cdn-cgi/image/width=1280/https://i.muistory.com/images/1/cover.png',
+    );
   });
 });
 

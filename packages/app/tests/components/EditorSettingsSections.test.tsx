@@ -53,6 +53,21 @@ describe('PlaybackModeSection', () => {
 
     expect(onChange).toHaveBeenCalledWith('text_box_position', 'top');
   });
+
+  it('标题页模版缺省为传统，点击全屏调用 onChange', () => {
+    const onChange = vi.fn();
+    render(
+      <PlaybackModeSection
+        game={{}}
+        onChange={onChange}
+      />,
+    );
+
+    expect(screen.getByText('标题页模版')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('全屏（封面底 + 毛玻璃卡）'));
+
+    expect(onChange).toHaveBeenCalledWith('title_layout', 'fullscreen');
+  });
 });
 
 describe('SiteTemplateSection', () => {
