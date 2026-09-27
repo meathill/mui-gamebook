@@ -1,0 +1,14 @@
+# 源码与配置文件
+src/
+tests/
+tsconfig*.json
+vite.config.ts
+
+# 临时与测试产物
+temp_*
+*.log
+.DS_Store
+
+# 保证仅发布 dist 与文档
+!dist
+!README.md

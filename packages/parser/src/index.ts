@@ -18,6 +18,7 @@ export { proseNodeToLine, redirectNodeToLine } from './serialize';
 export { scanClauses } from './parse-choice';
 export { normalizeMiniGameVariables, parseProseBlock } from './parse-scene';
 export { interpolateTemplate, parseTemplate } from './template';
+export { validateExpression, type ExpressionValidation } from './expression/index';
 export type {
   ParsedTemplate,
   TemplateDiagnostic,
@@ -178,10 +179,12 @@ export function parse(source: string): ParseResult {
     typewriter_speed,
     site_template,
     subdomain,
-    state = {},
+    state: configState,
+    initialState: configInitialState,
     ai = {},
     ...extraGlobals
   } = globalConfig;
+  const state = configState || configInitialState || {};
 
   if (!scenes['start']) {
     return { success: false, error: "Game must contain a 'start' scene." };

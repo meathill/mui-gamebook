@@ -1,0 +1,34 @@
+{
+  "name": "@roudanio/cli",
+  "version": "0.1.0",
+  "description": "Developer toolchain for Mui Gamebook: validate, preview, and sync interactive stories",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "mgb": "./dist/bin.js",
+    "mui-gamebook": "./dist/bin.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "vite build && node -e \"import('fs').then(fs => { fs.writeFileSync('dist/index.d.ts', 'export * from \\\"../src/index\\\";\\n'); try { fs.chmodSync('dist/bin.js', 0o755); } catch {} })\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mui-gamebook/parser": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  },
+  "author": "Meathill <meathill@gmail.com>",
+  "license": "MIT"
+}
