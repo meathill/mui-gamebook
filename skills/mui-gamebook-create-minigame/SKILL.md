@@ -1,12 +1,13 @@
 ---
 name: mui-gamebook-create-minigame
-description: 为互动小说创作并嵌入互动小游戏（Mini-game）：设计玩法与变量契约、编写标准 ES 模块代码、利用 uploadAsset 部署、挂接场景 DSL 驱动分支剧情。当用户要为游戏增加互动解谜、QTE、小游戏时使用。
+description: 为互动小说创作并嵌入互动小游戏（Mini-game）：设计玩法与变量契约、编写标准 ES 模块代码、利用 @roudanio/cli (mgb preview) 本地极速热重载调试、uploadAsset 部署 CDN、挂接场景 DSL 驱动分支剧情。当用户要为游戏增加互动解谜、QTE、小游戏时使用。
 ---
 
 # Mui Gamebook 小游戏创作指南
 
+> CLI 工具：`@roudanio/cli`（短别名 `mgb`，已发布至 npm）
 > 远程 MCP 端点：`https://muistory.com/api/mcp`
-> 核心定位：**剧情玩法化、变量回传驱动分支、严守 ES 模块生命周期契约**。
+> 核心定位：**剧情玩法化、变量回传驱动分支、严守 ES 模块生命周期契约、本地即时热调试**。
 
 ## 适用场景
 
@@ -16,7 +17,7 @@ description: 为互动小说创作并嵌入互动小游戏（Mini-game）：设�
 
 ## 核心架构与运行机制
 
-Mui Gamebook 播放器内置了强大的 `MiniGamePlayer` 引擎。当玩家进入包含 `minigame` 的场景时：
+Mui Gamebook 播放器（包含本地 `mgb preview` 开发环境）内置了 `MiniGamePlayer` 引擎。当玩家进入包含 `minigame` 的场景时：
 1. 宿主通过动态 `import()` 加载小游戏的 JavaScript ES 模块。
 2. 宿主调用模块的 `init(container, variables)`，将 DOM 容器与剧本当前变量状态注入。
 3. 玩家在容器内进行交互游戏。
@@ -28,7 +29,7 @@ Mui Gamebook 播放器内置了强大的 `MiniGamePlayer` 引擎。当玩家进�
 
 ## 代码契约规范（必须完全遵守）
 
-小游戏代码必须是**标准 ES 模块单文件**，默认导出（或导出）实现以下接口的对象：
+小游戏代码必须是**标准 ES 模块单文件**，默认导出实现以下接口的对象：
 
 ```javascript
 export default {
@@ -49,7 +50,7 @@ export default {
         <p style="font-size:13px;color:#a1a1aa;margin:0 0 16px 0;">输入正确的 4 位密码即可通过</p>
         <div id="display" style="font-family:monospace;font-size:24px;letter-spacing:6px;background:#27272a;padding:8px 24px;border-radius:8px;margin-bottom:16px;">----</div>
         <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;width:180px;">
-          <!-- 动态按钮 -->
+          <!-- 动态数字键盘按键 -->
         </div>
         <button id="skip-btn" style="margin-top:16px;background:transparent;border:none;color:#71717a;font-size:12px;cursor:pointer;text-decoration:underline;">
           跳过此关卡
@@ -58,6 +59,12 @@ export default {
     `;
 
     // 2. 绑定事件与逻辑 ...
+    const skipBtn = this.container.querySelector('#skip-btn');
+    skipBtn.addEventListener('click', () => {
+      if (this.completeCallback) {
+        this.completeCallback({ door_unlocked: false });
+      }
+    });
   },
 
   /**
@@ -104,22 +111,47 @@ minigame:
 
 ---
 
-## 创作与部署全流程（5 步走）
+## 现代化创作与部署流程（结合 CLI）
+
+```
+[1. 玩法与变量设计] → [2. 编写单文件 JS] → [3. mgb preview 本地热调试] → [4. uploadAsset CDN 部署] → [5. mgb push 同步]
+```
 
 ### 1. 剧情契合度与玩法设计
 结合剧情高潮点确定机制（开锁、猜拳、反应击打、连线、拼图等），定好持续时间（30-90 秒），明确产出的结算变量。
 
 ### 2. 剧本变量与分支条件配置
-在 `initialState` 中登记变量，在小游戏场景后使用 `* [选项] -> target (if: variable == true)` 配置好成功与失败分支，并务必保留一个无条件选项兜底。
+在 frontmatter 的 `initialState` 中登记变量，在小游戏场景后使用 `* [选项] -> target (if: variable == true)` 配置好成功与失败分支，并务必保留一个无条件选项兜底。
 
-### 3. 编写单文件 ES 模块代码
-实现 `init`、`onComplete`、`destroy`，确保样式自包含、移动端触控友好、带有跳过按钮。
+### 3. 本地即时预览与热调试（告别繁琐上传）
+利用 `@roudanio/cli`，无需提前上传 CDN 即可在本地全流程闭环调试：
+```bash
+npx @roudanio/cli preview story.md
+```
+- 本地启动 Web 播放器（`http://localhost:3456`）。
+- 调试小游戏代码逻辑、交互体验与响应速度。
+- 借助预览器自带的 **State 实时状态面板**，直观观察通关后变量是否成功变更，选项是否按预期流转。
 
-### 4. 上传 CDN 并挂接场景 DSL
-将代码转为 base64，调用 MCP 的 `uploadAsset({ gameId, data, contentType: 'application/javascript', fileName: 'minigame.js' })` 取得公网 URL，写回场景 YAML 的 `minigame.url` 中。
+### 4. 静态体检（门禁）
+```bash
+npx @roudanio/cli validate story.md
+```
+自动排查小游戏使用的变量是否在 `initialState` 中完整声明，确保无语法与死局隐患。
 
-### 5. 播放页实机调试
-在 `/play/<slug>` 播放页面进行实操测试，检验通关后变量是否顺利回传，分支是否根据玩法结果正确流转。
+### 5. 上传 CDN 并推送到云端
+将经过本地充分调测的 JS 代码转为 base64，调用 MCP 上传 CDN：
+```typescript
+uploadAsset({
+  gameId,
+  data: base64Code,
+  contentType: 'application/javascript',
+  fileName: 'lock-minigame.js'
+})
+```
+将返回的 CDN URL 填入场景 YAML 的 `minigame.url`，最后通过 CLI 推送上线：
+```bash
+npx @roudanio/cli push story.md --game <gameId> --publish
+```
 
 ---
 

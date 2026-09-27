@@ -51,8 +51,10 @@ MUI Gamebook 是一个创新的平台，旨在创建、游玩和分发由 AI 辅
 - 文本生成：OpenAI GPT-4、Google Gemini
 - 语音合成：Azure TTS
 
-### 工具链
-- **@mui-gamebook/parser**：DSL 解析器
+### 工具链与生态
+- **[@roudanio/cli](https://www.npmjs.com/package/@roudanio/cli)**：创作者本地开发工具链（短别名 `mgb`），支持本地 AST 静态体检、SSE 热重载即时 Web 预览、Mermaid 拓扑图与一键云端同步
+- **Agent Skills**：提供标准化的 AI 创作者技能套件，支持通过 `npx skills add meathill/mui-gamebook` 一键安装到任意 Agent
+- **@mui-gamebook/parser**：DSL 编译器与解析器
 - **@mui-gamebook/asset-generator**：素材批量生成
 
 ## 产品设计：四大核心模块
@@ -137,6 +139,41 @@ minigame:
 ```
 
 详细的 DSL 规范请参阅 [DSL_SPEC.md](./docs/DSL_SPEC.md)。
+
+## 🛠️ 本地 CLI 与 Agent Skills
+
+### 1. 官方开发者 CLI (`@roudanio/cli`)
+
+```bash
+# 全局安装，获得简短命令 mgb
+npm install -g @roudanio/cli
+
+# 或免安装直接调用
+npx @roudanio/cli <command>
+
+# 常用命令
+mgb init story.md        # 初始化起步互动小说模版
+mgb preview story.md     # 启动本地 Web 即时热预览 (localhost:3456)
+mgb validate story.md    # 编译器级 0 幻觉静态排查死局与变量语法
+mgb graph story.md       # 导出剧情分支拓扑 Mermaid 流程图
+mgb login                # 浏览器联动认证登录云端
+mgb push story.md        # 前置体检拦截并安全同步到 muistory.com
+```
+
+### 2. 一键安装 Agent Skills
+
+通过官方标准 Skill 管理器一键安装至任意 AI Agent（Antigravity、Claude Code、Cursor、Windsurf 等）：
+
+```bash
+# 列出本项目提供的全部 6 个标准创作与运维技能
+npx skills add meathill/mui-gamebook --list
+
+# 一键安装全部技能到当前项目或全局
+npx skills add meathill/mui-gamebook
+
+# 指定安装某个技能 (如创作主流程)
+npx skills add meathill/mui-gamebook --skill mui-gamebook-create-game
+```
 
 ## IP 版权保护 (Story Protocol)
 

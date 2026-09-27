@@ -21,19 +21,19 @@ function wrapSkillMd(name: string, description: string, body: string): string {
 
 const WORLDVIEW_BODY = `## 目标
 
-帮用户把一句话创意展开成**世界观设定文档**，并落成可玩游戏的骨架（createGame + generateScript dryRun 预览）。
+帮用户把一句话创意展开成**世界观设定文档**，并落成可玩游戏的骨架（可结合本地 @roudanio/cli 的 \`mgb init\`，或云端 createGame + generateScript dryRun 预览）。
 
 ## 流程
 
 1. 追问用户三件事（一次问完）：题材与时代、主角身份与目标、基调（轻松/悬疑/恐怖/治愈）与目标篇幅（场景数 5 / 15 / 30 档）。
 2. 输出世界观文档：时代地点、社会规则、核心冲突、关键势力/地点名词表（要求：名词全局唯一写法，后续场景只许用表里的词）。
-3. \`createGame\` 建游戏（title 必填；**建议传 \`slug\`**：小写英文/数字/连字符，如 \`lanxiang-otome\`。中文标题 slugify 会得到 \`-7180\` 这类空前缀 slug），再 \`generateScript(gameId + story=世界观文档, dryRun: true)\` 生成骨架并展示给用户确认，满意再去掉 dryRun 落库。
-4. frontmatter 必须有 \`title\` / \`state\` / \`ai\`；首场景必须是 \`# start\`。
+3. 本地快速起步可执行 \`npx @roudanio/cli init story.md\` 生成标准模版；云端则 \`createGame\` 建游戏（title 必填；**建议传 \`slug\`**：小写英文/数字/连字符，如 \`lanxiang-otome\`。中文标题 slugify 会得到 \`-7180\` 这类空前缀 slug），再 \`generateScript(gameId + story=世界观文档, dryRun: true)\` 生成骨架并展示给用户确认，满意再去掉 dryRun 落库。
+4. frontmatter 必须有 \`title\` / \`state\`（或 \`initialState\`） / \`ai\`；首场景必须是 \`# start\`。
 5. \`createGame\` 回包是「说明文字 + JSON」混合文本，解析时抽数组花括号里的 \`id\` / \`slug\`。
 
 ## 完成标准
 
-用户认可世界观文档，且游戏里有一版 dryRun 通过的骨架剧本。**不要在这一步生成任何图片/音频**。`;
+用户认可世界观文档，且本地或线上有一版通过校验的骨架剧本。**不要在这一步生成任何图片/音频**。`;
 
 const CHARACTERS_BODY = `## 目标
 
@@ -45,6 +45,7 @@ const CHARACTERS_BODY = `## 目标
 2. 角色数量建议：主角 1 + 重要配角 2-4 + 功能性 NPC 按需；每个角色给：ID（英文 snake_case，全局唯一）、显示名、外貌、性格、动机、说话口癖。
 3. 每个角色必须写 \`description\`（叙事用）+ \`image_prompt\`（外貌短语，供后续生图保持一致）；旁白 narrator 如需固定音色可配 \`voice_name\`。
 4. 设定卡落库后，用 \`@角色ID: 台词\` 写 3-5 句试读对白给用户确认人设是否成立。
+5. 可执行 \`npx @roudanio/cli validate story.md\` 自动化排查对白中是否有未在 \`ai.characters\` 注册的幽灵角色。
 
 ## 铁律
 
@@ -62,9 +63,10 @@ const PLOT_BODY = `## 目标
 ## 流程
 
 1. 先 \`listScenes\` / \`getDsl\` 看骨架现状；在现有剧本上改（generateScript 用 \`useExisting: true\`），从零写才用 \`setGameDsl\` 整篇替换（先 dryRun）。
-2. 主线按三幕组织：开场钩子（start 场景 200 字内抛冲突）→ 中段 2-3 个事件场景 → 结局场景（无选项即结局，无需手动回 start）。
-3. 局部修改优先细粒度工具：\`updateSceneText\` 改文案、\`addScene\` 加场景、\`addDialogueLine\` 追加 \`@角色ID: 台词\`（speaker 必须已注册）。
-4. 场景切分只看一级标题 \`# SceneID\`（\`---\` 只是装饰）；ID 用英文或中文均可，但不要空格标点，否则无法被选项引用。
+2. 本地调试推荐执行 \`npx @roudanio/cli preview story.md\` 启动本地 Web 即时预览服务（支持 SSE 保存热重载）。
+3. 主线按三幕组织：开场钩子（start 场景 200 字内抛冲突）→ 中段 2-3 个事件场景 → 结局场景（无选项即结局，无需手动回 start）。
+4. 局部修改优先细粒度工具：\`updateSceneText\` 改文案、\`addScene\` 加场景、\`addDialogueLine\` 追加 \`@角色ID: 台词\`（speaker 必须已注册）。
+5. 场景切分只看一级标题 \`# SceneID\`（\`---\` 只是装饰）；ID 用英文或中文均可，但不要空格标点，否则无法被选项引用。
 
 ## 完成标准
 
@@ -80,6 +82,7 @@ const BRANCHES_BODY = `## 目标
 2. 选项写法：\`* [文案] -> 场景ID (if: 条件) (set: 变量 = 表达式)\`；多条件逗号分隔是 AND，\`or\` 是 OR；**比较用 \`==\`，赋值才用 \`=\`**（\`(if: has_token = true)\` 非法，应写 \`(if: has_token == true)\`；\`(set: courage + 10)\` 非法，应写 \`(set: courage = courage + 10)\`）。
 3. 按状态自动分流用块级重定向（顶层 \`-> 目标 (if: 条件)\`，按序**首个条件命中**生效，无条件行兜底）。多线结局并列时，把更高优先级写在前面，或后序线对优先者用严格 \`>\`（\`favor_b > favor_a\`），避免并列被先写的 BE 抢走。
 4. 高风险变量（如生命值）给 \`trigger\`（如 \`条件 <= 0 → game_over\`），并用 \`{{变量}}\` / \`{{ if }}…{{ else }}…{{ /if }}\` 做动态文本（条件块必须在同一段落内）。
+5. 运行 \`npx @roudanio/cli validate story.md --strict\` 严格排查未声明变量与死局；执行 \`npx @roudanio/cli graph story.md\` 导出 Mermaid 拓扑图检查各结局连通性。在 \`mgb preview\` 自带的 State 面板中实时观测变量数值。
 
 ## 铁律（死局检查，每次改完自查）
 
@@ -100,6 +103,7 @@ const MEDIA_BODY = `## 目标
 2. 按场景优先级逐个生图：封面 > start 场景 > 结局/关键场景 > 其他。\`generateImage(gameId + prompt)\` 拿到 URL 后用 \`setSceneImage\` 挂进场景（写 url 和/或 imagePrompt）；角色立绘用 \`updateCharacter imageUrl\`。
 3. prompt 写法：场景内容 + \`@角色ID\` 引用（自动带入 image_prompt 与参考图）；\`character\` / \`characters\` 字段声明出镜角色。
 4. 自画素材用 \`uploadAsset\`（**\`gameId\` + \`data\` base64/data URL**，不是 gameSlug；type=cover|character|scene，角色再带 \`characterId\`）再挂接。若 \`updateCharacter imageUrl\` 偶发 401，可把 \`image_url\` 写进 DSL 的 \`ai.characters\` 后 \`setGameDsl\` 同步。批量图：先全部 \`uploadAsset\`，再把 URL 写回剧本并 \`setGameDsl\`。配音/视频需求大时走编辑器或批量工具。
+5. 终稿可通过 \`npx @roudanio/cli push story.md --game <id> --publish\` 一键安全同步上线（自带前置体检与发布状态保护）。
 
 ## 铁律
 

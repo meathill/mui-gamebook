@@ -47,3 +47,4 @@ cloudflare-env.d.ts
 .next
 .wrangler
 public/DSL_SPEC.md
+public/skills
