@@ -11,6 +11,13 @@ describe('static-posts library', () => {
     expect(typeof post?.content).toBe('string');
     expect(post?.content).toContain('互动小说');
     expect(post?.tags?.map((t) => t.tag)).toContain('Markdown');
+
+    const agentPost = getStaticBlogPostBySlug('ai-agent-gamebook-creation-guide');
+    expect(agentPost).not.toBeNull();
+    expect(agentPost?.title).toContain('AI Agent');
+    expect(agentPost?.category).toBe('tutorial');
+    expect(agentPost?.status).toBe('published');
+    expect(typeof agentPost?.content).toBe('string');
   });
 
   it('支持按分类筛选与分页', () => {

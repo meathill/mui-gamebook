@@ -145,7 +145,7 @@
 - `/admin` `/sign-in` `/my` 必须 `force-dynamic`。去掉根布局 cookies 后它们会变成一年静态壳。
 - 播放页不再给作者预览未发布作品（会读 session，页面无法缓存）。作者预览只走编辑器。
 - `/_next/static/*` 一年 immutable：主站原有 `public/_headers`，55 / 小鸟说补齐。
-- `packages/cms`（Payload）没有 wrangler，不按部署单元做缓存策略。独立站不做跨 Worker 发布钩子，继续时间盒。
+- `packages/cms`（Payload）未上线，已移除，博客迁移至统一的 MuiCV CMS。
 
 **ISR 必须配 queue，否则缓存过期即整站 500（2026-09-02，issue #18）**
 - 现象：8-15 上线 ISR 配方后，所有走 ISR 的路由在缓存条目过期需要后台重验证时返回**纯文本** `Internal Server Error`（Workers 运行时对未捕获异常的默认响应），静态页正常。Ahrefs 记 87/95 个 5XX，Health Score 33。
@@ -868,3 +868,12 @@ isValidVoiceId(voiceId: string, provider): boolean
   - `auth-config.ts` 显式配置 `rateLimit: { timeWindow: 60_000, maxRequests: 120 }`（**写入创建时的 key 行**，老 key 仍 10/天，要重建）
   - `resolveMcpAuth` 返回 `{ auth, error }`，限流映射 `429 + 40129`，不再伪装成未授权
 - **排查口诀**：MCP 上传/写库“莫名 401”先看是不是整把 key 全挂；`tools/list` 通而 `tools/call` 死 → 查 apikey 表 `rateLimitMax`/`requestCount`。
+
+## 移除未上线的 packages/cms 并迁移博客至 MuiCV CMS（2026-09）
+
+- **背景与决策**：仓库内 `packages/cms`（Payload CMS v3）从未部署上线，维护成本高且冗余。将其彻底移除，由生态统一的 MuiCV CMS（`https://cms.muicv.com`）接管文章发布与管理。
+- **文章迁移**：
+  - 通过 `muicv-cms` MCP（或 Payload REST API）将《用全模态 AI Agent 打造互动游戏书：从安装 Skills 到生图发布的全流程实战》（slug: `ai-agent-gamebook-creation-guide`）和《如何用 Markdown 制作互动小说？从零开始的文字冒险创作指南》（slug: `how-to-create-interactive-fiction-with-markdown`）全量迁移发布至 MuiCV CMS `posts` 集合（section: `guide`，status: `published`）。
+- **静态文章保留**：
+  - 项目内保留 `packages/app/src/lib/static-posts.ts` 及其测试，确保在后续页面重构前，主站核心 SEO 教程页保持 100% 可用与边缘预渲染稳定。
+  - `lib/blog.ts` 移除针对本地开发端口 `http://localhost:3021` 的硬编码 fallback，未配置 `NEXT_PUBLIC_CMS_API_URL` 时纯靠本地静态文章平滑支撑。

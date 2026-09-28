@@ -1,8 +1,8 @@
 /**
- * Blog data fetching from Payload CMS REST API.
+ * Blog data fetching with static fallback.
  *
- * The CMS runs as a separate service. Configure NEXT_PUBLIC_CMS_API_URL env var
- * to point to the Payload CMS instance (e.g. https://cms.muistory.com).
+ * Configurable via NEXT_PUBLIC_CMS_API_URL env var if connected to an external CMS.
+ * When not configured, seamlessly falls back to built-in static posts in static-posts.ts.
  */
 
 export interface BlogPost {
@@ -33,11 +33,7 @@ interface PayloadResponse<T> {
 
 function getCmsUrl(): string | null {
   const url = process.env.NEXT_PUBLIC_CMS_API_URL?.trim();
-  if (url) return url;
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3021';
-  }
-  return null;
+  return url || null;
 }
 
 import { getStaticBlogPostBySlug, getStaticBlogPosts } from './static-posts';

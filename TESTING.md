@@ -67,6 +67,5 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 - Next.js `page.tsx`/`layout.tsx` 里用 `async function` 声明的 Server Component——React DOM 的客户端渲染器不支持 async 函数组件，`@testing-library/react` 的 `render()` 无法调用，需要真实浏览器/RSC 渲染管线才能测
 - `StandaloneMiniGamePlayer.tsx` 通过 Blob + 动态 `import(blobUrl)` 加载小游戏模块，Node/jsdom 的模块加载器不支持 `blob:` scheme，"加载成功"和"游戏完成"分支不可达
 - `story-protocol.ts` 的 `createStoryClient`/`getIpInfo` 在函数体内直接 `new` 出 viem/Story Protocol SDK 对象且依赖真实网络请求；上线前仍需在测试网跑一次真实注册，测试无法替代
-- `packages/cms` 的 Payload 声明式配置（collections 均为纯字段声明，无自定义 `hooks`/`access`/`validate`）、`app/(payload)/**` admin 面板样板代码
 - 纯静态展示组件（无 props、无条件渲染、无状态），如 `components/home/*`、jianjian 的 `Header.tsx`/`Footer.tsx`/隐私政策与服务条款页
 - 已确认零引用的死代码（如曾经的 `packages/app/src/lib/auth.ts`，已删除）；`GameSettings.tsx` 已确认死代码但受权限限制未删除，暂时也未补测试

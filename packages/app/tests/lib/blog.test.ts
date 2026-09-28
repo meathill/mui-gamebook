@@ -13,25 +13,7 @@ describe('blog client library', () => {
     vi.restoreAllMocks();
   });
 
-  it('开发环境默认使用 http://localhost:3021', async () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ docs: [{ id: '1', title: 'Test Post', slug: 'test' }], totalDocs: 1 }),
-    });
-    globalThis.fetch = fetchMock;
-
-    const res = await getPublishedPosts();
-
-    expect(fetchMock).toHaveBeenCalled();
-    const calledUrl = fetchMock.mock.calls[0][0] as string;
-    expect(calledUrl.startsWith('http://localhost:3021/api/blog-posts')).toBe(true);
-    expect(res.docs.length).toBeGreaterThanOrEqual(1);
-    expect(res.docs.some((d) => d.slug === 'test')).toBe(true);
-  });
-
-  it('生产环境未配置 NEXT_PUBLIC_CMS_API_URL 时安全返回内置静态文章，不发起 fetch', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
+  it('未配置 NEXT_PUBLIC_CMS_API_URL 时安全返回内置静态文章，不发起 fetch', async () => {
     const fetchMock = vi.fn();
     globalThis.fetch = fetchMock;
 
@@ -40,6 +22,7 @@ describe('blog client library', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(res.docs.length).toBeGreaterThanOrEqual(1);
     expect(res.docs.some((d) => d.slug === 'how-to-create-interactive-fiction-with-markdown')).toBe(true);
+    expect(res.docs.some((d) => d.slug === 'ai-agent-gamebook-creation-guide')).toBe(true);
 
     const post = await getPostBySlug('how-to-create-interactive-fiction-with-markdown');
     expect(post).not.toBeNull();
