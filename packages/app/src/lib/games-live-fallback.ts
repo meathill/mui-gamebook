@@ -29,8 +29,10 @@ export async function fetchLiveGamesSnapshot(): Promise<ParsedGameRow[]> {
   const snapshot: ParsedGameRow[] = [];
   try {
     for (let offset = 0; ; offset += LIVE_SNAPSHOT_PAGE_SIZE) {
+      // 不可用 cache:'no-store'：一旦在渲染路径走到回退，会把整页钉成 private,no-store（issue #22）。
+      // 构建期/运行时回退都按公开目录 ISR 节奏缓存。
       const res = await fetch(`${base}/api/games?limit=${LIVE_SNAPSHOT_PAGE_SIZE}&offset=${offset}`, {
-        cache: 'no-store',
+        next: { revalidate: 3600 },
         signal: AbortSignal.timeout(15000),
       });
       if (!res.ok) return [];
@@ -54,7 +56,7 @@ export async function fetchLiveGameBySlug(slug: string): Promise<GameDetail | nu
   if (!base) return null;
   try {
     const res = await fetch(`${base}/api/games/${encodeURIComponent(slug)}`, {
-      cache: 'no-store',
+      next: { revalidate: 3600 },
       signal: AbortSignal.timeout(15000),
     });
     if (!res.ok) return null;

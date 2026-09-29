@@ -142,6 +142,12 @@
 - `/_next/static/*` 一年 immutable：主站原有 `public/_headers`，55 补齐。
 - `packages/cms`（Payload）未上线，已移除，博客迁移至统一的 MuiCV CMS。
 
+**公开页 HTML private,no-store → ISR + Workers Cache（2026-09-29，issue #22）**
+- 现象：`/`、`/games`、`/play/*`、`/tags/*` 发 `private, no-store`；`/how-to-play`、`/blog`、`/games/p/2` 已是 s-maxage。
+- 根因三件套：① `games-live-fallback` 用 `cache: 'no-store'`，构建/回退路径会把整页钉成动态；② `/play`、`/tags` 的 `generateStaticParams` 调 D1（对比 `/games/p` 空数组则 ISR 正常）；③ 按需 ISR 缺 `withStoredRevalidate`，长尾常 STALE/`s-maxage=2`。
+- 修复：回退改 `next: { revalidate: 3600 }`；play/tags `generateStaticParams=[]`；首页 HEADLESS 改读 `process.env`；`createRevalidatingOpenNextConfig` 包 `withStoredRevalidate`（查 tag 用真实 lastModified）；自定义 `worker.ts` + `cache.enabled` 做 Workers Cache 边缘 HTML，发布时 `revalidatePublicCatalog` 延迟 purge。
+- 验证：`curl -sI https://muistory.com/` 应见 `x-nextjs-cache` + `s-maxage`（或边缘 `cf-cache-status: HIT` / `x-edge-cache: cache`）；`/sign-in`、`/admin` 仍 private。
+
 **ISR 必须配 queue，否则缓存过期即整站 500（2026-09-02，issue #18）**
 - 现象：8-15 上线 ISR 配方后，所有走 ISR 的路由在缓存条目过期需要后台重验证时返回**纯文本** `Internal Server Error`（Workers 运行时对未捕获异常的默认响应），静态页正常。Ahrefs 记 87/95 个 5XX，Health Score 33。
 - 根因：OpenNext 的 `revalidate` 是 time-based 时**必须配置 queue**（官方 caching 文档明说）。未配置时落到 dummy queue，`send()` 直接 `throw FatalError("Dummy queue is not implemented")`，从 cacheInterceptor / Next server 的 ISR 重验证路径逃出 Next 错误边界，error.tsx 兜不住。

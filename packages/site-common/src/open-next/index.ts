@@ -3,6 +3,7 @@ import r2IncrementalCache from '@opennextjs/cloudflare/overrides/incremental-cac
 import { withRegionalCache } from '@opennextjs/cloudflare/overrides/incremental-cache/regional-cache';
 import memoryQueue from '@opennextjs/cloudflare/overrides/queue/memory-queue';
 import d1NextTagCache from '@opennextjs/cloudflare/overrides/tag-cache/d1-next-tag-cache';
+import { withStoredRevalidate } from './isr-freshness-cache';
 
 interface RevalidatingOptions {
   /**
@@ -27,13 +28,21 @@ interface RevalidatingOptions {
  * ISR 的时间型 revalidate 依赖 queue：未配置时会落到 dummy queue，
  * 缓存过期一触发后台重验证就直接抛 FatalError，整页 500。
  * memory queue 只依赖 WORKER_SELF_REFERENCE service binding，重验证内部已自带容错。
+ *
+ * withStoredRevalidate（#22）：按条目自带的 revalidate 判定新鲜度，修复按需 ISR
+ * 路径被 Next 回退成 1s、几乎每次 STALE 的问题；查 tag 用真实 lastModified。
  */
 export function createRevalidatingOpenNextConfig(options: RevalidatingOptions = {}) {
+  const baseCache =
+    options.useR2Cache === false ? 'dummy' : withRegionalCache(r2IncrementalCache, { mode: 'long-lived' });
+
   return defineCloudflareConfig({
-    incrementalCache:
-      options.useR2Cache === false ? 'dummy' : withRegionalCache(r2IncrementalCache, { mode: 'long-lived' }),
+    incrementalCache: baseCache === 'dummy' ? 'dummy' : withStoredRevalidate(baseCache),
     enableCacheInterception: false,
     queue: memoryQueue,
     tagCache: options.tagCache ? d1NextTagCache : undefined,
   });
 }
+
+export { applyStoredRevalidate, withStoredRevalidate } from './isr-freshness-cache';
+export type { NextModeTagCache } from './isr-freshness-cache';

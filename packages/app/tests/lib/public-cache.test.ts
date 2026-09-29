@@ -4,6 +4,12 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
+vi.mock('@opennextjs/cloudflare', () => ({
+  getCloudflareContext: vi.fn(() => {
+    throw new Error('no cf context in unit test');
+  }),
+}));
+
 import { revalidatePath } from 'next/cache';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
 
@@ -15,7 +21,7 @@ describe('revalidatePublicCatalog', () => {
   it('始终刷新首页、目录和 sitemap', () => {
     revalidatePublicCatalog();
 
-    expect(revalidatePath).toHaveBeenCalledWith('/', 'layout');
+    expect(revalidatePath).toHaveBeenCalledWith('/');
     expect(revalidatePath).toHaveBeenCalledWith('/games', 'layout');
     expect(revalidatePath).toHaveBeenCalledWith('/sitemap.xml');
   });

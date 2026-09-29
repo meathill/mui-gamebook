@@ -63,6 +63,7 @@ describe('构建期无 D1 时回退抓线上 API', () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[0][0]).toBe('https://muistory.com/api/games?limit=100&offset=0');
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ next: { revalidate: 3600 } });
     expect(fetchMock.mock.calls[1][0]).toBe('https://muistory.com/api/games?limit=100&offset=100');
     expect(games).toHaveLength(101);
     expect(games[0].tags).toEqual(['悬疑']);

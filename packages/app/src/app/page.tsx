@@ -2,7 +2,6 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 import { redirect } from 'next/navigation';
-import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { ArrowRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import { getFeaturedGames } from '@/lib/games';
@@ -50,14 +49,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const { env } = await getCloudflareContext({ async: true });
-
-  // Headless 模式：自动跳转到 admin 页面
-  // wrangler.jsonc 里 HEADLESS_MODE 的默认值固定是 "false"，wrangler types 会把它
-  // 推断成字面量类型而不是 string，这里显式加宽类型，避免部署环境把它改成 "true" 时
-  // 这个比较被 TS 判定为"两个字面量类型没有交集"
-  if ((env.HEADLESS_MODE as string) === 'true') {
-    if (!env.COOKIE_DOMAIN) {
+  // Headless 模式：读 process.env（OpenNext 会把 wrangler vars 注入），避免
+  // getCloudflareContext 参与公开首页渲染路径（issue #22）。
+  // wrangler types 把 HEADLESS_MODE 推断成字面量 "false"，显式加宽以免部署改成 "true" 时比较被判无交集。
+  if ((process.env.HEADLESS_MODE as string | undefined) === 'true') {
+    if (!process.env.COOKIE_DOMAIN) {
       throw new Error('HEADLESS_MODE 启用时必须配置 COOKIE_DOMAIN');
     }
     redirect('/admin');

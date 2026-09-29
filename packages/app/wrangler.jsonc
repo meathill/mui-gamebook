@@ -1,6 +1,10 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "main": ".open-next/worker.js",
+  // 自定义入口包一层 .open-next/worker.js：出口写 Workers Cache 边缘策略（issue #22）
+  "main": "worker.ts",
+  "alias": {
+    "open-next-generated-worker": "./.open-next/worker.js"
+  },
   "name": "mui-gamebook",
   "compatibility_date": "2026-06-27",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
@@ -37,6 +41,11 @@
   },
   "placement": {
     "mode": "smart"
+  },
+  // Workers Cache（issue #22）：Worker 前分层缓存，命中先于 smart placement。
+  // 缓存与否由 worker.ts 的 Cloudflare-CDN-Cache-Control 决定；cross_version_cache 默认 false。
+  "cache": {
+    "enabled": true
   },
   "r2_buckets": [
     {

@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
-import { cachedGetGameBySlug, getPublishedGames } from '@/lib/games';
+import { cachedGetGameBySlug } from '@/lib/games';
 import GamePlayer from '@/components/GamePlayer';
 import { GamePlayerImmersive } from '@/components/game-player';
 import PlayWebMcpTools from '@/components/PlayWebMcpTools';
@@ -16,13 +16,10 @@ import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/util
 export const revalidate = 3600;
 export const dynamicParams = true;
 
-export async function generateStaticParams() {
-  try {
-    const games = await getPublishedGames();
-    return games.map((game) => ({ slug: game.slug }));
-  } catch {
-    return [];
-  }
+// 不在构建期拉 D1 / 线上快照：generateStaticParams 里碰 getCloudflareContext 或
+// cache:'no-store' 回退会把按需 ISR 路径钉成动态（issue #22）。与 /games/p/* 一样空数组 + dynamicParams。
+export function generateStaticParams() {
+  return [];
 }
 
 type GameForLd = NonNullable<Awaited<ReturnType<typeof cachedGetGameBySlug>>>;

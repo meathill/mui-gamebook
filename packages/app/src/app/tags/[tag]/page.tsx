@@ -1,16 +1,11 @@
-import { getAllTags } from '@/lib/games';
 import { generateTagMetadata, TagCatalog } from './tag-catalog';
 
 export const revalidate = 3600;
 export const dynamicParams = true;
 
-export async function generateStaticParams() {
-  try {
-    const tags = await getAllTags();
-    return tags.map((item) => ({ tag: item.tag }));
-  } catch {
-    return [];
-  }
+// 空数组 + dynamicParams：避免 generateStaticParams 触达 D1/no-store 回退把标签页钉成动态（issue #22）
+export function generateStaticParams() {
+  return [];
 }
 
 type Props = {
