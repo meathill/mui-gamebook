@@ -5,6 +5,9 @@ const TRANSFORM_PREFIX = '/cdn-cgi/image';
 /** 已知会在 Cloudflare Image Resizing 回源时 403 的外域，生产环境直接回退本地占位 */
 const BLOCKED_HOSTS = ['picsum.photos'];
 
+/** 支持使用自身 Cloudflare Image Resizing 服务的 CDN 域名（就近在自身边缘缩放） */
+export const SELF_RESIZING_HOSTS = ['i.muicv.com'];
+
 /** 本地占位图，替代失效外链 */
 export const PLACEHOLDER_COVER = '/images/placeholder-cover-400x600.png';
 
@@ -54,6 +57,24 @@ export function resolveCoverSrc(src: string | null | undefined): string {
   return trimmed;
 }
 
+/**
+ * 判断图片是否属于当前 Cloudflare Zone（muistory.com 及其子域）或本地路径。
+ * Cloudflare Image Resizing (/cdn-cgi/image/...) 默认仅能缩放同 Zone 资源；
+ * 未在 Cloudflare 后台授权的外域通过本站 cdn-cgi 代理会直接报 403 Forbidden。
+ */
+export function isSameZoneHost(src: string): boolean {
+  if (src.startsWith('/') && !src.startsWith('//')) {
+    return true;
+  }
+  try {
+    const urlString = src.startsWith('//') ? `https:${src}` : src;
+    const { hostname } = new URL(urlString);
+    return hostname === 'muistory.com' || hostname.endsWith('.muistory.com') || hostname === 'localhost';
+  } catch {
+    return false;
+  }
+}
+
 export function buildCloudflareImageUrl({ src, width, quality }: ImageLoaderProps) {
   const trimmed = src.trim();
 
@@ -67,7 +88,11 @@ export function buildCloudflareImageUrl({ src, width, quality }: ImageLoaderProp
     return src;
   }
 
-  const normalizedSource = trimmed.startsWith('/') && !trimmed.startsWith('//') ? trimmed.slice(1) : trimmed;
+  // 避免已带 /cdn-cgi/image/ 的 URL 被二次重复嵌套
+  if (trimmed.includes(TRANSFORM_PREFIX)) {
+    return src;
+  }
+
   const options = [`fit=scale-down`, `format=auto`, `width=${normalizeWidth(width)}`];
   const normalizedQuality = normalizeQuality(quality);
 
@@ -75,7 +100,46 @@ export function buildCloudflareImageUrl({ src, width, quality }: ImageLoaderProp
     options.push(`quality=${normalizedQuality}`);
   }
 
-  return `${TRANSFORM_PREFIX}/${options.join(',')}/${normalizedSource}`;
+  const optionStr = options.join(',');
+
+  // 1. 同 Zone 资源（本地相对路径、muistory.com 及其子域）：走当前站的 /cdn-cgi/image/
+  if (isSameZoneHost(trimmed)) {
+    const normalizedSource = trimmed.startsWith('/') && !trimmed.startsWith('//') ? trimmed.slice(1) : trimmed;
+    return `${TRANSFORM_PREFIX}/${optionStr}/${normalizedSource}`;
+  }
+
+  // 2. 自带 Cloudflare Image Resizing 的外部 CDN（如 i.muicv.com）：由其自身域名节点就近缩放
+  try {
+    const urlString = trimmed.startsWith('//') ? `https:${trimmed}` : trimmed;
+    const url = new URL(urlString);
+    if (SELF_RESIZING_HOSTS.includes(url.hostname)) {
+      return `${url.origin}${TRANSFORM_PREFIX}/${optionStr}/${url.href}`;
+    }
+  } catch {
+    // 忽略解析错误，降级返回原图
+  }
+
+  // 3. 未知或不支持的外域：直接返回原图 URL，避免 403 裂图
+  return src;
+}
+
+/**
+ * 针对普通 <img> 或 Markdown 配图的 URL 优化辅助函数：
+ * 支持同 Zone 资源及 i.muicv.com 等自有 CDN 自动缩放与压缩，
+ * 默认宽度 1280、质量 75。
+ */
+export function buildOptimizedImageUrl(
+  src: string | null | undefined,
+  options?: { width?: number; quality?: number },
+): string {
+  if (!src) return '';
+  const trimmed = src.trim();
+  if (!trimmed) return '';
+  return buildCloudflareImageUrl({
+    src: trimmed,
+    width: options?.width ?? 1280,
+    quality: options?.quality ?? DEFAULT_IMAGE_QUALITY,
+  });
 }
 
 export default function cloudflareImageLoader(props: ImageLoaderProps) {

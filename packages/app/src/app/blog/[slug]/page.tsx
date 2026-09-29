@@ -7,6 +7,7 @@ import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
 import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import type { Metadata } from 'next';
 import JsonLd from '@/components/JsonLd';
+import { buildOptimizedImageUrl } from '../../../../image-loader';
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -70,6 +71,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
   };
 }
+
+const markdownComponents = {
+  img: ({ src, alt, ...rest }: React.ComponentProps<'img'>) => {
+    if (!src || typeof src !== 'string') return null;
+    const optimizedSrc = buildOptimizedImageUrl(src, { width: 1280, quality: 75 });
+    return (
+      <img
+        {...rest}
+        src={optimizedSrc}
+        alt={alt || ''}
+        loading="lazy"
+        decoding="async"
+        className="rounded-lg border border-gray-100 shadow-sm my-6 max-w-full h-auto"
+      />
+    );
+  },
+};
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
@@ -156,7 +174,7 @@ export default async function BlogPostPage({ params }: Props) {
         <div className="prose prose-gray max-w-none">
           {post.content ? (
             typeof post.content === 'string' ? (
-              <ReactMarkdown>{post.content}</ReactMarkdown>
+              <ReactMarkdown components={markdownComponents}>{post.content}</ReactMarkdown>
             ) : (
               <RichTextContent content={post.content} />
             )

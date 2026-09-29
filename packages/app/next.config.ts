@@ -33,6 +33,11 @@ const nextConfig: NextConfig = {
         hostname: 'i.muistory.com',
         port: '',
       },
+      {
+        protocol: 'https',
+        hostname: 'i.muicv.com',
+        port: '',
+      },
     ],
   },
   reactStrictMode: false,
