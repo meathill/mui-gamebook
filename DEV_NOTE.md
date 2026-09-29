@@ -49,12 +49,6 @@
 - 决策原因：避免供应商锁定，不同任务可选用最优模型
 - 工厂函数 `createAiProvider()` 按配置自动选择
 
-**AI Chatbot 操作排序策略**
-- 使用 Function Calling 让 AI 精确操作 DSL，而非直接生成文本
-- 多操作按优先级排序：添加 → 删除 → 更新
-- 操作完成后自动清理无效连线（cleanupInvalidEdges）
-- 细粒度操作（如 updateSceneText）优于粗粒度（updateScene），防止 AI 幻觉导致数据丢失
-
 **异步操作系统**
 - 视频生成等耗时操作使用 `pending://` 占位符
 - 前端每 10 秒轮询检查状态
@@ -109,7 +103,7 @@
 
 - 起因三连：immersive 作品的标题页滚不动、开始游戏后再也回不到标题页、游戏内面板状态无法通过 URL 表达。三件事同一个根子：**`isGameStarted` 一个布尔值同时承担了「有没有存档」和「该显示哪一屏」两种语义**，而 UI 状态完全不进 URL。
 - 滚动 bug 的具体成因：`GamePlayerImmersive` 在函数体第一行无条件调 `useImmersiveMode()`，早于 `if (!isGameStarted) return <TitleScreen/>` 的提前 return，于是标题页阶段 `<html data-immersive="true">` 就已经生效，`globals.css` 的 `body { overflow: hidden }` 把整页锁死。**hook 里带副作用又跑在提前 return 之前，是这类 bug 的通用形态**——副作用的开关条件必须和渲染分支用同一个判据。
-- 现在的语义：`isGameStarted` 只表示「有没有进行中的存档」（两个播放器解构时直接改名 `hasSave` 提醒自己），显示哪一屏由 hash 决定。`use-game-player.ts` 行为一行没改，55/jianjian 零影响。
+- 现在的语义：`isGameStarted` 只表示「有没有进行中的存档」（两个播放器解构时直接改名 `hasSave` 提醒自己），显示哪一屏由 hash 决定。`use-game-player.ts` 行为一行没改，55 零影响。
 - **hash 词表**（`components/game-player/hooks/useGameHashRoute.ts`）：无 hash = intro（唯一 canonical 落点），`#play` = 游戏中，其余注册过的 token = 叠在视图上的面板（当前 `#settings`/`#comments`）。认不出来的 hash 一律当 intro，不猜。
 - **导航规则**：视图 = 页面语义，切换用 push；面板 = 模态语义，打开 push、**关闭走 `history.back()`**，这样 X 按钮和 Android 返回键完全等价（绝不 push 一条"已关闭"记录，否则返回键会把面板重新打开）。面板互切用 replace，栈里最多一条面板记录。冷启动直接落在面板 hash 上时没有可退的历史，改用 `replaceState`（`didPushPanelRef` 守卫，防止 back 把用户弹出站外）。
 - **加新面板的 checklist**：① `GamePanel` union 加成员 ② `PANEL_BASE` 加一行声明冷启动 base 视图 ③ 组件里按 `route.panel` 渲染 ④ 确认页面上没有同名 DOM id（`Comment.tsx` 有 `id="comment"`，和 `#comments` 只差一个字母）。
@@ -123,7 +117,7 @@
 **Radix UI 引入**
 - 时机：编辑器功能复杂化后，需要更可靠的无障碍组件
 - 使用 Radix Themes 作为基础 UI 库
-- 图标最初统一使用 lucide-react，2026-06-28 起改为统一使用 @phosphor-icons/react（packages/app 与 jianjian 已全量迁移；sites/55 在 2026-07 的全盘维护中补齐迁移，全仓库不再有 lucide-react 依赖）
+- 图标最初统一使用 lucide-react，2026-06-28 起改为统一使用 @phosphor-icons/react（packages/app 与 sites/55 已全量迁移，全仓库不再有 lucide-react 依赖）
 
 **Radix Themes 移除（2026-07-17，issue #5）**
 - 全站实际只用到 Theme/Button/IconButton/DropdownMenu 四种组件，却为此全量加载 812KB（未压缩）styles.css，是 PSI「unused CSS 71KiB」与首页渲染阻塞的主因
@@ -137,7 +131,7 @@
 - issue #15：`request.ts` 不再读 cookie / Accept-Language，服务端始终中文。根布局读 `cookies()` 会把整站钉成 `private, no-cache`，公开目录无法 ISR。语言切换改纯客户端（写 cookie + 换 messages，不再 `router.refresh()`）。英文用户公开页会先闪一帧中文 chrome。
 
 **多站点 ISR / 缓存（2026-08-15，issue #15；2026-09-05 issue #20 关闭 cache interception）**
-- 配方：`createRevalidatingOpenNextConfig()` = R2 incremental cache + `withRegionalCache({ mode: 'long-lived' })`，`enableCacheInterception: false`。主站 / 小鸟说 / 55 共用，headless 部署跟主站同一份 `open-next.config.ts`。
+- 配方：`createRevalidatingOpenNextConfig()` = R2 incremental cache + `withRegionalCache({ mode: 'long-lived' })`，`enableCacheInterception: false`。主站 / 55 共用，headless 部署跟主站同一份 `open-next.config.ts`。
 - #20 背景：Next 16.3 + OpenNext 出现可见 `<Link>` 目标循环发 `_rsc` 预取、两天烧掉 ~10M Worker 请求的线上事故（freeaiapi），只关 `optimisticRouting` 拦不住，关掉 cache interception 才停。上游：opennextjs-cloudflare#1348、opennextjs-aws#1212。本仓库当时在 Next `~16.2.9`，趁升级 16.3.4 前先关，避免多站复现。
 - 页脚 / 次级导航 / 低意向链接统一 `prefetch={false}`（Footer、Pagination、AdminNav/MyNav、tag 链接、分类过滤、翻页、回退链接等），主导航和正文卡片保持默认预取。
 - 55 会从主站 API 拉剧本，不是纯 SSG，不上 Static Assets incremental cache。
@@ -145,24 +139,18 @@
 - 列表分页不能用 `?page=`：await searchParams 会把整页钉成 `private, no-cache`。已改成 `/games/p/2`、`/blog/c/update` 这类路径，旧 query 由 middleware 308 过去。详情页补 `generateStaticParams`（失败则空数组 + `dynamicParams`）才能按需 ISR。
 - `/admin` `/sign-in` `/my` 必须 `force-dynamic`。去掉根布局 cookies 后它们会变成一年静态壳。
 - 播放页不再给作者预览未发布作品（会读 session，页面无法缓存）。作者预览只走编辑器。
-- `/_next/static/*` 一年 immutable：主站原有 `public/_headers`，55 / 小鸟说补齐。
+- `/_next/static/*` 一年 immutable：主站原有 `public/_headers`，55 补齐。
 - `packages/cms`（Payload）未上线，已移除，博客迁移至统一的 MuiCV CMS。
 
 **ISR 必须配 queue，否则缓存过期即整站 500（2026-09-02，issue #18）**
 - 现象：8-15 上线 ISR 配方后，所有走 ISR 的路由在缓存条目过期需要后台重验证时返回**纯文本** `Internal Server Error`（Workers 运行时对未捕获异常的默认响应），静态页正常。Ahrefs 记 87/95 个 5XX，Health Score 33。
 - 根因：OpenNext 的 `revalidate` 是 time-based 时**必须配置 queue**（官方 caching 文档明说）。未配置时落到 dummy queue，`send()` 直接 `throw FatalError("Dummy queue is not implemented")`，从 cacheInterceptor / Next server 的 ISR 重验证路径逃出 Next 错误边界，error.tsx 兜不住。
 - 修复：`createRevalidatingOpenNextConfig()` 加 `queue: memoryQueue`（`@opennextjs/cloudflare/overrides/queue/memory-queue`）。它只依赖项目已有的 `WORKER_SELF_REFERENCE` service binding（向自身发 HEAD 触发重验证），内部自带容错与 isolate 级去重，零新增基础设施。
-- 按需失效：同轮启用 D1 tag cache（`tagCache: d1NextTagCache`，binding `NEXT_TAG_CACHE_D1` 复用各自主库），`revalidatePath` 真正生效；`revalidations` 表由 deploy 时的 populateCache 自动创建，无需手写 migration。配置函数参数化（`{ tagCache?: boolean }`）：无 D1 的 55 / 小鸟说读者站不开启，否则它们部署时 populateCache 会因缺绑定抛错；binding 缺失时运行时也会自动禁用（安全 no-op）。
+- 按需失效：同轮启用 D1 tag cache（`tagCache: d1NextTagCache`，binding `NEXT_TAG_CACHE_D1` 复用各自主库），`revalidatePath` 真正生效；`revalidations` 表由 deploy 时的 populateCache 自动创建，无需手写 migration。配置函数参数化（`{ tagCache?: boolean }`）：无 D1 的 55 读者站不开启，否则它们部署时 populateCache 会因缺绑定抛错；binding 缺失时运行时也会自动禁用（安全 no-op）。
 - 升级路径：流量上来后可换 `do-queue`（持久 + 重试 + 跨请求去重），需给每个 wrangler 配置加 `NEXT_CACHE_DO_QUEUE` durable object binding 和 `new_sqlite_classes` migration。
 - 遗留：regional cache（Cache API）在按需失效后最长 1 小时仍返回旧条目；要彻底即时需配 cache purge（`CACHE_PURGE_API_TOKEN` + `CACHE_PURGE_ZONE_ID` secrets），涉及账号级操作，另行安排。
 - 排查工具：`npx wrangler tail mui-gamebook` 抓实时异常栈（5 分钟定位根因）；`pnpm run audit-sitemap` 全量审计 sitemap URL 状态码（5XX 时退出码 1）。
 - 教训：① OpenNext 启用 ISR 要对照官方 caching 文档检查 queue / tag cache 前置条件，不能只配 incremental cache；② 「纯文本 500」= 异常在 Next 错误边界之外，先 `wrangler tail` 再读代码，别靠静态分析猜。
-
-**MediaAssetItem 统一组件**
-- 将封面编辑器和素材编辑器合并
-- 决策原因：两者逻辑高度重复（预览、生成、上传），统一后减少维护成本
-
----
 
 ## 异步操作系统
 
@@ -302,6 +290,16 @@ import { GOOGLE_VOICES, OPENAI_VOICES } from '@mui-gamebook/core/lib/voice-confi
 - `/packages/core/lib/voice-config.ts` - 统一音色配置
 - `/packages/app/src/lib/ai-service.ts` - `generateAndUploadTTS` 函数
 - `/packages/app/src/app/api/cms/assets/generate-tts/route.ts` - TTS API
+
+### 批量生成与编辑器音色是两套独立配置
+
+- 命令行批量生成（`asset-generator` 的 `remote`/`local` 命令）通过环境变量 `DEFAULT_TTS_VOICE` 覆盖默认音色，仅支持 Google/Gemini 音色名（`Aoede` 温和女声-默认、`Kore` 活泼女声、`Puck` 活泼男声、`Leda` 温柔女声、`Charon` 沉稳男声）；未设置时用按 provider 的官方默认音色。
+- 编辑器手动生成在每个角色表单里单独选 TTS provider（`mimo`/`google`/`openai`，默认 `mimo`）和音色，随角色数据保存，与 `DEFAULT_TTS_VOICE` 无关。
+
+### 创作侧小贴士
+
+- 创建游戏前先配好 `ai.style` 和 `ai.characters`，后续生成的所有素材会自动合并这些配置，保持风格一致（见上文「AI 上下文自动合并」）。
+- 编辑器中输入 `@` 会弹出角色选择列表，插入后显示高亮的角色名称标签（类似聊天软件的 @ 提及，`CharacterMentionTextarea` 组件）。
 
 ## 多 AI Provider 支持
 
@@ -500,7 +498,7 @@ prompt 之后，**音频缓存不会自动失效**，因为它的 key 里根本�
 
 ## MediaAssetItem 统一组件
 
-将封面编辑器和素材编辑器合并为统一的 `MediaAssetItem` 组件：
+将封面编辑器和素材编辑器合并为统一的 `MediaAssetItem` 组件（决策原因：两者逻辑高度重复——预览、生成、上传，统一后减少维护成本）：
 
 **组件路径：** `/packages/app/src/components/editor/MediaAssetItem/`
 
@@ -878,3 +876,21 @@ isValidVoiceId(voiceId: string, provider): boolean
 - **静态文章保留**：
   - 项目内保留 `packages/app/src/lib/static-posts.ts` 及其测试，确保在后续页面重构前，主站核心 SEO 教程页保持 100% 可用与边缘预渲染稳定。
   - `lib/blog.ts` 移除针对本地开发端口 `http://localhost:3021` 的硬编码 fallback，未配置 `NEXT_PUBLIC_CMS_API_URL` 时纯靠本地静态文章平滑支撑。
+
+## better-auth API Key 页面增强（2026-09）
+
+`/my/api-keys` 密钥管理页在一期基础上的体验补齐：
+
+- **默认不过期**：创建密钥不再强制填过期时间（此前有默认有效期，长线索的 MCP 客户端会被静默吊销）。
+- **展示形态**：列表只显示 key 的前缀 + 末 6 位，完整 key 仅在创建时展示一次；吊销按钮用 danger 样式并二次确认。
+- **密钥页内嵌 MCP 接入范例**：直接给出 `/api/mcp` 的 curl/JSON 示例，用户拿到 key 即可联通；skills 文档同步补了实战踩坑（限流 401 误报等，见上文）。
+
+## 游戏评分与评价体系（2026-09-26）
+
+- **数据**：`GameRatings` 表（migration `0010_game_ratings.sql`）。`(game_id, user_id)` 唯一索引保证每个登录用户对每个游戏只有一条评分；匿名打星时 `user_id` 为 NULL；`hidden`/`pinned` 供创作者管理；级联删除跟随游戏。
+- **公开 API**：`POST /api/games/[slug]/ratings`（打分 + 留言；匿名可打星，留言需要登录）、`GET` 返回评价列表与均分。
+- **创作者 API**：`PATCH /api/cms/games/[id]/ratings/[ratingId]`（body `{hidden?, pinned?}`，至少传一个）隐藏/置顶评价；配套后台管理页。
+- **均分透出**：`lib/games.ts` 的 `ratingColumns()`/`pickRating()` 以相关子查询在目录、精选、相关推荐等公开查询里带出 `avg_rating`/`rating_count`（子查询写法注意上文「drizzle 相关子查询的两个坑」：表名要手写限定）。
+- **登录前评价不丢**：未登录用户填写的评分 + 留言先落 localStorage（`game-review-draft:<slug>`），登录成功跳回播放页后自动读取草稿并提交；已评价标记存在 `game-rated:<slug>`。
+- 组件：`game-player/RatingWidget.tsx`（打分 + 留言框）、`game-player/RatingSummary.tsx`（均分展示）。
+

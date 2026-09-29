@@ -56,7 +56,7 @@ pnpm run cf-typegen
 
 上线订阅前在 Stripe Dashboard 完成：
 
-1. 建 Product（建议两个：基础 / 专业）和 4 个 Recurring Price：
+1. 建 Product（建议两个：Pro / Pro+）和 4 个 Recurring Price：
    - `basic` 月付 $9.98、年付 $99.98
    - `pro` 月付 $19.98、年付 $199.98
 2. 创建 **Restricted API Key**（推荐，权限含 Customers / Subscriptions / Checkout Sessions / Billing Portal），配置 secret：

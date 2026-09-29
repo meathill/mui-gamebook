@@ -2,65 +2,9 @@ import { LightbulbIcon, SparkleIcon, SpinnerIcon, XIcon } from '@phosphor-icons/
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDialog } from '@/components/Dialog';
 import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
-import { getGameSessionHeaders } from '@/lib/editor/game-session';
-
-type GenerationPhase = 'idle' | 'thinking' | 'writing' | 'correcting';
-
-const PHASE_LABELS: Record<GenerationPhase, string> = {
-  idle: '生成游戏脚本',
-  thinking: 'AI 思考中...',
-  writing: '正在编写剧本...',
-  correcting: '正在修正剧本...',
-};
-
-type SSEGenerateEvent =
-  | { type: 'phase'; phase: 'thinking' | 'correcting' }
-  | { type: 'reasoning'; delta: string }
-  | { type: 'content'; delta: string }
-  | { type: 'done'; script: string }
-  | { type: 'error'; content: string };
-
-// 追问最多进行几轮：每轮用轻量模型判断信息是否已经足够清晰，不够就再问 2-3 个问题
-const MAX_CLARIFY_ROUNDS = 5;
-
-// AI 故事创作引导提示
-const STORY_PROMPTS = [
-  {
-    title: '经典故事新视角',
-    description:
-      '以《哈利波特》世界为例，我们可以选择一个不同的视角。比如纳威·隆巴顿，他在霍格沃茨会经历什么？他有没有可能成为找到魔法石的关键人物？或者成为击败伏地魔的英雄？换个主角，一个熟悉的世界会变得截然不同。',
-    example:
-      '故事设定在霍格沃茨魔法学校，主角是纳威·隆巴顿，一个害羞但勇敢的男孩。当哈利波特忙于追踪伏地魔时，纳威意外发现了一个关于自己父母的秘密...',
-  },
-  {
-    title: '历史关键时刻',
-    description:
-      '选择一个历史上的关键时刻，让玩家做出不同的选择。比如在三国时期的赤壁之战前夜，如果你是诸葛亮，你会如何说服孙权联盟？不同的对话选择会导致完全不同的历史走向。',
-    example:
-      '公元208年，曹操率领八十万大军南下。作为刘备的军师诸葛亮，你被派往东吴说服孙权联合抗曹。在江东的朝堂上，你将面对众多质疑者...',
-  },
-  {
-    title: '日常生活冒险',
-    description:
-      '有时候最好的故事就在我们身边。想象一下：一个普通的上班族在地铁上捡到一个神秘的U盘，里面的内容将彻底改变他的生活。每一个选择都可能让主角走向完全不同的结局。',
-    example:
-      '周一早晨，你像往常一样挤上拥挤的地铁。突然，你注意到座位上有一个被遗落的U盘。当你把它插进电脑时，屏幕上出现了一段加密视频...',
-  },
-  {
-    title: '生存挑战',
-    description:
-      '荒野求生类型的故事非常适合互动小说。玩家需要在资源有限的情况下做出艰难的选择：是冒险寻找水源，还是留在原地等待救援？每个决定都关系到生死存亡。',
-    example:
-      '你的飞机坠毁在一座荒岛上。除了一把小刀和半瓶水，你什么都没有。远处的丛林深处传来了奇怪的声音。太阳即将落山，你必须做出选择...',
-  },
-  {
-    title: '悬疑推理',
-    description:
-      '一个好的推理故事需要线索、嫌疑人和意想不到的结局。玩家扮演侦探，通过询问证人、检查现场来寻找真相。错误的推理可能会让真凶逍遥法外，甚至让无辜者蒙冤。',
-    example:
-      '豪华别墅的书房里，著名收藏家被发现死在自己的椅子上。门窗紧锁，没有任何暴力痕迹。作为被请来的私家侦探，你注意到桌上的茶杯还冒着热气...',
-  },
-];
+import { STORY_PROMPTS } from './storyPrompts';
+import { MAX_CLARIFY_ROUNDS, useClarifyFlow } from './useClarifyFlow';
+import { PHASE_LABELS, useGenerateScriptStream } from './useGenerateScriptStream';
 
 interface Props {
   id: string;
@@ -76,33 +20,22 @@ type ScriptMode = 'unset' | 'regenerate' | 'revise';
 
 export default function StoryImporter({ id, initialStory, existingScript, onImport, onClose, onSaveStory }: Props) {
   const [story, setStory] = useState(initialStory || '');
-  const [phase, setPhase] = useState<GenerationPhase>('idle');
-  const [reasoningText, setReasoningText] = useState('');
-  // content 事件不预览正文，只累计字数：各 provider 的思考可见性本就不同，
-  // 统一只展示阶段 + 字数，保证体验一致
-  const [writtenChars, setWrittenChars] = useState(0);
-  const loading = phase !== 'idle';
   const dialog = useDialog();
   const reasoningBoxRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
   // 已有剧本时，点击生成前先让用户选择"重新生成"还是"在现有剧本基础上修改"
   const [scriptMode, setScriptMode] = useState<ScriptMode>('unset');
   const [showScriptModeChoice, setShowScriptModeChoice] = useState(false);
-
-  // 多轮追问：questions 非空时渲染追问表单，替代下方的生成按钮；qaHistory 累积历次问答，
-  // clarifyRound 记录已经问过几轮（上限 MAX_CLARIFY_ROUNDS）
-  const [clarifyQuestions, setClarifyQuestions] = useState<string[]>([]);
-  const [clarifyAnswers, setClarifyAnswers] = useState<string[]>([]);
-  const [clarifyLoading, setClarifyLoading] = useState(false);
-  const [qaHistory, setQaHistory] = useState('');
-  const [clarifyRound, setClarifyRound] = useState(0);
 
   // 用户被授权多个 AI 时可切换，默认用户自选模型对应的供应商（付费），否则第一项
   const { providers, userDefaultProvider, userDefaultModel } = useAiPermissions();
   const [selectedProvider, setSelectedProvider] = useState<string>('');
   const activeProvider = selectedProvider || userDefaultProvider || providers[0];
   const activeModel = activeProvider === userDefaultProvider ? userDefaultModel : null;
+
+  const { phase, reasoningText, writtenChars, generate, cancel: cancelGeneration } = useGenerateScriptStream();
+  const clarify = useClarifyFlow({ gameId: id, provider: activeProvider, model: activeModel });
+  const loading = phase !== 'idle';
 
   // 随机选择一个提示
   const randomPrompt = useMemo(() => {
@@ -121,72 +54,16 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
     return qa ? `${story}\n\n补充信息：\n${qa}` : story;
   }
 
-  function buildRoundQa(): string {
-    return clarifyQuestions
-      .map((q, i) => (clarifyAnswers[i]?.trim() ? `Q: ${q}\nA: ${clarifyAnswers[i].trim()}` : ''))
-      .filter(Boolean)
-      .join('\n');
-  }
-
-  function appendQa(base: string, addition: string): string {
-    if (!addition) return base;
-    return base ? `${base}\n${addition}` : addition;
-  }
-
-  // 用轻量模型快速判断当前信息是否够用；失败或解析不出结果都当作"已就绪"，
-  // 调用方据此直接跳过追问、不阻塞用户
-  async function fetchAssessment(fullStory: string): Promise<{ ready: boolean; questions: string[] }> {
-    try {
-      const res = await fetch(`/api/cms/games/${id}/clarify-story`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getGameSessionHeaders(id),
-        },
-        body: JSON.stringify({
-          story: fullStory,
-          provider: activeProvider,
-          ...(activeModel ? { model: activeModel } : {}),
-        }),
-      });
-      if (!res.ok) return { ready: true, questions: [] };
-      const data = (await res.json()) as { ready?: boolean; questions?: string[] };
-      return { ready: data.ready ?? true, questions: data.questions ?? [] };
-    } catch {
-      return { ready: true, questions: [] };
-    }
-  }
-
-  // 每轮的核心流程：评估当前信息是否足够；不够且未达轮次上限就展示新一轮追问，
-  // 否则（已就绪 / 没问出问题 / 达到上限）直接进入正式生成
-  // mode 显式传入而不是读闭包里的 scriptMode：handleChooseRevise/Regenerate 里
-  // setScriptMode 之后同一事件里立刻调用这条链路，state 更新还没反映到闭包，
-  // 直接读 scriptMode 会拿到更新前的旧值
+  // 评估通过后进入正式生成；追问展示由 useClarifyFlow 内部处理
   async function assessAndProceed(qa: string, round: number, mode: ScriptMode) {
     const fullStory = buildFullStory(qa);
-
-    if (round >= MAX_CLARIFY_ROUNDS) {
+    if ((await clarify.assess(fullStory, round)) === 'generate') {
       await runGeneration(fullStory, mode);
-      return;
     }
-
-    setClarifyLoading(true);
-    const { ready, questions } = await fetchAssessment(fullStory);
-    setClarifyLoading(false);
-
-    if (ready || questions.length === 0) {
-      await runGeneration(fullStory, mode);
-      return;
-    }
-
-    setClarifyQuestions(questions);
-    setClarifyAnswers(questions.map(() => ''));
-    setClarifyRound(round + 1);
   }
 
   function proceedToGeneration(mode: ScriptMode) {
-    setQaHistory('');
-    setClarifyRound(0);
+    clarify.reset();
     void assessAndProceed('', 0, mode);
   }
 
@@ -213,118 +90,39 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
 
   // 用户主动要求"别问了，直接生成"：把当前轮已经填的答案一并带上，但不再评估
   function handleForceGenerate() {
-    const finalQaHistory = appendQa(qaHistory, buildRoundQa());
-    setClarifyQuestions([]);
-    setClarifyAnswers([]);
-    void runGeneration(buildFullStory(finalQaHistory), scriptMode);
+    const newQaHistory = clarify.submitRoundAnswers();
+    void runGeneration(buildFullStory(newQaHistory), scriptMode);
   }
 
   function handleSubmitClarifyAnswers() {
-    const newQaHistory = appendQa(qaHistory, buildRoundQa());
-    setQaHistory(newQaHistory);
-    setClarifyQuestions([]);
-    setClarifyAnswers([]);
-    void assessAndProceed(newQaHistory, clarifyRound, scriptMode);
+    const newQaHistory = clarify.submitRoundAnswers();
+    void assessAndProceed(newQaHistory, clarify.round, scriptMode);
   }
 
   async function runGeneration(finalStory: string, mode: ScriptMode) {
-    setPhase('thinking');
-    setReasoningText('');
-    setWrittenChars(0);
-    abortRef.current?.abort();
-    abortRef.current = new AbortController();
-    try {
-      // 先保存原始输入（不含追问拼接内容），确保用户输入不丢失
-      if (onSaveStory) {
-        onSaveStory(story);
-      }
-
-      const res = await fetch(`/api/cms/games/${id}/generate-script`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getGameSessionHeaders(id),
-        },
-        signal: abortRef.current.signal,
-        body: JSON.stringify({
-          story: finalStory,
-          provider: activeProvider,
-          ...(activeModel ? { model: activeModel } : {}),
-          ...(mode === 'revise' && existingScript ? { existingScript } : {}),
-        }),
-      });
-
-      if (!res.ok) {
-        const data = (await res.json()) as {
-          error: string;
-        };
-        throw new Error(data.error || '生成失败');
-      }
-
-      const reader = res.body?.getReader();
-      if (!reader) throw new Error('无法读取响应流');
-
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let script: string | null = null;
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() ?? '';
-
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const jsonStr = line.slice(6).trim();
-          if (!jsonStr) continue;
-
-          let event: SSEGenerateEvent;
-          try {
-            event = JSON.parse(jsonStr) as SSEGenerateEvent;
-          } catch (parseError) {
-            console.error('解析生成流消息失败:', parseError, jsonStr);
-            continue;
-          }
-
-          switch (event.type) {
-            case 'phase':
-              setPhase(event.phase);
-              break;
-            case 'reasoning':
-              setReasoningText((prev) => prev + event.delta);
-              break;
-            case 'content':
-              setPhase('writing');
-              setWrittenChars((prev) => prev + event.delta.length);
-              break;
-            case 'done':
-              script = event.script;
-              break;
-            case 'error':
-              throw new Error(event.content);
-          }
-        }
-      }
-
-      if (!script) throw new Error('未能生成剧本');
-
-      onImport(script);
-      onClose();
-    } catch (e: unknown) {
-      // 用户主动取消不弹错
-      if ((e as Error).name === 'AbortError') return;
-      await dialog.error((e as Error).message);
-    } finally {
-      abortRef.current = null;
-      setPhase('idle');
+    // 先保存原始输入（不含追问拼接内容），确保用户输入不丢失
+    if (onSaveStory) {
+      onSaveStory(story);
     }
-  }
 
-  function handleCancelGeneration() {
-    abortRef.current?.abort();
+    await generate(
+      {
+        gameId: id,
+        story: finalStory,
+        provider: activeProvider,
+        model: activeModel,
+        existingScript: mode === 'revise' ? existingScript : undefined,
+      },
+      {
+        onDone: (script) => {
+          onImport(script);
+          onClose();
+        },
+        onError: (message) => {
+          void dialog.error(message);
+        },
+      },
+    );
   }
 
   function handleUseExample() {
@@ -385,7 +183,7 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
                 <span className="text-xs text-purple-500">已写 {writtenChars} 字</span>
               )}
               <button
-                onClick={handleCancelGeneration}
+                onClick={cancelGeneration}
                 className="ml-auto text-xs text-gray-500 hover:text-red-600 underline shrink-0"
                 type="button">
                 取消
@@ -422,24 +220,21 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
               </button>
             </div>
           </div>
-        ) : clarifyQuestions.length > 0 ? (
+        ) : clarify.questions.length > 0 ? (
           <div className="mb-4 rounded-lg border border-purple-200 bg-purple-50 p-4">
             <p className="text-sm text-purple-900 font-medium mb-3">
               故事信息还不太完整，回答几个小问题能帮 AI 生成更贴合的剧本（也可以跳过）
-              <span className="text-purple-400 font-normal">{`（第 ${clarifyRound}/${MAX_CLARIFY_ROUNDS} 轮）`}</span>：
+              <span className="text-purple-400 font-normal">{`（第 ${clarify.round}/${MAX_CLARIFY_ROUNDS} 轮）`}</span>
+              ：
             </p>
             <div className="space-y-3">
-              {clarifyQuestions.map((q, i) => (
+              {clarify.questions.map((q, i) => (
                 <div key={q}>
                   <label className="text-xs text-purple-700 mb-1 block">{q}</label>
                   <input
                     type="text"
-                    value={clarifyAnswers[i] ?? ''}
-                    onChange={(e) => {
-                      const next = [...clarifyAnswers];
-                      next[i] = e.target.value;
-                      setClarifyAnswers(next);
-                    }}
+                    value={clarify.answers[i] ?? ''}
+                    onChange={(e) => clarify.setAnswer(i, e.target.value)}
                     className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
                     placeholder="可留空"
                   />
@@ -480,12 +275,12 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
             )}
             <button
               onClick={handleGenerateClick}
-              disabled={loading || clarifyLoading || !story.trim()}
+              disabled={loading || clarify.loading || !story.trim()}
               className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
               type="button">
-              {(loading || clarifyLoading) && <SpinnerIcon className="animate-spin size-4" />}
-              {clarifyLoading
-                ? `正在分析故事（第 ${clarifyRound + 1}/${MAX_CLARIFY_ROUNDS} 轮）...`
+              {(loading || clarify.loading) && <SpinnerIcon className="animate-spin size-4" />}
+              {clarify.loading
+                ? `正在分析故事（第 ${clarify.round + 1}/${MAX_CLARIFY_ROUNDS} 轮）...`
                 : PHASE_LABELS[phase]}
             </button>
           </div>

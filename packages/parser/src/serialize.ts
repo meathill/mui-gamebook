@@ -11,9 +11,17 @@
  * 可能被 CommonMark 识别为强调——表达式请使用空格（`a * 2`），引擎两种写法都支持。
  */
 import * as yaml from 'js-yaml';
-import { omitBy } from 'lodash-es';
 import type { AICharacter, Game, GameState, Scene, SceneRedirectNode, VariableMeta } from './types';
 import { isVariableMeta } from './utils';
+
+/** 浅层剔除值为 undefined 的键（唯一用例就是序列化前清字段，不需要引入工具库） */
+function omitUndefined<T extends object>(obj: T): T {
+  const result = {} as Record<string, unknown>;
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== undefined) result[key] = value;
+  }
+  return result as T;
+}
 
 function dumpYaml(obj: unknown): string {
   return yaml.dump(obj, { indent: 2, lineWidth: -1 }).trim();
@@ -42,7 +50,7 @@ function buildFrontMatter(game: Game): Record<string, unknown> {
     const cleanedState: GameState = {};
     for (const [key, val] of Object.entries(game.initialState)) {
       if (isVariableMeta(val)) {
-        cleanedState[key] = omitBy(val, (v) => v === undefined) as VariableMeta;
+        cleanedState[key] = omitUndefined(val) as VariableMeta;
       } else {
         cleanedState[key] = val;
       }
@@ -56,16 +64,13 @@ function buildFrontMatter(game: Game): Record<string, unknown> {
     if (Object.keys(game.ai.characters || {}).length > 0) {
       frontMatter.ai.characters = {};
       for (const [id, char] of Object.entries(game.ai.characters || {})) {
-        frontMatter.ai.characters[id] = omitBy(
-          {
-            name: char.name,
-            description: char.description,
-            image_prompt: char.image_prompt,
-            image_url: char.image_url,
-            voice_name: char.voice_name,
-          },
-          (v) => v === undefined,
-        ) as unknown as AICharacter;
+        frontMatter.ai.characters[id] = omitUndefined({
+          name: char.name,
+          description: char.description,
+          image_prompt: char.image_prompt,
+          image_url: char.image_url,
+          voice_name: char.voice_name,
+        }) as unknown as AICharacter;
       }
     }
   }
@@ -97,31 +102,26 @@ function buildSceneMetadata(scene: Scene): Record<string, unknown> {
 
   const metadata: Record<string, unknown> = {};
   if (imageNode && imageNode.type === 'ai_image') {
-    metadata.image = omitBy(
-      {
-        prompt: imageNode.prompt,
-        character: imageNode.character,
-        characters: imageNode.characters,
-        url: imageNode.url,
-        aspectRatio: imageNode.aspectRatio,
-      },
-      (v) => v === undefined,
-    );
+    metadata.image = omitUndefined({
+      prompt: imageNode.prompt,
+      character: imageNode.character,
+      characters: imageNode.characters,
+      url: imageNode.url,
+      aspectRatio: imageNode.aspectRatio,
+    });
   }
   if (audioNode && audioNode.type === 'ai_audio') {
-    metadata.audio = omitBy(
-      { type: audioNode.audioType, prompt: audioNode.prompt, url: audioNode.url },
-      (v) => v === undefined,
-    );
+    metadata.audio = omitUndefined({ type: audioNode.audioType, prompt: audioNode.prompt, url: audioNode.url });
   }
   if (videoNode && videoNode.type === 'ai_video') {
-    metadata.video = omitBy({ prompt: videoNode.prompt, url: videoNode.url }, (v) => v === undefined);
+    metadata.video = omitUndefined({ prompt: videoNode.prompt, url: videoNode.url });
   }
   if (minigameNode && minigameNode.type === 'minigame') {
-    metadata.minigame = omitBy(
-      { prompt: minigameNode.prompt, variables: minigameNode.variables, url: minigameNode.url },
-      (v) => v === undefined,
-    );
+    metadata.minigame = omitUndefined({
+      prompt: minigameNode.prompt,
+      variables: minigameNode.variables,
+      url: minigameNode.url,
+    });
   }
 
   // 场景元数据未知键写回（与 parse 的 scene.extra 透传配对）

@@ -11,12 +11,13 @@ MUI Gamebook 是一个创新的平台，旨在创建、游玩和分发由 AI 辅
 ### 🎨 AI 辅助创作
 - **零代码门槛**：用自然语言描述创意，AI 自动生成完整剧本
 - **AI Chatbot 全天候辅助**：24 小时智能助手，随时优化剧情、修改细节
-- **多模型支持**：GPT-4、Gemini 等主流模型
+- **按模态解耦的多模型**：文本默认 OpenCode Go / DeepSeek，生图与视频默认 Google Gemini，语音合成默认小米 MiMo，经 Cloudflare AI Gateway 统一调度
 
 ### 🎮 丰富的互动体验
 - **变量系统**：好感度、物品、属性等多种变量类型，创造真正的分支剧情
 - **小游戏嵌入**：AI 自动生成互动小游戏（解谜、战斗等）
 - **多媒体支持**：AI 生成图片、语音，打造沉浸式阅读体验
+- **结局评分与评价**：玩家可为作品打分留言，创作者可管理评价（隐藏/置顶）
 
 ### 🌐 跨平台发布
 - **一键发布到 Web**：响应式设计适配各种设备
@@ -30,9 +31,19 @@ MUI Gamebook 是一个创新的平台，旨在创建、游玩和分发由 AI 辅
 | `/` | 首页：展示最新游戏、产品特色和 FAQ |
 | `/games` | 全部剧本列表，支持分页 |
 | `/play/[slug]` | 游戏详情和播放页面 |
-| `/about` | 关于我们：核心功能、技术栈介绍 |
+| `/tags` | 标签浏览 |
+| `/interactive-fiction` | 互动小说主题页 |
+| `/how-to-play` | 玩法指南 |
+| `/create` | 创作指南 |
+| `/blog` | 博客（内容来自 MuiCV CMS，未配置时回退内置静态文章） |
+| `/pricing` | 定价与套餐 |
+| `/skills` | Agent Skills 介绍 |
+| `/open` | 开放数据与开发者信息 |
+| `/my` | 个人中心：我的作品、API Key、设置 |
 | `/admin` | 管理后台入口 |
 | `/sign-in` | 登录页面 |
+| `/preview/[slug]` | 作者预览未发布作品（noindex，不参与缓存） |
+| `/privacy`、`/terms`、`/contact` | 隐私政策、服务条款、联系我们 |
 
 ## 技术栈
 
@@ -47,9 +58,10 @@ MUI Gamebook 是一个创新的平台，旨在创建、游玩和分发由 AI 辅
 - **Drizzle ORM**
 
 ### AI 集成
-- 图像生成：DALL-E、Stable Diffusion、Gemini
-- 文本生成：OpenAI GPT-4、Google Gemini
-- 语音合成：Azure TTS
+- 文本生成：默认 OpenCode Go（DeepSeek），可选 MiMo、Claude、Gemini、OpenAI
+- 图像/视频生成：默认 Google Gemini（GenAI）
+- 语音合成：默认小米 MiMo，可选 Google / OpenAI
+- 真实密钥统一托管在 Cloudflare AI Gateway（BYOK），应用侧不持有各 provider 的 key
 
 ### 工具链与生态
 - **[@roudanio/cli](https://www.npmjs.com/package/@roudanio/cli)**：创作者本地开发工具链（短别名 `mgb`），支持本地 AST 静态体检、SSE 热重载即时 Web 预览、Mermaid 拓扑图与一键云端同步
@@ -87,16 +99,21 @@ pnpm install
 # 创建数据库（如果尚未创建）
 # wrangler d1 create mui-gamebook
 
-# 执行 Schema 迁移
+# 执行 migrations/ 下的全部迁移（0000_init.sql … 0010_game_ratings.sql，共 11 个）
+pnpm --filter @mui-gamebook/app run db:migrate:local
+
+# 修改 schema 后重新生成迁移
 pnpm --filter=@mui-gamebook/app exec drizzle-kit generate
-wrangler d1 execute mui-gamebook --file=packages/app/migrations/0000_loose_doorman.sql
-wrangler d1 execute mui-gamebook --file=packages/app/migrations/0001_init.sql
 ```
 
 ### 3. 本地开发
 
 ```bash
-pnpm dev
+# 主站（localhost:3020）
+pnpm --filter @mui-gamebook/app run dev
+
+# 55 独立站点（localhost:3022）
+pnpm --filter ./sites/55 run dev
 ```
 
 ### 4. 用户系统初始化
@@ -104,7 +121,7 @@ pnpm dev
 本项目采用邀请制用户系统。首次运行时需要手动初始化管理员账户：
 
 ```bash
-curl -X POST http://localhost:3000/api/admin/invite \
+curl -X POST http://localhost:3020/api/admin/invite \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer your-secure-admin-secret" \
   -d '{"email": "admin@example.com", "password": "yourpassword", "name": "Admin"}'
@@ -197,11 +214,16 @@ PINATA_JWT=eyJ...
 pnpm test
 ```
 
-## 构建
+## 构建与部署
+
+根目录没有统一的 build 脚本，各可部署单元在自己的目录里构建和发布：
 
 ```bash
-pnpm build
+pnpm --filter @mui-gamebook/app run build   # 主站构建
+pnpm --filter @mui-gamebook/app run deploy  # 主站构建并发布（55 站点同理）
 ```
+
+详见 [DEPLOYMENT.md](./DEPLOYMENT.md)。
 
 ## 许可证
 

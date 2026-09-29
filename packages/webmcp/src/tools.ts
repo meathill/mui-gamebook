@@ -185,7 +185,8 @@ export const WEBMCP_TOOLS: WebMcpTool[] = [
       type: 'object',
       properties: {
         sceneId: { type: 'string', description: '场景 ID' },
-        choiceIndex: { type: 'integer', description: '新的目标场景 ID' },
+        choiceIndex: { type: 'integer', description: '选项索引（从 0 开始）' },
+        targetSceneId: { type: 'string', description: '新的目标场景 ID' },
       },
       required: ['sceneId', 'choiceIndex', 'targetSceneId'],
     },

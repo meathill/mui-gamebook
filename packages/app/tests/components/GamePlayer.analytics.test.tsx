@@ -18,14 +18,6 @@ vi.mock('../../src/hooks/useGameAnalytics', () => ({
   }),
 }));
 
-// Mock other hooks
-vi.mock('../../src/hooks/useAudioPlayer', () => ({
-  useAudioPlayer: () => ({
-    play: vi.fn(),
-    stop: vi.fn(),
-  }),
-}));
-
 vi.mock('../../src/components/Dialog', () => ({
   useDialog: () => ({
     confirm: vi.fn(),

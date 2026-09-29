@@ -5,6 +5,9 @@
 
 import { clampPollInterval } from './polling';
 
+// 占位符 URL 判断/解析的唯一实现在 pending-operations.ts，这里保持 re-export 兼容既有调用方
+export { extractOperationId, isPlaceholderUrl } from './pending-operations';
+
 type OperationCallback = (
   operationId: number,
   result: { status: 'completed' | 'failed'; url?: string; error?: string },
@@ -164,19 +167,3 @@ class PendingOperationsManager {
 
 // 导出单例
 export const pendingOperationsManager = new PendingOperationsManager();
-
-/**
- * 检查 URL 是否是占位符
- */
-export function isPlaceholderUrl(url: string): boolean {
-  return url.startsWith('pending://');
-}
-
-/**
- * 从占位符 URL 提取操作 ID
- */
-export function extractOperationId(url: string): number | null {
-  if (!isPlaceholderUrl(url)) return null;
-  const id = parseInt(url.replace('pending://', ''), 10);
-  return isNaN(id) ? null : id;
-}

@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { isPlaceholderUrl } from '@/lib/pending-operations';
 import { clampPollInterval } from '@/lib/polling';
 
 export type OperationStatus = 'pending' | 'completed' | 'failed';
@@ -20,13 +21,6 @@ interface UseAsyncOperationOptions {
   maxAttempts?: number; // 最大尝试次数，默认 120
   onComplete?: (url: string) => void;
   onError?: (error: string) => void;
-}
-
-/**
- * 检查 URL 是否是占位符
- */
-function isPlaceholderUrl(url: string): boolean {
-  return url.startsWith('pending://');
 }
 
 export function useAsyncOperation(placeholderUrl: string | undefined, options: UseAsyncOperationOptions = {}) {

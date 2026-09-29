@@ -9,7 +9,6 @@
     - `sites/*/src/**/*.{test,spec}.{ts,tsx}`（sites 下测试与源文件同目录内联）
   - `vitest.setup.ts` — 全局 setup，mock `localStorage`、引入 `@testing-library/jest-dom`
 - `packages/app` 额外有自己的 `vitest.config.ts`（需要 `@` → `src` 的别名和 jsdom 插件），可以在包内单独跑测试；其余包/站点都依赖根配置
-
 ## 运行测试
 
 ```bash
@@ -63,9 +62,11 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 - `packages/app/src/components/admin/`、`game-player/`，`packages/cronjob`
 - `sites/55` 的组件层和数据/逻辑层
 
+2026-09 新增：Stripe 计费闭环（`tests/api/stripe-billing.test.ts`）、游戏评分与评价（`tests/lib/game-ratings.test.ts`/`tests/api/cms-game-ratings.test.ts`）、MCP 端点与鉴权（`tests/api/mcp.test.ts`/`tests/lib/mcp-auth.test.ts`）、后台列表排序筛选（`list-query` 等）。
+
 明确不测的部分（结构性障碍或纯展示，非遗漏）：
 - Next.js `page.tsx`/`layout.tsx` 里用 `async function` 声明的 Server Component——React DOM 的客户端渲染器不支持 async 函数组件，`@testing-library/react` 的 `render()` 无法调用，需要真实浏览器/RSC 渲染管线才能测
 - `StandaloneMiniGamePlayer.tsx` 通过 Blob + 动态 `import(blobUrl)` 加载小游戏模块，Node/jsdom 的模块加载器不支持 `blob:` scheme，"加载成功"和"游戏完成"分支不可达
 - `story-protocol.ts` 的 `createStoryClient`/`getIpInfo` 在函数体内直接 `new` 出 viem/Story Protocol SDK 对象且依赖真实网络请求；上线前仍需在测试网跑一次真实注册，测试无法替代
-- 纯静态展示组件（无 props、无条件渲染、无状态），如 `components/home/*`、jianjian 的 `Header.tsx`/`Footer.tsx`/隐私政策与服务条款页
+- 纯静态展示组件（无 props、无条件渲染、无状态），如 `components/home/*`
 - 已确认零引用的死代码（如曾经的 `packages/app/src/lib/auth.ts`，已删除）；`GameSettings.tsx` 已确认死代码但受权限限制未删除，暂时也未补测试
