@@ -152,7 +152,7 @@ export async function POST(req: Request, { params }: Props) {
             throw e;
           });
 
-        // 记录 AI 用量；model 记的是配置侧模型名，provider 响应不回传真实模型 ID（见 TODO.md）
+        // 记录 AI 用量；model 记的是配置侧模型名，provider 响应不回传真实模型 ID（see issue #23）
         await recordAiUsage({
           userId: session.user.id,
           type: 'chat',
