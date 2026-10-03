@@ -3,7 +3,7 @@
  */
 import type { Node, Edge } from '@xyflow/react';
 import type { SceneNodeData } from '@/lib/editor/transformers';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 
 // 处理器上下文
 export interface HandlerContext {

@@ -1,7 +1,7 @@
 /**
  * 角色操作处理器
  */
-import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import type { AICharacter } from '@roudanio/parser/src/types';
 import type { HandlerContext, AddCharacterArgs, UpdateCharacterArgs, DeleteCharacterArgs } from './types';
 
 export function handleAddCharacter(args: AddCharacterArgs, ctx: HandlerContext): string {

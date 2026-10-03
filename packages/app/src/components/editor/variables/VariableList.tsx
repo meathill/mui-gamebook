@@ -1,5 +1,5 @@
 import { EyeIcon, TrashIcon } from '@phosphor-icons/react/dist/ssr';
-import type { GameState } from '@mui-gamebook/parser/src/types';
+import type { GameState } from '@roudanio/parser/src/types';
 import { getDisplayValue, isVisible } from './utils';
 
 interface VariableListProps {

@@ -11,7 +11,7 @@ import {
   formDataToCharacter,
 } from '@/components/editor/characters';
 import { useDialog } from '@/components/Dialog';
-import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import type { AICharacter } from '@roudanio/parser/src/types';
 import SidebarSearchBar from './SidebarSearchBar';
 
 interface SidebarCharactersProps {

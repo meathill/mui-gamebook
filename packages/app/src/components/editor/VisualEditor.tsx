@@ -16,7 +16,7 @@ import {
   useReactFlow,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { parse, stringify } from '@mui-gamebook/parser';
+import { parse, stringify } from '@roudanio/parser';
 import { hasSubstantialScript } from '@/lib/editor/generate-script';
 import { gameToFlow, flowToGame, SceneNodeData } from '@/lib/editor/transformers';
 import { useEditorData } from '@/lib/editor/useEditorData';

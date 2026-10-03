@@ -5,7 +5,7 @@ import {
   handleUpdateCharacter,
 } from '@/lib/editor/handlers/characterHandlers';
 import type { HandlerContext } from '@/lib/editor/handlers/types';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 
 function makeGame(characters: Game['ai']['characters'] = {}): Game {
   return {

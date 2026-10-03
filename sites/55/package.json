@@ -14,7 +14,7 @@
   "dependencies": {
     "@mui-gamebook/app": "workspace:*",
     "@mui-gamebook/core": "workspace:*",
-    "@mui-gamebook/parser": "workspace:*",
+    "@roudanio/parser": "workspace:*",
     "@mui-gamebook/site-common": "workspace:*",
     "@next/third-parties": "^16.3.4",
     "@opennextjs/cloudflare": "^1.20.6",

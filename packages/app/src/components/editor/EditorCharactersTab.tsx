@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { PlusIcon, MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr';
-import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import type { AICharacter } from '@roudanio/parser/src/types';
 import { useDialog } from '@/components/Dialog';
 import {
   CharacterForm,

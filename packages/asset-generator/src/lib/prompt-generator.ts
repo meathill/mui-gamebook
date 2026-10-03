@@ -2,7 +2,7 @@
  * AI Prompt 生成模块
  * 为缺少图片的场景自动生成 ai_image 节点和 prompt
  */
-import type { Game, Scene, SceneNode } from '@mui-gamebook/parser';
+import type { Game, Scene, SceneNode } from '@roudanio/parser';
 import type { FunctionDeclaration } from '@mui-gamebook/core/lib/ai-provider';
 import { getAiProvider } from './config';
 

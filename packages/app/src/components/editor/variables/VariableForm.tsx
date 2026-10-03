@@ -1,5 +1,5 @@
 import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react/dist/ssr';
-import type { VariableDisplay } from '@mui-gamebook/parser/src/types';
+import type { VariableDisplay } from '@roudanio/parser/src/types';
 import { VariableFormData, ICON_OPTIONS } from './utils';
 
 interface VariableFormProps {

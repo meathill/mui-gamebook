@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { parse, validateExpression, parseTemplate, type Game, type SceneNode } from '@mui-gamebook/parser';
+import { parse, validateExpression, parseTemplate, type Game, type SceneNode } from '@roudanio/parser';
 import { colors } from '../utils/colors';
 import type { ValidationIssue, ValidationReport, ValidationStats } from '../types';
 

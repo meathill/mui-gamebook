@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MediaAssetItem from '@/components/editor/MediaAssetItem';
-import type { SceneAiImageNode } from '@mui-gamebook/parser/src/types';
+import type { SceneAiImageNode } from '@roudanio/parser/src/types';
 
 // Mock useDialog
 vi.mock('@/components/Dialog', () => ({

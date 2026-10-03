@@ -2,7 +2,7 @@
  * MCP Agent 工具：AI 生成（generateScript/generateImage）。
  * generateScript 是"生成 → 校验 → 一次纠错重生成"的闭环。
  */
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import * as schema from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { generateAndUploadImage } from '@/lib/ai-service';

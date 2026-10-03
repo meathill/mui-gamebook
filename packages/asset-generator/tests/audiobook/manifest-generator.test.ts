@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Game } from '@mui-gamebook/parser';
+import type { Game } from '@roudanio/parser';
 import { checkFfmpeg } from '../../src/lib/converter';
 import { makeSilentWav } from './wav-test-helpers';
 

@@ -1,6 +1,6 @@
 /**
  * 有声书生成的共享类型定义
- * 不依赖 @mui-gamebook/parser 的 Game 类型——用一个结构上兼容的通用角色名单类型，
+ * 不依赖 @roudanio/parser 的 Game 类型——用一个结构上兼容的通用角色名单类型，
  * 这样 Node CLI（packages/asset-generator）和 Workers 应用（packages/app）都能直接
  * 传 game.ai.characters 进来，不需要 core 反过来依赖 parser
  */

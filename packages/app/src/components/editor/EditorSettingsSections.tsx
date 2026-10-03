@@ -1,6 +1,6 @@
 'use client';
 
-import type { DisplayMode, Game, SiteTemplate, TextBoxPosition, TitleLayout } from '@mui-gamebook/parser/src/types';
+import type { DisplayMode, Game, SiteTemplate, TextBoxPosition, TitleLayout } from '@roudanio/parser/src/types';
 import TypewriterSpeedField from './TypewriterSpeedField';
 
 type GameFieldChange = (field: string, value: string | number | boolean | Record<string, unknown>) => void;

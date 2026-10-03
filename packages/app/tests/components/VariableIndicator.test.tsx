@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import VariableIndicator from '../../src/components/game-player/VariableIndicator';
-import type { VariableMeta } from '@mui-gamebook/parser/src/types';
+import type { VariableMeta } from '@roudanio/parser/src/types';
 
 describe('VariableIndicator Component', () => {
   it('should render progress bar mode correctly', () => {

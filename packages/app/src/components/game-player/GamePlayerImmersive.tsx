@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { PlayableGame, PlayableScene, TextBoxPosition } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame, PlayableScene, TextBoxPosition } from '@roudanio/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import {
   completeReadingKey,

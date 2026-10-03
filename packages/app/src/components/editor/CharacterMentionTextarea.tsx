@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useMemo, KeyboardEvent, useCallback } from 'react';
-import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import type { AICharacter } from '@roudanio/parser/src/types';
 import { isImeComposing } from '@/lib/keyboard';
 
 interface CharacterMentionTextareaProps {

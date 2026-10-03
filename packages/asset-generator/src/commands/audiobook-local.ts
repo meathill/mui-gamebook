@@ -3,7 +3,7 @@
  */
 import { readFile } from 'node:fs/promises';
 import * as path from 'path';
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { generateAudiobook } from '../lib/audiobook/manifest-generator';
 import { describeAudiobookMode, printAudiobookSummary } from '../lib/audiobook/report';
 import type { AudiobookCommandOptions } from '../lib/audiobook/types';

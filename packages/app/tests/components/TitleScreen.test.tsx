@@ -1,7 +1,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame } from '@roudanio/parser/src/types';
 import TitleScreen from '@/components/game-player/TitleScreen';
 import messages from '../../src/i18n/messages/en.json';
 

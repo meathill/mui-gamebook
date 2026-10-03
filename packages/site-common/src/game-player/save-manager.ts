@@ -1,4 +1,4 @@
-import type { RuntimeState } from '@mui-gamebook/parser/src/types';
+import type { RuntimeState } from '@roudanio/parser/src/types';
 
 /**
  * 存档数据

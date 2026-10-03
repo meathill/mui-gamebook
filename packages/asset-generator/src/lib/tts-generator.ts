@@ -2,7 +2,7 @@
  * TTS 生成模块
  * 处理文本转语音的生成
  */
-import type { Game, SceneNode } from '@mui-gamebook/parser';
+import type { Game, SceneNode } from '@roudanio/parser';
 import { generateStorySpeech, resolveDefaultVoice } from './tts';
 import { generateCacheFileName, cacheExists, readCache, writeCache } from './cache';
 import { smartUpload } from './uploader';

@@ -2,7 +2,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { hasQuoteLikeCharacters, segmentTextWithProvider } from '@mui-gamebook/core/lib/audiobook/segmentation';
 import { explodeSegmentsToSentences } from '@mui-gamebook/core/lib/audiobook/sentence-split';
 import { resolveVoiceForSpeaker } from '@mui-gamebook/core/lib/audiobook/voice-assignment';

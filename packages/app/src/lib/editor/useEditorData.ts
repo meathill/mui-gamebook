@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { parse, stringify } from '@mui-gamebook/parser';
+import { parse, stringify } from '@roudanio/parser';
 import { gameToFlow, flowToGame, replaceEditorSceneAssetUrl, SceneNodeData } from '@/lib/editor/transformers';
 import { pendingOperationsManager, isPlaceholderUrl, extractOperationId } from '@/lib/pending-operations-manager';
 import { loadDraft, clearDraft } from '@/hooks/useAutoSave';
 import { useDialog } from '@/components/Dialog';
 import { trackPublishStory } from '@mui-gamebook/site-common/utils';
 import { bindGameIdToSession, getGameSessionId } from '@/lib/editor/game-session';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 import type { Node, Edge } from '@xyflow/react';
 
 // 扩展 Game 类型，添加编辑器特有的字段

@@ -1,7 +1,7 @@
 /**
  * audiobook 命令 - 为线上游戏生成分角色语音有声书 manifest
  */
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { getGameContent } from '../lib/d1';
 import { generateAudiobook } from '../lib/audiobook/manifest-generator';
 import { describeAudiobookMode, printAudiobookSummary } from '../lib/audiobook/report';

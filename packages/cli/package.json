@@ -22,7 +22,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@mui-gamebook/parser": "workspace:*"
+    "@roudanio/parser": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.10.4",

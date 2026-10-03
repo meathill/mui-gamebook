@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 import AudiobookGenerationCard from '@/components/editor/AudiobookGenerationCard';
 
 const fetchMock = vi.fn<typeof fetch>();

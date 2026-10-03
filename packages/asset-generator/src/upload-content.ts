@@ -9,7 +9,7 @@
  */
 import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { updateGame, type BaseConfig } from './lib/api-client';
 
 /**

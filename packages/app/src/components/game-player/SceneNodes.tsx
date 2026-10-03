@@ -1,7 +1,7 @@
 'use client';
 
 import ReactMarkdown from 'react-markdown';
-import type { PlayableCharacter, PlayableSceneNode, RuntimeState } from '@mui-gamebook/parser/src/types';
+import type { PlayableCharacter, PlayableSceneNode, RuntimeState } from '@roudanio/parser/src/types';
 import { evaluateCondition, interpolateVariables, resolveSpeakerName } from '@mui-gamebook/site-common/utils';
 import { SpeakerHighIcon } from '@phosphor-icons/react';
 import AudioControls from './AudioControls';

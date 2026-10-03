@@ -3,7 +3,7 @@
  * NARRATOR_SPEAKER_ID/RawSegment 是跟 @mui-gamebook/core（app 也会用）共享的类型，
  * 从那里重新导出，避免出现两份定义
  */
-import type { Game } from '@mui-gamebook/parser';
+import type { Game } from '@roudanio/parser';
 import { NARRATOR_SPEAKER_ID, type RawSegment } from '@mui-gamebook/core/lib/audiobook/types';
 
 export { NARRATOR_SPEAKER_ID, type RawSegment };

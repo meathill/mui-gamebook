@@ -4,7 +4,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import GamePlayerImmersive from '../../src/components/game-player/GamePlayerImmersive';
 import { DialogProvider } from '@/components/Dialog';
-import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame } from '@roudanio/parser/src/types';
 import messages from '../../src/i18n/messages/en.json';
 
 const renderWithProviders = (component: React.ReactElement) => {

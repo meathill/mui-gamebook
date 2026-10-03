@@ -66,7 +66,7 @@ MUI Gamebook 是一个创新的平台，旨在创建、游玩和分发由 AI 辅
 ### 工具链与生态
 - **[@roudanio/cli](https://www.npmjs.com/package/@roudanio/cli)**：创作者本地开发工具链（短别名 `mgb`），支持本地 AST 静态体检、SSE 热重载即时 Web 预览、Mermaid 拓扑图与一键云端同步
 - **Agent Skills**：提供标准化的 AI 创作者技能套件，支持通过 `npx skills add meathill/mui-gamebook` 一键安装到任意 Agent
-- **@mui-gamebook/parser**：DSL 编译器与解析器
+- **@roudanio/parser**：DSL 编译器与解析器
 - **@mui-gamebook/asset-generator**：素材批量生成
 
 ## 产品设计：四大核心模块

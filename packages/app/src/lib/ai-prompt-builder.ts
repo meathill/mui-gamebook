@@ -1,4 +1,4 @@
-import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import type { AICharacter } from '@roudanio/parser/src/types';
 
 /**
  * AI 配置类型

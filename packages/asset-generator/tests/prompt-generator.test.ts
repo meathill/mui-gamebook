@@ -2,7 +2,7 @@
  * prompt-generator 模块测试
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Game } from '@mui-gamebook/parser';
+import type { Game } from '@roudanio/parser';
 import { findScenesWithoutImages, buildAIContext, insertImageNodes } from '../src/lib/prompt-generator';
 
 // Mock AI provider

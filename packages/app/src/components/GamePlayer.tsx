@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame } from '@roudanio/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import {
   completeReadingKey,

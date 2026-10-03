@@ -6,7 +6,7 @@ import {
   collectPreloadUrls,
   PRELOAD_WIDTH,
 } from '@/components/game-player/usePreload';
-import type { PlayableGame, PlayableScene, PlayableSceneNode } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame, PlayableScene, PlayableSceneNode } from '@roudanio/parser/src/types';
 
 vi.mock('../../image-loader', () => ({
   default: ({ src, width }: { src: string; width: number }) => `/cdn-cgi/image/width=${width}/${src}`,

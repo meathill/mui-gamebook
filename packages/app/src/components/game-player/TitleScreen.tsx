@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import ReactMarkdown from 'react-markdown';
 import { UserIcon, ClockIcon, QuestionIcon } from '@phosphor-icons/react/dist/ssr';
 import { formatLongDate } from '@mui-gamebook/site-common/utils';
-import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame } from '@roudanio/parser/src/types';
 import ShareButton from '@/components/ShareButton';
 import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../../image-loader';
 import RatingSummary from './RatingSummary';

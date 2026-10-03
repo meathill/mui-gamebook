@@ -7,7 +7,7 @@ import {
 } from '@/lib/editor/chatFunctionHandlers';
 import type { Node, Edge } from '@xyflow/react';
 import { createEditorSceneAsset, type SceneNodeData } from '@/lib/editor/transformers';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 
 // 创建测试用的 mock 函数
 function createMockContext() {

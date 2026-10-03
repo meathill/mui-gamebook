@@ -1,6 +1,6 @@
 import type { AssetMap } from './asset-finder';
-import type { Game } from '@mui-gamebook/parser';
-import { parse, stringify } from '@mui-gamebook/parser';
+import type { Game } from '@roudanio/parser';
+import { parse, stringify } from '@roudanio/parser';
 import fs from 'node:fs';
 import path from 'node:path';
 import { stripTimestampPrefix } from '../utils';

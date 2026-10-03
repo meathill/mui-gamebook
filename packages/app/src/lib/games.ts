@@ -1,6 +1,6 @@
-import { parse } from '@mui-gamebook/parser';
-import { toPlayableGame } from '@mui-gamebook/parser/src/utils';
-import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import { parse } from '@roudanio/parser';
+import { toPlayableGame } from '@roudanio/parser/src/utils';
+import type { PlayableGame } from '@roudanio/parser/src/types';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { cache } from 'react';
 import type { GameRow, ParsedGameRow } from '@/types';

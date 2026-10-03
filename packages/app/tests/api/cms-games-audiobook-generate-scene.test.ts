@@ -44,7 +44,7 @@ vi.mock('@/lib/ai-provider-factory', () => ({
 
 // 分段/切句/音色分配都是纯函数，故意不 mock——用一个真实可控的 fake provider
 // 驱动，这样测的是路由把这些真实实现接起来是否正确，而不是"我 mock 了什么就
-// 断言什么"的空转测试。@mui-gamebook/parser 的 parse() 同理，不 mock。
+// 断言什么"的空转测试。@roudanio/parser 的 parse() 同理，不 mock。
 
 import { POST } from '@/app/api/cms/games/[id]/audiobook/generate-scene/route';
 import { createAiProvider } from '@/lib/ai-provider-factory';

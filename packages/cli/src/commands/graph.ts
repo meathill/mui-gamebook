@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { parse, type Game } from '@mui-gamebook/parser';
+import { parse, type Game } from '@roudanio/parser';
 
 export function generateMermaidGraph(game: Game): string {
   const lines: string[] = ['flowchart TD'];

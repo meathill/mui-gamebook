@@ -1,7 +1,7 @@
 'use client';
 
 import { ImageIcon, MusicNoteIcon, VideoCameraIcon, GameControllerIcon } from '@phosphor-icons/react';
-import type { SceneNode } from '@mui-gamebook/parser';
+import type { SceneNode } from '@roudanio/parser';
 import MediaAssetItem from './MediaAssetItem';
 import { buildImagePrompt, buildAudioPrompt, extractCharacterIds, type AiConfig } from '@/lib/ai-prompt-builder';
 import { createEditorSceneAsset, type EditorSceneAsset } from '@/lib/editor/transformers';

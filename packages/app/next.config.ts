@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     ];
   },
   pageExtensions: ['js', 'jsx', 'md', 'mdx', 'ts', 'tsx'],
-  transpilePackages: ['@mui-gamebook/parser'],
+  transpilePackages: ['@roudanio/parser'],
   experimental: {
     // phosphor 客户端 barrel 不在 Next 默认优化清单，按需改写 import 减小客户端模块图
     optimizePackageImports: ['@phosphor-icons/react'],

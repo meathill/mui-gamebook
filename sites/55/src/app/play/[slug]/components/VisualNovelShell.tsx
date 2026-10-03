@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame } from '@roudanio/parser/src/types';
 import {
   useGamePlayer,
   useSaveSystem,

@@ -11,7 +11,7 @@ import {
   formDataToVariable,
 } from '@/components/editor/variables';
 import { useDialog } from '@/components/Dialog';
-import type { GameState } from '@mui-gamebook/parser/src/types';
+import type { GameState } from '@roudanio/parser/src/types';
 import SidebarSearchBar from './SidebarSearchBar';
 
 interface SidebarVariablesProps {

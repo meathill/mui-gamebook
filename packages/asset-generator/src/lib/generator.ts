@@ -2,7 +2,7 @@
  * 素材生成模块 - 入口
  * 整合图片、TTS、小游戏的生成
  */
-import type { Game } from '@mui-gamebook/parser';
+import type { Game } from '@roudanio/parser';
 import { processGlobalAssets, processNode } from './image-generator';
 import { processNodeTTS } from './tts-generator';
 

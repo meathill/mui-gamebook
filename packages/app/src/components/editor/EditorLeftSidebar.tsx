@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { BracketsCurlyIcon, UsersIcon, ListIcon } from '@phosphor-icons/react';
 import { SidebarOutline, SidebarVariables, SidebarCharacters } from './sidebar';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 
 type SidebarTab = 'outline' | 'variables' | 'characters';
 

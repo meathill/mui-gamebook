@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Game } from '@mui-gamebook/parser/src/types';
+import { Game } from '@roudanio/parser/src/types';
 import { XIcon } from '@phosphor-icons/react/dist/ssr';
 
 interface Props {

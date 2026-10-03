@@ -1,4 +1,4 @@
-import type { SceneNode, AICharacter } from '@mui-gamebook/parser';
+import type { SceneNode, AICharacter } from '@roudanio/parser';
 
 export interface MediaAssetItemProps {
   /** 资源数据 */

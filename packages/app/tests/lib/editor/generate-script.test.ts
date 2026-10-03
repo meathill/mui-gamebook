@@ -1,4 +1,4 @@
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { describe, expect, it } from 'vitest';
 import {
   buildCorrectionPrompt,

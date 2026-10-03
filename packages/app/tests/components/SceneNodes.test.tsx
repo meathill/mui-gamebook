@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import type { PlayableSceneNode } from '@mui-gamebook/parser/src/types';
+import type { PlayableSceneNode } from '@roudanio/parser/src/types';
 import SceneNodes from '@/components/game-player/SceneNodes';
 import type { UseAudioPlayerReturn } from '@/components/game-player/useAudioPlayer';
 

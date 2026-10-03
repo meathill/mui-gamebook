@@ -18,7 +18,7 @@
     "@aws-sdk/client-s3": "^3.1075.0",
     "@google/genai": "^2.10.0",
     "@mui-gamebook/core": "workspace:*",
-    "@mui-gamebook/parser": "workspace:*",
+    "@roudanio/parser": "workspace:*",
     "dotenv": "^17.4.2",
     "openai": "^6.45.0",
     "slugify": "^1.6.9"

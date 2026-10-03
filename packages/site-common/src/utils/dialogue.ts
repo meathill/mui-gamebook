@@ -3,7 +3,7 @@
  * speaker 存的是角色 ID，展示名从 PlayableGame.characters 解析；
  * 未注册（理论上 parser 已拦截）回退显示原始 ID。
  */
-import type { PlayableCharacter } from '@mui-gamebook/parser/src/types';
+import type { PlayableCharacter } from '@roudanio/parser/src/types';
 
 export function resolveSpeakerName(speaker: string, characters?: Record<string, PlayableCharacter>): string {
   return characters?.[speaker]?.name ?? speaker;

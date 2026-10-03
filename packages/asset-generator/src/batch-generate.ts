@@ -11,8 +11,8 @@
  */
 import 'dotenv/config';
 import { readFileSync, existsSync } from 'fs';
-import { parse, stringify } from '@mui-gamebook/parser';
-import type { Game, SceneNode } from '@mui-gamebook/parser';
+import { parse, stringify } from '@roudanio/parser';
+import type { Game, SceneNode } from '@roudanio/parser';
 import { setProviderType, getProviderType } from './lib/config';
 import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
 import { processGame } from './lib/generator';

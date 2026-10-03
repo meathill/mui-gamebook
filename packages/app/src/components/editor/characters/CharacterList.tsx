@@ -1,5 +1,5 @@
 import { TrashIcon } from '@phosphor-icons/react/dist/ssr';
-import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import type { AICharacter } from '@roudanio/parser/src/types';
 
 interface Props {
   characters: [string, AICharacter][];

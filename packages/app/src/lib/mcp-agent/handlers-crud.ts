@@ -1,7 +1,7 @@
 /**
  * MCP Agent 工具：游戏 CRUD（listGames/createGame/getGameInfo/updateGameMeta/setGameDsl/deleteGame）
  */
-import { parse, stringify } from '@mui-gamebook/parser';
+import { parse, stringify } from '@roudanio/parser';
 import { desc, eq } from 'drizzle-orm';
 import slugify from 'slugify';
 import * as schema from '@/db/schema';

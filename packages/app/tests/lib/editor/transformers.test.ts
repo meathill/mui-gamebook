@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createEditorSceneAsset, gameToFlow, flowToGame, replaceEditorSceneAssetUrl } from '@/lib/editor/transformers';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 
 const mockGame: Game = {
   slug: 'test-game',

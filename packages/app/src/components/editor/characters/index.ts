@@ -1,4 +1,4 @@
-import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import type { AICharacter } from '@roudanio/parser/src/types';
 
 export { default as CharacterList } from './CharacterList';
 export { default as CharacterForm } from './CharacterForm';

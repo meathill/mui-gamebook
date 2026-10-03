@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
-import type { TextBoxPosition } from '@mui-gamebook/parser/src/types';
+import type { TextBoxPosition } from '@roudanio/parser/src/types';
 import { useTypewriter } from './hooks/useTypewriter';
 
 interface ImmersiveTextBoxProps {

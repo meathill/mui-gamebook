@@ -1,7 +1,7 @@
 /**
  * remote 命令 - 处理线上游戏素材
  */
-import { parse, stringify } from '@mui-gamebook/parser';
+import { parse, stringify } from '@roudanio/parser';
 import { getGameContent, updateGameContent } from '../lib/d1';
 import { processGame } from '../lib/generator';
 import { printUsageStats } from '../lib/usage';

@@ -32,7 +32,7 @@ mkdir -p sites/your-site-name/src/{app,components,lib}
 {
   "dependencies": {
     "@mui-gamebook/site-common": "workspace:*",
-    "@mui-gamebook/parser": "workspace:*"
+    "@roudanio/parser": "workspace:*"
   }
 }
 ```

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { PlayableScene, PlayableSceneNode } from '@mui-gamebook/parser/src/types';
+import type { PlayableScene, PlayableSceneNode } from '@roudanio/parser/src/types';
 import type { AudiobookClip } from '@/lib/audiobook-types';
 import { useAudioPlayer } from '../useAudioPlayer';
 

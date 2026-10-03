@@ -90,9 +90,6 @@ importers:
       '@mui-gamebook/core':
         specifier: workspace:*
         version: link:../core
-      '@mui-gamebook/parser':
-        specifier: workspace:*
-        version: link:../parser
       '@mui-gamebook/site-common':
         specifier: workspace:*
         version: link:../site-common
@@ -120,6 +117,9 @@ importers:
       '@radix-ui/react-dropdown-menu':
         specifier: ^2.1.18
         version: 2.1.18(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@roudanio/parser':
+        specifier: workspace:*
+        version: link:../parser
       '@story-protocol/core-sdk':
         specifier: ^1.4.4
         version: 1.4.4(typescript@6.0.3)(zod@4.4.3)
@@ -274,7 +274,7 @@ importers:
       '@mui-gamebook/core':
         specifier: workspace:*
         version: link:../core
-      '@mui-gamebook/parser':
+      '@roudanio/parser':
         specifier: workspace:*
         version: link:../parser
       dotenv:
@@ -296,7 +296,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@mui-gamebook/parser':
+      '@roudanio/parser':
         specifier: workspace:*
         version: link:../parser
     devDependencies:
@@ -382,7 +382,7 @@ importers:
       '@mui-gamebook/core':
         specifier: workspace:*
         version: link:../core
-      '@mui-gamebook/parser':
+      '@roudanio/parser':
         specifier: workspace:*
         version: link:../parser
       date-fns:
@@ -410,7 +410,7 @@ importers:
 
   packages/webmcp:
     dependencies:
-      '@mui-gamebook/parser':
+      '@roudanio/parser':
         specifier: workspace:*
         version: link:../parser
     devDependencies:
@@ -429,9 +429,6 @@ importers:
       '@mui-gamebook/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@mui-gamebook/parser':
-        specifier: workspace:*
-        version: link:../../packages/parser
       '@mui-gamebook/site-common':
         specifier: workspace:*
         version: link:../../packages/site-common
@@ -444,6 +441,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.7
         version: 2.1.10(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@roudanio/parser':
+        specifier: workspace:*
+        version: link:../../packages/parser
       better-auth:
         specifier: ^1.6.21
         version: 1.6.21(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(kysely@0.29.2))(next@16.3.4(@types/node@26.0.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9)

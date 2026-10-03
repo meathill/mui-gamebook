@@ -2,7 +2,7 @@
  * MCP Agent 工具的公共构件：类型、鉴权后 actor 解析、游戏加载与剧本写回。
  * 鉴权后的调用上下文由 route 注入；此处不直接读 cookie。
  */
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { eq, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';

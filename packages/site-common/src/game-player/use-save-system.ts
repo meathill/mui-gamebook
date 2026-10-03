@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import type { RuntimeState } from '@mui-gamebook/parser/src/types';
+import type { RuntimeState } from '@roudanio/parser/src/types';
 import { createSaveManager, type SaveSlot, type SaveSlotId, type SaveData } from './save-manager';
 
 export interface UseSaveSystemReturn {

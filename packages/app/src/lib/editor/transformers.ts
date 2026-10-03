@@ -1,6 +1,6 @@
 import { Node, Edge } from '@xyflow/react';
-import { parseProseBlock } from '@mui-gamebook/parser/src/parse-scene';
-import { Game, Scene, SceneNode } from '@mui-gamebook/parser/src/types';
+import { parseProseBlock } from '@roudanio/parser/src/parse-scene';
+import { Game, Scene, SceneNode } from '@roudanio/parser/src/types';
 import { proseNodesToContent } from './prose-audio';
 
 export interface EditorSceneAsset {

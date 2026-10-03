@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import GamePlayer from '../../src/components/GamePlayer';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { PlayableGame } from '@mui-gamebook/parser/src/types';
+import { PlayableGame } from '@roudanio/parser/src/types';
 
 // Mock useGameAnalytics hook
 const mockTrackOpen = vi.fn();

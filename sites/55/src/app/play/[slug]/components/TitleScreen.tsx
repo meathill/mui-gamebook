@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { PlayableGame } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame } from '@roudanio/parser/src/types';
 
 const PLACEHOLDER_COVER = '/placeholder-cover-400x600.png';
 function resolveCover(src: string | undefined | null): string | null {

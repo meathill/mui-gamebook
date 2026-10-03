@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 import { cleanupInvalidChoices, dryRunWebMcpBatch, executeWebMcpBatch, parseVariableValue } from '../src/core';
 import { getReadonlyTools, getWritableTools, sortWebMcpCalls, WEBMCP_TOOLS } from '../src/tools';
 

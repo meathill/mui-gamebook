@@ -7,7 +7,7 @@ import { create } from 'zustand';
 import { temporal } from 'zundo';
 import type { TemporalState } from 'zundo';
 import type { Node, Edge } from '@xyflow/react';
-import type { Game, GameState, AICharacter } from '@mui-gamebook/parser/src/types';
+import type { Game, GameState, AICharacter } from '@roudanio/parser/src/types';
 import type { SceneNodeData } from './transformers';
 import type { Tab } from '@/components/editor/EditorToolbar';
 

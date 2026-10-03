@@ -3,7 +3,7 @@
  * 处理 AI 图片和小游戏的生成
  */
 import type { AiUsageInfo } from '@mui-gamebook/core/lib/ai-provider';
-import type { Game, SceneNode } from '@mui-gamebook/parser';
+import type { Game, SceneNode } from '@roudanio/parser';
 import { getAiProvider } from './config';
 import { retry } from './utils';
 import { addUsage } from './usage';

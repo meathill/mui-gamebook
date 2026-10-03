@@ -1,4 +1,4 @@
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 import { XIcon } from '@phosphor-icons/react/dist/ssr';
 import MDEditor from '@uiw/react-md-editor';
 import { isImeComposing } from '@/lib/keyboard';

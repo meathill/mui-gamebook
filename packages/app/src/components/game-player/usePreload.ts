@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import type { PlayableGame, PlayableScene, PlayableSceneNode } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame, PlayableScene, PlayableSceneNode } from '@roudanio/parser/src/types';
 import cloudflareImageLoader from '../../../image-loader';
 
 /** 预加载档位：与 next.config deviceSizes 中档对齐，命中率最高 */

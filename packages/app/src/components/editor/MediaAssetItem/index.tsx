@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { TrashIcon, SpinnerIcon, UploadSimpleIcon, SparkleIcon, ListIcon } from '@phosphor-icons/react';
-import type { SceneNode } from '@mui-gamebook/parser';
+import type { SceneNode } from '@roudanio/parser';
 import Button from '@/components/Button';
 import { useDialog } from '@/components/Dialog';
 import MiniGameSelector from '../MiniGameSelector';

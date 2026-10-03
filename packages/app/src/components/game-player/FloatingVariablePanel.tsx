@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { RuntimeState, VariableMeta } from '@mui-gamebook/parser/src/types';
+import type { RuntimeState, VariableMeta } from '@roudanio/parser/src/types';
 import { CaretLeftIcon, CaretRightIcon, GaugeIcon } from '@phosphor-icons/react';
 
 interface FloatingVariablePanelProps {

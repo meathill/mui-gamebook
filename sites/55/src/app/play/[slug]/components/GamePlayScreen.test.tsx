@@ -1,8 +1,8 @@
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import type { PlayableGame, PlayableScene } from '@mui-gamebook/parser/src/types';
-import type { getVisibleVariables } from '@mui-gamebook/parser/src/utils';
+import type { PlayableGame, PlayableScene } from '@roudanio/parser/src/types';
+import type { getVisibleVariables } from '@roudanio/parser/src/utils';
 import GamePlayScreen from './GamePlayScreen';
 
 // jsdom 未实现 Element.scrollTo

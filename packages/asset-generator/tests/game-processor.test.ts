@@ -15,7 +15,7 @@ vi.mock('node:fs', () => {
 });
 
 // Mock parser
-vi.mock('@mui-gamebook/parser', () => ({
+vi.mock('@roudanio/parser', () => ({
   parse: (src: string) => {
     if (src.includes('# start')) {
       return {

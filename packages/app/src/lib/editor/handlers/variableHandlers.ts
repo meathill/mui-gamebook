@@ -1,7 +1,7 @@
 /**
  * 变量操作处理器
  */
-import type { GameState } from '@mui-gamebook/parser/src/types';
+import type { GameState } from '@roudanio/parser/src/types';
 import type { HandlerContext, AddVariableArgs, UpdateVariableArgs, DeleteVariableArgs } from './types';
 import { parseValue } from './types';
 

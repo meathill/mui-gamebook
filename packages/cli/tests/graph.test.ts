@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { generateMermaidGraph } from '../src/commands/graph';
 
 const SAMPLE_SCRIPT = `---

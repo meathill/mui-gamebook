@@ -17,7 +17,7 @@
  * 旁路产物，详见 CLAUDE.md 的架构说明（可视化编辑器会把一个场景的所有文本
  * 节点合并成一个节点保存，往节点结构里塞这些数据会被合并逻辑悄悄冲掉）。
  */
-import type { Game, Scene } from '@mui-gamebook/parser';
+import type { Game, Scene } from '@roudanio/parser';
 import { generateStorySpeech, type VoiceName } from '../tts';
 import { generateCacheFileName, cacheExists, readCache, writeCache } from '../cache';
 import { uploadToR2 } from '../uploader';

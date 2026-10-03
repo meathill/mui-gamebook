@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react';
 import { SpinnerIcon } from '@phosphor-icons/react';
-import type { RuntimeState } from '@mui-gamebook/parser/src/types';
+import type { RuntimeState } from '@roudanio/parser/src/types';
 
 interface MiniGameAPI {
   init(container: HTMLElement, variables: Record<string, number | string | boolean>): void;

@@ -161,7 +161,7 @@ function main() {
   try {
     const fileContent = fs.readFileSync(filePath, 'utf-8');
 
-    console.log('🔄 Parsing with @mui-gamebook/parser...');
+    console.log('🔄 Parsing with @roudanio/parser...');
     const result = parse(fileContent);
 
     if (!result.success) {

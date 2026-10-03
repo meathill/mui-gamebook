@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import type { Game } from '@mui-gamebook/parser';
+import type { Game } from '@roudanio/parser';
 import { MIMO_VOICE_IDS } from '@mui-gamebook/core/lib/voice-config';
 import { resolveVoiceForSpeaker } from '../../src/lib/audiobook/voice-assignment';
 

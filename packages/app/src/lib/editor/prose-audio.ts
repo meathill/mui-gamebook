@@ -4,9 +4,9 @@
  * 所有操作都走 parseProseBlock → 改节点 → 重序列化，与 parser 单一语义源对齐，
  * 不写第二套字符串手术正则（孤儿注释、legacy 同行形态、重定向行都由 parser 兜住）。
  */
-import { parseProseBlock } from '@mui-gamebook/parser/src/parse-scene';
-import { proseNodeToLine, redirectNodeToLine } from '@mui-gamebook/parser/src/serialize';
-import type { SceneNode } from '@mui-gamebook/parser/src/types';
+import { parseProseBlock } from '@roudanio/parser/src/parse-scene';
+import { proseNodeToLine, redirectNodeToLine } from '@roudanio/parser/src/serialize';
+import type { SceneNode } from '@roudanio/parser/src/types';
 
 /** 独占一行的语音注释（宽松匹配，仅供预览行过滤） */
 const AUDIO_COMMENT_LINE_REGEX = /^\s*<!--\s*audio:.*-->\s*$/;

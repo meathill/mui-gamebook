@@ -3,7 +3,7 @@
  */
 import { readFile, writeFile } from 'node:fs/promises';
 import * as path from 'path';
-import { parse, stringify } from '@mui-gamebook/parser';
+import { parse, stringify } from '@roudanio/parser';
 import { processGame } from '../lib/generator';
 import { printUsageStats } from '../lib/usage';
 

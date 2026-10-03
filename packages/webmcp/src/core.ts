@@ -2,7 +2,7 @@
  * WebMCP 无头执行内核：直接操作 Game 对象，无 React/Flow 依赖。
  * 后端 /api/mcp 与单测走这里；编辑器 in-page tools 复用既有 HandlerContext 链路（含 undo）。
  */
-import type { Game, GameStateValue, Scene, SceneChoiceNode, SceneNode } from '@mui-gamebook/parser/src/types';
+import type { Game, GameStateValue, Scene, SceneChoiceNode, SceneNode } from '@roudanio/parser/src/types';
 import { sortWebMcpCalls } from './tools';
 
 export interface WebMcpCall {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Game } from '@mui-gamebook/parser';
+import type { Game } from '@roudanio/parser';
 
 // 捕获上传调用的参数
 let uploadCalls: Array<{ fileName: string; contentType: string }> = [];

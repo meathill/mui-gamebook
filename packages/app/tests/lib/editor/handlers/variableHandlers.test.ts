@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleAddVariable, handleDeleteVariable, handleUpdateVariable } from '@/lib/editor/handlers/variableHandlers';
 import type { HandlerContext } from '@/lib/editor/handlers/types';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 
 function makeGame(initialState: Game['initialState'] = {}): Game {
   return {

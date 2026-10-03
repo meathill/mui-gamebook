@@ -6,7 +6,7 @@
  */
 import type { Node } from '@xyflow/react';
 import { createEditorSceneAsset, type SceneNodeData } from '@/lib/editor/transformers';
-import type { SceneAiImageNode } from '@mui-gamebook/parser/src/types';
+import type { SceneAiImageNode } from '@roudanio/parser/src/types';
 import type {
   HandlerContext,
   UpdateSceneArgs,

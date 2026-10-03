@@ -3,7 +3,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { and, eq, sql } from 'drizzle-orm';
 import * as schema from '@/db/schema';
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { getSession } from '@/lib/auth-server';
 import { PRIVATE_GAME_CACHE_CONTROL, PUBLISHED_GAME_CACHE_CONTROL } from '@/lib/public-cache';
 

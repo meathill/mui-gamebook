@@ -1,4 +1,4 @@
-import { toPlayableGame } from '@mui-gamebook/parser/src/utils';
+import { toPlayableGame } from '@roudanio/parser/src/utils';
 import type { GameRow, ParsedGameRow } from '@/types';
 import { countTags, safeParseTags } from './games-shared';
 import type { GameDetail } from './games';

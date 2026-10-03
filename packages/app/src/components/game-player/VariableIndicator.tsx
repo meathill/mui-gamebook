@@ -1,4 +1,4 @@
-import type { RuntimeState, VariableMeta } from '@mui-gamebook/parser/src/types';
+import type { RuntimeState, VariableMeta } from '@roudanio/parser/src/types';
 
 interface VariableIndicatorProps {
   varKey: string;

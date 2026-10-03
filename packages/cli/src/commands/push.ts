@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { colors } from '../utils/colors';
 import { resolveConfig } from '../utils/config';
 import { McpClient } from '../utils/mcp-client';

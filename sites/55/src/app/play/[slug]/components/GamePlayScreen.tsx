@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import type { PlayableGame, PlayableScene, RuntimeState } from '@mui-gamebook/parser/src/types';
+import type { PlayableGame, PlayableScene, RuntimeState } from '@roudanio/parser/src/types';
 import {
   evaluateCondition,
   interpolateVariables,
@@ -10,7 +10,7 @@ import {
 } from '@mui-gamebook/site-common/game-player';
 import { formatDialogueLine, resolveSpeakerName } from '@mui-gamebook/site-common/utils';
 import { useTypewriter } from '@mui-gamebook/app/components/game-player/hooks/useTypewriter';
-import type { getVisibleVariables } from '@mui-gamebook/parser/src/utils';
+import type { getVisibleVariables } from '@roudanio/parser/src/utils';
 import GameHudBar from './GameHudBar';
 
 interface Props {

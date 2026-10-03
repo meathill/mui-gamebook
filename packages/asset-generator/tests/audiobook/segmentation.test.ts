@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Game } from '@mui-gamebook/parser';
+import type { Game } from '@roudanio/parser';
 
 // vi.mock 会被 hoist 到文件顶部，工厂函数里直接引用（非嵌套闭包）的外部变量必须通过
 // vi.hoisted 声明，否则会在初始化之前被访问（TDZ ReferenceError）

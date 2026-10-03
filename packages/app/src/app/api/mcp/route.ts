@@ -1,4 +1,4 @@
-import { parse, stringify } from '@mui-gamebook/parser';
+import { parse, stringify } from '@roudanio/parser';
 import { executeWebMcpBatch, WEBMCP_TOOLS } from '@mui-gamebook/webmcp';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { eq } from 'drizzle-orm';

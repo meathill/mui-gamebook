@@ -2,8 +2,8 @@
  * 大纲 → 剧本生成的提示词与校验
  * 核心目标：确保生成的剧本一定包含角色（ai.characters）与属性（state）
  */
-import { parse } from '@mui-gamebook/parser';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import { parse } from '@roudanio/parser';
+import type { Game } from '@roudanio/parser/src/types';
 
 /**
  * 内嵌于系统提示词的完整 frontmatter 示例

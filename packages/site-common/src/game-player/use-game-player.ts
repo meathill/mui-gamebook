@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { PlayableGame, PlayableScene, PlayableSceneNode, RuntimeState } from '@mui-gamebook/parser/src/types';
-import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@mui-gamebook/parser/src/utils';
-import { normalizeTriggerCondition } from '@mui-gamebook/parser/src/expression';
+import type { PlayableGame, PlayableScene, PlayableSceneNode, RuntimeState } from '@roudanio/parser/src/types';
+import { isVariableMeta, extractRuntimeState, getVisibleVariables } from '@roudanio/parser/src/utils';
+import { normalizeTriggerCondition } from '@roudanio/parser/src/expression';
 import { evaluateCondition, executeSet, interpolateVariables } from '../utils/evaluator';
 
 export interface GamePlayerState {

@@ -1,4 +1,4 @@
-import type { AICharacter } from '@mui-gamebook/parser/src/types';
+import type { AICharacter } from '@roudanio/parser/src/types';
 
 export interface MentionInputProps {
   /** 原始文本值（包含 @角色ID） */

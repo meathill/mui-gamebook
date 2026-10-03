@@ -1,5 +1,5 @@
 {
-  "name": "@mui-gamebook/parser",
+  "name": "@roudanio/parser",
   "version": "0.0.1",
   "description": "DSL parser for MUI Gamebook",
   "type": "module",

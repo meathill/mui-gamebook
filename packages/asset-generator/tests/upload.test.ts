@@ -19,7 +19,7 @@ vi.mock('node:fs', () => ({
 }));
 
 // Mock Parser
-vi.mock('@mui-gamebook/parser', async () => {
+vi.mock('@roudanio/parser', async () => {
   return {
     parse: vi.fn(),
     stringify: vi.fn(),

@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AICharacter, Game } from '@mui-gamebook/parser/src/types';
+import type { AICharacter, Game } from '@roudanio/parser/src/types';
 import CharacterMentionTextarea from '@/components/editor/CharacterMentionTextarea';
 import ChatPanel from '@/components/editor/ChatPanel';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';

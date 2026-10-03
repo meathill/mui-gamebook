@@ -10,7 +10,7 @@ import {
   WarningCircleIcon,
   XIcon,
 } from '@phosphor-icons/react/dist/ssr';
-import type { Game } from '@mui-gamebook/parser/src/types';
+import type { Game } from '@roudanio/parser/src/types';
 
 interface AudiobookGenerationCardProps {
   gameId: string;

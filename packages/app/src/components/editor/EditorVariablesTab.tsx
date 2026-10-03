@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { PlusIcon, MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr';
-import type { GameState } from '@mui-gamebook/parser/src/types';
+import type { GameState } from '@roudanio/parser/src/types';
 import { useDialog } from '@/components/Dialog';
 import {
   VariableForm,

@@ -1,4 +1,4 @@
-import { parse } from '@mui-gamebook/parser';
+import { parse } from '@roudanio/parser';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { and, eq, ne } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';

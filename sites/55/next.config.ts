@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_VERSION: pkg.version,
   },
-  transpilePackages: ['@mui-gamebook/core', '@mui-gamebook/parser', '@mui-gamebook/site-common'],
+  transpilePackages: ['@mui-gamebook/core', '@roudanio/parser', '@mui-gamebook/site-common'],
   images: {
     remotePatterns: [
       {

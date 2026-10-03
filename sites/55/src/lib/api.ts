@@ -3,8 +3,8 @@
  * 从 CMS 获取游戏数据
  */
 
-import type { Game as FullGame, PlayableGame } from '@mui-gamebook/parser/src/types';
-import { toPlayableGame } from '@mui-gamebook/parser/src/utils';
+import type { Game as FullGame, PlayableGame } from '@roudanio/parser/src/types';
+import { toPlayableGame } from '@roudanio/parser/src/utils';
 
 export interface Game {
   id: number;

@@ -1,7 +1,7 @@
 import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
-import { parse, type Game } from '@mui-gamebook/parser';
+import { parse, type Game } from '@roudanio/parser';
 import { getPreviewHtml } from './html';
 
 export interface PreviewServerOptions {

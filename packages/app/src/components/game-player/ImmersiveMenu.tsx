@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import type { TextBoxPosition } from '@mui-gamebook/parser/src/types';
+import type { TextBoxPosition } from '@roudanio/parser/src/types';
 import { ArrowCounterClockwiseIcon, CaretDownIcon, ChatIcon, HouseIcon } from '@phosphor-icons/react';
 import Button from '@/components/Button';
 import ShareButton from '@/components/ShareButton';
