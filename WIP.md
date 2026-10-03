@@ -1,7 +1,3 @@
 # WIP
 
-## 本轮：本地创作链路 + 渲染降本（进行中）
-
-- [x] RelatedGames 全表扫描改走 GameTags（SQL 内排序，补单测）
-- [x] parser 达到可发布状态（publishConfig/dist/exports，pack + 纯 node 冒烟验证）
-- [ ] 跑全量测试、typecheck、format、构建，提交推送
+当前无正在进行的短期任务。本轮已推送：API 缓存 1 小时、RelatedGames 走 GameTags、parser 可发布（pack + 纯 node 冒烟过）、缓存头断言松绑。全量 2115 测试、类型检查、格式化、构建均通过。
