@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getGamesByTag, getAllTags, getFeaturedGames, getGameBySlug } from '@/lib/games';
+import { getGamesByTag, getAllTags, getFeaturedGames, getGameBySlug, getRelatedGames } from '@/lib/games';
 
 // Mock getCloudflareContext
 vi.mock('@opennextjs/cloudflare', () => ({
@@ -342,6 +342,77 @@ title: "测试作品"
       expect(game).not.toBeNull();
       expect(game?.avgRating).toBeUndefined();
       expect(game?.ratingCount).toBe(0);
+    });
+  });
+
+  describe('getRelatedGames', () => {
+    const mockRows = [
+      {
+        slug: 'game-a',
+        title: 'Game A',
+        description: 'Desc A',
+        cover_image: null,
+        tags: '["悬疑","探案"]',
+        created_at: 1000,
+        updated_at: 3000,
+        match_count: 2,
+      },
+      {
+        slug: 'game-b',
+        title: 'Game B',
+        description: 'Desc B',
+        cover_image: null,
+        tags: '["悬疑"]',
+        created_at: 1000,
+        updated_at: 4000,
+        match_count: 1,
+      },
+    ];
+
+    it('走 GameTags 在 SQL 内排序，只取前 N 行', async () => {
+      const bind = vi.fn().mockReturnValue({
+        all: vi.fn().mockResolvedValue({ results: mockRows }),
+      });
+      const prepare = vi.fn().mockReturnValue({ bind });
+      mockDB.prepare.mockImplementation(prepare);
+
+      const result = await getRelatedGames('current', ['悬疑', '探案'], 4);
+
+      const sql = prepare.mock.calls[0][0] as string;
+      expect(sql).toContain('GROUP BY');
+      expect(sql).toContain('ORDER BY match_count DESC');
+      expect(sql).toContain('LIMIT ?');
+      expect(bind).toHaveBeenCalledWith('current', '悬疑', '探案', 4);
+      expect(result.map((game) => game.slug)).toEqual(['game-a', 'game-b']);
+      expect(result[0].tags).toEqual(['悬疑', '探案']);
+      expect(result[0]).not.toHaveProperty('match_count');
+    });
+
+    it('无标签时直接返回空，不查库', async () => {
+      const result = await getRelatedGames('current', [], 4);
+
+      expect(result).toEqual([]);
+      expect(mockDB.prepare).not.toHaveBeenCalled();
+    });
+
+    it('GameTags 表不存在时降级全表扫描 + 内存打分', async () => {
+      mockDB.prepare
+        .mockReturnValueOnce({
+          bind: vi.fn().mockReturnValue({
+            all: vi.fn().mockRejectedValue(new Error('no such table: GameTags')),
+          }),
+        })
+        .mockReturnValueOnce({
+          bind: vi.fn().mockReturnValue({
+            all: vi.fn().mockResolvedValue({ results: mockRows }),
+          }),
+        });
+
+      const result = await getRelatedGames('current-game', ['悬疑', '探案'], 4);
+
+      // 内存打分：game-a 命中 2 个标签排前，game-b 命中 1 个排后
+      //（排除当前作品由 SQL 的 slug != ? 保证，见上一条对 bind 参数的断言）
+      expect(result.map((game) => game.slug)).toEqual(['game-a', 'game-b']);
     });
   });
 });

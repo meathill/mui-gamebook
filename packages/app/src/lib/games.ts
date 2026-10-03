@@ -109,7 +109,29 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
     async (DB) => {
       if (tags.length === 0) return [];
 
-      // 获取所有已发布且可玩的游戏（除当前游戏外），然后在内存中按标签匹配排序
+      // 标签匹配数在 SQL 里算好：只回传前 N 行，避免全表拉取再内存打分。
+      // 排序与旧内存版一致：匹配数降序，同分按更新时间倒序。
+      try {
+        const placeholders = tags.map(() => '?').join(', ');
+        const { results } = (await DB.prepare(
+          `SELECT ${gameListColumns('g')}, ${ratingColumns('g')}, COUNT(gt.tag) AS match_count
+           FROM Games g
+           INNER JOIN GameTags gt ON g.id = gt.game_id
+           WHERE g.published = 1 AND g.shadow_banned = 0 AND ${playableContentExists('g')} AND g.slug != ? AND gt.tag IN (${placeholders})
+           GROUP BY g.id
+           ORDER BY match_count DESC, g.updated_at DESC
+           LIMIT ?`,
+        )
+          .bind(currentSlug, ...tags, limit)
+          .all()) as { results: (GameRow & { match_count: number })[] };
+
+        return results.map(({ match_count: _, ...row }) => parseGameRow(row));
+      } catch {
+        // GameTags 表不存在，降级到旧方法
+        console.log('GameTags table not found, falling back to full scan');
+      }
+
+      // 降级：获取所有已发布且可玩的游戏（除当前游戏外），然后在内存中按标签匹配排序
       const { results } = (await DB.prepare(
         `SELECT ${gameListColumns('Games')}, ${ratingColumns('Games')}
          FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} AND slug != ?
