@@ -4,6 +4,26 @@
   "description": "DSL parser for MUI Gamebook",
   "type": "module",
   "main": "src/index.ts",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "scripts": {
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "prepack": "pnpm run build",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@types/mdast": "^4.0.4",
     "@types/unist": "^3.0.3",
@@ -12,15 +32,15 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
+    "slugify": "^1.6.9",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.1.0"
-  },
-  "scripts": {
-    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^24.10.4",
-    "typescript": "^6.0.3"
-  }
+    "typescript": "^6.0.3",
+    "vite": "^8.1.0"
+  },
+  "license": "MIT"
 }
