@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { EDGE_PURGE_DELAY_MS, scheduleEdgeHtmlPurge, type EdgeCacheContext } from '@/lib/workers-cache';
 
-export const PUBLISHED_GAME_CACHE_CONTROL = 'public, s-maxage=60';
+export const PUBLISHED_GAME_CACHE_CONTROL = 'public, max-age=3600, s-maxage=3600';
 export const PRIVATE_GAME_CACHE_CONTROL = 'private, no-store';
 
 function parseTagList(tags: string | string[] | null | undefined): string[] {
