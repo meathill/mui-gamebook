@@ -73,7 +73,7 @@ vi.mock('@/lib/config', () => ({
     opencodeTextModel: 'oc',
     googleTextModel: 'g',
     openaiTextModel: 'o',
-    mimoTextModel: 'mimo-v2.5-pro',
+    mimoTextModel: 'mimo-v2.6-pro',
     anthropicTextModel: 'a',
   })),
   isRootUser: vi.fn(() => true),

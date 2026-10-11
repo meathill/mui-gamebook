@@ -41,8 +41,10 @@ export const MODEL_PRICING_RATES: Record<string, ModelPricingRate> = {
   'tts-1-hd': { inputPricePerMillion: 30.0 },
 
   // === 小米 MiMo (换算成 USD，1 USD ≈ 7.2 RMB) ===
-  'mimo-v2.5-pro': { inputPricePerMillion: 0.14, outputPricePerMillion: 0.28 }, // 1.00元/1M, 2.00元/1M
-  'mimo-v2.5': { inputPricePerMillion: 0.07, outputPricePerMillion: 0.14 }, // 0.50元/1M, 1.00元/1M
+  'mimo-v2.6-pro': { inputPricePerMillion: 0.14, outputPricePerMillion: 0.28 }, // 1.00元/1M, 2.00元/1M
+  'mimo-v2.6-flash': { inputPricePerMillion: 0.07, outputPricePerMillion: 0.14 }, // 0.50元/1M, 1.00元/1M
+  'mimo-v2.5-pro': { inputPricePerMillion: 0.14, outputPricePerMillion: 0.28 }, // 历史兼容
+  'mimo-v2.5': { inputPricePerMillion: 0.07, outputPricePerMillion: 0.14 }, // 历史兼容
   'mimo-v2.5-tts': { inputPricePerMillion: 0.14 }, // 1.00元/1M 字符
 
   // === Anthropic Claude ===

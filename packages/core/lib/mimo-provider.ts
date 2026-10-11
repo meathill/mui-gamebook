@@ -19,10 +19,10 @@ import { OpenAiProvider } from './openai-provider';
 export const MIMO_DEFAULT_BASE_URL = 'https://token-plan-cn.xiaomimimo.com/v1';
 
 /** MiMo 默认文本模型（正式生成用，支持深度思考） */
-export const MIMO_DEFAULT_TEXT_MODEL = 'mimo-v2.5-pro';
+export const MIMO_DEFAULT_TEXT_MODEL = 'mimo-v2.6-pro';
 
 /** MiMo 轻量文本模型：用于"故事信息是否已足够清晰"这类快速判断/追问生成，不用于正式剧本生成 */
-export const MIMO_FAST_TEXT_MODEL = 'mimo-v2.5';
+export const MIMO_FAST_TEXT_MODEL = 'mimo-v2.6-flash';
 
 /** MiMo 默认 TTS 模型（预置音色版本，另有 -voicedesign/-voiceclone 变体本类暂不支持） */
 export const MIMO_DEFAULT_TTS_MODEL = 'mimo-v2.5-tts';
@@ -62,16 +62,43 @@ interface MimoStreamChunk {
   };
 }
 
+/** 将历史 2.5 模型名称自动规整为 2.6 系列，确保永远不调用已下线或旧版模型 */
+export function normalizeMimoTextModel(model?: string): string {
+  if (model === 'mimo-v2.5') return MIMO_FAST_TEXT_MODEL;
+  if (model === 'mimo-v2.5-pro') return MIMO_DEFAULT_TEXT_MODEL;
+  return model || MIMO_DEFAULT_TEXT_MODEL;
+}
+
 export class MimoProvider extends OpenAiProvider {
-  constructor(apiKey: string, models: { text?: string; tts?: string } = {}, baseURL: string = MIMO_DEFAULT_BASE_URL) {
-    super(apiKey, { text: models.text || MIMO_DEFAULT_TEXT_MODEL, tts: models.tts }, { baseURL, type: 'mimo' });
+  readonly sessionId?: string;
+
+  constructor(
+    apiKey: string,
+    models: { text?: string; tts?: string } = {},
+    baseURL: string = MIMO_DEFAULT_BASE_URL,
+    headers: Record<string, string> = {},
+    sessionId?: string,
+  ) {
+    const resolvedSessionId =
+      sessionId || headers['x-opencode-session'] || headers['x-session-id'] || `ses_${crypto.randomUUID()}`;
+
+    const mergedHeaders: Record<string, string> = {
+      'x-opencode-session': resolvedSessionId,
+      'x-session-id': resolvedSessionId,
+      ...headers,
+    };
+
+    const resolvedTextModel = normalizeMimoTextModel(models.text);
+
+    super(apiKey, { text: resolvedTextModel, tts: models.tts }, { baseURL, type: 'mimo', headers: mergedHeaders });
+    this.sessionId = resolvedSessionId;
   }
 
   /**
    * MiMo 不识别 OpenAI 专有的 reasoning_effort 参数，思考开关走自己的
    * `thinking.type` 字段（OpenAI SDK 的类型不认识这个字段），所以这里和
    * generateTTS 一样绕开 SDK 直接裸 fetch，方便控制请求体的确切形状。
-   * mimo-v2.5-pro 默认开启深度思考，官方文档建议复杂任务配合流式输出
+   * mimo-v2.6-pro 默认开启深度思考，官方文档建议复杂任务配合流式输出
    * 使用（见 generateTextStream），这里的非流式版本仅用于短小、不需要
    * 实时反馈的调用（如追问/评估）。
    * 不传 maxOutputTokens 时不设上限：正式剧本生成是一次性的，没有"继续"
@@ -79,10 +106,14 @@ export class MimoProvider extends OpenAiProvider {
    */
   async generateText(
     prompt: string,
-    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string },
+    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string; sessionId?: string },
   ): Promise<TextGenerationResult> {
-    const model = options?.model || this.models.text || MIMO_DEFAULT_TEXT_MODEL;
+    const model = normalizeMimoTextModel(options?.model || this.models.text);
     console.log(`[MiMo] Generating text with model: ${model}`);
+
+    const extraHeaders: Record<string, string> = options?.sessionId
+      ? { 'x-opencode-session': options.sessionId, 'x-session-id': options.sessionId }
+      : {};
 
     const response = await fetch(`${this.apiBaseUrl}/chat/completions`, {
       method: 'POST',
@@ -90,6 +121,7 @@ export class MimoProvider extends OpenAiProvider {
         Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
         ...this.gatewayHeaders,
+        ...extraHeaders,
       },
       body: JSON.stringify({
         model,
@@ -125,10 +157,14 @@ export class MimoProvider extends OpenAiProvider {
    */
   async *generateTextStream(
     prompt: string,
-    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string },
+    options?: { thinking?: boolean; maxOutputTokens?: number; model?: string; sessionId?: string },
   ): AsyncGenerator<TextStreamChunk, TextGenerationResult, void> {
-    const model = options?.model || this.models.text || MIMO_DEFAULT_TEXT_MODEL;
+    const model = normalizeMimoTextModel(options?.model || this.models.text);
     console.log(`[MiMo] Streaming text with model: ${model}`);
+
+    const extraHeaders: Record<string, string> = options?.sessionId
+      ? { 'x-opencode-session': options.sessionId, 'x-session-id': options.sessionId }
+      : {};
 
     const response = await fetch(`${this.apiBaseUrl}/chat/completions`, {
       method: 'POST',
@@ -136,6 +172,7 @@ export class MimoProvider extends OpenAiProvider {
         Authorization: `Bearer ${this.apiKey}`,
         'Content-Type': 'application/json',
         ...this.gatewayHeaders,
+        ...extraHeaders,
       },
       body: JSON.stringify({
         model,

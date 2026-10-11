@@ -90,7 +90,7 @@ const BASE_CONFIG = {
   sfxModel: 'eleven-sfx-v1',
   opencodeTextModel: 'deepseek-v4.1-flash',
   opencodeBaseUrl: 'https://opencode.ai/zen/go/v1',
-  mimoTextModel: 'mimo-v2.5-pro',
+  mimoTextModel: 'mimo-v2.6-pro',
   mimoBaseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
   mimoTtsModel: 'mimo-v2.5-tts',
   anthropicTextModel: 'claude-sonnet-5',
@@ -155,13 +155,15 @@ describe('ai-provider-factory', () => {
     await expect(createAiProvider('opencode')).rejects.toThrow('OPENCODE_API_KEY not configured');
   });
 
-  it('MiMo 仍需要 MIMO_API_KEY，且不走网关（不要求 cfAiGatewayBaseUrl），带上 tts 模型', async () => {
+  it('MiMo 仍需要 MIMO_API_KEY，且不走网关（不要求 cfAiGatewayBaseUrl），带上 tts 模型并透传 session', async () => {
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue(BASE_CONFIG);
-    await createAiProvider('mimo');
+    await createAiProvider('mimo', { gameId: 42 });
     expect(mimoCtor).toHaveBeenCalledWith(
       'tp-test',
-      { text: 'mimo-v2.5-pro', tts: 'mimo-v2.5-tts' },
+      { text: 'mimo-v2.6-pro', tts: 'mimo-v2.5-tts' },
       BASE_CONFIG.mimoBaseUrl,
+      {},
+      'game_42',
     );
   });
 

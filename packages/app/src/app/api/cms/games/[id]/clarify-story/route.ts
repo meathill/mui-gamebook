@@ -77,7 +77,7 @@ export async function POST(req: Request, { params }: Props) {
     });
 
     // 这一步只是快速判断信息是否够用，不需要 DSL、也不需要 pro 级别的深度思考模型。
-    // 无自选模型时沿用轻量默认（mimo-v2.5 / 系统默认）；用户自选了模型则尊重其选择。
+    // 无自选模型时沿用轻量默认（mimo-v2.6-flash / 系统默认）；用户自选了模型则尊重其选择。
     const fastModelOverride =
       !selection.isCustom && providerType === 'mimo'
         ? MIMO_FAST_TEXT_MODEL

@@ -110,7 +110,7 @@ export function getEnvDefaults(envMap?: unknown): AppConfig {
     openaiTtsModel: (env.OPENAI_TTS_MODEL as string) || 'gpt-4o-mini-tts',
     openaiVideoModel: (env.OPENAI_VIDEO_MODEL as string) || '',
     openaiSttModel: (env.OPENAI_STT_MODEL as string) || 'whisper-1',
-    mimoTextModel: (env.MIMO_TEXT_MODEL as string) || 'mimo-v2.5-pro',
+    mimoTextModel: (env.MIMO_TEXT_MODEL as string) || 'mimo-v2.6-pro',
     mimoBaseUrl: (env.MIMO_BASE_URL as string) || 'https://token-plan-cn.xiaomimimo.com/v1',
     mimoTtsModel: (env.MIMO_TTS_MODEL as string) || 'mimo-v2.5-tts',
     mimoSttModel: (env.MIMO_STT_MODEL as string) || 'mimo-v2.5-asr',

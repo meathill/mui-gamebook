@@ -103,6 +103,32 @@ describe('OpencodeProvider', () => {
     expect(capturedHeaders['x-session-id']).toBe('custom_override_session');
   });
 
+  it('自动将历史 mimo-v2.5 与 mimo-v2.5-pro 规整升级为 2.6 系列', async () => {
+    let capturedBody = '';
+    vi.spyOn(globalThis, 'fetch').mockImplementation((_url, init) => {
+      capturedBody = init?.body as string;
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: 'test' } }],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+    });
+
+    const provider1 = new OpencodeProvider('test-key', { text: 'mimo-v2.5' });
+    await provider1.generateText('hello');
+    expect(JSON.parse(capturedBody).model).toBe('mimo-v2.6-flash');
+
+    const provider2 = new OpencodeProvider('test-key', { text: 'mimo-v2.5-pro' });
+    await provider2.generateText('hello');
+    expect(JSON.parse(capturedBody).model).toBe('mimo-v2.6-pro');
+
+    await provider1.generateText('hello', { model: 'mimo-v2.5' });
+    expect(JSON.parse(capturedBody).model).toBe('mimo-v2.6-flash');
+  });
+
   it('不支持生图、视频与 TTS，明确报错', async () => {
     const provider = new OpencodeProvider('test-key');
     await expect(provider.generateImage()).rejects.toThrow('OpenCode 不支持图片生成');

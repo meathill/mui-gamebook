@@ -117,7 +117,7 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
       defaultTextProvider: 'mimo',
-      mimoTextModel: 'mimo-v2.5-pro',
+      mimoTextModel: 'mimo-v2.6-pro',
       opencodeTextModel: 'deepseek-v4.1-flash',
       googleTextModel: 'gemini-3.8-flash',
       openaiTextModel: 'gpt-5.6-luna',
@@ -174,7 +174,7 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'text_generation',
-      model: 'mimo-v2.5-pro',
+      model: 'mimo-v2.6-pro',
       usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
       gameId: 1,
     });
@@ -204,7 +204,7 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'text_generation',
-      model: 'mimo-v2.5-pro',
+      model: 'mimo-v2.6-pro',
       usage: { promptTokens: 150, completionTokens: 280, totalTokens: 430 },
       gameId: 1,
     });
@@ -293,7 +293,7 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
     expect(createAiProvider).toHaveBeenCalledWith('mimo', {
       sessionId: 'custom_script_session',
       gameId: '77',
-      textModel: 'mimo-v2.5-pro',
+      textModel: 'mimo-v2.6-pro',
     });
   });
 });

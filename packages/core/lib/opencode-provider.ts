@@ -46,6 +46,13 @@ interface OpenCodeStreamChunk {
   };
 }
 
+/** 将历史 2.5 模型名称自动规整为 2.6 系列，确保永远不调用已下线或旧版模型 */
+export function normalizeOpencodeModel(model?: string): string {
+  if (model === 'mimo-v2.5') return 'mimo-v2.6-flash';
+  if (model === 'mimo-v2.5-pro') return 'mimo-v2.6-pro';
+  return model || OPENCODE_DEFAULT_TEXT_MODEL;
+}
+
 export class OpencodeProvider extends OpenAiProvider {
   readonly sessionId: string;
 
@@ -65,11 +72,9 @@ export class OpencodeProvider extends OpenAiProvider {
       ...headers,
     };
 
-    super(
-      apiKey,
-      { text: models.text || OPENCODE_DEFAULT_TEXT_MODEL },
-      { baseURL, type: 'opencode', headers: mergedHeaders },
-    );
+    const resolvedTextModel = normalizeOpencodeModel(models.text);
+
+    super(apiKey, { text: resolvedTextModel }, { baseURL, type: 'opencode', headers: mergedHeaders });
     this.sessionId = resolvedSessionId;
   }
 
@@ -77,7 +82,7 @@ export class OpencodeProvider extends OpenAiProvider {
     prompt: string,
     options?: { thinking?: boolean; maxOutputTokens?: number; model?: string; sessionId?: string },
   ): Promise<TextGenerationResult> {
-    const model = options?.model || this.models.text || OPENCODE_DEFAULT_TEXT_MODEL;
+    const model = normalizeOpencodeModel(options?.model || this.models.text);
     console.log(`[OpenCode] Generating text with model: ${model}`);
 
     const extraHeaders: Record<string, string> = options?.sessionId
@@ -96,6 +101,9 @@ export class OpencodeProvider extends OpenAiProvider {
         model,
         messages: [{ role: 'user', content: prompt }],
         ...(options?.maxOutputTokens !== undefined && { max_tokens: options.maxOutputTokens }),
+        ...(model.startsWith('mimo-') && {
+          thinking: { type: options?.thinking === false ? 'disabled' : 'enabled' },
+        }),
       }),
     });
 
@@ -123,7 +131,7 @@ export class OpencodeProvider extends OpenAiProvider {
     prompt: string,
     options?: { thinking?: boolean; maxOutputTokens?: number; model?: string; sessionId?: string },
   ): AsyncGenerator<TextStreamChunk, TextGenerationResult, void> {
-    const model = options?.model || this.models.text || OPENCODE_DEFAULT_TEXT_MODEL;
+    const model = normalizeOpencodeModel(options?.model || this.models.text);
     console.log(`[OpenCode] Streaming text with model: ${model}`);
 
     const extraHeaders: Record<string, string> = options?.sessionId
@@ -142,6 +150,9 @@ export class OpencodeProvider extends OpenAiProvider {
         model,
         messages: [{ role: 'user', content: prompt }],
         ...(options?.maxOutputTokens !== undefined && { max_tokens: options.maxOutputTokens }),
+        ...(model.startsWith('mimo-') && {
+          thinking: { type: options?.thinking === false ? 'disabled' : 'enabled' },
+        }),
         stream: true,
         stream_options: { include_usage: true },
       }),

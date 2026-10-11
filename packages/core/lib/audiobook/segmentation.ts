@@ -107,7 +107,7 @@ export function validateSegments(raw: unknown, rosterIds: string[], originalText
 
   let segments = (raw as { segments: unknown }).segments;
 
-  // 实测 MiMo（mimo-v2.5-pro）偶尔会把 segments 数组整个序列化成字符串返回，
+  // 实测 MiMo（如 mimo-v2.6-pro）偶尔会把 segments 数组整个序列化成字符串返回，
   // 而不是按 function-call schema 给出真正的嵌套数组，这里做一次防御性解析
   if (typeof segments === 'string') {
     try {

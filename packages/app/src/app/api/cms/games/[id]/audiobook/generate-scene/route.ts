@@ -9,9 +9,10 @@ import { resolveVoiceForSpeaker } from '@mui-gamebook/core/lib/audiobook/voice-a
 import { NARRATOR_SPEAKER_ID } from '@mui-gamebook/core/lib/audiobook/types';
 import * as schema from '@/db/schema';
 import type { AudiobookClip } from '@/lib/audiobook-types';
-import { createAiProvider, resolveTtsProviderType } from '@/lib/ai-provider-factory';
+import { createAiProvider, resolveTextProviderType, resolveTtsProviderType } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
 
@@ -86,12 +87,24 @@ export async function POST(req: Request, { params }: Params) {
   }
   const publicDomain = env.ASSETS_PUBLIC_DOMAIN || process.env.ASSETS_PUBLIC_DOMAIN;
 
+  const clientSessionId = req.headers.get('x-opencode-session') || req.headers.get('x-session-id') || undefined;
+  const config = await getConfig();
+
+  const textProviderType = await resolveTextProviderType();
+  const textProvider = await createAiProvider(textProviderType, {
+    sessionId: clientSessionId,
+    gameId,
+  });
+
   const ttsProviderType = await resolveTtsProviderType();
-  const provider = await createAiProvider(ttsProviderType);
-  if (!provider.generateTTS) {
+  const ttsProvider = await createAiProvider(ttsProviderType, {
+    sessionId: clientSessionId,
+    gameId,
+  });
+  if (!ttsProvider.generateTTS) {
     return NextResponse.json({ error: '当前 provider 不支持 TTS' }, { status: 500 });
   }
-  const generateTTS = provider.generateTTS.bind(provider);
+  const generateTTS = ttsProvider.generateTTS.bind(ttsProvider);
 
   const voices: Record<string, string> = {};
   function resolveVoice(speaker: string): string {
@@ -106,14 +119,20 @@ export async function POST(req: Request, { params }: Params) {
     if (!hasQuoteLikeCharacters(content)) {
       return [{ speaker: NARRATOR_SPEAKER_ID, text: content }];
     }
-    const result = await segmentTextWithProvider(provider, content, {
+    const result = await segmentTextWithProvider(textProvider, content, {
       roster,
       sceneId,
       nodeIndex,
       precedingExcerpt: '',
     });
     if (result.usage) {
-      await recordAiUsage({ userId, type: 'chat', model: 'mimo-v2.5-pro', usage: result.usage, gameId });
+      const textModelName =
+        textProviderType === 'opencode'
+          ? config.opencodeTextModel
+          : textProviderType === 'mimo'
+            ? 'mimo-v2.6-pro'
+            : `${textProviderType}-text`;
+      await recordAiUsage({ userId, type: 'chat', model: textModelName, usage: result.usage, gameId });
     }
     return result.segments;
   }

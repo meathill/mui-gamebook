@@ -83,7 +83,7 @@ export const PROVIDER_SECTIONS: ProviderSectionConfig[] = [
         placeholder: 'https://opencode.ai/zen/go/v1',
         hint: 'OpenCode 官方端点',
       },
-      { field: 'mimoTextModel', label: '小米 MiMo 文本模型', placeholder: 'mimo-v2.5-pro' },
+      { field: 'mimoTextModel', label: '小米 MiMo 文本模型', placeholder: 'mimo-v2.6-pro' },
       {
         field: 'mimoBaseUrl',
         label: '小米 MiMo base URL',

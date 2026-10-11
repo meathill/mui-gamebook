@@ -76,7 +76,7 @@ describe('POST /api/cms/games/[id]/clarify-story', () => {
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
       defaultTextProvider: 'mimo',
-      mimoTextModel: 'mimo-v2.5-pro',
+      mimoTextModel: 'mimo-v2.6-pro',
       opencodeTextModel: 'deepseek-v4.1-flash',
       googleTextModel: 'gemini-3.8-flash',
       openaiTextModel: 'gpt-5.6-luna',
@@ -155,7 +155,7 @@ describe('POST /api/cms/games/[id]/clarify-story', () => {
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['anthropic'] });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
       defaultTextProvider: 'anthropic',
-      mimoTextModel: 'mimo-v2.5-pro',
+      mimoTextModel: 'mimo-v2.6-pro',
       opencodeTextModel: 'deepseek-v4.1-flash',
       googleTextModel: 'gemini-3.8-flash',
       openaiTextModel: 'gpt-5.6-luna',
@@ -217,14 +217,14 @@ describe('POST /api/cms/games/[id]/clarify-story', () => {
     expect(createAiProvider).toHaveBeenCalledWith('mimo', {
       sessionId: 'custom_session_999',
       gameId: '42',
-      textModel: 'mimo-v2.5-pro',
+      textModel: 'mimo-v2.6-pro',
     });
   });
 
   it('付费用户自选模型时追问不再强制轻量模型', async () => {
     (getUserAiModelPreference as ReturnType<typeof vi.fn>).mockResolvedValue({
       provider: 'mimo',
-      model: 'mimo-v2.5-pro',
+      model: 'mimo-v2.6-pro',
     });
     (isPaidAiUser as ReturnType<typeof vi.fn>).mockResolvedValue(true);
     const generateText = vi.fn().mockResolvedValue({
@@ -238,14 +238,14 @@ describe('POST /api/cms/games/[id]/clarify-story', () => {
     expect(createAiProvider).toHaveBeenCalledWith('mimo', {
       sessionId: undefined,
       gameId: '1',
-      textModel: 'mimo-v2.5-pro',
+      textModel: 'mimo-v2.6-pro',
     });
     const [, options] = generateText.mock.calls[0];
     expect(options).toEqual({ thinking: false, maxOutputTokens: 400 });
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'clarify_questions',
-      model: 'mimo-v2.5-pro',
+      model: 'mimo-v2.6-pro',
       usage: { promptTokens: 10, completionTokens: 5, totalTokens: 15 },
       gameId: 1,
     });

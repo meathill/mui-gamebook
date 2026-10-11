@@ -81,7 +81,7 @@ describe('POST /api/cms/games/[id]/chat', () => {
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
       defaultTextProvider: 'mimo',
-      mimoTextModel: 'mimo-v2.5-pro',
+      mimoTextModel: 'mimo-v2.6-pro',
       opencodeTextModel: 'deepseek-v4.1-flash',
       googleTextModel: 'gemini-3.8-flash',
       openaiTextModel: 'gpt-5.6-luna',
@@ -147,7 +147,7 @@ describe('POST /api/cms/games/[id]/chat', () => {
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
       type: 'chat',
-      model: 'mimo-v2.5-pro',
+      model: 'mimo-v2.6-pro',
       usage: { promptTokens: 20, completionTokens: 30, totalTokens: 50 },
       gameId: 1,
     });
@@ -225,7 +225,7 @@ describe('POST /api/cms/games/[id]/chat', () => {
     expect(createAiProvider).toHaveBeenCalledWith('mimo', {
       sessionId: 'chat_session_888',
       gameId: '66',
-      textModel: 'mimo-v2.5-pro',
+      textModel: 'mimo-v2.6-pro',
     });
   });
 

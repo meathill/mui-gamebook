@@ -900,3 +900,16 @@ isValidVoiceId(voiceId: string, provider): boolean
 - **登录前评价不丢**：未登录用户填写的评分 + 留言先落 localStorage（`game-review-draft:<slug>`），登录成功跳回播放页后自动读取草稿并提交；已评价标记存在 `game-rated:<slug>`。
 - 组件：`game-player/RatingWidget.tsx`（打分 + 留言框）、`game-player/RatingSummary.tsx`（均分展示）。
 
+## MiMo 2.6 升级与 OpenCode Go 套餐会话接入（2026-10）
+
+- **背景与升级目标**：
+  - 将文本模型由 MiMo 2.5 升级至 2.6 系列：`mimo-v2.5` -> `mimo-v2.6-flash`，`mimo-v2.5-pro` -> `mimo-v2.6-pro`。
+  - STT、TTS 与 Voice Clone 保持走 MiMo 原厂。
+  - 文本模型请求统一走 OpenCode Go 套餐，必须稳定携带 `x-opencode-session` 与 `x-session-id` headers。
+- **架构与决策**：
+  - **模态解耦**：在有声书分幕分角色逻辑（`audiobook/generate-scene`）中，原本文本分段与音频合成均绑定在同一个 provider 实例（TTS Provider），导致文本分段硬编码走了 MiMo 且无法享受 OpenCode Go 套餐。重构解耦为 `textProvider`（走系统文本配置/OpenCode）与 `ttsProvider`（走 MiMo），文本分段由文本模型完成并注入 Session Header，TTS 专职由语音 Provider 负责。
+  - **OpenCode 预设扩展与 Session 透传**：保留 OpenCode 默认文本模型为 `deepseek-v4.1-flash`，同时将 `mimo-v2.6-pro` 与 `mimo-v2.6-flash` 列入 OpenCode 预设。`AiProviderFactory`、`MimoProvider` 与 `OpencodeProvider` 统一支持传入 `sessionId`/`gameId` 并自动补充 `x-opencode-session` 与 `x-session-id`。
+  - **思考参数兼容**：`OpencodeProvider` 对 MiMo 系列模型支持深度思考参数映射（`thinking: { type: options?.thinking === false ? 'disabled' : 'enabled' }`）。
+  - **定价表同步**：`pricing.ts` 补充 `mimo-v2.6-pro`（$0.14/$0.28 每 1M）与 `mimo-v2.6-flash`（$0.07/$0.14 每 1M）费率，保留 2.5 历史兼容。
+
+

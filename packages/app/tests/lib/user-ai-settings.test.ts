@@ -10,7 +10,7 @@ import {
 
 const SYSTEM_MODELS = {
   opencode: 'deepseek-v4.1-flash',
-  mimo: 'mimo-v2.5-pro',
+  mimo: 'mimo-v2.6-pro',
   anthropic: 'claude-sonnet-5',
   google: 'gemini-3.8-flash',
   openai: 'gpt-5.6-luna',
@@ -106,7 +106,7 @@ describe('getDefaultTextModelForProvider', () => {
   it('五个供应商都有映射', () => {
     const config = {
       opencodeTextModel: 'deepseek-v4.1-flash',
-      mimoTextModel: 'mimo-v2.5-pro',
+      mimoTextModel: 'mimo-v2.6-pro',
       anthropicTextModel: 'claude-sonnet-5',
       googleTextModel: 'gemini-3.8-flash',
       openaiTextModel: 'gpt-5.6-luna',

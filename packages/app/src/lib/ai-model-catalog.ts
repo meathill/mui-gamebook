@@ -34,9 +34,8 @@ export const TEXT_MODEL_PRESETS: Record<TextProviderType, TextModelPreset[]> = {
     { value: 'gemini-2.5-flash', label: 'gemini-2.5-flash（轻量）' },
   ],
   mimo: [
-    { value: 'mimo-v2.5-pro', label: 'mimo-v2.5-pro（默认）' },
-    { value: 'mimo-v2.5-flash', label: 'mimo-v2.5-flash（轻量）' },
-    { value: 'mimo-v2.5', label: 'mimo-v2.5' },
+    { value: 'mimo-v2.6-pro', label: 'mimo-v2.6-pro（默认）' },
+    { value: 'mimo-v2.6-flash', label: 'mimo-v2.6-flash（轻量）' },
   ],
   anthropic: [
     { value: 'claude-sonnet-5', label: 'claude-sonnet-5（默认）' },
@@ -46,6 +45,8 @@ export const TEXT_MODEL_PRESETS: Record<TextProviderType, TextModelPreset[]> = {
   opencode: [
     { value: 'deepseek-v4.1-flash', label: 'deepseek-v4.1-flash（默认）' },
     { value: 'deepseek-v4-pro', label: 'deepseek-v4-pro（强推理）' },
+    { value: 'mimo-v2.6-pro', label: 'mimo-v2.6-pro（小米旗舰）' },
+    { value: 'mimo-v2.6-flash', label: 'mimo-v2.6-flash（小米轻量）' },
     { value: 'qwen3-max', label: 'qwen3-max' },
     { value: 'kimi-k2-0905', label: 'kimi-k2' },
     { value: 'glm-4.6', label: 'glm-4.6' },

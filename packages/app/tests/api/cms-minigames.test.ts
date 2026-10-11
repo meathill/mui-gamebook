@@ -89,7 +89,7 @@ describe('POST /api/cms/minigames', () => {
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
       defaultTextProvider: 'mimo',
-      mimoTextModel: 'mimo-v2.5-pro',
+      mimoTextModel: 'mimo-v2.6-pro',
       opencodeTextModel: 'deepseek-v4.1-flash',
       googleTextModel: 'gemini-3.8-flash',
       openaiTextModel: 'gpt-5.6-luna',
@@ -120,7 +120,7 @@ describe('POST /api/cms/minigames', () => {
       '魁地奇',
       undefined,
       'mimo',
-      'mimo-v2.5-pro',
+      'mimo-v2.6-pro',
     );
     expect(recordAiUsage).toHaveBeenCalledWith({
       userId: 'u1',
@@ -136,7 +136,7 @@ describe('POST /api/cms/minigames', () => {
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['mimo'] });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
       defaultTextProvider: 'mimo',
-      mimoTextModel: 'mimo-v2.5-pro',
+      mimoTextModel: 'mimo-v2.6-pro',
       opencodeTextModel: 'deepseek-v4.1-flash',
       googleTextModel: 'gemini-3.8-flash',
       openaiTextModel: 'gpt-5.6-luna',

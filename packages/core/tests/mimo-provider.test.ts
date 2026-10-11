@@ -46,22 +46,32 @@ describe('MimoProvider', () => {
     });
   });
 
-  it('默认使用 Token Plan base URL，type 为 mimo', () => {
+  it('默认使用 Token Plan base URL，type 为 mimo，并注入 session header', () => {
     const provider = new MimoProvider('tp-test-key');
     expect(provider.type).toBe('mimo');
+    expect(provider.sessionId).toMatch(/^ses_/);
     expect(constructorSpy).toHaveBeenCalledWith({
       apiKey: 'tp-test-key',
       baseURL: MIMO_DEFAULT_BASE_URL,
       dangerouslyAllowBrowser: true,
+      defaultHeaders: {
+        'x-opencode-session': provider.sessionId,
+        'x-session-id': provider.sessionId,
+      },
     });
   });
 
-  it('支持自定义 base URL', () => {
-    new MimoProvider('sk-test-key', {}, 'https://api.xiaomimimo.com/v1');
+  it('支持自定义 base URL 与显式 sessionId', () => {
+    const provider = new MimoProvider('sk-test-key', {}, 'https://api.xiaomimimo.com/v1', {}, 'game_99');
+    expect(provider.sessionId).toBe('game_99');
     expect(constructorSpy).toHaveBeenCalledWith({
       apiKey: 'sk-test-key',
       baseURL: 'https://api.xiaomimimo.com/v1',
       dangerouslyAllowBrowser: true,
+      defaultHeaders: {
+        'x-opencode-session': 'game_99',
+        'x-session-id': 'game_99',
+      },
     });
   });
 
@@ -128,6 +138,30 @@ describe('MimoProvider', () => {
 
       const body = JSON.parse(fetchMock.mock.calls[0][1].body);
       expect(body.model).toBe(MIMO_FAST_TEXT_MODEL);
+    });
+
+    it('自动将历史 mimo-v2.5 与 mimo-v2.5-pro 规整升级为 2.6 系列', async () => {
+      const provider1 = new MimoProvider('tp-test-key', { text: 'mimo-v2.5' });
+      await provider1.generateText('测试');
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).model).toBe(MIMO_FAST_TEXT_MODEL);
+
+      const provider2 = new MimoProvider('tp-test-key', { text: 'mimo-v2.5-pro' });
+      await provider2.generateText('测试');
+      expect(JSON.parse(fetchMock.mock.calls[1][1].body).model).toBe(MIMO_DEFAULT_TEXT_MODEL);
+
+      await provider1.generateText('测试', { model: 'mimo-v2.5-pro' });
+      expect(JSON.parse(fetchMock.mock.calls[2][1].body).model).toBe(MIMO_DEFAULT_TEXT_MODEL);
+    });
+
+    it('携带 x-opencode-session 与 x-session-id 头部，并支持 options.sessionId 覆盖', async () => {
+      const provider = new MimoProvider('tp-test-key', {}, undefined, {}, 'default_sess_1');
+      await provider.generateText('测试 1');
+      expect(fetchMock.mock.calls[0][1].headers['x-opencode-session']).toBe('default_sess_1');
+      expect(fetchMock.mock.calls[0][1].headers['x-session-id']).toBe('default_sess_1');
+
+      await provider.generateText('测试 2', { sessionId: 'custom_override_sess' });
+      expect(fetchMock.mock.calls[1][1].headers['x-opencode-session']).toBe('custom_override_sess');
+      expect(fetchMock.mock.calls[1][1].headers['x-session-id']).toBe('custom_override_sess');
     });
 
     it('请求失败时抛出明确错误', async () => {

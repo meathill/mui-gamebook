@@ -84,7 +84,7 @@ describe('POST /api/cms/games/[id]/chat 参考图校验', () => {
     (getUserAiPermissions as ReturnType<typeof vi.fn>).mockResolvedValue({ providers: ['google'] });
     (getConfig as ReturnType<typeof vi.fn>).mockResolvedValue({
       defaultTextProvider: 'google',
-      mimoTextModel: 'mimo-v2.5-pro',
+      mimoTextModel: 'mimo-v2.6-pro',
       opencodeTextModel: 'deepseek-v4.1-flash',
       googleTextModel: 'gemini-3.8-flash',
       openaiTextModel: 'gpt-5.6-luna',

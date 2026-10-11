@@ -11,6 +11,7 @@ import {
   XIcon,
 } from '@phosphor-icons/react/dist/ssr';
 import type { Game } from '@roudanio/parser/src/types';
+import { getGameSessionHeaders } from '@/lib/editor/game-session';
 
 interface AudiobookGenerationCardProps {
   gameId: string;
@@ -83,7 +84,10 @@ export default function AudiobookGenerationCard({ gameId, game }: AudiobookGener
     try {
       const res = await fetch(`/api/cms/games/${gameId}/audiobook/generate-scene`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...getGameSessionHeaders(gameId),
+        },
         body: JSON.stringify({ sceneId }),
       });
       if (!res.ok) {

@@ -49,7 +49,7 @@ describe('validateSegments', () => {
     expect(validateSegments(raw, rosterIds, original)).toEqual([{ speaker: 'narrator', text: original }]);
   });
 
-  it('accepts segments returned as a JSON-encoded string (observed MiMo mimo-v2.5-pro quirk)', () => {
+  it('accepts segments returned as a JSON-encoded string (observed MiMo mimo-v2.6-pro quirk)', () => {
     const original = '妈妈把一个装满点心的篮子交给你。';
     const raw = { segments: JSON.stringify([{ speaker: 'narrator', text: original }]) };
     expect(validateSegments(raw, rosterIds, original)).toEqual([{ speaker: 'narrator', text: original }]);

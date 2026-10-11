@@ -148,5 +148,31 @@ describe('pricing.ts 计费核算模块', () => {
       expect(calculateCostUsd(usage)).toBe(0.05);
       expect(calculateBilledTokens(usage)).toBe(50000);
     });
+
+    it('MiMo 2.6 Pro: 1000 input tokens + 2000 output tokens', () => {
+      const usage = {
+        type: 'text_generation',
+        model: 'mimo-v2.6-pro',
+        promptTokens: 1000,
+        completionTokens: 2000,
+      };
+      // Cost = (1000 * 0.14 + 2000 * 0.28) / 1,000,000 = (140 + 560) / 1,000,000 = $0.0007 USD
+      const cost = calculateCostUsd(usage);
+      expect(cost).toBeCloseTo(0.0007, 6);
+      expect(calculateBilledTokens(usage)).toBe(700);
+    });
+
+    it('MiMo 2.6 Flash: 1000 input tokens + 2000 output tokens', () => {
+      const usage = {
+        type: 'text_generation',
+        model: 'mimo-v2.6-flash',
+        promptTokens: 1000,
+        completionTokens: 2000,
+      };
+      // Cost = (1000 * 0.07 + 2000 * 0.14) / 1,000,000 = (70 + 280) / 1,000,000 = $0.00035 USD
+      const cost = calculateCostUsd(usage);
+      expect(cost).toBeCloseTo(0.00035, 6);
+      expect(calculateBilledTokens(usage)).toBe(350);
+    });
   });
 });

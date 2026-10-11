@@ -142,6 +142,7 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
     if (!apiKey) {
       throw new Error('MIMO_API_KEY not configured');
     }
+    const resolvedSessionId = options?.sessionId || (options?.gameId ? `game_${options.gameId}` : undefined);
 
     return new MimoProvider(
       apiKey,
@@ -150,6 +151,8 @@ export async function createAiProvider(type?: AiProviderType, options?: CreateAi
         tts: options?.ttsModel || config.mimoTtsModel,
       },
       config.mimoBaseUrl,
+      {},
+      resolvedSessionId,
     );
   }
 

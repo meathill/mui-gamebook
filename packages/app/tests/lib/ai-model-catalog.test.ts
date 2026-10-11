@@ -20,9 +20,11 @@ describe('ai-model-catalog', () => {
     }
     expect(TEXT_MODEL_PRESETS.openai[0]?.value).toBe('gpt-5.6-luna');
     expect(TEXT_MODEL_PRESETS.google[0]?.value).toBe('gemini-3.8-flash');
-    expect(TEXT_MODEL_PRESETS.mimo[0]?.value).toBe('mimo-v2.5-pro');
+    expect(TEXT_MODEL_PRESETS.mimo[0]?.value).toBe('mimo-v2.6-pro');
     expect(TEXT_MODEL_PRESETS.anthropic[0]?.value).toBe('claude-sonnet-5');
     expect(TEXT_MODEL_PRESETS.opencode[0]?.value).toBe('deepseek-v4.1-flash');
+    expect(TEXT_MODEL_PRESETS.opencode.some((m) => m.value === 'mimo-v2.6-pro')).toBe(true);
+    expect(TEXT_MODEL_PRESETS.opencode.some((m) => m.value === 'mimo-v2.6-flash')).toBe(true);
   });
 
   it('isTextProviderType 只接受五种供应商', () => {
