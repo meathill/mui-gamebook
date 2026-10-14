@@ -1,16 +1,21 @@
 'use client';
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import ReactMarkdown from 'react-markdown';
-import { UserIcon, ClockIcon, QuestionIcon } from '@phosphor-icons/react/dist/ssr';
 import { formatLongDate } from '@mui-gamebook/site-common/utils';
+import { ClockIcon, QuestionIcon, UserIcon } from '@phosphor-icons/react/dist/ssr';
 import type { PlayableGame } from '@roudanio/parser/src/types';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import ReactMarkdown, { type Components } from 'react-markdown';
 import ShareButton from '@/components/ShareButton';
 import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../../image-loader';
 import RatingSummary from './RatingSummary';
+
+// 书名已经是页面上的 h1。背景故事是 UGC，作者常把章节写成 # 标题，原样渲染会变成第二个 h1。
+const backgroundMarkdownComponents: Components = {
+  h1: ({ node: _node, ...props }) => <h2 {...props} />,
+};
 
 interface TitleScreenProps {
   game: PlayableGame;
@@ -110,7 +115,7 @@ export default function TitleScreen({
 
           {game.backgroundStory ? (
             <div className="text-left prose prose-invert prose-sm max-h-[36dvh] overflow-y-auto mb-8 mx-auto max-w-2xl leading-relaxed">
-              <ReactMarkdown>{game.backgroundStory}</ReactMarkdown>
+              <ReactMarkdown components={backgroundMarkdownComponents}>{game.backgroundStory}</ReactMarkdown>
             </div>
           ) : (
             <p className="text-white/85 text-lg mb-8 max-w-xl mx-auto leading-relaxed">
@@ -212,7 +217,7 @@ export default function TitleScreen({
         )}
         {game.backgroundStory ? (
           <div className="text-gray-600 text-base mb-8 max-w-2xl leading-relaxed text-left prose prose-gray prose-sm">
-            <ReactMarkdown>{game.backgroundStory}</ReactMarkdown>
+            <ReactMarkdown components={backgroundMarkdownComponents}>{game.backgroundStory}</ReactMarkdown>
           </div>
         ) : (
           <p className="text-gray-600 text-lg mb-8 max-w-xl leading-relaxed">

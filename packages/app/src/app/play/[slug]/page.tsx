@@ -1,17 +1,18 @@
-import { notFound, redirect } from 'next/navigation';
+import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
+import { ClockIcon, QuestionIcon, UserIcon } from '@phosphor-icons/react/dist/ssr';
+import { Metadata } from 'next';
 import Link from 'next/link';
-import { cachedGetGameBySlug } from '@/lib/games';
+import { notFound, redirect } from 'next/navigation';
+import { getTranslations } from 'next-intl/server';
+import Comment from '@/components/Comment';
 import GamePlayer from '@/components/GamePlayer';
 import { GamePlayerImmersive } from '@/components/game-player';
+import RatingSummary from '@/components/game-player/RatingSummary';
+import JsonLd from '@/components/JsonLd';
 import PlayWebMcpTools from '@/components/PlayWebMcpTools';
 import RelatedGames from '@/components/RelatedGames';
-import Comment from '@/components/Comment';
-import JsonLd from '@/components/JsonLd';
-import RatingSummary from '@/components/game-player/RatingSummary';
-import { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
-import { UserIcon, ClockIcon, QuestionIcon } from '@phosphor-icons/react/dist/ssr';
-import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
+import { cachedGetGameBySlug } from '@/lib/games';
+import { buildGameSearchMetadata } from '@/lib/search-snippet';
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -80,19 +81,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
 
-    // 优先取作者填写的描述；若无则截取背景故事；最后回退至定制场景词描述
-    const cleanBackgroundStory = game.backgroundStory
-      ? game.backgroundStory
-          .replace(/^[#*>\s-]+/gm, '')
-          .replace(/\n+/g, ' ')
-          .trim()
-          .slice(0, 150)
-      : undefined;
-
-    const description =
-      game.description ||
-      cleanBackgroundStory ||
-      `在姆伊游戏书在线体验《${game.title}》，开启你的文字冒险与互动小说之旅。分支剧情由你抉择。`;
+    // 书名和简介是 UGC。只在 meta 上补到 Bing 的长度，不改作品正文（issue #24）
+    const search = buildGameSearchMetadata({
+      title: game.title,
+      description: game.description,
+      backgroundStory: game.backgroundStory,
+      tags: game.tags,
+      sceneCount: Object.keys(game.scenes).length,
+    });
 
     // 独立 OG 图片：优先使用作品封面图，未配置封面或为失效外链（picsum）时回退至站点默认大图
     const isBlockedCover = game.cover_image?.includes('picsum.photos');
@@ -112,15 +108,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     ];
 
-    const fullTitle = `${game.title} - 在线互动小说`;
-
     return {
-      title: game.title,
-      description,
+      title: search.title,
+      description: search.description,
       alternates: { canonical: `/play/${slug}` },
       openGraph: {
-        title: `${fullTitle} | 姆伊游戏书`,
-        description,
+        title: search.socialTitle,
+        description: search.description,
         images: ogImages,
         type: 'article',
         siteName: '姆伊游戏书',
@@ -128,8 +122,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
       twitter: {
         card: 'summary_large_image',
-        title: `${fullTitle} | 姆伊游戏书`,
-        description,
+        title: search.socialTitle,
+        description: search.description,
         images: ogImages.map((img) => img.url),
       },
     };

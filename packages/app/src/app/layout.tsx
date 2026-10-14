@@ -1,16 +1,17 @@
+import { GoogleAnalytics } from '@next/third-parties/google';
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
-import { GoogleAnalytics } from '@next/third-parties/google';
 import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import Providers from '@/components/Providers';
-import LocaleProvider from '@/i18n/locale-provider';
-import type { Locale } from '@/i18n/config';
-import { ReactNode } from 'react';
-import { cn } from '@/lib';
 import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
+import { ReactNode } from 'react';
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
+import Providers from '@/components/Providers';
+import type { Locale } from '@/i18n/config';
+import LocaleProvider from '@/i18n/locale-provider';
+import { cn } from '@/lib';
+import { SITE_TITLE_SUFFIX } from '@/lib/search-snippet';
 
 const interSans = Inter({
   variable: '--font-geist-sans',
@@ -25,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL)),
     title: {
-      template: '%s | 姆伊游戏书',
+      template: `%s${SITE_TITLE_SUFFIX}`,
       default: '姆伊游戏书 — 在线互动小说 · 文字冒险创作 · Markdown 游戏书平台',
     },
     description:

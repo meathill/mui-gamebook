@@ -1,7 +1,7 @@
-import { NextIntlClientProvider } from 'next-intl';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
 import type { PlayableGame } from '@roudanio/parser/src/types';
+import { fireEvent, render, screen } from '@testing-library/react';
+import { NextIntlClientProvider } from 'next-intl';
+import { describe, expect, it, vi } from 'vitest';
 import TitleScreen from '@/components/game-player/TitleScreen';
 import messages from '../../src/i18n/messages/en.json';
 
@@ -65,6 +65,37 @@ describe('TitleScreen', () => {
 
     expect(screen.getByText('很久以前...')).toBeInTheDocument();
     expect(screen.queryByText('简介')).not.toBeInTheDocument();
+  });
+
+  it('背景故事里的一级标题降成 h2，页面只保留书名这一个 h1', () => {
+    const { rerender } = renderWithProviders(
+      <TitleScreen
+        game={{ ...baseGame, backgroundStory: '# 序章：来自东方的信笺\n\n雾气笼罩。' }}
+        hasSave={false}
+        onStart={vi.fn()}
+        onRestart={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: '迷失之城' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: '序章：来自东方的信笺' })).toBeInTheDocument();
+
+    rerender(
+      <NextIntlClientProvider
+        messages={messages}
+        locale="en">
+        <TitleScreen
+          game={{ ...baseGame, title_layout: 'fullscreen', backgroundStory: '# 序章：来自东方的信笺' }}
+          hasSave={false}
+          onStart={vi.fn()}
+          onRestart={vi.fn()}
+        />
+      </NextIntlClientProvider>,
+    );
+
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 2, name: '序章：来自东方的信笺' })).toBeInTheDocument();
   });
 
   it('渲染 tags 列表', () => {
