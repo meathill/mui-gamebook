@@ -3,21 +3,22 @@
  */
 import OpenAI from 'openai';
 import { buildMiniGamePrompt, extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
-import { getMessageText } from './ai-provider';
-import type {
-  AiProvider,
-  AiProviderType,
-  AiUsageInfo,
-  ChatMessage,
-  ChatWithToolsResult,
-  FunctionCallResult,
-  FunctionDeclaration,
-  ImageGenerationResult,
-  MiniGameGenerationResult,
-  TextGenerationResult,
-  TTSResult,
-  VideoGenerationStartResult,
-  VideoGenerationStatusResult,
+import {
+  type AiProvider,
+  type AiProviderType,
+  type AiUsageInfo,
+  type ChatMessage,
+  type ChatWithToolsResult,
+  type FunctionCallResult,
+  type FunctionDeclaration,
+  getMessageText,
+  type ImageGenerationResult,
+  type MiniGameGenerationResult,
+  servedModel,
+  type TextGenerationResult,
+  type TTSResult,
+  type VideoGenerationStartResult,
+  type VideoGenerationStatusResult,
 } from './ai-provider';
 
 export class OpenAiProvider implements AiProvider {
@@ -68,6 +69,7 @@ export class OpenAiProvider implements AiProvider {
     return {
       text: response.choices[0]?.message?.content || '',
       usage,
+      model: servedModel(response.model, model),
     };
   }
 
@@ -154,6 +156,7 @@ export class OpenAiProvider implements AiProvider {
       type: 'image/png',
       buffer: Buffer.from(imageData, 'base64'),
       usage,
+      model,
     };
   }
 
@@ -199,7 +202,7 @@ export class OpenAiProvider implements AiProvider {
       throw new Error(`OpenAI 视频生成请求失败: ${response.status} ${errorText}`);
     }
 
-    const data = (await response.json()) as { id: string };
+    const data = (await response.json()) as { id: string; model?: string };
 
     if (!data.id) {
       throw new Error('无法获取视频生成任务 ID');
@@ -212,6 +215,7 @@ export class OpenAiProvider implements AiProvider {
         completionTokens: 0,
         totalTokens: 100_000, // Sora 视频生成估算用量
       },
+      model: servedModel(data.model, model),
     };
   }
 
@@ -244,12 +248,15 @@ export class OpenAiProvider implements AiProvider {
         status: 'queued' | 'in_progress' | 'completed' | 'failed';
         output_url?: string;
         error?: { message: string };
+        model?: string;
       };
+      const reportedModel = data.model?.trim();
 
       if (data.status === 'completed' && data.output_url) {
         return {
           done: true,
           uri: data.output_url,
+          ...(reportedModel && { model: reportedModel }),
         };
       }
 
@@ -257,12 +264,13 @@ export class OpenAiProvider implements AiProvider {
         return {
           done: true,
           error: data.error?.message || '视频生成失败',
+          ...(reportedModel && { model: reportedModel }),
         };
       }
 
       // queued 或 in_progress
       console.log(`[OpenAI] 视频生成状态: ${data.status}`);
-      return { done: false };
+      return reportedModel ? { done: false, model: reportedModel } : { done: false };
     } catch (error) {
       console.error('[OpenAI] 检查视频状态失败:', error);
       return { done: false, error: '轮询请求出错' };
@@ -296,7 +304,7 @@ export class OpenAiProvider implements AiProvider {
       throw new Error('AI 未返回有效的游戏代码');
     }
 
-    return { code, usage };
+    return { code, usage, model: servedModel(response.model, model) };
   }
 
   async chatWithTools(messages: ChatMessage[], tools: FunctionDeclaration[]): Promise<ChatWithToolsResult> {
@@ -346,9 +354,10 @@ export class OpenAiProvider implements AiProvider {
       totalTokens: response.usage?.total_tokens ?? 0,
     };
 
+    const served = servedModel(response.model, model);
     const choice = response.choices[0];
     if (!choice) {
-      return { usage };
+      return { usage, model: served };
     }
 
     const text = choice.message?.content || undefined;
@@ -368,6 +377,7 @@ export class OpenAiProvider implements AiProvider {
       text,
       functionCalls,
       usage,
+      model: served,
     };
   }
 
@@ -391,6 +401,7 @@ export class OpenAiProvider implements AiProvider {
     return {
       buffer: Buffer.from(arrayBuffer),
       mimeType: 'audio/mpeg',
+      model,
     };
   }
 }

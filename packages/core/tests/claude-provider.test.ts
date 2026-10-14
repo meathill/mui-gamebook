@@ -67,6 +67,20 @@ describe('ClaudeProvider', () => {
 
     expect(result.text).toBe('从前有座山');
     expect(result.usage).toEqual({ promptTokens: 100, completionTokens: 200, totalTokens: 300 });
+    expect(result.model).toBe(CLAUDE_DEFAULT_TEXT_MODEL);
+  });
+
+  it('响应 model 优先于请求模型', async () => {
+    createMock.mockResolvedValue({
+      content: [{ type: 'text', text: 'ok' }],
+      usage: { input_tokens: 1, output_tokens: 1 },
+      model: 'claude-sonnet-5-20260201',
+    });
+    const provider = new ClaudeProvider('sk-ant-test', { text: 'claude-sonnet-5' });
+
+    const result = await provider.generateText('写故事');
+
+    expect(result.model).toBe('claude-sonnet-5-20260201');
   });
 
   it('thinking 选项映射为 adaptive thinking', async () => {

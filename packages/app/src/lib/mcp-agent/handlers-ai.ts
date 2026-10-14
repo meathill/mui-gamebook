@@ -2,12 +2,14 @@
  * MCP Agent 工具：AI 生成（generateScript/generateImage）。
  * generateScript 是"生成 → 校验 → 一次纠错重生成"的闭环。
  */
+
+import { servedModel } from '@mui-gamebook/core/lib/ai-provider';
 import { parse } from '@roudanio/parser';
-import * as schema from '@/db/schema';
 import { eq } from 'drizzle-orm';
-import { generateAndUploadImage } from '@/lib/ai-service';
+import * as schema from '@/db/schema';
 import { getUserAiPermissions, resolveTextProvider } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
+import { generateAndUploadImage } from '@/lib/ai-service';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getConfig } from '@/lib/config';
 import {
@@ -20,7 +22,7 @@ import {
   validateGeneratedScript,
 } from '@/lib/editor/generate-script';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
-import { type McpGameContext, type McpToolOutcome, fail, ok, writeGameContent } from './shared';
+import { fail, type McpGameContext, type McpToolOutcome, ok, writeGameContent } from './shared';
 
 async function fetchDslSpec(): Promise<string> {
   const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://muistory.com';
@@ -58,14 +60,14 @@ async function runTextGeneration(
     }
     return {
       text: result.value.text || text,
-      model,
+      model: servedModel(result.value.model, model),
       usage: result.value.usage,
     };
   }
   const result = await provider.generateText(prompt, { thinking: true });
   return {
     text: result.text,
-    model,
+    model: servedModel(result.model, model),
     usage: result.usage,
   };
 }
@@ -108,7 +110,7 @@ export async function handleGenerateScript(
     totalUsage.promptTokens += corrected.usage.promptTokens;
     totalUsage.completionTokens += corrected.usage.completionTokens;
     totalUsage.totalTokens += corrected.usage.totalTokens;
-    model = corrected.model;
+    model = servedModel(corrected.model, model);
     const reval = validateGeneratedScript(stripCodeFence(corrected.text));
     if (!reval.parseError) script = stripCodeFence(corrected.text);
   }

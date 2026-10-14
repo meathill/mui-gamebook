@@ -12,7 +12,7 @@
  * （packages/asset-generator）和 Workers 应用（packages/app）的缓存策略完全不同。
  */
 import type { AiProvider, AiUsageInfo, ChatMessage, FunctionDeclaration } from '../ai-provider';
-import { NARRATOR_SPEAKER_ID, type CharacterRoster, type RawSegment, type SegmentationContext } from './types';
+import { type CharacterRoster, NARRATOR_SPEAKER_ID, type RawSegment, type SegmentationContext } from './types';
 
 /** 含有引号类字符（中英文引号、CJK 直角引号）才需要送 LLM 分段，否则整段直接判定为旁白 */
 const QUOTE_PATTERN = /["“”'‘’「」『』]/;
@@ -148,6 +148,8 @@ export interface SegmentationResult {
   segments: RawSegment[];
   /** 真正调用了 LLM 并拿到响应时才有值（哪怕最终校验失败退化为兜底）；调用方可用它记账 */
   usage?: AiUsageInfo;
+  /** 响应回传的实际模型 ID */
+  model?: string;
   /** true 表示模型分段通过了校验；false 表示各种原因退化成了单一 narrator 兜底分段 */
   validated: boolean;
 }
@@ -177,16 +179,18 @@ export async function segmentTextWithProvider(
   try {
     const response = await provider.chatWithTools(messages, [buildFunctionDeclaration(rosterIds)]);
     const call = response.functionCalls?.find((fc) => fc.name === FUNCTION_NAME);
+    const model = response.model?.trim();
+    const usageFields = { usage: response.usage, ...(model ? { model } : {}) };
     if (!call) {
-      return { segments: fallbackSegments, usage: response.usage, validated: false };
+      return { segments: fallbackSegments, ...usageFields, validated: false };
     }
 
     const validated = validateSegments(call.args, rosterIds, content);
     if (!validated) {
-      return { segments: fallbackSegments, usage: response.usage, validated: false };
+      return { segments: fallbackSegments, ...usageFields, validated: false };
     }
 
-    return { segments: validated, usage: response.usage, validated: true };
+    return { segments: validated, ...usageFields, validated: true };
   } catch {
     return { segments: fallbackSegments, validated: false };
   }

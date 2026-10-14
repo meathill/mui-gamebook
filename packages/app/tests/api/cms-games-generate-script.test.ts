@@ -51,9 +51,9 @@ import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { getConfig } from '@/lib/config';
-import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
+import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 
 const VALID_SCRIPT = `---
 title: "测试游戏"
@@ -205,6 +205,33 @@ describe('POST /api/cms/games/[id]/generate-script', () => {
       userId: 'u1',
       type: 'text_generation',
       model: 'mimo-v2.6-pro',
+      usage: { promptTokens: 150, completionTokens: 280, totalTokens: 430 },
+      gameId: 1,
+    });
+  });
+
+  it('用量记响应带回的模型；纠错这一轮没有模型时保留上一轮', async () => {
+    const generateText = vi
+      .fn()
+      .mockResolvedValueOnce({
+        text: INCOMPLETE_SCRIPT,
+        model: 'mimo-v2.6-pro-gateway',
+        usage: { promptTokens: 100, completionTokens: 200, totalTokens: 300 },
+      })
+      .mockResolvedValueOnce({
+        text: VALID_SCRIPT,
+        usage: { promptTokens: 50, completionTokens: 80, totalTokens: 130 },
+      });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', generateText });
+
+    const res = await POST(makeReq({ story: '一个关于英雄的故事' }), makeParams());
+    await readSseEvents(res);
+
+    expect(res.status).toBe(200);
+    expect(recordAiUsage).toHaveBeenCalledWith({
+      userId: 'u1',
+      type: 'text_generation',
+      model: 'mimo-v2.6-pro-gateway',
       usage: { promptTokens: 150, completionTokens: 280, totalTokens: 430 },
       gameId: 1,
     });

@@ -104,6 +104,32 @@ describe('MimoProvider', () => {
       expect(body).not.toHaveProperty('reasoning_effort');
       expect(result.text).toBe('你好');
       expect(result.usage).toEqual({ promptTokens: 10, completionTokens: 20, totalTokens: 30 });
+      expect(result.model).toBe(MIMO_DEFAULT_TEXT_MODEL);
+    });
+
+    it('响应 model 优先于规整后的请求模型', async () => {
+      fetchMock.mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          model: 'mimo-v2.6-pro-gateway',
+          choices: [{ message: { content: '你好' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        }),
+      });
+      const provider = new MimoProvider('tp-test-key', { text: 'mimo-v2.5-pro' });
+
+      const result = await provider.generateText('测试');
+
+      expect(JSON.parse(fetchMock.mock.calls[0][1].body).model).toBe(MIMO_DEFAULT_TEXT_MODEL);
+      expect(result.model).toBe('mimo-v2.6-pro-gateway');
+    });
+
+    it('响应没有 model 时记规整后的请求模型', async () => {
+      const provider = new MimoProvider('tp-test-key', { text: 'mimo-v2.5' });
+
+      const result = await provider.generateText('测试');
+
+      expect(result.model).toBe(MIMO_FAST_TEXT_MODEL);
     });
 
     it('默认（或 thinking !== false）开启深度思考，且不设 max_completion_tokens 上限', async () => {
@@ -210,6 +236,7 @@ describe('MimoProvider', () => {
       expect(result.value).toEqual({
         text: '正文继续',
         usage: { promptTokens: 5, completionTokens: 6, totalTokens: 11 },
+        model: MIMO_DEFAULT_TEXT_MODEL,
       });
 
       const body = JSON.parse(fetchMock.mock.calls[0][1].body);
@@ -222,6 +249,32 @@ describe('MimoProvider', () => {
       fetchMock.mockResolvedValue({ ok: false, status: 500, text: async () => 'server error' });
       const provider = new MimoProvider('tp-test-key');
       await expect(provider.generateTextStream('文本').next()).rejects.toThrow('MiMo 生成请求失败: 500 server error');
+    });
+
+    it('流式帧里的 model 记到对应片段和最终结果', async () => {
+      fetchMock.mockResolvedValue(
+        makeSseResponse([
+          JSON.stringify({ model: 'mimo-v2.6-flash-gateway', choices: [{ delta: { content: '甲' } }] }),
+          JSON.stringify({ choices: [{ delta: { content: '乙' } }] }),
+        ]),
+      );
+      const provider = new MimoProvider('tp-test-key', { text: 'mimo-v2.5' });
+      const gen = provider.generateTextStream('写故事');
+
+      const first = await gen.next();
+      const second = await gen.next();
+      const done = await gen.next();
+
+      expect(first).toEqual({ value: { type: 'content', delta: '甲', model: 'mimo-v2.6-flash-gateway' }, done: false });
+      expect(second).toEqual({ value: { type: 'content', delta: '乙' }, done: false });
+      expect(done).toEqual({
+        value: {
+          text: '甲乙',
+          usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+          model: 'mimo-v2.6-flash-gateway',
+        },
+        done: true,
+      });
     });
   });
 

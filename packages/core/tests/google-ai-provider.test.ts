@@ -30,6 +30,29 @@ describe('GoogleAiProvider', () => {
       expect(generateContent.mock.calls[0][0].model).toBe('gemini-2.5-flash');
       expect(result.text).toBe('从前有座山');
       expect(result.usage).toEqual({ promptTokens: 10, completionTokens: 20, totalTokens: 30 });
+      expect(result.model).toBe('gemini-2.5-flash');
+    });
+
+    it('响应 modelVersion 优先于请求模型', async () => {
+      const generateContent = vi.fn().mockResolvedValue({
+        text: 'x',
+        usageMetadata,
+        modelVersion: 'gemini-2.5-flash-001',
+      });
+      const provider = new GoogleAiProvider(fakeGenAI({ generateContent }) as never, 'key');
+
+      const result = await provider.generateText('写故事');
+
+      expect(result.model).toBe('gemini-2.5-flash-001');
+    });
+
+    it('空白 modelVersion 退回请求模型', async () => {
+      const generateContent = vi.fn().mockResolvedValue({ text: 'x', usageMetadata, modelVersion: '  ' });
+      const provider = new GoogleAiProvider(fakeGenAI({ generateContent }) as never, 'key');
+
+      const result = await provider.generateText('写故事');
+
+      expect(result.model).toBe('gemini-2.5-flash');
     });
 
     it('response.text 为空时返回空字符串', async () => {
@@ -192,6 +215,7 @@ describe('GoogleAiProvider', () => {
 
       expect(result.operationName).toBe('operations/abc123');
       expect(result.usage).toEqual({ promptTokens: 0, completionTokens: 0, totalTokens: 50_000 });
+      expect(result.model).toBe('veo-3.1-fast-generate-preview');
     });
 
     it('没有 operation.name 时抛出异常', async () => {
@@ -258,6 +282,24 @@ describe('GoogleAiProvider', () => {
       const result = await provider.checkVideoGenerationStatus('operations/abc');
 
       expect(result).toEqual({ done: true, uri: 'https://x.com/v.mp4' });
+    });
+
+    it('状态响应带 modelVersion 时写入 model，空白则不写', async () => {
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ done: false, modelVersion: 'veo-3.1-fast-generate-001' }),
+      } as Response);
+      const provider = new GoogleAiProvider(fakeGenAI() as never, 'key');
+
+      const withModel = await provider.checkVideoGenerationStatus('operations/abc');
+      expect(withModel).toEqual({ done: false, model: 'veo-3.1-fast-generate-001' });
+
+      vi.mocked(fetch).mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ done: false, modelVersion: '   ' }),
+      } as Response);
+      const blank = await provider.checkVideoGenerationStatus('operations/abc');
+      expect(blank).toEqual({ done: false });
     });
 
     it('任务成功但没有视频 uri 时返回错误（可选链短路，不抛异常）', async () => {
@@ -336,7 +378,10 @@ describe('GoogleAiProvider', () => {
 
       const result = await provider.chatWithTools([{ role: 'user', content: 'x' }], tools);
 
-      expect(result).toEqual({ usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 } });
+      expect(result).toEqual({
+        usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
+        model: 'gemini-2.5-flash',
+      });
     });
 
     it('解析文本和 functionCall part', async () => {

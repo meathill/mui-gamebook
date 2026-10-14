@@ -4,19 +4,20 @@
  */
 import Anthropic from '@anthropic-ai/sdk';
 import { buildMiniGamePrompt, extractMiniGameCode, MINIGAME_API_SPEC } from './ai';
-import type {
-  AiProvider,
-  AiUsageInfo,
-  ChatMessage,
-  ChatWithToolsResult,
-  FunctionCallResult,
-  FunctionDeclaration,
-  ImageGenerationResult,
-  MiniGameGenerationResult,
-  TextGenerationResult,
-  TTSResult,
-  VideoGenerationStartResult,
-  VideoGenerationStatusResult,
+import {
+  type AiProvider,
+  type AiUsageInfo,
+  type ChatMessage,
+  type ChatWithToolsResult,
+  type FunctionCallResult,
+  type FunctionDeclaration,
+  type ImageGenerationResult,
+  type MiniGameGenerationResult,
+  servedModel,
+  type TextGenerationResult,
+  type TTSResult,
+  type VideoGenerationStartResult,
+  type VideoGenerationStatusResult,
 } from './ai-provider';
 
 /** Claude 默认文本模型 */
@@ -75,6 +76,7 @@ export class ClaudeProvider implements AiProvider {
     return {
       text: ClaudeProvider.extractText(response.content),
       usage: ClaudeProvider.mapUsage(response.usage),
+      model: servedModel(response.model, model),
     };
   }
 
@@ -106,7 +108,7 @@ export class ClaudeProvider implements AiProvider {
       throw new Error('AI 未返回有效的游戏代码');
     }
 
-    return { code, usage: ClaudeProvider.mapUsage(response.usage) };
+    return { code, usage: ClaudeProvider.mapUsage(response.usage), model: servedModel(response.model, model) };
   }
 
   async chatWithTools(messages: ChatMessage[], tools: FunctionDeclaration[]): Promise<ChatWithToolsResult> {
@@ -177,6 +179,7 @@ export class ClaudeProvider implements AiProvider {
       text,
       functionCalls: functionCalls.length > 0 ? functionCalls : undefined,
       usage: ClaudeProvider.mapUsage(response.usage),
+      model: servedModel(response.model, model),
     };
   }
 

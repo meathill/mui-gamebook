@@ -4,14 +4,15 @@
  * 支持文本生成、流式响应（含 DeepSeek 思考过程）、工具调用与小游戏生成
  */
 
-import type {
-  AiUsageInfo,
-  ImageGenerationResult,
-  TextGenerationResult,
-  TextStreamChunk,
-  TTSResult,
-  VideoGenerationStartResult,
-  VideoGenerationStatusResult,
+import {
+  type AiUsageInfo,
+  type ImageGenerationResult,
+  servedModel,
+  type TextGenerationResult,
+  type TextStreamChunk,
+  type TTSResult,
+  type VideoGenerationStartResult,
+  type VideoGenerationStatusResult,
 } from './ai-provider';
 import { OpenAiProvider } from './openai-provider';
 
@@ -19,6 +20,7 @@ export const OPENCODE_DEFAULT_BASE_URL = 'https://opencode.ai/zen/go/v1';
 export const OPENCODE_DEFAULT_TEXT_MODEL = 'deepseek-v4.1-flash';
 
 interface OpenCodeChatCompletionResponse {
+  model?: string;
   choices?: Array<{
     message?: {
       content?: string;
@@ -33,6 +35,7 @@ interface OpenCodeChatCompletionResponse {
 }
 
 interface OpenCodeStreamChunk {
+  model?: string;
   choices?: Array<{
     delta?: {
       reasoning_content?: string;
@@ -124,6 +127,7 @@ export class OpencodeProvider extends OpenAiProvider {
     return {
       text: choice?.message?.content || '',
       usage,
+      model: servedModel(data.model, model),
     };
   }
 
@@ -164,18 +168,21 @@ export class OpencodeProvider extends OpenAiProvider {
     }
 
     let text = '';
+    let reportedModel: string | undefined;
     const usage: AiUsageInfo = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
 
     for await (const chunk of this.parseSseLines(response)) {
       const typedChunk = chunk as OpenCodeStreamChunk;
       const delta = typedChunk.choices?.[0]?.delta;
+      const chunkModel = typedChunk.model?.trim();
+      if (chunkModel) reportedModel = chunkModel;
 
       if (delta?.reasoning_content) {
-        yield { type: 'reasoning', delta: delta.reasoning_content };
+        yield { type: 'reasoning', delta: delta.reasoning_content, ...(chunkModel && { model: chunkModel }) };
       }
       if (delta?.content) {
         text += delta.content;
-        yield { type: 'content', delta: delta.content };
+        yield { type: 'content', delta: delta.content, ...(chunkModel && { model: chunkModel }) };
       }
       if (typedChunk.usage) {
         usage.promptTokens = typedChunk.usage.prompt_tokens ?? 0;
@@ -184,7 +191,7 @@ export class OpencodeProvider extends OpenAiProvider {
       }
     }
 
-    return { text, usage };
+    return { text, usage, model: servedModel(reportedModel, model) };
   }
 
   private async *parseSseLines(response: Response): AsyncGenerator<Record<string, unknown>, void, void> {

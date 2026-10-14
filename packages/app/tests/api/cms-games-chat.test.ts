@@ -51,9 +51,9 @@ import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
 import { getConfig } from '@/lib/config';
-import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
+import { getUserAiModelPreference, isPaidAiUser } from '@/lib/user-ai-settings';
 
 function makeReq(body: unknown) {
   return new Request('http://localhost/api/cms/games/1/chat', { method: 'POST', body: JSON.stringify(body) });
@@ -149,6 +149,42 @@ describe('POST /api/cms/games/[id]/chat', () => {
       type: 'chat',
       model: 'mimo-v2.6-pro',
       usage: { promptTokens: 20, completionTokens: 30, totalTokens: 50 },
+      gameId: 1,
+    });
+  });
+
+  it('响应带回的模型优先记入用量，空白则退回配置名', async () => {
+    const chatWithTools = vi.fn().mockResolvedValue({
+      text: 'ok',
+      model: 'mimo-v2.6-pro-gateway',
+      usage: { promptTokens: 2, completionTokens: 3, totalTokens: 5 },
+    });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', chatWithTools });
+
+    const first = await POST(makeReq(baseBody), makeParams());
+    await readSseEvents(first);
+
+    expect(recordAiUsage).toHaveBeenCalledWith({
+      userId: 'u1',
+      type: 'chat',
+      model: 'mimo-v2.6-pro-gateway',
+      usage: { promptTokens: 2, completionTokens: 3, totalTokens: 5 },
+      gameId: 1,
+    });
+
+    chatWithTools.mockResolvedValue({
+      text: 'ok',
+      model: '   ',
+      usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
+    });
+    const second = await POST(makeReq(baseBody), makeParams());
+    await readSseEvents(second);
+
+    expect(recordAiUsage).toHaveBeenLastCalledWith({
+      userId: 'u1',
+      type: 'chat',
+      model: 'mimo-v2.6-pro',
+      usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
       gameId: 1,
     });
   });

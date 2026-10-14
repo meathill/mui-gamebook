@@ -4,14 +4,15 @@
  * 支持文本生成、function calling 与 TTS；不支持图片/视频
  */
 
-import type {
-  AiUsageInfo,
-  ImageGenerationResult,
-  TextGenerationResult,
-  TextStreamChunk,
-  TTSResult,
-  VideoGenerationStartResult,
-  VideoGenerationStatusResult,
+import {
+  type AiUsageInfo,
+  type ImageGenerationResult,
+  servedModel,
+  type TextGenerationResult,
+  type TextStreamChunk,
+  type TTSResult,
+  type VideoGenerationStartResult,
+  type VideoGenerationStatusResult,
 } from './ai-provider';
 import { OpenAiProvider } from './openai-provider';
 
@@ -28,6 +29,7 @@ export const MIMO_FAST_TEXT_MODEL = 'mimo-v2.6-flash';
 export const MIMO_DEFAULT_TTS_MODEL = 'mimo-v2.5-tts';
 
 interface MimoChatAudioResponse {
+  model?: string;
   choices?: Array<{
     message?: {
       audio?: { data?: string };
@@ -36,6 +38,7 @@ interface MimoChatAudioResponse {
 }
 
 interface MimoChatCompletionResponse {
+  model?: string;
   choices?: Array<{
     message?: {
       content?: string;
@@ -49,6 +52,7 @@ interface MimoChatCompletionResponse {
 }
 
 interface MimoStreamChunk {
+  model?: string;
   choices?: Array<{
     delta?: {
       reasoning_content?: string;
@@ -147,6 +151,7 @@ export class MimoProvider extends OpenAiProvider {
     return {
       text: data.choices?.[0]?.message?.content || '',
       usage,
+      model: servedModel(data.model, model),
     };
   }
 
@@ -191,18 +196,21 @@ export class MimoProvider extends OpenAiProvider {
     }
 
     let text = '';
+    let reportedModel: string | undefined;
     const usage: AiUsageInfo = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
 
     for await (const chunk of this.parseSseLines(response)) {
       const typedChunk = chunk as MimoStreamChunk;
       const delta = typedChunk.choices?.[0]?.delta;
+      const chunkModel = typedChunk.model?.trim();
+      if (chunkModel) reportedModel = chunkModel;
 
       if (delta?.reasoning_content) {
-        yield { type: 'reasoning', delta: delta.reasoning_content };
+        yield { type: 'reasoning', delta: delta.reasoning_content, ...(chunkModel && { model: chunkModel }) };
       }
       if (delta?.content) {
         text += delta.content;
-        yield { type: 'content', delta: delta.content };
+        yield { type: 'content', delta: delta.content, ...(chunkModel && { model: chunkModel }) };
       }
       if (typedChunk.usage) {
         usage.promptTokens = typedChunk.usage.prompt_tokens ?? 0;
@@ -211,7 +219,7 @@ export class MimoProvider extends OpenAiProvider {
       }
     }
 
-    return { text, usage };
+    return { text, usage, model: servedModel(reportedModel, model) };
   }
 
   /**
@@ -301,6 +309,7 @@ export class MimoProvider extends OpenAiProvider {
     return {
       buffer: Buffer.from(base64Audio, 'base64'),
       mimeType: 'audio/wav',
+      model: servedModel(data.model, model),
     };
   }
 }

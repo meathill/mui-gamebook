@@ -1,16 +1,17 @@
-import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { drizzle } from 'drizzle-orm/d1';
-import { eq } from 'drizzle-orm';
-import { NextResponse } from 'next/server';
-import { parse } from '@roudanio/parser';
+import { servedModel } from '@mui-gamebook/core/lib/ai-provider';
 import { hasQuoteLikeCharacters, segmentTextWithProvider } from '@mui-gamebook/core/lib/audiobook/segmentation';
 import { explodeSegmentsToSentences } from '@mui-gamebook/core/lib/audiobook/sentence-split';
-import { resolveVoiceForSpeaker } from '@mui-gamebook/core/lib/audiobook/voice-assignment';
 import { NARRATOR_SPEAKER_ID } from '@mui-gamebook/core/lib/audiobook/types';
+import { resolveVoiceForSpeaker } from '@mui-gamebook/core/lib/audiobook/voice-assignment';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { parse } from '@roudanio/parser';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
-import type { AudiobookClip } from '@/lib/audiobook-types';
 import { createAiProvider, resolveTextProviderType, resolveTtsProviderType } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
+import type { AudiobookClip } from '@/lib/audiobook-types';
 import { getSession } from '@/lib/auth-server';
 import { getConfig } from '@/lib/config';
 import { getManagedGame } from '@/lib/game-access';
@@ -132,7 +133,13 @@ export async function POST(req: Request, { params }: Params) {
           : textProviderType === 'mimo'
             ? 'mimo-v2.6-pro'
             : `${textProviderType}-text`;
-      await recordAiUsage({ userId, type: 'chat', model: textModelName, usage: result.usage, gameId });
+      await recordAiUsage({
+        userId,
+        type: 'chat',
+        model: servedModel(result.model, textModelName),
+        usage: result.usage,
+        gameId,
+      });
     }
     return result.segments;
   }
@@ -142,7 +149,7 @@ export async function POST(req: Request, { params }: Params) {
     await recordAiUsage({
       userId,
       type: 'audio_generation',
-      model: ttsProviderType === 'mimo' ? 'mimo-v2.5-tts' : `${ttsProviderType}-tts`,
+      model: servedModel(result.model, ttsProviderType === 'mimo' ? 'mimo-v2.5-tts' : `${ttsProviderType}-tts`),
       usage: { promptTokens: text.length, completionTokens: 0, totalTokens: text.length },
       gameId,
     });

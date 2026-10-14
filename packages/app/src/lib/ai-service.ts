@@ -1,9 +1,10 @@
-import type {
-  AiProviderType,
-  AiUsageInfo,
-  ImageProviderType,
-  TtsProviderType,
-  VideoProviderType,
+import {
+  type AiProviderType,
+  type AiUsageInfo,
+  type ImageProviderType,
+  servedModel,
+  type TtsProviderType,
+  type VideoProviderType,
 } from '@mui-gamebook/core/lib/ai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import {
@@ -109,13 +110,19 @@ export async function generateAndUploadImage(
   // 生图使用独立的 Image Provider（默认 Google），付费用户可用自选覆盖
   const imageProviderType = selection?.provider ?? (await resolveImageProviderType());
   const provider = await createAiProvider(imageProviderType, selection ? { imageModel: selection.model } : undefined);
-  const { buffer, type, usage } = await provider.generateImage(prompt, {
+  const {
+    buffer,
+    type,
+    usage,
+    model: reportedModel,
+  } = await provider.generateImage(prompt, {
     aspectRatio: options?.aspectRatio,
     referenceImages: options?.referenceImages,
   });
 
-  const model =
+  const configuredModel =
     selection?.model ?? (imageProviderType === 'google' ? config.googleImageModel : config.openaiImageModel);
+  const model = servedModel(reportedModel, configuredModel);
 
   // 根据实际 mimeType 修正文件扩展名
   const finalFileName = fixFileExtension(fileName, type);
@@ -156,9 +163,10 @@ export async function startAsyncVideoGeneration(
     throw new Error('当前 AI 提供者不支持视频生成');
   }
 
-  const { operationName, usage } = await provider.startVideoGeneration(prompt, configParams);
-  const model =
+  const { operationName, usage, model: reportedModel } = await provider.startVideoGeneration(prompt, configParams);
+  const configuredModel =
     selection?.model ?? (videoProviderType === 'google' ? config.googleVideoModel : config.openaiVideoModel);
+  const model = servedModel(reportedModel, configuredModel);
 
   return {
     operationName,
@@ -249,7 +257,7 @@ export async function generateAndStoreMiniGame(
 
   const activeProviderType = providerType || (await resolveTextProviderType());
   const provider = await createAiProvider(activeProviderType, textModel ? { textModel } : undefined);
-  const { code, usage } = await provider.generateMiniGame(prompt, variables);
+  const { code, usage, model: reportedModel } = await provider.generateMiniGame(prompt, variables);
 
   // 存储到数据库
   const DB = env.DB;
@@ -272,7 +280,7 @@ export async function generateAndStoreMiniGame(
     mimo: config.mimoTextModel,
     anthropic: config.anthropicTextModel,
   };
-  const model = textModel ?? modelMap[activeProviderType] ?? activeProviderType;
+  const model = servedModel(reportedModel, textModel ?? modelMap[activeProviderType] ?? activeProviderType);
 
   // 返回访问 URL
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || '';
@@ -289,9 +297,9 @@ export async function generateAndStoreMiniGame(
  */
 import {
   GOOGLE_VOICE_IDS,
-  OPENAI_VOICE_IDS,
-  MIMO_VOICE_IDS,
   getDefaultVoice,
+  MIMO_VOICE_IDS,
+  OPENAI_VOICE_IDS,
 } from '@mui-gamebook/core/lib/voice-config';
 export type TTSVoiceName =
   | (typeof GOOGLE_VOICE_IDS)[number]
@@ -359,7 +367,7 @@ export async function generateAndUploadTTS(
     google: config.googleTtsModel,
     openai: config.openaiTtsModel,
   };
-  const model = selection?.model ?? modelMap[ttsProviderType] ?? ttsProviderType;
+  const model = servedModel(result.model, selection?.model ?? modelMap[ttsProviderType] ?? ttsProviderType);
 
   return {
     url: `${publicDomain}/${finalFileName}`,

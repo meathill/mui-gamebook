@@ -1,22 +1,23 @@
-import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { servedModel } from '@mui-gamebook/core/lib/ai-provider';
 import { MIMO_FAST_TEXT_MODEL } from '@mui-gamebook/core/lib/mimo-provider';
 import { OPENCODE_DEFAULT_TEXT_MODEL } from '@mui-gamebook/core/lib/opencode-provider';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
 import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
 import { buildAssessStoryPrompt, parseAssessStoryResult } from '@/lib/editor/clarify-story';
 import { getManagedGame } from '@/lib/game-access';
-import { getConfig } from '@/lib/config';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 import {
   getDefaultTextModelForProvider,
   getUserAiModelPreference,
   isPaidAiUser,
   resolveEffectiveTextSelection,
 } from '@/lib/user-ai-settings';
-import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -95,7 +96,7 @@ export async function POST(req: Request, { params }: Props) {
     await recordAiUsage({
       userId: session.user.id,
       type: 'clarify_questions',
-      model: modelName,
+      model: servedModel(result.model, modelName),
       usage: result.usage,
       gameId: Number(id),
     });

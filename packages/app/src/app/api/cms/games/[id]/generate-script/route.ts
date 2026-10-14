@@ -1,3 +1,4 @@
+import { servedModel } from '@mui-gamebook/core/lib/ai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
@@ -5,6 +6,7 @@ import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
 import {
   buildCorrectionPrompt,
   buildGenerateScriptPrompt,
@@ -14,14 +16,13 @@ import {
   validateGeneratedScript,
 } from '@/lib/editor/generate-script';
 import { getManagedGame } from '@/lib/game-access';
-import { getConfig } from '@/lib/config';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 import {
   getDefaultTextModelForProvider,
   getUserAiModelPreference,
   isPaidAiUser,
   resolveEffectiveTextSelection,
 } from '@/lib/user-ai-settings';
-import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -112,6 +113,7 @@ export async function POST(req: Request, { params }: Props) {
       }
 
       const totalUsage = { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+      let billedModel = selection.model;
 
       async function runGeneration(genPrompt: string): Promise<string> {
         if (provider.generateTextStream) {
@@ -127,6 +129,7 @@ export async function POST(req: Request, { params }: Props) {
           totalUsage.promptTokens += result.value.usage.promptTokens;
           totalUsage.completionTokens += result.value.usage.completionTokens;
           totalUsage.totalTokens += result.value.usage.totalTokens;
+          billedModel = servedModel(result.value.model, billedModel);
           return result.value.text || text;
         }
 
@@ -134,6 +137,7 @@ export async function POST(req: Request, { params }: Props) {
         totalUsage.promptTokens += result.usage.promptTokens;
         totalUsage.completionTokens += result.usage.completionTokens;
         totalUsage.totalTokens += result.usage.totalTokens;
+        billedModel = servedModel(result.model, billedModel);
         emit({ type: 'content', delta: result.text });
         return result.text;
       }
@@ -162,11 +166,10 @@ export async function POST(req: Request, { params }: Props) {
           }
         }
 
-        // 记录 AI 用量（两次调用合计，存真实模型 ID）
         await recordAiUsage({
           userId: session.user.id,
           type: 'text_generation',
-          model: selection.model,
+          model: billedModel,
           usage: totalUsage,
           gameId: Number(id),
         });

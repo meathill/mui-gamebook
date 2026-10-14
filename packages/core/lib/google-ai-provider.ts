@@ -2,21 +2,22 @@
  * Google GenAI 提供者实现
  */
 import { GoogleGenAI, PartUnion, ThinkingLevel, Type } from '@google/genai';
-import type {
-  AiProvider,
-  AiUsageInfo,
-  ChatMessage,
-  ChatWithToolsResult,
-  FunctionCallResult,
-  FunctionDeclaration,
-  ImageGenerationResult,
-  MiniGameGenerationResult,
-  TextGenerationResult,
-  TTSResult,
-  VideoGenerationStartResult,
-  VideoGenerationStatusResult,
-} from './ai-provider';
 import { buildMiniGamePrompt, MINIGAME_API_SPEC } from './ai';
+import {
+  type AiProvider,
+  type AiUsageInfo,
+  type ChatMessage,
+  type ChatWithToolsResult,
+  type FunctionCallResult,
+  type FunctionDeclaration,
+  type ImageGenerationResult,
+  type MiniGameGenerationResult,
+  servedModel,
+  type TextGenerationResult,
+  type TTSResult,
+  type VideoGenerationStartResult,
+  type VideoGenerationStatusResult,
+} from './ai-provider';
 
 export class GoogleAiProvider implements AiProvider {
   readonly type = 'google' as const;
@@ -89,6 +90,7 @@ export class GoogleAiProvider implements AiProvider {
     return {
       text: response.text || '',
       usage,
+      model: servedModel(response.modelVersion, model),
     };
   }
 
@@ -174,6 +176,7 @@ export class GoogleAiProvider implements AiProvider {
             type: part.inlineData.mimeType || 'image/png',
             buffer: Buffer.from(imageData, 'base64'),
             usage,
+            model: servedModel(response.modelVersion, model),
           };
         }
       }
@@ -210,6 +213,7 @@ export class GoogleAiProvider implements AiProvider {
         completionTokens: 0,
         totalTokens: 50_000,
       },
+      model,
     };
   }
 
@@ -236,6 +240,7 @@ export class GoogleAiProvider implements AiProvider {
 
       const data = (await response.json()) as {
         done: boolean;
+        modelVersion?: string;
         response?: {
           generateVideoResponse: {
             generatedSamples: {
@@ -250,23 +255,28 @@ export class GoogleAiProvider implements AiProvider {
           message: string;
         };
       };
+      const reportedModel = data.modelVersion?.trim();
 
       if (!data.done) {
         console.log('任务进行中... 进度:', data.metadata?.progressPercent || '未知');
-        return { done: false };
+        return reportedModel ? { done: false, model: reportedModel } : { done: false };
       }
 
       if (data.error) {
         console.error('任务失败:', data.error);
-        return { done: true, error: data.error.message || '视频生成失败' };
+        return {
+          done: true,
+          error: data.error.message || '视频生成失败',
+          ...(reportedModel && { model: reportedModel }),
+        };
       }
 
       const videoUri = data.response?.generateVideoResponse.generatedSamples[0].video.uri;
       if (!videoUri) {
-        return { done: true, error: '视频 URI 不存在' };
+        return { done: true, error: '视频 URI 不存在', ...(reportedModel && { model: reportedModel }) };
       }
 
-      return { done: true, uri: videoUri };
+      return { done: true, uri: videoUri, ...(reportedModel && { model: reportedModel }) };
     } catch {
       return { done: false, error: '轮询请求出错' };
     }
@@ -298,7 +308,7 @@ export class GoogleAiProvider implements AiProvider {
       throw new Error('AI 未返回有效的游戏代码');
     }
 
-    return { code, usage };
+    return { code, usage, model: servedModel(response.modelVersion, model) };
   }
 
   async chatWithTools(messages: ChatMessage[], tools: FunctionDeclaration[]): Promise<ChatWithToolsResult> {
@@ -363,9 +373,10 @@ export class GoogleAiProvider implements AiProvider {
 
     const usage = GoogleAiProvider.extractUsage(response);
 
+    const served = servedModel(response.modelVersion, model);
     const candidate = response.candidates?.[0];
     if (!candidate?.content?.parts) {
-      return { usage };
+      return { usage, model: served };
     }
 
     let text: string | undefined;
@@ -387,6 +398,7 @@ export class GoogleAiProvider implements AiProvider {
       text,
       functionCalls: functionCalls.length > 0 ? functionCalls : undefined,
       usage,
+      model: served,
     };
   }
 
@@ -420,6 +432,7 @@ ${text}`;
     return {
       buffer: Buffer.from(data, 'base64'),
       mimeType: 'audio/pcm',
+      model: servedModel(response.modelVersion, model),
     };
   }
 }

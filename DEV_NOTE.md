@@ -54,6 +54,11 @@
 - 前端每 10 秒轮询检查状态
 - 决策原因：Cloudflare Workers 有执行时间限制，长任务必须异步
 
+**AI 用量记实际服务的模型（issue #23）**
+- Result 上的 `model` 可选。Provider 用 `servedModel(响应里的模型, 本次请求的模型)`：响应优先（Gemini 是 `modelVersion`，OpenAI/Claude/MiMo/OpenCode 是 `model`），没有再退回请求名。
+- `recordAiUsage` 再退回配置名，所以旧 mock 不回填时账面不变。空串不算有效模型 ID。
+- 视频状态轮询只有响应带了模型才写入，避免没有模型的失败结果多出一个空字段。
+
 **每日 AI 用量限制**
 - 基于用户维度的每日配额
 - 不同操作类型（文本、图片、音频、视频）分别计量

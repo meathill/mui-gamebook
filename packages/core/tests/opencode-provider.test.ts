@@ -43,6 +43,39 @@ describe('OpencodeProvider', () => {
       completionTokens: 30,
       totalTokens: 45,
     });
+    expect(result.model).toBe('deepseek-v4.1-flash');
+  });
+
+  it('响应 model 优先于请求模型', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          model: 'deepseek-v4.1-flash-gateway',
+          choices: [{ message: { content: 'ok' } }],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    );
+
+    const provider = new OpencodeProvider('test-key', { text: 'deepseek-v4.1-flash' });
+    const result = await provider.generateText('你好');
+
+    expect(result.model).toBe('deepseek-v4.1-flash-gateway');
+  });
+
+  it('响应没有 model 时记规整后的请求模型', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const provider = new OpencodeProvider('test-key', { text: 'mimo-v2.5' });
+    const result = await provider.generateText('你好');
+
+    expect(result.model).toBe('mimo-v2.6-flash');
   });
 
   it('generateText 请求失败抛出错误', async () => {

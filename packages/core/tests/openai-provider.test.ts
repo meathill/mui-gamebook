@@ -33,3 +33,54 @@ describe('OpenAiProvider headers（AI Gateway 鉴权场景）', () => {
     expect(constructorSpy).toHaveBeenLastCalledWith({ apiKey: 'sk-test', dangerouslyAllowBrowser: true });
   });
 });
+
+function chatCreate(provider: OpenAiProvider) {
+  return (
+    provider as unknown as {
+      client: { chat: { completions: { create: ReturnType<typeof vi.fn> } } };
+    }
+  ).client.chat.completions.create;
+}
+
+describe('OpenAiProvider 实际服务模型', () => {
+  it('响应 model 优先于请求模型', async () => {
+    const provider = new OpenAiProvider('sk-test', { text: 'gpt-4o' });
+    chatCreate(provider).mockResolvedValue({
+      model: 'gpt-4o-2024-08-06',
+      choices: [{ message: { content: 'ok' } }],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    });
+
+    const result = await provider.generateText('hi');
+
+    expect(result.model).toBe('gpt-4o-2024-08-06');
+  });
+
+  it('响应没有 model 时记请求模型', async () => {
+    const provider = new OpenAiProvider('sk-test', { text: 'gpt-4o' });
+    chatCreate(provider).mockResolvedValue({
+      choices: [{ message: { content: 'ok' } }],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    });
+
+    const result = await provider.generateText('hi');
+
+    expect(result.model).toBe('gpt-4o');
+  });
+
+  it('chat 没有 choice 时仍带回服务模型', async () => {
+    const provider = new OpenAiProvider('sk-test', { text: 'gpt-4o' });
+    chatCreate(provider).mockResolvedValue({
+      model: 'gpt-4o-gateway',
+      choices: [],
+      usage: { prompt_tokens: 3, completion_tokens: 0, total_tokens: 3 },
+    });
+
+    const result = await provider.chatWithTools([{ role: 'user', content: 'hi' }], []);
+
+    expect(result).toEqual({
+      usage: { promptTokens: 3, completionTokens: 0, totalTokens: 3 },
+      model: 'gpt-4o-gateway',
+    });
+  });
+});

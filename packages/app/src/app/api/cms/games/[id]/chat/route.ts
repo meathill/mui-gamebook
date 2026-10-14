@@ -1,3 +1,4 @@
+import { servedModel } from '@mui-gamebook/core/lib/ai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
@@ -6,6 +7,7 @@ import { getUserAiPermissions } from '@/lib/ai-permissions';
 import { createAiProvider } from '@/lib/ai-provider-factory';
 import { recordAiUsage } from '@/lib/ai-usage';
 import { getSession } from '@/lib/auth-server';
+import { getConfig } from '@/lib/config';
 import {
   buildChatHistory,
   CHAT_FUNCTION_DECLARATIONS,
@@ -13,14 +15,13 @@ import {
   MAX_CHAT_IMAGES,
 } from '@/lib/editor/chat-declarations';
 import { getManagedGame } from '@/lib/game-access';
-import { getConfig } from '@/lib/config';
+import { checkUserUsageLimit } from '@/lib/usage-limit';
 import {
   getDefaultTextModelForProvider,
   getUserAiModelPreference,
   isPaidAiUser,
   resolveEffectiveTextSelection,
 } from '@/lib/user-ai-settings';
-import { checkUserUsageLimit } from '@/lib/usage-limit';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -152,11 +153,10 @@ export async function POST(req: Request, { params }: Props) {
             throw e;
           });
 
-        // 记录 AI 用量；model 记的是配置侧模型名，provider 响应不回传真实模型 ID（see issue #23）
         await recordAiUsage({
           userId: session.user.id,
           type: 'chat',
-          model: selection.model,
+          model: servedModel(response.model, selection.model),
           usage: response.usage,
           gameId: Number(id),
         });

@@ -15,10 +15,21 @@ export interface AiUsageInfo {
 /**
  * 图片生成结果
  */
+/**
+ * 响应里的模型 ID 优先（网关别名、重定向、降级时和请求名不同）。
+ * 没有或只有空白时，用本次实际发出的请求模型。
+ */
+export function servedModel(reported: string | undefined, requested: string): string {
+  const trimmed = reported?.trim();
+  return trimmed || requested;
+}
+
 export interface ImageGenerationResult {
   buffer: Buffer;
   type: string;
   usage: AiUsageInfo;
+  /** 实际服务的模型 ID；旧实现可能不回填 */
+  model?: string;
 }
 
 /**
@@ -27,6 +38,8 @@ export interface ImageGenerationResult {
 export interface TextGenerationResult {
   text: string;
   usage: AiUsageInfo;
+  /** 实际服务的模型 ID；旧实现可能不回填 */
+  model?: string;
 }
 
 /**
@@ -37,6 +50,8 @@ export interface TextGenerationResult {
 export interface TextStreamChunk {
   type: 'reasoning' | 'content';
   delta: string;
+  /** 这一帧响应里带回的模型 ID */
+  model?: string;
 }
 
 /**
@@ -45,6 +60,8 @@ export interface TextStreamChunk {
 export interface VideoGenerationStartResult {
   operationName: string;
   usage: AiUsageInfo;
+  /** 实际服务的模型 ID；旧实现可能不回填 */
+  model?: string;
 }
 
 /**
@@ -54,6 +71,8 @@ export interface VideoGenerationStatusResult {
   done: boolean;
   uri?: string;
   error?: string;
+  /** 状态响应里带回的模型 ID */
+  model?: string;
 }
 
 /**
@@ -62,6 +81,8 @@ export interface VideoGenerationStatusResult {
 export interface MiniGameGenerationResult {
   code: string;
   usage: AiUsageInfo;
+  /** 实际服务的模型 ID；旧实现可能不回填 */
+  model?: string;
 }
 
 /**
@@ -129,6 +150,8 @@ export interface ChatWithToolsResult {
   text?: string;
   functionCalls?: FunctionCallResult[];
   usage: AiUsageInfo;
+  /** 实际服务的模型 ID；旧实现可能不回填 */
+  model?: string;
 }
 
 /**
@@ -137,6 +160,8 @@ export interface ChatWithToolsResult {
 export interface TTSResult {
   buffer: Buffer;
   mimeType: string;
+  /** 实际服务的模型 ID；语音接口常常不回传，此时记请求模型 */
+  model?: string;
 }
 
 /**
