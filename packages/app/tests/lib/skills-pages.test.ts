@@ -7,6 +7,7 @@ import { listSkillDownloadSlugs, getSkillDownload } from '@/lib/skills';
 // Mock next-intl server
 vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(async () => (key: string) => `trans_${key}`),
+  getLocale: vi.fn(async () => 'zh'),
 }));
 
 describe('Skills 页面与 API 综合访问验证', () => {

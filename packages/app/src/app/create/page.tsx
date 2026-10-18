@@ -1,19 +1,20 @@
-import Link from 'next/link';
-import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  FileTextIcon,
-  SparkleIcon,
   BracketsCurlyIcon,
-  RocketLaunchIcon,
-  HandHeartIcon,
-  GameControllerIcon,
   CheckCircleIcon,
+  FileTextIcon,
+  GameControllerIcon,
+  HandHeartIcon,
+  RocketLaunchIcon,
+  SparkleIcon,
 } from '@phosphor-icons/react/dist/ssr';
-import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { getLocale, getTranslations } from 'next-intl/server';
 import JsonLd from '@/components/JsonLd';
+import QQGroupInvite from '@/components/QQGroupInvite';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('create');
@@ -152,6 +153,16 @@ export default async function CreatePage() {
               {t('ctaBrowse')}
             </Link>
           </div>
+          {/* 创作者交流群：仅中文展示 */}
+          {(await getLocale()) === 'zh' && (
+            <div className="mt-10 inline-block p-4 bg-white rounded-2xl">
+              <QQGroupInvite
+                size="sm"
+                title="创作者交流群"
+                line="写作卡壳、想要新功能？进群和其他作者、开发者直接聊。"
+              />
+            </div>
+          )}
         </div>
       </section>
     </div>

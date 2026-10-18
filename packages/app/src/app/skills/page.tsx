@@ -1,17 +1,18 @@
-import Link from 'next/link';
-import type { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import {
   ArrowRightIcon,
   ArrowsCounterClockwiseIcon,
   DownloadSimpleIcon,
-  PlugsConnectedIcon,
   GameControllerIcon,
+  PlugsConnectedIcon,
   PuzzlePieceIcon,
   ShieldCheckIcon,
 } from '@phosphor-icons/react/dist/ssr';
-import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { getLocale, getTranslations } from 'next-intl/server';
 import JsonLd from '@/components/JsonLd';
+import QQGroupInvite from '@/components/QQGroupInvite';
 
 export const revalidate = 3600;
 
@@ -125,6 +126,15 @@ export default async function SkillsPage() {
           <div className="rounded-2xl p-8 border border-dashed border-stone-300 text-center">
             <h2 className="text-xl font-bold text-stone-700 mb-2">{t('comingTitle')}</h2>
             <p className="text-stone-500">{t('comingDesc')}</p>
+            {/* QQ 交流群：仅中文展示 */}
+            {(await getLocale()) === 'zh' && (
+              <div className="mt-6 flex justify-center">
+                <QQGroupInvite
+                  size="sm"
+                  line="加群第一时间获取新 skill、反馈需求。"
+                />
+              </div>
+            )}
           </div>
         </div>
       </section>

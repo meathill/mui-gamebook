@@ -26,6 +26,7 @@ vi.mock('../../src/components/Dialog', () => ({
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => 'zh',
 }));
 
 const mockGame: PlayableGame & { id: number } = {

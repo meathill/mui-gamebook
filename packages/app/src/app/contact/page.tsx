@@ -1,7 +1,8 @@
-import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
+import { ChatCircleIcon, EnvelopeIcon, GithubLogoIcon, TwitterLogoIcon } from '@phosphor-icons/react/dist/ssr';
 import { Metadata } from 'next';
-import { EnvelopeIcon, ChatCircleIcon, GithubLogoIcon, TwitterLogoIcon } from '@phosphor-icons/react/dist/ssr';
+import Link from 'next/link';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { QQ_GROUP_NAME, QQ_GROUP_NUMBER, QQ_GROUP_QR_SRC } from '@/components/QQGroupInvite';
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('contact');
@@ -14,6 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ContactPage() {
   const t = await getTranslations('contact');
+  const isZh = (await getLocale()) === 'zh';
 
   const contactMethods = [
     {
@@ -50,7 +52,7 @@ export default async function ContactPage() {
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">{t('contactTitle')}</h2>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className={`grid gap-6 ${isZh ? 'sm:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-3'}`}>
             {contactMethods.map(({ key, icon: Icon, href, value }) => (
               <a
                 key={key}
@@ -65,6 +67,24 @@ export default async function ContactPage() {
                 <p className="text-orange-600 text-sm">{value}</p>
               </a>
             ))}
+            {/* QQ 群：仅中文展示，/contact#qq 可直达 */}
+            {isZh && (
+              <div
+                id="qq"
+                className="flex flex-col items-center p-6 bg-white rounded-2xl shadow-md scroll-mt-24">
+                <img
+                  src={QQ_GROUP_QR_SRC}
+                  width={112}
+                  height={140}
+                  loading="lazy"
+                  decoding="async"
+                  alt={`QQ 群「${QQ_GROUP_NAME}」二维码，群号 ${QQ_GROUP_NUMBER}`}
+                  className="rounded-lg border border-gray-200 mb-3"
+                />
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">QQ 群</h3>
+                <p className="text-orange-600 text-sm font-mono select-all">{QQ_GROUP_NUMBER}</p>
+              </div>
+            )}
           </div>
         </div>
       </section>

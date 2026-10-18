@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import QQGroupInvite from '@/components/QQGroupInvite';
 import ShareButton from '@/components/ShareButton';
 import RatingWidget from './RatingWidget';
 
@@ -18,6 +19,7 @@ interface EndScreenProps {
 
 export default function EndScreen({ title, shareUrl, onRestart, slug, avgRating, ratingCount }: EndScreenProps) {
   const t = useTranslations('game');
+  const locale = useLocale();
 
   return (
     <div className="mt-12 p-6 bg-gray-50 rounded-xl border border-gray-200 text-center animate-fade-in">
@@ -53,6 +55,15 @@ export default function EndScreen({ title, shareUrl, onRestart, slug, avgRating,
           />
         </div>
       </div>
+      {/* QQ 交流群：国内社区，仅中文展示 */}
+      {locale === 'zh' && (
+        <div className="mt-6 pt-6 border-t border-gray-200 flex justify-center">
+          <QQGroupInvite
+            size="sm"
+            line="喜欢这个故事？进群和作者、玩家一起聊剧情。"
+          />
+        </div>
+      )}
     </div>
   );
 }

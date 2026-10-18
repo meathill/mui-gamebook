@@ -1,6 +1,7 @@
+import { HandHeartIcon, ImageIcon, LayoutIcon, LockIcon, PackageIcon, PenIcon } from '@phosphor-icons/react/dist/ssr';
 import Link from 'next/link';
-import { getTranslations } from 'next-intl/server';
-import { PenIcon, ImageIcon, LayoutIcon, LockIcon, PackageIcon, HandHeartIcon } from '@phosphor-icons/react/dist/ssr';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { QQ_GROUP_NUMBER } from '@/components/QQGroupInvite';
 
 const highlights = [
   { key: 'focus', Icon: PenIcon },
@@ -13,6 +14,7 @@ const highlights = [
 
 export default async function HighlightsSection() {
   const t = await getTranslations('home');
+  const isZh = (await getLocale()) === 'zh';
 
   return (
     <section className="py-16 bg-gray-50 border-y border-gray-200">
@@ -34,6 +36,18 @@ export default async function HighlightsSection() {
                   className="mt-3 inline-block text-sm font-medium text-orange-600 hover:text-orange-700">
                   {t('highlights.openDev.link')}
                 </Link>
+              )}
+              {key === 'openDev' && isZh && (
+                <p className="mt-2 text-sm text-gray-500">
+                  也可以{' '}
+                  <Link
+                    href="/contact#qq"
+                    prefetch={false}
+                    className="font-medium text-orange-600 hover:text-orange-700">
+                    加 QQ 群 {QQ_GROUP_NUMBER}
+                  </Link>{' '}
+                  直接反馈
+                </p>
               )}
             </div>
           ))}
