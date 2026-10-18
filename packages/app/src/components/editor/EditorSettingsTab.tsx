@@ -1,6 +1,7 @@
-import type { Game } from '@roudanio/parser/src/types';
 import { XIcon } from '@phosphor-icons/react/dist/ssr';
+import type { Game } from '@roudanio/parser/src/types';
 import MDEditor from '@uiw/react-md-editor';
+import QQGroupInvite from '@/components/QQGroupInvite';
 import { isImeComposing } from '@/lib/keyboard';
 import AudiobookGenerationCard from './AudiobookGenerationCard';
 import { PlaybackModeSection, SiteTemplateSection } from './EditorSettingsSections';
@@ -162,6 +163,12 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
               </span>
             </label>
             <p className="text-xs text-gray-500 mt-2">已发布的游戏会在首页对所有人可见。</p>
+            {game.published && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500 mb-3">作品发布啦！欢迎进 QQ 群分享你的作品，听听玩家的反馈：</p>
+                <QQGroupInvite size="sm" />
+              </div>
+            )}
           </div>
 
           {/* AI Style Config */}

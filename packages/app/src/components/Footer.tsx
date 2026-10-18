@@ -1,9 +1,10 @@
 'use client';
 
-import Link from 'next/link';
-import { useTranslations, useLocale as useCurrentLocale } from 'next-intl';
+import { CaretUpIcon, CheckIcon, GlobeIcon } from '@phosphor-icons/react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { GlobeIcon, CheckIcon, CaretUpIcon } from '@phosphor-icons/react';
+import Link from 'next/link';
+import { useLocale as useCurrentLocale, useTranslations } from 'next-intl';
+import QQGroupInvite from '@/components/QQGroupInvite';
 import { useLocale } from '@/i18n/client';
 import type { Locale } from '@/i18n/config';
 
@@ -50,6 +51,13 @@ export default function Footer() {
               {currentLocale === 'zh' ? '姆伊游戏书' : 'MuiStory'}
             </Link>
             <p className="mt-3 text-sm text-gray-500 max-w-xs">{t('tagline')}</p>
+            {/* QQ 群是国内社区，仅中文界面展示 */}
+            {currentLocale === 'zh' && (
+              <QQGroupInvite
+                size="sm"
+                className="mt-5 max-w-sm"
+              />
+            )}
           </div>
 
           <FooterColumn title={t('groups.read')}>

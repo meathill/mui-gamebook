@@ -271,7 +271,13 @@ Agent 会调用它内置的绘画工具（或根据模型自带多模态接口�
 
 从一段备忘录里的脑洞，到一部包含独立密码解谜、全链路拓扑无死局、配图精美的互动游戏书，你所需要的不再是庞大的程序团队和数月的时间，而仅仅是一套高效的全模态 AI Agent 工作流。
 
-打开你的客户端，访问 [muistory.com/skills](https://muistory.com/skills) 导入技能，让文字在读者的每一次抉择中活过来吧！`,
+打开你的客户端，访问 [muistory.com/skills](https://muistory.com/skills) 导入技能，让文字在读者的每一次抉择中活过来吧！
+
+## 加入姆伊游戏书交流群
+
+不管你是爱玩游戏书的读者，还是正在用 AI Agent 创作的作者，都欢迎加入 QQ 群「姆伊游戏书交流群」（群号：**931810108**），一起聊剧情、交流 Skills 用法、分享新作品。
+
+![QQ 群「姆伊游戏书交流群」二维码，群号 931810108](/images/qq-group-qr.webp)`,
   },
   {
     id: 'how-to-create-interactive-fiction-with-markdown',
