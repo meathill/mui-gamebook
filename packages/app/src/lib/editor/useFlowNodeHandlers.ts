@@ -1,11 +1,19 @@
 import { useCallback } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import { parse } from '@roudanio/parser';
 import { addEdge, type Connection, type Edge, type Node, type useReactFlow } from '@xyflow/react';
 import { getLayoutedElements } from '@/lib/editor/layout';
-import { handleBatchFunctionCalls } from '@/lib/editor/chatFunctionHandlers';
-import type { SceneNodeData } from '@/lib/editor/transformers';
+import {
+  executeEditorToolBatch,
+  type EditorDocument,
+  type EditorToolBatchResult,
+  type FunctionCall,
+} from '@/lib/editor/chatFunctionHandlers';
+import { failResult } from '@/lib/editor/handlers/types';
+import { flowToGame, gameToFlow, type SceneNodeData } from '@/lib/editor/transformers';
 import type { EditorGame } from '@/lib/editor/useEditorData';
 import type { useDialog } from '@/components/Dialog';
+import type { Tab } from '@/components/editor/EditorToolbar';
 
 interface UseFlowNodeHandlersParams {
   nodes: Node[];
@@ -18,6 +26,9 @@ interface UseFlowNodeHandlersParams {
   setSelectedEdge: (edge: Edge | null) => void;
   originalGame: EditorGame | null;
   setOriginalGame: Dispatch<SetStateAction<EditorGame | null>>;
+  activeTab: Tab;
+  textContent: string;
+  setTextContent: Dispatch<SetStateAction<string>>;
   screenToFlowPosition: ReturnType<typeof useReactFlow>['screenToFlowPosition'];
   fitView: ReturnType<typeof useReactFlow>['fitView'];
   dialog: ReturnType<typeof useDialog>;
@@ -38,6 +49,9 @@ export function useFlowNodeHandlers({
   setSelectedEdge,
   originalGame,
   setOriginalGame,
+  activeTab,
+  textContent,
+  setTextContent,
   screenToFlowPosition,
   fitView,
   dialog,
@@ -120,19 +134,64 @@ export function useFlowNodeHandlers({
     window.requestAnimationFrame(() => fitView());
   }, [nodes, edges, setNodes, setEdges, fitView]);
 
-  // AI function call 处理器
-  const handleFunctionCall = useCallback(
-    (calls: Array<{ name: string; args: Record<string, unknown> }>) => {
-      handleBatchFunctionCalls(calls, {
-        nodes: nodes as Node<SceneNodeData>[],
+  /** 从当前编辑视图构建 AI 工具的工作副本 */
+  function buildBaseDocument(): { document?: EditorDocument; error?: string } {
+    if (!originalGame) return { error: '游戏数据未加载' };
+
+    if (activeTab === 'story') {
+      const parsed = parse(textContent);
+      if (!parsed.success) {
+        return { error: `当前剧本无法解析，AI 修改已取消：${parsed.error}` };
+      }
+      const flow = gameToFlow(parsed.data);
+      return {
+        document: {
+          nodes: flow.nodes,
+          edges: flow.edges,
+          // 保留编辑器特有字段（storyPrompt 等），以文本解析结果覆盖剧本内容
+          game: { ...originalGame, ...parsed.data },
+        },
+      };
+    }
+
+    const typedNodes = nodes as Node<SceneNodeData>[];
+    return {
+      document: {
+        nodes: typedNodes,
         edges,
-        originalGame,
-        setNodes,
-        setEdges,
-        setOriginalGame,
-      });
+        game: flowToGame(typedNodes, edges, originalGame),
+      },
+    };
+  }
+
+  // AI function call 处理器：工作副本执行 + 单次提交
+  const handleFunctionCall = useCallback(
+    (calls: FunctionCall[], baseDocument?: EditorDocument): EditorToolBatchResult => {
+      const base = baseDocument ? { document: baseDocument } : buildBaseDocument();
+      if (!base.document) {
+        const message = base.error ?? '无法构建编辑器状态';
+        return {
+          ok: false,
+          changed: false,
+          results: calls.map((call) => failResult(call.name, message)),
+          dsl: textContent,
+          error: message,
+        };
+      }
+
+      const result = executeEditorToolBatch(calls, base.document);
+      const nextDocument = result.document;
+      if (result.ok && result.changed && nextDocument) {
+        setNodes(() => nextDocument.nodes);
+        setEdges(() => nextDocument.edges);
+        setOriginalGame((prev) =>
+          prev ? { ...prev, ...nextDocument.game, storyPrompt: prev.storyPrompt } : (nextDocument.game as EditorGame),
+        );
+        setTextContent(result.dsl);
+      }
+      return result;
     },
-    [nodes, edges, originalGame, setNodes, setEdges, setOriginalGame],
+    [nodes, edges, originalGame, activeTab, textContent, setNodes, setEdges, setOriginalGame, setTextContent],
   );
 
   return {

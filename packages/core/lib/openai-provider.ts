@@ -11,7 +11,6 @@ import {
   type ChatWithToolsResult,
   type FunctionCallResult,
   type FunctionDeclaration,
-  getMessageText,
   type ImageGenerationResult,
   type MiniGameGenerationResult,
   servedModel,
@@ -20,6 +19,16 @@ import {
   type VideoGenerationStartResult,
   type VideoGenerationStatusResult,
 } from './ai-provider';
+import { toOpenAiMessages } from './openai-messages';
+
+function parseToolArgs(raw: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
+}
 
 export class OpenAiProvider implements AiProvider {
   readonly type: AiProviderType;
@@ -312,25 +321,8 @@ export class OpenAiProvider implements AiProvider {
     console.log(`[OpenAI] Chat with tools using model: ${model}`);
 
     // 转换消息格式为 OpenAI 格式：纯文本保持 string（兼容旧调用），带图时用 content 数组。
-    // 图片只会出现在 user 消息上；assistant 历史回退为纯文本（SDK 不接受 assistant 发 image_url）。
-    const openaiMessages = messages.map((msg) => {
-      if (typeof msg.content === 'string') {
-        return { role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user', content: msg.content };
-      }
-      if (msg.role === 'model') {
-        return { role: 'assistant' as const, content: getMessageText(msg.content) };
-      }
-      return {
-        role: 'user' as const,
-        content: msg.content
-          .filter((p) => (p.type === 'text' && p.text) || (p.type === 'image_url' && p.url))
-          .map((p) =>
-            p.type === 'image_url'
-              ? { type: 'image_url' as const, image_url: { url: p.url as string } }
-              : { type: 'text' as const, text: p.text as string },
-          ),
-      };
-    });
+    // tool 消息与 assistant.tool_calls 用于多轮工具闭环。
+    const openaiMessages = toOpenAiMessages(messages);
 
     // 转换工具声明为 OpenAI 格式
     const openaiTools = tools.map((tool) => ({
@@ -367,9 +359,10 @@ export class OpenAiProvider implements AiProvider {
     if (toolCalls && toolCalls.length > 0) {
       functionCalls = toolCalls
         .filter((tc): tc is typeof tc & { function: { name: string; arguments: string } } => 'function' in tc)
-        .map((tc) => ({
+        .map((tc, index) => ({
+          id: tc.id || `call_${index}_${tc.function.name}`,
           name: tc.function.name,
-          args: JSON.parse(tc.function.arguments) as Record<string, unknown>,
+          args: parseToolArgs(tc.function.arguments),
         }));
     }
 

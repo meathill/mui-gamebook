@@ -13,6 +13,7 @@ import {
   CHAT_FUNCTION_DECLARATIONS,
   type ChatRequest,
   MAX_CHAT_IMAGES,
+  MAX_CHAT_TOOL_ROUNDS,
 } from '@/lib/editor/chat-declarations';
 import { getManagedGame } from '@/lib/game-access';
 import { checkUserUsageLimit } from '@/lib/usage-limit';
@@ -47,14 +48,49 @@ export async function POST(req: Request, { params }: Props) {
     provider: requestedProvider,
     model: requestedModel,
     images,
+    toolRounds,
   } = (await req.json()) as ChatRequest;
 
-  if (!message) {
+  // 允许“只有参考图、没有文字”的消息；两者都空才拒绝
+  if (!message && (!images || images.length === 0)) {
     return NextResponse.json({ error: 'Message is required' }, { status: 400 });
   }
 
   if (images && images.length > MAX_CHAT_IMAGES) {
     return NextResponse.json({ error: `最多支持 ${MAX_CHAT_IMAGES} 张参考图` }, { status: 400 });
+  }
+
+  if (toolRounds && toolRounds.length > MAX_CHAT_TOOL_ROUNDS) {
+    return NextResponse.json(
+      { error: `工具调用轮次超过上限 ${MAX_CHAT_TOOL_ROUNDS}，请先总结当前结果` },
+      { status: 400 },
+    );
+  }
+
+  // 校验每轮 call/result 一一对应，避免把错位的工具结果喂给模型
+  for (const round of toolRounds ?? []) {
+    if (!Array.isArray(round.calls) || !Array.isArray(round.results)) {
+      return NextResponse.json({ error: 'toolRounds 格式错误' }, { status: 400 });
+    }
+    const callsValid = round.calls.every(
+      (call) =>
+        call &&
+        typeof call.id === 'string' &&
+        typeof call.name === 'string' &&
+        call.args &&
+        typeof call.args === 'object' &&
+        !Array.isArray(call.args),
+    );
+    const resultsValid = round.results.every(
+      (result) => result && typeof result.id === 'string' && typeof result.content === 'string',
+    );
+    if (!callsValid || !resultsValid || round.calls.length !== round.results.length) {
+      return NextResponse.json({ error: 'toolRounds 的 calls/results 未一一对应' }, { status: 400 });
+    }
+    const callIds = new Set(round.calls.map((call) => call.id));
+    if (round.results.some((result) => !callIds.has(result.id))) {
+      return NextResponse.json({ error: 'toolRounds 的 calls/results 未一一对应' }, { status: 400 });
+    }
   }
 
   // 校验游戏归属（所有者或 root）
@@ -144,7 +180,10 @@ export async function POST(req: Request, { params }: Props) {
         }
 
         const response = await provider
-          .chatWithTools(buildChatHistory(history, userMessageWithImages, images), CHAT_FUNCTION_DECLARATIONS)
+          .chatWithTools(
+            buildChatHistory(history, userMessageWithImages, images, toolRounds),
+            CHAT_FUNCTION_DECLARATIONS,
+          )
           .catch((e: Error) => {
             // 部分文本模型不支持多模态输入：不静默丢图，直接报错提示切换 provider
             if (images && images.length > 0) {
@@ -167,13 +206,15 @@ export async function POST(req: Request, { params }: Props) {
         }
 
         if (response.functionCalls && response.functionCalls.length > 0) {
-          for (const fc of response.functionCalls) {
+          for (const [index, fc] of response.functionCalls.entries()) {
             controller.enqueue(
               encoder.encode(
                 `data: ${JSON.stringify({
                   type: 'function_call',
+                  id: fc.id || `call_${index}_${fc.name}`,
                   name: fc.name,
                   args: fc.args,
+                  ...(fc.signature ? { signature: fc.signature } : {}),
                 })}\n\n`,
               ),
             );

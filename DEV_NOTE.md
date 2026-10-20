@@ -841,13 +841,17 @@ isValidVoiceId(voiceId: string, provider): boolean
 ## WebMCP + Chatbot 参考图 + 生成剧本统一阶段状态（2026-09）
 
 ### WebMCP 三层
-- 新建 `packages/webmcp` 纯函数内核（操作 `Game` 对象，无 React 依赖）：`tools.ts` 是工具定义的唯一源
-  （22 个：20 个沿用 chatbot 命名 + 只读 `getDsl`/`listScenes`），`core.ts` 是无头执行（含 增→删→改 排序、
-  悬空指向清理、`dryRun` 克隆预演）。
-- `CHAT_FUNCTION_DECLARATIONS` 改为复用 `WEBMCP_TOOLS` 写子集，保证 chatbot 与 MCP 语义同源。
+- `packages/webmcp` 纯函数内核（操作 `Game` 对象，无 React 依赖）：工具定义拆为 `tool-types.ts` /
+  `write-tools.ts` / `read-tools.ts`，`tools.ts` 只负责聚合、优先级与筛选。共 26 个工具：
+  21 个写工具 + 5 个只读工具（`getDsl`/`listScenes`/`getScene`/`searchScenes`/`validateScript`）。
+  `core.ts` 是无头执行（含 增→删→改 排序、悬空指向清理、`dryRun` 克隆预演）。只读工具带
+  `readOnlyHint`，破坏性写工具带 `consequentialHint`，供浏览器 Agent 判断风险。
+- `CHAT_FUNCTION_DECLARATIONS` 复用 `WEBMCP_TOOLS` **全量读写工具**，chatbot 因此可以先 `getScene` 查证、
+  改完 `validateScript` 校验；`getDsl` 现在返回完整 DSL，而非场景数量摘要。
 - in-page 注册走 `document.modelContext`（无 polyfill 依赖，不支持的浏览器静默跳过）：
-  `useWebMcpTools` hook，编辑器页全量（写操作经 `handleFunctionCall` 同一链路，含 undo），
-  播放页经客户端小组件 `PlayWebMcpTools` 只挂只读（播放页是 ISR 服务端组件，不能直接注册）。
+  `useWebMcpTools({ tools, execute })` 由调用方显式决定暴露面，按规范用 `AbortSignal` 注销；
+  编辑器页注册 `WEBMCP_TOOLS` 全量，播放页经 `getPlaybackTools()` 只注册 `getDsl`/`listScenes`
+  （播放页是 ISR 服务端组件，不能直接注册）。
 - 后端 `POST /api/mcp`：**dual-era**（2026-09 本地 Agent 接入）。
   - **Legacy 2025-03-26**：无 modern header 时走 `initialize` / `ping` / `tools/list` / `tools/call`，供 MiMoCode 等客户端。
   - **Modern 2026-07-28**：带 `MCP-Protocol-Version` + `Mcp-Method`（`tools/call` 另需 `Mcp-Name`）与 `_meta` 时按无状态规范校验；`server/discover` 仍实现。
@@ -856,6 +860,21 @@ isValidVoiceId(voiceId: string, provider): boolean
   - **drizzleAdapter 坑**：schema 对象的 **export 名**必须等于 better-auth 的 model 名（`apikey` 不是 `apiKey`），否则 `The model "apikey" was not found in the schema object`。字段名也要对齐插件 schema（如 `requestCount`，不是 `rateLimitCount`/`totalUsed`）。
   - 本地接入：项目 `.mimocode/mimocode.jsonc` 指向生产 `https://muistory.com/api/mcp`，技能 `.mimocode/skills/mui-gamebook-mcp/`。**必须先部署**并跑 `db:migrate`（0003/0004 apikey）。
   - in-page WebMCP / chatbot 语义仍以 `packages/webmcp` 为唯一源。
+
+### 编辑器 chatbot 工具闭环（2026-10）
+- **多轮工具调用**：`chat/route.ts` 接收客户端回传的 `toolRounds`（assistant tool calls + tool results），
+  Provider 侧补齐 OpenAI `tool_calls`/`tool`、Claude `tool_use`/`tool_result`、Google
+  `functionCall`/`functionResponse`（含 `thoughtSignature`）。客户端 `useChatbot` 每轮执行工具后把
+  真实结果喂回模型，最多 4 轮、单轮 24 个调用，每轮独立记 usage。模型必须“失败就修正”，不能假装成功。
+- **工作副本执行**：`executeEditorToolBatch` 在克隆出的 `{ nodes, edges, game }` 上执行，批量内
+  前序新增/删除对后续调用可见；每个调用返回 `{ ok, message, warnings }`，不再“先返回成功、后异步执行”。
+  写操作结束后统一 `flowToGame → stringify → parse` 校验，失败整批回滚；`setSceneImage` 与
+  `updateCharacter.imageUrl` 已补齐。
+- **源同步**：story tab 以 `textContent` 为唯一源（AI 编辑前先 parse，避免覆盖用户未保存的文本）；
+  flowchart/settings 以 `nodes/edges` 为源；`currentDsl` 按当前 tab 现算并传给 chatbot/in-page。
+  flowchart 的 nodes→textContent 同步也已补齐，autosave 与 chatbot 不再读旧 DSL。
+- **提示词**：系统提示明确“先查后改、精细修改优先、破坏性操作先确认、改完必验、只有 ok:true 才算完成”，
+  并说明 `choiceIndex` 是场景出边顺序。
 
 ### Chatbot 参考图（≤4）
 - `ChatMessage.content: string | ChatContentPart[]`；Google=fetch→inlineData、OpenAI=`image_url` 直传 R2 URL、

@@ -102,8 +102,11 @@ export interface FunctionDeclaration {
  * Function Call 结果
  */
 export interface FunctionCallResult {
+  id?: string;
   name: string;
   args: Record<string, unknown>;
+  /** Google Gemini 的 thoughtSignature，其他 provider 忽略 */
+  signature?: string;
 }
 
 /**
@@ -116,11 +119,30 @@ export interface ChatContentPart {
 }
 
 /**
+ * 工具调用（assistant/model 消息携带）
+ */
+export interface ToolCall {
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+  /** Google Gemini 的 thoughtSignature，其他 provider 忽略 */
+  signature?: string;
+}
+
+/**
  * Chat 消息
  */
 export interface ChatMessage {
-  role: 'user' | 'model';
+  role: 'user' | 'model' | 'tool';
   content: string | ChatContentPart[];
+  /** assistant/model 消息携带的工具调用 */
+  toolCalls?: ToolCall[];
+  /** tool 消息对应的调用 ID */
+  toolCallId?: string;
+  /** tool 消息的工具名（Google 按 name 匹配） */
+  name?: string;
+  /** tool 消息是否表示执行失败 */
+  isError?: boolean;
 }
 
 /** 是否为多模态消息 */

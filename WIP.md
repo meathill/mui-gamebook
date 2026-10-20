@@ -1,3 +1,3 @@
 # WIP
 
-当前无正在进行的短期任务。本轮已推送：MiMo 模型全面升级至 2.6 系列（mimo-v2.6-flash / mimo-v2.6-pro），文本分段与 TTS 模态解耦，确保文本请求走 OpenCode Go 套餐并注入 x-opencode-session 与 x-session-id 契约头，底层增加 2.5 旧模型自动规整升阶兜底。全量 2120 个测试、类型检查、格式化、构建均通过。
+当前无正在进行的短期任务。本轮完成编辑器 chatbot 工具闭环强化：WebMCP 新增 `getScene`/`searchScenes`/`validateScript` 只读工具，`getDsl` 返回完整 DSL；编辑器执行链路改为工作副本 + 单次提交 + 整批校验回滚，补齐 `setSceneImage`/`updateCharacter.imageUrl`；chatbot 支持最多 4 轮工具调用（Provider 侧支持 tool 消息），工具结果会回传模型继续纠错；story/flowchart 双源同步与 in-page WebMCP 显式工具列表已对齐。全量 2168 个测试、类型检查、格式化、构建均通过。

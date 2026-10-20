@@ -138,7 +138,42 @@ describe('ClaudeProvider', () => {
     ]);
 
     expect(result.text).toBe('我来添加角色');
-    expect(result.functionCalls).toEqual([{ name: 'addCharacter', args: { id: 'hero', name: '勇者' } }]);
+    expect(result.functionCalls).toEqual([{ id: 'toolu_1', name: 'addCharacter', args: { id: 'hero', name: '勇者' } }]);
+  });
+
+  it('chatWithTools 映射 tool_use/tool_result，连续结果合并为一条 user 消息', async () => {
+    createMock.mockResolvedValue({
+      content: [{ type: 'tool_use', id: 'toolu_2', name: 'getScene', input: { sceneId: 'start' } }],
+      usage: { input_tokens: 1, output_tokens: 1 },
+    });
+    const provider = new ClaudeProvider('sk-ant-test');
+
+    const result = await provider.chatWithTools(
+      [
+        { role: 'user', content: 'hi' },
+        { role: 'model', content: '', toolCalls: [{ id: 'toolu_0', name: 'listScenes', args: {} }] },
+        { role: 'tool', content: '{"ok":true}', toolCallId: 'toolu_0', name: 'listScenes' },
+        { role: 'tool', content: '{"ok":false}', toolCallId: 'toolu_1', name: 'getScene', isError: true },
+      ],
+      [],
+    );
+
+    const request = createMock.mock.calls[0][0];
+    expect(request.messages).toEqual([
+      { role: 'user', content: 'hi' },
+      {
+        role: 'assistant',
+        content: [{ type: 'tool_use', id: 'toolu_0', name: 'listScenes', input: {} }],
+      },
+      {
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 'toolu_0', content: '{"ok":true}' },
+          { type: 'tool_result', tool_use_id: 'toolu_1', content: '{"ok":false}', is_error: true },
+        ],
+      },
+    ]);
+    expect(result.functionCalls?.[0]).toMatchObject({ id: 'toolu_2', name: 'getScene' });
   });
 
   it('generateMiniGame 走 system 参数并剥离代码块标记', async () => {

@@ -84,3 +84,58 @@ describe('OpenAiProvider 实际服务模型', () => {
     });
   });
 });
+
+describe('OpenAiProvider 多轮工具调用', () => {
+  it('映射 assistant tool_calls 与 tool 消息，并回传 tool call id', async () => {
+    const provider = new OpenAiProvider('sk-test', { text: 'gpt-4o' });
+    chatCreate(provider).mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: 'ok',
+            tool_calls: [
+              {
+                id: 'call_1',
+                type: 'function',
+                function: { name: 'getScene', arguments: '{"sceneId":"start"}' },
+              },
+            ],
+          },
+        },
+      ],
+      usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+    });
+
+    const result = await provider.chatWithTools(
+      [
+        { role: 'user', content: 'hi' },
+        { role: 'model', content: '', toolCalls: [{ id: 'call_0', name: 'listScenes', args: {} }] },
+        { role: 'tool', content: '{"ok":true}', toolCallId: 'call_0', name: 'listScenes' },
+      ],
+      [],
+    );
+
+    const request = chatCreate(provider).mock.calls[0][0];
+    expect(request.messages[1]).toEqual({
+      role: 'assistant',
+      content: '',
+      tool_calls: [
+        {
+          id: 'call_0',
+          type: 'function',
+          function: { name: 'listScenes', arguments: '{}' },
+        },
+      ],
+    });
+    expect(request.messages[2]).toEqual({
+      role: 'tool',
+      tool_call_id: 'call_0',
+      content: '{"ok":true}',
+    });
+    expect(result.functionCalls?.[0]).toMatchObject({
+      id: 'call_1',
+      name: 'getScene',
+      args: { sceneId: 'start' },
+    });
+  });
+});

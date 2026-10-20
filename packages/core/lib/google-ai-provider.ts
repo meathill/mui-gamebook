@@ -5,7 +5,6 @@ import { GoogleGenAI, PartUnion, ThinkingLevel, Type } from '@google/genai';
 import { buildMiniGamePrompt, MINIGAME_API_SPEC } from './ai';
 import {
   type AiProvider,
-  type AiUsageInfo,
   type ChatMessage,
   type ChatWithToolsResult,
   type FunctionCallResult,
@@ -18,6 +17,8 @@ import {
   type VideoGenerationStartResult,
   type VideoGenerationStatusResult,
 } from './ai-provider';
+import { toGoogleContents } from './google-messages';
+import { extractGoogleUsage } from './google-utils';
 
 export class GoogleAiProvider implements AiProvider {
   readonly type = 'google' as const;
@@ -39,16 +40,6 @@ export class GoogleAiProvider implements AiProvider {
   ) {
     this.apiBaseUrl = options?.apiBaseUrl ?? 'https://generativelanguage.googleapis.com';
     this.gatewayHeaders = options?.headers ?? {};
-  }
-
-  private static extractUsage(response: {
-    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number };
-  }): AiUsageInfo {
-    return {
-      promptTokens: response.usageMetadata?.promptTokenCount ?? 0,
-      completionTokens: response.usageMetadata?.candidatesTokenCount ?? 0,
-      totalTokens: response.usageMetadata?.totalTokenCount ?? 0,
-    };
   }
 
   async generateText(prompt: string, options?: { thinking?: boolean }): Promise<TextGenerationResult> {
@@ -85,7 +76,7 @@ export class GoogleAiProvider implements AiProvider {
       config: getThinkingConfig(),
     });
 
-    const usage = GoogleAiProvider.extractUsage(response);
+    const usage = extractGoogleUsage(response);
 
     return {
       text: response.text || '',
@@ -157,7 +148,7 @@ export class GoogleAiProvider implements AiProvider {
       },
     });
 
-    const usage = GoogleAiProvider.extractUsage(response);
+    const usage = extractGoogleUsage(response);
 
     if (!response.candidates || response.candidates.length === 0) {
       throw new Error('No candidates received from Google AI.');
@@ -296,7 +287,7 @@ export class GoogleAiProvider implements AiProvider {
       ],
     });
 
-    const usage = GoogleAiProvider.extractUsage(response);
+    const usage = extractGoogleUsage(response);
 
     let code = response.text || '';
     code = code
@@ -315,41 +306,9 @@ export class GoogleAiProvider implements AiProvider {
     const model = this.models.text || 'gemini-2.5-flash';
     console.log(`[Google AI] Chat with tools using model: ${model}`);
 
-    // 转换消息格式为 Google AI 格式：文本直传，图片 URL 先下载再以 inlineData 传入
-    const contents: Array<{
-      role: string;
-      parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
-    }> = [];
-    for (const msg of messages) {
-      const parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }> = [];
-      if (typeof msg.content === 'string') {
-        parts.push({ text: msg.content });
-      } else {
-        for (const part of msg.content) {
-          if (part.type === 'text' && part.text) {
-            parts.push({ text: part.text });
-          } else if (part.type === 'image_url' && part.url) {
-            try {
-              const imgRes = await fetch(part.url);
-              if (!imgRes.ok) {
-                console.warn(`[Google AI] Failed to fetch chat image: ${part.url}`);
-                continue;
-              }
-              const buf = await imgRes.arrayBuffer();
-              parts.push({
-                inlineData: {
-                  mimeType: imgRes.headers.get('content-type') || 'image/png',
-                  data: Buffer.from(buf).toString('base64'),
-                },
-              });
-            } catch (e) {
-              console.warn(`[Google AI] Failed to process chat image: ${part.url}`, e);
-            }
-          }
-        }
-      }
-      contents.push({ role: msg.role === 'model' ? 'model' : 'user', parts });
-    }
+    // 转换消息格式为 Google AI 格式：文本直传，图片 URL 先下载再以 inlineData 传入。
+    // tool 消息映射为 functionResponse；连续结果合并到同一条 user 消息。
+    const contents = await toGoogleContents(messages);
 
     // 转换工具声明为 Google AI 格式
     // 使用类型断言因为我们的接口与 Google AI 的类型定义略有不同
@@ -371,7 +330,7 @@ export class GoogleAiProvider implements AiProvider {
       },
     });
 
-    const usage = GoogleAiProvider.extractUsage(response);
+    const usage = extractGoogleUsage(response);
 
     const served = servedModel(response.modelVersion, model);
     const candidate = response.candidates?.[0];
@@ -388,8 +347,10 @@ export class GoogleAiProvider implements AiProvider {
       }
       if (part.functionCall) {
         functionCalls.push({
+          id: part.functionCall.id || `call_${functionCalls.length}_${part.functionCall.name || 'tool'}`,
           name: part.functionCall.name || '',
           args: (part.functionCall.args as Record<string, unknown>) || {},
+          ...(part.thoughtSignature ? { signature: part.thoughtSignature } : {}),
         });
       }
     }

@@ -1,18 +1,57 @@
 /**
- * AI Chatbot Function Call 类型定义
+ * AI Chatbot Function Call 类型定义与执行上下文。
+ *
+ * 执行引擎使用可变工作副本（working copy）：一次批量内的所有调用共享同一份
+ * nodes/edges/game，前序新增的场景对后续调用立即可见；全部成功后再一次性提交。
  */
 import type { Node, Edge } from '@xyflow/react';
-import type { SceneNodeData } from '@/lib/editor/transformers';
 import type { Game } from '@roudanio/parser/src/types';
+import type { SceneNodeData } from '@/lib/editor/transformers';
 
-// 处理器上下文
-export interface HandlerContext {
+/** 编辑器工具执行的工作副本 */
+export interface EditorDocument {
   nodes: Node<SceneNodeData>[];
   edges: Edge[];
-  originalGame: Game | null;
-  setNodes: (fn: (nodes: Node[]) => Node[]) => void;
-  setEdges: (fn: (edges: Edge[]) => Edge[]) => void;
-  setOriginalGame: (game: Game | ((prev: Game | null) => Game | null)) => void;
+  game: Game;
+}
+
+/** 兼容旧命名：handler 直接修改这份上下文 */
+export type HandlerContext = EditorDocument;
+
+/** 单个工具调用的结构化结果 */
+export interface EditorToolResult {
+  /** 对应 model 返回的 tool call id（in-page 调用可缺省） */
+  id?: string;
+  name: string;
+  ok: boolean;
+  message: string;
+  warnings?: string[];
+}
+
+export function okResult(name: string, message: string, warnings?: string[]): EditorToolResult {
+  return { name, ok: true, message, ...(warnings && warnings.length > 0 ? { warnings } : {}) };
+}
+
+export function failResult(name: string, message: string, warnings?: string[]): EditorToolResult {
+  return { name, ok: false, message, ...(warnings && warnings.length > 0 ? { warnings } : {}) };
+}
+
+export function findSceneNode(ctx: HandlerContext, sceneId: string): Node<SceneNodeData> | undefined {
+  return ctx.nodes.find((node) => node.id === sceneId);
+}
+
+export function outgoingEdges(ctx: HandlerContext, sceneId: string): Edge[] {
+  return ctx.edges.filter((edge) => edge.source === sceneId);
+}
+
+export function choiceEdge(ctx: HandlerContext, sceneId: string, choiceIndex: number): Edge | undefined {
+  if (!Number.isInteger(choiceIndex) || choiceIndex < 0) return undefined;
+  return outgoingEdges(ctx, sceneId)[choiceIndex];
+}
+
+/** 场景 ID 与 parser 的引用口径一致：字母、数字、下划线、连字符 */
+export function isValidSceneId(sceneId: string): boolean {
+  return /^[\p{L}\p{N}_-]+$/u.test(sceneId);
 }
 
 // 场景操作参数
@@ -91,6 +130,7 @@ export interface UpdateCharacterArgs {
   name?: string;
   description?: string;
   imagePrompt?: string;
+  imageUrl?: string;
 }
 
 export interface DeleteCharacterArgs {
@@ -101,6 +141,13 @@ export interface DeleteCharacterArgs {
 export interface UpdateSceneTextArgs {
   sceneId: string;
   text: string;
+}
+
+export interface SetSceneImageArgs {
+  sceneId: string;
+  url?: string;
+  imagePrompt?: string;
+  character?: string;
 }
 
 // 对话与重定向操作参数（DSL v2）

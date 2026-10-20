@@ -1,8 +1,11 @@
 /**
  * WebMCP 无头执行内核：直接操作 Game 对象，无 React/Flow 依赖。
- * 后端 /api/mcp 与单测走这里；编辑器 in-page tools 复用既有 HandlerContext 链路（含 undo）。
+ * 后端 /api/mcp、编辑器只读工具与单测走这里；只读实现拆在 read-core.ts。
  */
-import type { Game, GameStateValue, Scene, SceneChoiceNode, SceneNode } from '@roudanio/parser/src/types';
+import { stringify } from '@roudanio/parser';
+import type { Game, GameStateValue, SceneNode } from '@roudanio/parser/src/types';
+import { choiceNodes, getScene } from './game-utils';
+import { getSceneDetail, searchScenes, validateGame } from './read-core';
 import { sortWebMcpCalls } from './tools';
 
 export interface WebMcpCall {
@@ -25,16 +28,6 @@ function requireChoiceIndex(args: Record<string, unknown>): number {
   const v = args['choiceIndex'];
   if (typeof v !== 'number' || !Number.isInteger(v) || v < 0) throw new Error('choiceIndex 非法');
   return v;
-}
-
-function getScene(game: Game, sceneId: string): Scene {
-  const scene = game.scenes[sceneId];
-  if (!scene) throw new Error(`场景不存在: ${sceneId}`);
-  return scene;
-}
-
-function choiceNodes(scene: Scene): SceneChoiceNode[] {
-  return scene.nodes.filter((n): n is SceneChoiceNode => n.type === 'choice');
 }
 
 /** 解析变量值：true/false/数字优先，否则保留字符串 */
@@ -81,17 +74,39 @@ function cloneGame(game: Game): Game {
   return JSON.parse(JSON.stringify(game)) as Game;
 }
 
+/** 场景正文/对话（只读视图，不插值运行时变量） */
+
 export function executeWebMcpCall(game: Game, call: WebMcpCall): WebMcpResult {
   const { name, args } = call;
   switch (name) {
     case 'getDsl':
-      return { ok: true, message: `共 ${Object.keys(game.scenes).length} 个场景` };
+      return { ok: true, message: stringify(game) };
     case 'listScenes': {
-      const list = Object.entries(game.scenes)
-        .map(([id, s]) => `${id}(${s.nodes.length})`)
-        .join(', ');
-      return { ok: true, message: list || '暂无场景' };
+      const entries = Object.entries(game.scenes).map(
+        ([id, scene]) => `${id} (nodes: ${scene.nodes.length}, choices: ${choiceNodes(scene).length})`,
+      );
+      return {
+        ok: true,
+        message: entries.length > 0 ? `共 ${entries.length} 个场景：\n${entries.join('\n')}` : '暂无场景',
+      };
     }
+    case 'getScene': {
+      const sceneId = requireString(args, 'sceneId');
+      return { ok: true, message: JSON.stringify(getSceneDetail(game, sceneId), null, 2) };
+    }
+    case 'searchScenes': {
+      const query = requireString(args, 'query');
+      const rawLimit = args['limit'];
+      const limit =
+        typeof rawLimit === 'number' && Number.isInteger(rawLimit) ? Math.min(Math.max(rawLimit, 1), 50) : 20;
+      const matches = searchScenes(game, query, limit);
+      return {
+        ok: true,
+        message: JSON.stringify({ query, total: matches.length, matches }, null, 2),
+      };
+    }
+    case 'validateScript':
+      return { ok: true, message: JSON.stringify(validateGame(game), null, 2) };
     case 'addScene': {
       const sceneId = requireString(args, 'sceneId');
       const content = requireString(args, 'content');

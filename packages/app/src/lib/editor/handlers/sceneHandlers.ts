@@ -1,217 +1,202 @@
 /**
- * 场景操作处理器
- *
- * 注意：所有操作都在 setNodes/setEdges 回调内执行，以确保获取最新状态。
- * 返回值仅用于日志，不再用于标记操作结果。
+ * 场景操作处理器（纯工作副本版）。
+ * 每个 handler 直接在 ctx 上校验并修改，返回真实成功/失败结果；
+ * 由 executeEditorToolBatch 统一克隆、排序、校验和提交。
  */
-import type { Node } from '@xyflow/react';
-import { createEditorSceneAsset, type SceneNodeData } from '@/lib/editor/transformers';
 import type { SceneAiImageNode } from '@roudanio/parser/src/types';
-import type {
-  HandlerContext,
-  UpdateSceneArgs,
-  AddSceneArgs,
-  AddDialogueLineArgs,
-  AddRedirectArgs,
-  DeleteSceneArgs,
-  RenameSceneArgs,
-  UpdateSceneTextArgs,
-  UpdateSceneImagePromptArgs,
+import { createEditorSceneAsset } from '@/lib/editor/transformers';
+import {
+  failResult,
+  findSceneNode,
+  isValidSceneId,
+  okResult,
+  type AddDialogueLineArgs,
+  type AddRedirectArgs,
+  type AddSceneArgs,
+  type DeleteSceneArgs,
+  type EditorToolResult,
+  type HandlerContext,
+  type RenameSceneArgs,
+  type SetSceneImageArgs,
+  type UpdateSceneArgs,
+  type UpdateSceneImagePromptArgs,
+  type UpdateSceneTextArgs,
 } from './types';
 
-export function handleUpdateScene(args: UpdateSceneArgs, ctx: HandlerContext): string {
-  const { sceneId, content } = args;
-
-  // 在 setNodes 回调内操作最新状态
-  ctx.setNodes((nds) => {
-    const nodeExists = nds.some((n) => n.id === sceneId);
-    if (!nodeExists) {
-      console.warn(`场景 "${sceneId}" 不存在，跳过更新`);
-      return nds;
-    }
-    return nds.map((node) => (node.id === sceneId ? { ...node, data: { ...node.data, content } } : node));
-  });
-
-  return `已更新场景 "${sceneId}"`;
+export function handleUpdateScene(args: UpdateSceneArgs, ctx: HandlerContext): EditorToolResult {
+  const node = findSceneNode(ctx, args.sceneId);
+  if (!node) return failResult('updateScene', `场景 "${args.sceneId}" 不存在，未修改`);
+  node.data = { ...node.data, content: args.content };
+  return okResult('updateScene', `已覆盖场景 "${args.sceneId}" 的文案（素材与选项保留）`, [
+    'updateScene 是覆盖式操作，原正文/对话已被替换',
+  ]);
 }
 
-export function handleAddScene(args: AddSceneArgs, ctx: HandlerContext): string {
-  const { sceneId, content } = args;
+export function handleAddScene(args: AddSceneArgs, ctx: HandlerContext): EditorToolResult {
+  const { sceneId, content, afterSceneId } = args;
+  if (!sceneId.trim()) return failResult('addScene', '场景 ID 不能为空');
+  if (!isValidSceneId(sceneId)) {
+    return failResult('addScene', `场景 ID "${sceneId}" 含不可引用字符，只能使用字母、数字、下划线、连字符`);
+  }
+  if (findSceneNode(ctx, sceneId)) return failResult('addScene', `场景 "${sceneId}" 已存在，未添加`);
 
-  // 在 setNodes 回调内操作最新状态
-  ctx.setNodes((nds) => {
-    const nodeExists = nds.some((n) => n.id === sceneId);
-    if (nodeExists) {
-      console.warn(`场景 "${sceneId}" 已存在，跳过添加`);
-      return nds;
-    }
+  const anchor = afterSceneId ? findSceneNode(ctx, afterSceneId) : undefined;
+  if (afterSceneId && !anchor) {
+    return failResult('addScene', `afterSceneId "${afterSceneId}" 不存在；如需添加请去掉 afterSceneId`);
+  }
+  const position = anchor
+    ? { x: anchor.position.x + 260, y: anchor.position.y + 90 }
+    : { x: ctx.nodes.length * 40, y: ctx.nodes.length * 40 };
 
-    const newNode: Node<SceneNodeData> = {
-      id: sceneId,
-      position: { x: Math.random() * 500, y: Math.random() * 500 },
-      data: { label: sceneId, content, assets: [] },
-      type: 'scene',
-    };
-    return [...nds, newNode];
+  ctx.nodes.push({
+    id: sceneId,
+    position,
+    data: { label: sceneId, content, assets: [] },
+    type: 'scene',
   });
-
-  return `已添加场景 "${sceneId}"`;
+  return okResult('addScene', `已添加场景 "${sceneId}"`);
 }
 
-export function handleDeleteScene(args: DeleteSceneArgs, ctx: HandlerContext): string {
+export function handleDeleteScene(args: DeleteSceneArgs, ctx: HandlerContext): EditorToolResult {
   const { sceneId } = args;
-  if (sceneId === 'start') {
-    return '不能删除 start 场景';
-  }
+  if (sceneId === 'start') return failResult('deleteScene', '不能删除 start 场景');
+  if (!findSceneNode(ctx, sceneId)) return failResult('deleteScene', `场景 "${sceneId}" 不存在，未删除`);
 
-  ctx.setNodes((nds) => nds.filter((n) => n.id !== sceneId));
-  ctx.setEdges((eds) => eds.filter((e) => e.source !== sceneId && e.target !== sceneId));
-  return `已删除场景 "${sceneId}"`;
+  const relatedEdges = ctx.edges.filter((edge) => edge.source === sceneId || edge.target === sceneId);
+  ctx.nodes = ctx.nodes.filter((node) => node.id !== sceneId);
+  ctx.edges = ctx.edges.filter((edge) => edge.source !== sceneId && edge.target !== sceneId);
+  delete ctx.game.scenes[sceneId];
+
+  return okResult('deleteScene', `已删除场景 "${sceneId}"，同时清理 ${relatedEdges.length} 条相关选项/引用`);
 }
 
-export function handleRenameScene(args: RenameSceneArgs, ctx: HandlerContext): string {
+export function handleRenameScene(args: RenameSceneArgs, ctx: HandlerContext): EditorToolResult {
   const { oldId, newId } = args;
-  if (!newId || oldId === newId) {
-    return '新旧场景 ID 相同';
+  if (!newId.trim() || oldId === newId) return failResult('renameScene', '新旧场景 ID 相同或为空');
+  if (!isValidSceneId(newId)) {
+    return failResult('renameScene', `新场景 ID "${newId}" 含不可引用字符，只能使用字母、数字、下划线、连字符`);
   }
+  if (!findSceneNode(ctx, oldId)) return failResult('renameScene', `场景 "${oldId}" 不存在，未重命名`);
+  if (findSceneNode(ctx, newId)) return failResult('renameScene', `场景 "${newId}" 已存在，未重命名`);
 
-  // 在 setNodes 回调内操作最新状态
-  ctx.setNodes((nds) => {
-    if (nds.some((n) => n.id === newId)) {
-      console.warn(`场景 "${newId}" 已存在，跳过重命名`);
-      return nds;
-    }
-    return nds.map((node) => (node.id === oldId ? { ...node, id: newId, data: { ...node.data, label: newId } } : node));
-  });
-
-  ctx.setEdges((eds) =>
-    eds.map((edge) => {
-      let updated = false;
-      let source = edge.source;
-      let target = edge.target;
-      if (source === oldId) {
-        source = newId;
-        updated = true;
-      }
-      if (target === oldId) {
-        target = newId;
-        updated = true;
-      }
-      return updated ? { ...edge, source, target } : edge;
-    }),
+  let updatedRefs = 0;
+  ctx.nodes = ctx.nodes.map((node) =>
+    node.id === oldId ? { ...node, id: newId, data: { ...node.data, label: newId } } : node,
   );
-
-  return `已将场景 "${oldId}" 重命名为 "${newId}"`;
-}
-
-/**
- * 只更新场景文案（content 字段）
- */
-export function handleUpdateSceneText(args: UpdateSceneTextArgs, ctx: HandlerContext): string {
-  const { sceneId, text } = args;
-
-  ctx.setNodes((nds) => {
-    const nodeExists = nds.some((n) => n.id === sceneId);
-    if (!nodeExists) {
-      console.warn(`场景 "${sceneId}" 不存在，跳过更新文案`);
-      return nds;
-    }
-    return nds.map((node) => (node.id === sceneId ? { ...node, data: { ...node.data, content: text } } : node));
+  ctx.edges = ctx.edges.map((edge) => {
+    if (edge.source !== oldId && edge.target !== oldId) return edge;
+    updatedRefs += 1;
+    return {
+      ...edge,
+      source: edge.source === oldId ? newId : edge.source,
+      target: edge.target === oldId ? newId : edge.target,
+    };
   });
 
-  return `已更新场景 "${sceneId}" 的文案`;
+  return okResult('renameScene', `已将场景 "${oldId}" 重命名为 "${newId}"，同步更新 ${updatedRefs} 条引用`);
 }
 
-/**
- * 只更新场景的图片生成 prompt
- */
-export function handleUpdateSceneImagePrompt(args: UpdateSceneImagePromptArgs, ctx: HandlerContext): string {
-  const { sceneId, imagePrompt } = args;
-
-  ctx.setNodes((nds) => {
-    const nodeExists = nds.some((n) => n.id === sceneId);
-    if (!nodeExists) {
-      console.warn(`场景 "${sceneId}" 不存在，跳过更新图片 prompt`);
-      return nds;
-    }
-    return nds.map((node) => {
-      if (node.id !== sceneId) return node;
-      const nodeData = node.data as SceneNodeData;
-      // 查找或创建 ai_image 资源
-      const assets = nodeData.assets || [];
-      const aiImageIndex = assets.findIndex((entry) => entry.asset.type === 'ai_image');
-      if (aiImageIndex >= 0) {
-        // 更新现有的 ai_image prompt
-        const existingEntry = assets[aiImageIndex];
-        const existingAsset = existingEntry.asset as SceneAiImageNode;
-        const updatedAsset: SceneAiImageNode = { ...existingAsset, prompt: imagePrompt };
-        const newAssets = [...assets];
-        newAssets[aiImageIndex] = { ...existingEntry, asset: updatedAsset };
-        return { ...node, data: { ...nodeData, assets: newAssets } };
-      } else {
-        // 添加新的 ai_image 资源
-        const newAsset: SceneAiImageNode = { type: 'ai_image', prompt: imagePrompt };
-        return {
-          ...node,
-          data: {
-            ...nodeData,
-            assets: [...assets, createEditorSceneAsset(newAsset)],
-          },
-        };
-      }
-    });
-  });
-
-  return `已更新场景 "${sceneId}" 的图片 prompt`;
+export function handleUpdateSceneText(args: UpdateSceneTextArgs, ctx: HandlerContext): EditorToolResult {
+  const node = findSceneNode(ctx, args.sceneId);
+  if (!node) return failResult('updateSceneText', `场景 "${args.sceneId}" 不存在，未修改`);
+  node.data = { ...node.data, content: args.text };
+  return okResult('updateSceneText', `已更新场景 "${args.sceneId}" 的文案`);
 }
 
-/** 向场景 content 追加一行 DSL 原文（对话/重定向共用；对话与重定向行是 content 的一等语法） */
-function appendLineToSceneContent(ctx: HandlerContext, sceneId: string, line: string): void {
-  ctx.setNodes((nds) => {
-    if (!nds.some((n) => n.id === sceneId)) {
-      console.warn(`场景 "${sceneId}" 不存在，跳过追加内容`);
-      return nds;
-    }
-    return nds.map((node) =>
-      node.id === sceneId
-        ? {
-            ...node,
-            data: {
-              ...node.data,
-              content: node.data.content ? `${node.data.content}\n\n${line}` : line,
-            },
-          }
-        : node,
-    );
-  });
-}
+/** 更新/创建场景的 ai_image 素材 */
+export function handleUpdateSceneImagePrompt(args: UpdateSceneImagePromptArgs, ctx: HandlerContext): EditorToolResult {
+  const node = findSceneNode(ctx, args.sceneId);
+  if (!node) return failResult('updateSceneImagePrompt', `场景 "${args.sceneId}" 不存在，未修改`);
 
-/**
- * 追加一行角色对话（DSL v2 `@角色ID: 台词`）
- */
-export function handleAddDialogueLine(args: AddDialogueLineArgs, ctx: HandlerContext): string {
-  const { sceneId, speaker, content, emotion } = args;
-
-  if (!ctx.originalGame?.ai?.characters?.[speaker]) {
-    return `角色 "${speaker}" 未在角色列表注册，对话行会被当作普通文本。请先用 addCharacter 创建该角色`;
+  const assets = node.data.assets ?? [];
+  const index = assets.findIndex((entry) => entry.asset.type === 'ai_image');
+  if (index >= 0) {
+    const existing = assets[index];
+    const updatedAsset: SceneAiImageNode = { ...(existing.asset as SceneAiImageNode), prompt: args.imagePrompt };
+    node.data = {
+      ...node.data,
+      assets: assets.map((entry, i) => (i === index ? { ...existing, asset: updatedAsset } : entry)),
+    };
+  } else {
+    node.data = {
+      ...node.data,
+      assets: [...assets, createEditorSceneAsset({ type: 'ai_image', prompt: args.imagePrompt })],
+    };
   }
-
-  const line = `@${speaker}${emotion ? ` (${emotion})` : ''}: ${content}`;
-  appendLineToSceneContent(ctx, sceneId, line);
-  return `已向场景 "${sceneId}" 追加 ${speaker} 的对话`;
+  return okResult('updateSceneImagePrompt', `已更新场景 "${args.sceneId}" 的配图 prompt`);
 }
 
-/**
- * 追加一条块级重定向（DSL v2 `-> target (if:) (set:)`）
- */
-export function handleAddRedirect(args: AddRedirectArgs, ctx: HandlerContext): string {
-  const { sceneId, targetSceneId, condition, stateChange } = args;
+/** 设置场景配图 url / prompt / character */
+export function handleSetSceneImage(args: SetSceneImageArgs, ctx: HandlerContext): EditorToolResult {
+  const { sceneId, url, imagePrompt, character } = args;
+  if (!url && !imagePrompt) {
+    return failResult('setSceneImage', 'url 与 imagePrompt 至少提供一个');
+  }
+  const node = findSceneNode(ctx, sceneId);
+  if (!node) return failResult('setSceneImage', `场景 "${sceneId}" 不存在，未设置`);
 
+  const assets = node.data.assets ?? [];
+  const index = assets.findIndex((entry) => entry.asset.type === 'ai_image');
+  if (index >= 0) {
+    const existing = assets[index];
+    const updatedAsset: SceneAiImageNode = {
+      ...(existing.asset as SceneAiImageNode),
+      ...(url ? { url } : {}),
+      ...(imagePrompt ? { prompt: imagePrompt } : {}),
+      ...(character ? { character } : {}),
+    };
+    node.data = {
+      ...node.data,
+      assets: assets.map((entry, i) => (i === index ? { ...existing, asset: updatedAsset } : entry)),
+    };
+  } else {
+    const newAsset: SceneAiImageNode = {
+      type: 'ai_image',
+      prompt: imagePrompt ?? '',
+      ...(url ? { url } : {}),
+      ...(character ? { character } : {}),
+    };
+    node.data = { ...node.data, assets: [...assets, createEditorSceneAsset(newAsset)] };
+  }
+  return okResult('setSceneImage', `已设置场景 "${sceneId}" 的配图`);
+}
+
+function appendLineToSceneContent(ctx: HandlerContext, sceneId: string, line: string): boolean {
+  const node = findSceneNode(ctx, sceneId);
+  if (!node) return false;
+  node.data = {
+    ...node.data,
+    content: node.data.content ? `${node.data.content}\n\n${line}` : line,
+  };
+  return true;
+}
+
+export function handleAddDialogueLine(args: AddDialogueLineArgs, ctx: HandlerContext): EditorToolResult {
+  const { sceneId, speaker, content, emotion } = args;
+  if (!ctx.game.ai.characters?.[speaker]) {
+    return failResult(
+      'addDialogueLine',
+      `角色 "${speaker}" 未在角色列表注册，未追加对话。请先用 addCharacter 创建该角色`,
+    );
+  }
+  const line = `@${speaker}${emotion ? ` (${emotion})` : ''}: ${content}`;
+  if (!appendLineToSceneContent(ctx, sceneId, line)) {
+    return failResult('addDialogueLine', `场景 "${sceneId}" 不存在，未追加对话`);
+  }
+  return okResult('addDialogueLine', `已向场景 "${sceneId}" 追加 ${speaker} 的对话`);
+}
+
+export function handleAddRedirect(args: AddRedirectArgs, ctx: HandlerContext): EditorToolResult {
+  const { sceneId, targetSceneId, condition, stateChange } = args;
+  if (!findSceneNode(ctx, targetSceneId)) {
+    return failResult('addRedirect', `目标场景 "${targetSceneId}" 不存在，未追加重定向`);
+  }
   const clauses: string[] = [];
   if (condition) clauses.push(`(if: ${condition})`);
   if (stateChange) clauses.push(`(set: ${stateChange})`);
   const line = [`-> ${targetSceneId}`, ...clauses].join(' ');
-
-  appendLineToSceneContent(ctx, sceneId, line);
-  return `已向场景 "${sceneId}" 追加重定向 -> ${targetSceneId}`;
+  if (!appendLineToSceneContent(ctx, sceneId, line)) {
+    return failResult('addRedirect', `场景 "${sceneId}" 不存在，未追加重定向`);
+  }
+  return okResult('addRedirect', `已向场景 "${sceneId}" 追加重定向 -> ${targetSceneId}`);
 }

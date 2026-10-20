@@ -1,18 +1,21 @@
 'use client';
 
 import {
+  CheckCircleIcon,
   ImageIcon,
   PaperPlaneRightIcon,
   RobotIcon,
   SpinnerIcon,
   SquareIcon,
   TrashIcon,
+  XCircleIcon,
   XIcon,
 } from '@phosphor-icons/react';
 import Button from '@/components/Button';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
 import { MAX_CHAT_IMAGES } from '@/lib/editor/chat-declarations';
+import type { EditorToolBatchResult } from '@/lib/editor/chatFunctionHandlers';
 import { isImeComposing } from '@/lib/keyboard';
 import { FunctionCall, Message, useChatbot } from './useChatbot';
 
@@ -26,7 +29,10 @@ interface ChatPanelProps {
   story?: string;
   characters?: Record<string, { name: string; description?: string }>;
   variables?: Record<string, unknown>;
-  onFunctionCall: (calls: FunctionCall[]) => void;
+  onFunctionCall: (
+    calls: FunctionCall[],
+    baseDocument?: EditorToolBatchResult['document'],
+  ) => Promise<EditorToolBatchResult> | EditorToolBatchResult;
 }
 
 export default function ChatPanel({
@@ -55,7 +61,7 @@ export default function ChatPanel({
   const activeProvider = selectedProvider || userDefaultProvider || providers[0];
   const activeModel = activeProvider === userDefaultProvider ? userDefaultModel : null;
 
-  const { messages, loading, error, sendMessage, clearMessages, cancelRequest } = useChatbot({
+  const { messages, loading, status, error, sendMessage, clearMessages, cancelRequest } = useChatbot({
     gameId,
     onFunctionCall,
   });
@@ -176,7 +182,7 @@ export default function ChatPanel({
         {loading && (
           <div className="flex items-center gap-2 text-gray-500 text-sm">
             <SpinnerIcon className="size-4 animate-spin" />
-            <span>AI 正在思考...</span>
+            <span>{status === 'executing' ? '正在执行工具并校验...' : 'AI 正在思考...'}</span>
           </div>
         )}
 
@@ -295,8 +301,25 @@ export default function ChatPanel({
   );
 }
 
+function formatToolContent(raw: string): { summary: string; raw: string } {
+  const shorten = (text: string) => (text.length > 120 ? `${text.slice(0, 120)}…` : text);
+  try {
+    const data = JSON.parse(raw) as Record<string, unknown>;
+    if (typeof data.message === 'string') return { summary: shorten(data.message), raw };
+    if (typeof data.error === 'string') return { summary: shorten(data.error), raw };
+    if (Array.isArray(data.matches)) return { summary: `匹配 ${data.matches.length} 条`, raw };
+    if (typeof data.sceneId === 'string') return { summary: `场景 ${data.sceneId}`, raw };
+    if (typeof data.ok === 'boolean') return { summary: data.ok ? '成功' : '失败', raw };
+    return { summary: '已完成', raw };
+  } catch {
+    return { summary: raw.length > 120 ? `${raw.slice(0, 120)}…` : raw, raw };
+  }
+}
+
 function MessageBubble({ message }: { message: Message }) {
   const isUser = message.role === 'user';
+  const isToolRound = message.kind === 'tool-round';
+  const failedCount = message.toolResults?.filter((result) => !result.ok).length ?? 0;
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -304,7 +327,7 @@ function MessageBubble({ message }: { message: Message }) {
         className={`max-w-[85%] rounded-lg px-3 py-2 max-h-[50dvh] overflow-auto ${
           isUser ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-800'
         }`}>
-        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+        {message.content && <p className="text-sm whitespace-pre-wrap">{message.content}</p>}
         {message.images && message.images.length > 0 && (
           <div className="flex gap-1.5 mt-2 flex-wrap">
             {message.images.map((url) => (
@@ -318,11 +341,43 @@ function MessageBubble({ message }: { message: Message }) {
           </div>
         )}
 
-        {message.functionCalls && message.functionCalls.length > 0 && (
+        {isToolRound && (
+          <div className={`${message.content ? 'mt-2 pt-2 border-t border-gray-200' : ''}`}>
+            <div className="text-xs text-gray-500 mb-1">
+              {message.toolResults
+                ? `执行了 ${message.toolResults.length} 个操作${failedCount > 0 ? `，${failedCount} 个失败` : ''}`
+                : '正在执行操作...'}
+            </div>
+            {message.toolResults?.map((result, index) => {
+              const { summary, raw } = formatToolContent(result.message);
+              return (
+                <details
+                  key={`${result.name}-${index}`}
+                  className="text-xs">
+                  <summary
+                    className={`cursor-pointer flex items-center gap-1 ${result.ok ? 'text-green-700' : 'text-red-600'}`}>
+                    {result.ok ? (
+                      <CheckCircleIcon className="size-3.5 shrink-0" />
+                    ) : (
+                      <XCircleIcon className="size-3.5 shrink-0" />
+                    )}
+                    <span className="font-mono shrink-0">{result.name}</span>
+                    <span className="truncate opacity-80">{summary}</span>
+                  </summary>
+                  <pre className="mt-1 max-h-40 overflow-auto whitespace-pre-wrap break-all bg-white/70 rounded p-2 text-[10px] text-gray-600">
+                    {raw}
+                  </pre>
+                </details>
+              );
+            })}
+          </div>
+        )}
+
+        {!isToolRound && message.functionCalls && message.functionCalls.length > 0 && (
           <div className="mt-2 pt-2 border-t border-white/20">
-            {message.functionCalls.map((fc, i) => (
+            {message.functionCalls.map((fc) => (
               <div
-                key={i}
+                key={fc.id}
                 className="text-xs opacity-80 flex items-center gap-1">
                 <span className="font-mono">✓ {fc.name}</span>
               </div>

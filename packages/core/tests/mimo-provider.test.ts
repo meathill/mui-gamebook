@@ -297,7 +297,9 @@ describe('MimoProvider', () => {
       [{ name: 'addCharacter', description: '添加角色', parameters: { type: 'object', properties: {} } }],
     );
 
-    expect(result.functionCalls).toEqual([{ name: 'addCharacter', args: { id: 'hero', name: '勇者' } }]);
+    expect(result.functionCalls).toEqual([
+      { id: 'call_0_addCharacter', name: 'addCharacter', args: { id: 'hero', name: '勇者' } },
+    ]);
   });
 
   it('不支持图片/视频生成', async () => {

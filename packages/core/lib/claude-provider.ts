@@ -11,6 +11,7 @@ import {
   type ChatWithToolsResult,
   type FunctionCallResult,
   type FunctionDeclaration,
+  getMessageText,
   type ImageGenerationResult,
   type MiniGameGenerationResult,
   servedModel,
@@ -122,48 +123,83 @@ export class ClaudeProvider implements AiProvider {
       input_schema: tool.parameters,
     }));
 
+    const claudeMessages: Anthropic.MessageParam[] = [];
+    let pendingToolResults: Anthropic.ToolResultBlockParam[] = [];
+    const flushToolResults = () => {
+      if (pendingToolResults.length === 0) return;
+      claudeMessages.push({ role: 'user', content: pendingToolResults });
+      pendingToolResults = [];
+    };
+
+    for (const msg of messages) {
+      if (msg.role === 'tool') {
+        pendingToolResults.push({
+          type: 'tool_result',
+          tool_use_id: msg.toolCallId ?? '',
+          content: typeof msg.content === 'string' ? msg.content : getMessageText(msg.content),
+          ...(msg.isError ? { is_error: true } : {}),
+        });
+        continue;
+      }
+      flushToolResults();
+
+      if (msg.role === 'model') {
+        const text = typeof msg.content === 'string' ? msg.content : getMessageText(msg.content);
+        const toolCalls = msg.toolCalls ?? [];
+        if (toolCalls.length === 0) {
+          claudeMessages.push({ role: 'assistant', content: text });
+          continue;
+        }
+        const blocks: Anthropic.ContentBlockParam[] = [];
+        if (text) blocks.push({ type: 'text', text });
+        for (const call of toolCalls) {
+          blocks.push({ type: 'tool_use', id: call.id, name: call.name, input: call.args });
+        }
+        claudeMessages.push({ role: 'assistant', content: blocks });
+        continue;
+      }
+
+      if (typeof msg.content === 'string') {
+        claudeMessages.push({ role: 'user', content: msg.content });
+        continue;
+      }
+
+      const blocks: Anthropic.ContentBlockParam[] = [];
+      for (const part of msg.content) {
+        if (part.type === 'text' && part.text) {
+          blocks.push({ type: 'text', text: part.text });
+        } else if (part.type === 'image_url' && part.url) {
+          try {
+            const imgRes = await fetch(part.url);
+            if (!imgRes.ok) {
+              console.warn(`[Claude] Failed to fetch chat image: ${part.url}`);
+              continue;
+            }
+            const buf = await imgRes.arrayBuffer();
+            const mime = imgRes.headers.get('content-type') || 'image/png';
+            blocks.push({
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mime)
+                  ? mime
+                  : 'image/png') as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
+                data: Buffer.from(buf).toString('base64'),
+              },
+            });
+          } catch (e) {
+            console.warn(`[Claude] Failed to process chat image: ${part.url}`, e);
+          }
+        }
+      }
+      claudeMessages.push({ role: 'user', content: blocks });
+    }
+    flushToolResults();
+
     const response = await this.client.messages.create({
       model,
       max_tokens: MAX_OUTPUT_TOKENS,
-      messages: await Promise.all(
-        messages.map(async (msg) => {
-          if (typeof msg.content === 'string') {
-            return {
-              role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user',
-              content: msg.content,
-            };
-          }
-          const blocks: Anthropic.ContentBlockParam[] = [];
-          for (const part of msg.content) {
-            if (part.type === 'text' && part.text) {
-              blocks.push({ type: 'text', text: part.text });
-            } else if (part.type === 'image_url' && part.url) {
-              try {
-                const imgRes = await fetch(part.url);
-                if (!imgRes.ok) {
-                  console.warn(`[Claude] Failed to fetch chat image: ${part.url}`);
-                  continue;
-                }
-                const buf = await imgRes.arrayBuffer();
-                const mime = imgRes.headers.get('content-type') || 'image/png';
-                blocks.push({
-                  type: 'image',
-                  source: {
-                    type: 'base64',
-                    media_type: (['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(mime)
-                      ? mime
-                      : 'image/png') as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp',
-                    data: Buffer.from(buf).toString('base64'),
-                  },
-                });
-              } catch (e) {
-                console.warn(`[Claude] Failed to process chat image: ${part.url}`, e);
-              }
-            }
-          }
-          return { role: (msg.role === 'model' ? 'assistant' : 'user') as 'assistant' | 'user', content: blocks };
-        }),
-      ),
+      messages: claudeMessages,
       tools: claudeTools,
     });
 
@@ -171,6 +207,7 @@ export class ClaudeProvider implements AiProvider {
     const functionCalls: FunctionCallResult[] = response.content
       .filter((block): block is Anthropic.ToolUseBlock => block.type === 'tool_use')
       .map((block) => ({
+        id: block.id,
         name: block.name,
         args: block.input as Record<string, unknown>,
       }));

@@ -22,8 +22,8 @@ describe('webmcp tools 清单', () => {
       getReadonlyTools()
         .map((t) => t.name)
         .sort(),
-    ).toEqual(['getDsl', 'listScenes']);
-    expect(getWritableTools().length).toBe(WEBMCP_TOOLS.length - 2);
+    ).toEqual(['getDsl', 'getScene', 'listScenes', 'searchScenes', 'validateScript']);
+    expect(getWritableTools().length).toBe(WEBMCP_TOOLS.length - 5);
   });
 
   it('批量排序：增→删→改', () => {
@@ -105,5 +105,84 @@ describe('webmcp 纯核', () => {
     const game = makeGame();
     game.scenes['start'].nodes.push({ type: 'choice', text: '坏链', nextSceneId: 'missing' });
     expect(cleanupInvalidChoices(game)).toBe(1);
+  });
+});
+
+describe('webmcp 只读工具', () => {
+  function gameWithChoices(): Game {
+    const game = makeGame();
+    game.scenes['forest'] = {
+      id: 'forest',
+      nodes: [
+        { type: 'text', content: '你走进雾林，听见狼嚎。' },
+        { type: 'dialogue', speaker: 'hero', content: '小心。' },
+        { type: 'choice', text: '回营地', nextSceneId: 'start', condition: 'hp > 0' },
+        { type: 'redirect', nextSceneId: 'start' },
+      ],
+    };
+    game.scenes['start'].nodes.push({ type: 'choice', text: '去森林', nextSceneId: 'forest' });
+    return game;
+  }
+
+  it('getDsl 返回完整 DSL，而不是场景数量', () => {
+    const result = executeWebMcpBatch(gameWithChoices(), [{ name: 'getDsl', args: {} }]);
+    expect(result[0].ok).toBe(true);
+    expect(result[0].message).toContain('title:');
+    expect(result[0].message).toContain('# start');
+    expect(result[0].message).toContain('# forest');
+  });
+
+  it('listScenes 包含节点与选项数量', () => {
+    const result = executeWebMcpBatch(gameWithChoices(), [{ name: 'listScenes', args: {} }]);
+    expect(result[0].message).toContain('共 2 个场景');
+    expect(result[0].message).toContain('start (nodes: 2, choices: 1)');
+    expect(result[0].message).toContain('forest (nodes: 4, choices: 1)');
+  });
+
+  it('getScene 返回正文、选项 choiceIndex、重定向与入边', () => {
+    const result = executeWebMcpBatch(gameWithChoices(), [{ name: 'getScene', args: { sceneId: 'forest' } }]);
+    const detail = JSON.parse(result[0].message);
+    expect(detail.prose).toEqual([
+      { type: 'text', content: '你走进雾林，听见狼嚎。' },
+      { type: 'dialogue', speaker: 'hero', content: '小心。' },
+    ]);
+    expect(detail.choices).toEqual([
+      {
+        choiceIndex: 0,
+        text: '回营地',
+        targetSceneId: 'start',
+        condition: 'hp > 0',
+      },
+    ]);
+    expect(detail.redirects).toEqual([{ targetSceneId: 'start' }]);
+    expect(detail.incoming).toContainEqual({ fromSceneId: 'start', type: 'choice', choiceIndex: 0, text: '去森林' });
+  });
+
+  it('getScene 对不存在的场景报错', () => {
+    const result = executeWebMcpBatch(gameWithChoices(), [{ name: 'getScene', args: { sceneId: 'ghost' } }]);
+    expect(result[0].ok).toBe(false);
+    expect(result[0].message).toContain('场景不存在');
+  });
+
+  it('searchScenes 搜正文、对话和选项，并可限制数量', () => {
+    const result = executeWebMcpBatch(gameWithChoices(), [{ name: 'searchScenes', args: { query: '森林' } }]);
+    const payload = JSON.parse(result[0].message);
+    expect(payload.matches).toContainEqual(
+      expect.objectContaining({ sceneId: 'start', field: 'choice', snippet: expect.stringContaining('森林') }),
+    );
+
+    const limited = executeWebMcpBatch(gameWithChoices(), [{ name: 'searchScenes', args: { query: '雾', limit: 1 } }]);
+    expect(JSON.parse(limited[0].message).matches).toHaveLength(1);
+  });
+
+  it('validateScript 报告悬空引用与未注册角色', () => {
+    const game = gameWithChoices();
+    game.scenes['start'].nodes.push({ type: 'choice', text: '坏链', nextSceneId: 'missing' });
+    game.scenes['start'].nodes.push({ type: 'text', content: '@ghost: 我不存在' });
+    const result = executeWebMcpBatch(game, [{ name: 'validateScript', args: {} }]);
+    const payload = JSON.parse(result[0].message);
+    expect(payload.ok).toBe(false);
+    expect(payload.errors.join('\n')).toContain('missing');
+    expect(payload.warnings.join('\n')).toContain('ghost');
   });
 });

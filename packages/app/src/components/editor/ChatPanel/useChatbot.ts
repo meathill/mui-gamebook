@@ -1,201 +1,236 @@
 import { useCallback, useRef, useState } from 'react';
-import { getGameSessionHeaders } from '@/lib/editor/game-session';
+import type { EditorToolBatchResult } from '@/lib/editor/chatFunctionHandlers';
+import { MAX_CHAT_TOOL_ROUNDS, MAX_TOOL_CALLS_PER_ROUND, type ChatToolRound } from '@/lib/editor/chat-declarations';
+import type { ChatContext, ChatStatus, FunctionCall, Message, ToolExecutionResult } from './chat-types';
+import { createId, requestChat, serializeToolResult } from './chat-stream';
 
-export interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  images?: string[];
-  functionCalls?: FunctionCall[];
-}
+export type { ChatStatus, FunctionCall, Message, ToolExecutionResult } from './chat-types';
 
-export interface FunctionCall {
-  name: string;
-  args: Record<string, unknown>;
-}
-
-interface SSEMessage {
-  type: 'text' | 'function_call' | 'done' | 'error';
-  content?: string;
-  name?: string;
-  args?: Record<string, unknown>;
-}
-
-interface ChatContext {
-  dsl: string;
-  story?: string;
-  characters?: Record<string, { name: string; description?: string }>;
-  variables?: Record<string, unknown>;
-}
+type OnFunctionCall = (
+  calls: FunctionCall[],
+  baseDocument?: EditorToolBatchResult['document'],
+) => Promise<EditorToolBatchResult> | EditorToolBatchResult;
 
 interface UseChatbotProps {
   gameId: string;
-  onFunctionCall: (calls: FunctionCall[]) => void;
+  onFunctionCall: OnFunctionCall;
 }
 
 export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<ChatStatus>(null);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const messagesRef = useRef<Message[]>([]);
+  const onFunctionCallRef = useRef(onFunctionCall);
+  onFunctionCallRef.current = onFunctionCall;
 
-  // 保持 messagesRef 与 messages 同步
-  messagesRef.current = messages;
+  const appendMessage = useCallback((message: Message) => {
+    messagesRef.current = [...messagesRef.current, message];
+    setMessages(messagesRef.current);
+  }, []);
+
+  const updateMessage = useCallback((id: string, patch: Partial<Message>) => {
+    messagesRef.current = messagesRef.current.map((message) =>
+      message.id === id ? { ...message, ...patch } : message,
+    );
+    setMessages(messagesRef.current);
+  }, []);
 
   const sendMessage = useCallback(
     async (content: string, context: ChatContext, provider?: string, images?: string[], model?: string | null) => {
       if (!content.trim() && (!images || images.length === 0)) return;
       if (loading) return;
 
-      // 取消之前的请求
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-      abortControllerRef.current = new AbortController();
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
 
-      const userMessage: Message = {
-        id: Date.now().toString(),
+      appendMessage({
+        id: createId(),
         role: 'user',
         content,
+        kind: 'text',
         ...(images && images.length > 0 ? { images } : {}),
-      };
-      // 使用 ref 获取最新的 messages
-      const updatedMessages = [...messagesRef.current, userMessage];
-      setMessages(updatedMessages);
+      });
       setLoading(true);
+      setStatus('thinking');
       setError(null);
 
-      // 将历史消息转换为 API 格式（排除 functionCalls 和 id，保留图片引用）
-      const history = updatedMessages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-        ...(msg.images && msg.images.length > 0 ? { images: msg.images } : {}),
-      }));
+      // history 只包含用户/assistant 的正文，不包含中间工具轮
+      const history = messagesRef.current
+        .filter((message) => message.kind !== 'tool-round')
+        .map((message) => ({
+          role: message.role,
+          content: message.content,
+          ...(message.images && message.images.length > 0 ? { images: message.images } : {}),
+        }));
+
+      let activeContext: ChatContext = { ...context };
+      const toolRounds: ChatToolRound[] = [];
+      let lastDocument: EditorToolBatchResult['document'] | undefined;
 
       try {
-        const response = await fetch(`/api/cms/games/${gameId}/chat`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...getGameSessionHeaders(gameId),
-          },
-          body: JSON.stringify({
+        for (let round = 0; round <= MAX_CHAT_TOOL_ROUNDS; round++) {
+          if (controller.signal.aborted) return;
+
+          setStatus('thinking');
+          const response = await requestChat({
+            gameId,
             message: content,
-            context,
+            context: activeContext,
             history,
+            toolRounds,
             provider,
-            ...(model ? { model } : {}),
-            ...(images && images.length > 0 ? { images } : {}),
-          }),
-          signal: abortControllerRef.current.signal,
-        });
+            model,
+            images,
+            signal: controller.signal,
+          });
 
-        if (!response.ok) {
-          const data = (await response.json()) as { error: string };
-          throw new Error(data.error || '请求失败');
-        }
-
-        const reader = response.body?.getReader();
-        if (!reader) throw new Error('无法读取响应流');
-
-        const decoder = new TextDecoder();
-        let assistantContent = '';
-        const functionCalls: FunctionCall[] = [];
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n').filter((line) => line.startsWith('data: '));
-
-          for (const line of lines) {
-            const jsonStr = line.slice(6); // 移除 'data: ' 前缀
-            if (!jsonStr.trim()) continue;
-
-            try {
-              const data = JSON.parse(jsonStr) as SSEMessage;
-
-              switch (data.type) {
-                case 'text':
-                  assistantContent += data.content || '';
-                  // 实时更新消息
-                  setMessages((prev) => {
-                    const last = prev[prev.length - 1];
-                    if (last?.role === 'assistant') {
-                      return [...prev.slice(0, -1), { ...last, content: assistantContent }];
-                    }
-                    return [
-                      ...prev,
-                      {
-                        id: Date.now().toString(),
-                        role: 'assistant',
-                        content: assistantContent,
-                      },
-                    ];
-                  });
-                  break;
-
-                case 'function_call':
-                  if (data.name && data.args) {
-                    functionCalls.push({ name: data.name, args: data.args });
-                    // 不再立即调用，等 done 时批量处理
-                  }
-                  break;
-
-                case 'error':
-                  setError(data.content || '未知错误');
-                  break;
-
-                case 'done':
-                  // 批量处理所有 function calls
-                  if (functionCalls.length > 0) {
-                    onFunctionCall(functionCalls);
-                    setMessages((prev) => {
-                      const last = prev[prev.length - 1];
-                      if (last?.role === 'assistant') {
-                        return [...prev.slice(0, -1), { ...last, functionCalls }];
-                      }
-                      return prev;
-                    });
-                  }
-                  break;
-              }
-            } catch (e) {
-              console.error('解析 SSE 消息失败:', e, jsonStr);
-            }
+          if (response.error) {
+            setError(response.error);
+            return;
           }
-        }
 
-        // 如果只有 function calls 没有文本，添加一条说明消息
-        if (!assistantContent && functionCalls.length > 0) {
-          const callNames = functionCalls.map((fc) => fc.name).join(', ');
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: Date.now().toString(),
-              role: 'assistant',
-              content: `已执行操作：${callNames}`,
-              functionCalls,
-            },
-          ]);
+          const calls = response.calls;
+          if (calls.length === 0) {
+            if (response.text) {
+              appendMessage({
+                id: createId(),
+                role: 'assistant',
+                content: response.text,
+                kind: 'text',
+              });
+            } else if (round === 0) {
+              setError('无法获取 AI 响应');
+            }
+            return;
+          }
+
+          // 达到工具轮次上限：不再执行，保留已完成的修改并提示用户
+          if (toolRounds.length >= MAX_CHAT_TOOL_ROUNDS) {
+            setError(`工具调用轮次已达上限（${MAX_CHAT_TOOL_ROUNDS}），已停止执行。请缩小修改范围后重试。`);
+            return;
+          }
+
+          const roundMessageId = createId();
+          appendMessage({
+            id: roundMessageId,
+            role: 'assistant',
+            content: response.text,
+            functionCalls: calls,
+            kind: 'tool-round',
+          });
+
+          setStatus('executing');
+          const executable = calls.slice(0, MAX_TOOL_CALLS_PER_ROUND);
+          let execution: EditorToolBatchResult;
+          try {
+            execution = await onFunctionCallRef.current(executable, lastDocument);
+          } catch (executionError) {
+            const message = `工具执行异常：${(executionError as Error).message}`;
+            execution = {
+              ok: false,
+              changed: false,
+              dsl: activeContext.dsl,
+              results: executable.map((call) => ({
+                id: call.id,
+                name: call.name,
+                ok: false,
+                message,
+              })),
+              error: message,
+            };
+          }
+
+          // 基础状态无法构建（剧本解析失败/游戏未加载）时，重试没有意义，直接停止
+          if (!execution.document && execution.error) {
+            updateMessage(roundMessageId, {
+              toolResults: calls.map((call) => ({
+                name: call.name,
+                ok: false,
+                message: execution.error as string,
+              })),
+            });
+            setError(execution.error);
+            return;
+          }
+
+          const resultById = new Map(
+            execution.results.filter((result) => result.id).map((result) => [result.id as string, result]),
+          );
+          const results = calls.map((call, index) => {
+            if (index >= executable.length) {
+              return {
+                id: call.id,
+                name: call.name,
+                content: JSON.stringify({
+                  ok: false,
+                  name: call.name,
+                  message: `单轮工具调用超过上限 ${MAX_TOOL_CALLS_PER_ROUND}，本条未执行`,
+                }),
+                isError: true,
+              };
+            }
+            const result = resultById.get(call.id) ?? execution.results[index];
+            const normalized: ToolExecutionResult = result
+              ? {
+                  name: result.name,
+                  ok: result.ok,
+                  message: result.message,
+                  ...(result.warnings ? { warnings: result.warnings } : {}),
+                }
+              : {
+                  name: call.name,
+                  ok: false,
+                  message: '工具未返回结果',
+                };
+            return {
+              id: call.id,
+              name: normalized.name,
+              content: serializeToolResult(normalized),
+              isError: !normalized.ok,
+            };
+          });
+
+          toolRounds.push({ assistantText: response.text, calls, results });
+          updateMessage(roundMessageId, {
+            toolResults: results.map((result) => ({
+              name: result.name,
+              ok: !result.isError,
+              message: result.content,
+            })),
+          });
+
+          if (execution.document) lastDocument = execution.document;
+          activeContext = {
+            ...activeContext,
+            dsl: execution.dsl || activeContext.dsl,
+            ...(execution.document
+              ? {
+                  characters: execution.document.game.ai.characters,
+                  variables: execution.document.game.initialState as Record<string, unknown>,
+                }
+              : {}),
+          };
         }
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') {
-          // 请求被取消，不需要处理
-          return;
-        }
-        setError((e as Error).message);
+      } catch (requestError) {
+        if ((requestError as Error).name === 'AbortError') return;
+        setError((requestError as Error).message);
       } finally {
-        setLoading(false);
-        abortControllerRef.current = null;
+        if (abortControllerRef.current === controller) {
+          abortControllerRef.current = null;
+          setLoading(false);
+          setStatus(null);
+        }
       }
     },
-    [gameId, loading, onFunctionCall],
+    [appendMessage, gameId, loading, updateMessage],
   );
 
   const clearMessages = useCallback(() => {
+    messagesRef.current = [];
     setMessages([]);
     setError(null);
   }, []);
@@ -205,12 +240,14 @@ export function useChatbot({ gameId, onFunctionCall }: UseChatbotProps) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
       setLoading(false);
+      setStatus(null);
     }
   }, []);
 
   return {
     messages,
     loading,
+    status,
     error,
     sendMessage,
     clearMessages,

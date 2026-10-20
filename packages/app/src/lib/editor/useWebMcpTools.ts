@@ -2,38 +2,25 @@
 
 /**
  * in-page WebMCP 注册 hook（W3C WebMCP 草案：document.modelContext.registerTool）。
- * - editor 模式：注册全部工具，写操作经 onWriteCall 回到编辑器既有链路（含 undo）。
- * - readonly 模式：只注册 getDsl/listScenes，写调用直接返回拒绝文案。
+ * - 调用方显式提供工具子集与执行函数，编辑器与播放页各自决定暴露面；
+ * - 按规范用 AbortSignal 注销，兼容早期实现的 unregister/unregisterTool；
  * - 不支持的浏览器（无 modelContext）静默跳过，不阻塞页面。
  */
 import { useEffect, useRef } from 'react';
-import { getReadonlyTools, WEBMCP_TOOLS } from '@mui-gamebook/webmcp';
+import type { WebMcpTool } from '@mui-gamebook/webmcp';
 
 interface WebMcpHost {
-  mode: 'editor' | 'readonly';
-  getDsl: () => string;
-  listScenes: () => string;
-  onWriteCall?: (name: string, args: Record<string, unknown>) => string;
+  tools: WebMcpTool[];
+  execute: (name: string, args: Record<string, unknown>) => unknown | Promise<unknown>;
 }
 
-interface ModelContextLike {
-  registerTool: (tool: {
-    name: string;
-    description: string;
-    inputSchema: unknown;
-    execute: (args: Record<string, unknown>) => Promise<{ content: Array<{ type: string; text: string }> }>;
-  }) => { unregister?: () => void } | void;
-  unregisterTool?: (name: string) => void;
-}
-
-function getModelContext(): ModelContextLike | null {
+function getModelContext(): WebMcpModelContext | null {
   if (typeof document === 'undefined') return null;
-  const mc = (document as unknown as { modelContext?: ModelContextLike }).modelContext;
-  return mc?.registerTool ? mc : null;
-}
-
-function textResult(text: string) {
-  return { content: [{ type: 'text', text }] };
+  const documentContext = document.modelContext;
+  if (documentContext?.registerTool) return documentContext;
+  // 兼容只挂到 navigator 的 polyfill / 早期实现
+  const navigatorContext = typeof navigator !== 'undefined' ? navigator.modelContext : undefined;
+  return navigatorContext?.registerTool ? navigatorContext : null;
 }
 
 export function useWebMcpTools(host: WebMcpHost) {
@@ -41,40 +28,62 @@ export function useWebMcpTools(host: WebMcpHost) {
   hostRef.current = host;
 
   useEffect(() => {
-    const mc = getModelContext();
-    if (!mc) return;
-    const mode = hostRef.current.mode;
-    const tools = mode === 'editor' ? WEBMCP_TOOLS : getReadonlyTools();
-    const cleanups: Array<() => void> = [];
+    const modelContext = getModelContext();
+    if (!modelContext) return;
 
-    for (const tool of tools) {
-      const handle = mc.registerTool({
-        name: tool.name,
-        description: tool.description,
-        inputSchema: tool.inputSchema,
-        execute: async (args) => {
-          const h = hostRef.current;
-          try {
-            if (tool.name === 'getDsl') return textResult(h.getDsl());
-            if (tool.name === 'listScenes') return textResult(h.listScenes());
-            if (h.mode !== 'editor' || !h.onWriteCall) return textResult(`只读页面不支持 ${tool.name}`);
-            return textResult(h.onWriteCall(tool.name, args));
-          } catch (e) {
-            return textResult(`执行失败：${(e as Error).message}`);
+    const controller = new AbortController();
+    const legacyCleanups: Array<() => void> = [];
+
+    for (const tool of hostRef.current.tools) {
+      let registration: unknown;
+      try {
+        registration = modelContext.registerTool(
+          {
+            name: tool.name,
+            description: tool.description,
+            inputSchema: tool.inputSchema,
+            ...(tool.annotations ? { annotations: tool.annotations } : {}),
+            execute: async (args) => {
+              try {
+                return await hostRef.current.execute(tool.name, args ?? {});
+              } catch (error) {
+                return `执行失败：${(error as Error).message}`;
+              }
+            },
+          },
+          { signal: controller.signal },
+        );
+      } catch (error) {
+        console.warn(`[WebMCP] 注册工具 ${tool.name} 失败:`, error);
+        continue;
+      }
+
+      // 正常实现返回 Promise；早期实现可能返回带 unregister 的句柄
+      if (registration && typeof (registration as Promise<unknown>).then === 'function') {
+        void Promise.resolve(registration).catch((error: unknown) => {
+          if (!controller.signal.aborted) {
+            console.warn(`[WebMCP] 注册工具 ${tool.name} 失败:`, error);
           }
-        },
-      });
-      if (handle && typeof (handle as { unregister?: unknown }).unregister === 'function') {
-        cleanups.push(() => (handle as { unregister: () => void }).unregister());
-      } else {
-        cleanups.push(() => mc.unregisterTool?.(tool.name));
+        });
+      } else if (registration && typeof (registration as { unregister?: unknown }).unregister === 'function') {
+        const handle = registration as { unregister: () => void };
+        legacyCleanups.push(() => handle.unregister());
       }
     }
 
     return () => {
-      for (const fn of cleanups) {
+      controller.abort();
+      for (const cleanup of legacyCleanups) {
         try {
-          fn();
+          cleanup();
+        } catch {
+          // 忽略注销失败
+        }
+      }
+      // 部分实现不响应 signal，补一次按名注销
+      for (const tool of hostRef.current.tools) {
+        try {
+          modelContext.unregisterTool?.(tool.name);
         } catch {
           // 忽略注销失败
         }

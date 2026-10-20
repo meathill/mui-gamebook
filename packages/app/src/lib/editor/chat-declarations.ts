@@ -1,6 +1,6 @@
 /**
- * AI Chatbot 的 function 声明
- * 定义 AI 可以调用的函数，用于修改剧本
+ * AI Chatbot 的 function 声明与多轮工具会话协议。
+ * 工具定义统一来自 @mui-gamebook/webmcp，读写工具全部开放给编辑器 chatbot。
  */
 import type { ChatMessage, FunctionDeclaration } from '@mui-gamebook/core/lib/ai-provider';
 import { WEBMCP_TOOLS } from '@mui-gamebook/webmcp';
@@ -8,37 +8,50 @@ import { WEBMCP_TOOLS } from '@mui-gamebook/webmcp';
 /** 单次对话最多携带的参考图数量（前端上传 + 后端校验双拦） */
 export const MAX_CHAT_IMAGES = 4;
 
-/** chatbot 可调用的函数 = WebMCP 写工具子集（只读的 getDsl/listScenes 不进 function calling） */
-export const CHAT_FUNCTION_DECLARATIONS: FunctionDeclaration[] = WEBMCP_TOOLS.filter((t) => !t.readonly).map((t) => ({
-  name: t.name,
-  description: t.description,
-  parameters: t.inputSchema,
+/** 单条用户消息最多允许的工具执行轮次 */
+export const MAX_CHAT_TOOL_ROUNDS = 4;
+
+/** 单轮最多执行的工具数量，防止模型失控批量写入 */
+export const MAX_TOOL_CALLS_PER_ROUND = 24;
+
+/** chatbot 可调用的函数 = 全部 WebMCP 读写工具 */
+export const CHAT_FUNCTION_DECLARATIONS: FunctionDeclaration[] = WEBMCP_TOOLS.map((tool) => ({
+  name: tool.name,
+  description: tool.description,
+  parameters: tool.inputSchema,
 }));
 
 /**
- * AI 聊天助手的系统提示词
+ * AI 聊天助手的系统提示词。
+ * 重点：先查后改、改完必验、失败必须纠正，禁止假装成功。
  */
-export const CHAT_SYSTEM_PROMPT = `你是一个互动小说编辑助手。用户会向你描述他们想要对剧本做的修改，你的职责是**直接调用函数完成修改**，而不是描述你打算怎么做。
+export const CHAT_SYSTEM_PROMPT = `你是一个互动小说编辑助手。你通过工具直接读取和修改剧本，首要目标是**准确**：不确定就查，改完就验，失败就修正。
 
-你收到的上下文包括：
+你每轮收到的上下文包括：
 1. 用户的原始故事大纲（如果有）
-2. 当前完整的剧本内容（DSL 格式）
+2. 当前最新的完整剧本（DSL 格式）
 3. 角色定义
 4. 变量定义
 
-工作方式：
-- 默认直接行动：理解意图后立刻调用函数执行，不要输出"我可以帮你……"之类的计划性文字
-- 批量执行：一次修改涉及多处时，在同一个回复里调用多个函数一次完成（例如新增场景 + 添加选项 + 更新变量）
-- 主动补全设定：当用户请求或剧情隐含了新角色时，主动调用 addCharacter 补充角色定义（含 description 和 image_prompt）；隐含了新属性/资源/状态时，主动调用 addVariable 创建变量，并在相关场景选项中用 (set: ...) / (if: ...) 接入，让变量真正参与剧情
-- 精细修改优先：改文案用 updateSceneText/updateChoiceText 这类细粒度函数，不要整段重写场景
-- 仅在意图确实含糊、无法安全执行时才反问；能合理推断就直接做
-- 行动之后用一两句话总结你做了什么，方便用户核对
+可用工具：
+- 读取：getDsl / listScenes / getScene / searchScenes / validateScript
+- 场景：addScene / updateScene / updateSceneText / updateSceneImagePrompt / setSceneImage / deleteScene / renameScene / addDialogueLine / addRedirect
+- 选项：addChoice / updateChoice / updateChoiceText / updateChoiceTarget / updateChoiceCondition / deleteChoice
+- 变量与角色：addVariable / updateVariable / deleteVariable / addCharacter / updateCharacter / deleteCharacter
 
-重要规则：
-- 场景内容使用 Markdown 格式
-- 选项格式为：* [选项文本] -> 目标场景ID (if: 条件) (set: 状态变更)
-- 变量值可以是数字、字符串或布尔值
-- 变量插值使用 {{变量名}} 语法`;
+工作协议：
+1. **先查后改**：场景 ID、选项序号、现有文案不确定时，先调用 listScenes / getScene / searchScenes。禁止臆造场景 ID 或 choiceIndex。
+2. **精细修改优先**：改文案用 updateSceneText；改选项目标/条件用 updateChoiceTarget/updateChoiceCondition；只有用户明确要求重写整个场景时才用 updateScene。
+3. **批量执行**：同一轮可以调用多个工具。新增场景 + 选项 + 变量应在同一轮完成；系统会按“增 → 删 → 改”排序，并保证前序新增对后续调用可见。
+4. **破坏性操作先确认**：deleteScene / deleteVariable / deleteCharacter / renameScene / updateScene 前先用 getScene/listScenes 确认目标和引用；不能删除 start。
+5. **改完必验**：写入后系统会自动校验并把结果回传给你；如果返回 ok:false 或 warnings，必须根据错误修正并重试。必要时调用 validateScript。
+6. **不假装成功**：只有工具结果 ok:true 才算完成。失败的操作要在最终总结里明确说明，不要写成已完成。
+7. **choiceIndex 口径**：选项在该场景出边中的顺序（从 0 开始），不是场景节点数组下标；用 getScene 查看。
+8. **场景 ID 规则**：只能使用字母、数字、下划线、连字符，不能有空格；不能与已有场景重复。
+9. **对话角色**：addDialogueLine 的 speaker 必须已在角色列表注册；未注册先用 addCharacter。
+10. **收尾**：用一两句话总结成功和失败的操作，方便用户核对。
+
+不要在最终回复里粘贴大段剧本或工具 JSON；只总结关键改动和需要用户注意的问题。`;
 
 /**
  * 聊天请求体类型
@@ -58,6 +71,29 @@ export interface ChatRequest {
     variables?: Record<string, unknown>;
   };
   history?: Array<{ role: 'user' | 'assistant'; content: string; images?: string[] }>;
+  /** 本次用户消息已经执行的工具轮次（客户端回传，用于多轮工具调用） */
+  toolRounds?: ChatToolRound[];
+}
+
+export interface ChatToolCall {
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+  /** Google Gemini thoughtSignature，其他 provider 忽略 */
+  signature?: string;
+}
+
+export interface ChatToolResult {
+  id: string;
+  name: string;
+  content: string;
+  isError?: boolean;
+}
+
+export interface ChatToolRound {
+  assistantText?: string;
+  calls: ChatToolCall[];
+  results: ChatToolResult[];
 }
 
 /** 聊天历史里的图片不进 system 首轮，只挂在产生它的那条 user 消息上 */
@@ -66,18 +102,47 @@ function toChatContent(text: string, images?: string[]): ChatMessage['content'] 
   return [{ type: 'text', text }, ...images.map((url) => ({ type: 'image_url' as const, url }))];
 }
 
+/** 把工具轮次追加到消息序列，供 Provider 还原 assistant tool_calls + tool result */
+export function appendToolRounds(messages: ChatMessage[], toolRounds?: ChatToolRound[]): ChatMessage[] {
+  if (!toolRounds || toolRounds.length === 0) return messages;
+  for (const round of toolRounds) {
+    messages.push({
+      role: 'model',
+      content: round.assistantText ?? '',
+      toolCalls: round.calls.map((call) => ({
+        id: call.id,
+        name: call.name,
+        args: call.args,
+        ...(call.signature ? { signature: call.signature } : {}),
+      })),
+    });
+    for (const result of round.results) {
+      messages.push({
+        role: 'tool',
+        content: result.content,
+        toolCallId: result.id,
+        name: result.name,
+        ...(result.isError ? { isError: true } : {}),
+      });
+    }
+  }
+  return messages;
+}
+
 /**
- * 构建聊天历史记录
+ * 构建聊天历史记录。
+ * `currentUserMessageWithContext` 每轮都使用最新 context 重建，保证模型看到的是编辑后的剧本。
  */
 export function buildChatHistory(
   history: ChatRequest['history'],
   currentUserMessageWithContext: string,
   currentImages?: string[],
+  toolRounds?: ChatToolRound[],
 ): ChatMessage[] {
   const messages: ChatMessage[] = [
     // 系统提示作为第一条用户消息
     { role: 'user', content: CHAT_SYSTEM_PROMPT },
-    { role: 'model', content: '我明白了，我会根据你的请求帮助你编辑剧本。请告诉我你想做什么修改？' },
+    { role: 'model', content: '我明白了，我会先读取必要的上下文，再准确修改并校验剧本。请告诉我你想做什么？' },
   ];
 
   // 添加历史对话（如果有）
@@ -102,5 +167,5 @@ export function buildChatHistory(
     messages.push({ role: 'user', content: toChatContent(currentUserMessageWithContext, currentImages) });
   }
 
-  return messages;
+  return appendToolRounds(messages, toolRounds);
 }

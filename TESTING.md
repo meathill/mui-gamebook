@@ -64,6 +64,8 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 
 2026-09 新增：Stripe 计费闭环（`tests/api/stripe-billing.test.ts`）、游戏评分与评价（`tests/lib/game-ratings.test.ts`/`tests/api/cms-game-ratings.test.ts`）、MCP 端点与鉴权（`tests/api/mcp.test.ts`/`tests/lib/mcp-auth.test.ts`）、后台列表排序筛选（`list-query` 等）。
 
+2026-10 新增：WebMCP 只读工具与工具清单（`packages/webmcp/tests/`）、编辑器工作副本执行引擎与整批回滚（`tests/lib/editor/chatFunctionHandlers.test.ts`、`tests/lib/editor/handlers/*`）、chatbot 多轮工具闭环（`tests/components/editor/useChatbot.test.ts`、`tests/lib/editor/chat-images.test.ts`、`tests/api/cms-games-chat.test.ts`）、in-page WebMCP 注册与注销（`tests/lib/editor/useWebMcpTools.test.ts`）、三家 Provider 的 tool call/result 消息映射（`packages/core/tests/*-provider.test.ts`）。
+
 明确不测的部分（结构性障碍或纯展示，非遗漏）：
 - Next.js `page.tsx`/`layout.tsx` 里用 `async function` 声明的 Server Component——React DOM 的客户端渲染器不支持 async 函数组件，`@testing-library/react` 的 `render()` 无法调用，需要真实浏览器/RSC 渲染管线才能测
 - `StandaloneMiniGamePlayer.tsx` 通过 Blob + 动态 `import(blobUrl)` 加载小游戏模块，Node/jsdom 的模块加载器不支持 `blob:` scheme，"加载成功"和"游戏完成"分支不可达

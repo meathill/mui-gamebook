@@ -189,11 +189,11 @@ describe('POST /api/cms/games/[id]/chat', () => {
     });
   });
 
-  it('成功路径：function call 回复逐条推送', async () => {
+  it('成功路径：function call 回复逐条推送（带稳定 id）', async () => {
     const chatWithTools = vi.fn().mockResolvedValue({
       functionCalls: [
-        { name: 'addScene', args: { id: 'forest' } },
-        { name: 'setVariable', args: { key: 'health', value: 100 } },
+        { name: 'addScene', args: { sceneId: 'forest' } },
+        { name: 'addVariable', args: { name: 'health', value: '100' } },
       ],
       usage: { promptTokens: 5, completionTokens: 5, totalTokens: 10 },
     });
@@ -203,10 +203,83 @@ describe('POST /api/cms/games/[id]/chat', () => {
 
     const events = await readSseEvents(res);
     expect(events).toEqual([
-      { type: 'function_call', name: 'addScene', args: { id: 'forest' } },
-      { type: 'function_call', name: 'setVariable', args: { key: 'health', value: 100 } },
+      { type: 'function_call', id: 'call_0_addScene', name: 'addScene', args: { sceneId: 'forest' } },
+      {
+        type: 'function_call',
+        id: 'call_1_addVariable',
+        name: 'addVariable',
+        args: { name: 'health', value: '100' },
+      },
       { type: 'done' },
     ]);
+  });
+
+  it('provider 返回的 tool call id 与 thoughtSignature 原样回传', async () => {
+    const chatWithTools = vi.fn().mockResolvedValue({
+      functionCalls: [{ id: 'fc_1', name: 'getScene', args: { sceneId: 'start' }, signature: 'sig' }],
+      usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 },
+    });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'google', chatWithTools });
+
+    const res = await POST(makeReq(baseBody), makeParams());
+    const events = await readSseEvents(res);
+
+    expect(events[0]).toEqual({
+      type: 'function_call',
+      id: 'fc_1',
+      name: 'getScene',
+      args: { sceneId: 'start' },
+      signature: 'sig',
+    });
+  });
+
+  it('toolRounds 超过上限返回 400', async () => {
+    const round = {
+      assistantText: '',
+      calls: [{ id: 'c1', name: 'getDsl', args: {} }],
+      results: [{ id: 'c1', name: 'getDsl', content: '{}' }],
+    };
+    const res = await POST(makeReq({ ...baseBody, toolRounds: Array.from({ length: 5 }, () => round) }), makeParams());
+
+    expect(res.status).toBe(400);
+  });
+
+  it('toolRounds 的 calls/results 未对齐返回 400', async () => {
+    const res = await POST(
+      makeReq({
+        ...baseBody,
+        toolRounds: [
+          {
+            assistantText: '',
+            calls: [{ id: 'c1', name: 'getDsl', args: {} }],
+            results: [{ id: 'c2', name: 'getDsl', content: '{}' }],
+          },
+        ],
+      }),
+      makeParams(),
+    );
+
+    expect(res.status).toBe(400);
+  });
+
+  it('只有参考图没有文字时允许请求', async () => {
+    const chatWithTools = vi
+      .fn()
+      .mockResolvedValue({ text: '收到图片', usage: { promptTokens: 1, completionTokens: 1, totalTokens: 2 } });
+    (createAiProvider as ReturnType<typeof vi.fn>).mockResolvedValue({ type: 'mimo', chatWithTools });
+
+    const res = await POST(
+      makeReq({
+        message: '',
+        context: {},
+        images: ['https://cdn.example/images/game/a.png'],
+      }),
+      makeParams(),
+    );
+
+    expect(res.status).toBe(200);
+    const events = await readSseEvents(res);
+    expect(events[0]).toEqual({ type: 'text', content: '收到图片' });
   });
 
   it('既没有文本也没有 function call 时推送 error 事件后仍 done', async () => {

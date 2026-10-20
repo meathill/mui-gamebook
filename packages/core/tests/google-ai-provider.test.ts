@@ -400,7 +400,58 @@ describe('GoogleAiProvider', () => {
       const result = await provider.chatWithTools([{ role: 'user', content: 'x' }], tools);
 
       expect(result.text).toBe('我来添加角色');
-      expect(result.functionCalls).toEqual([{ name: 'addCharacter', args: { id: 'hero' } }]);
+      expect(result.functionCalls).toEqual([{ id: 'call_0_addCharacter', name: 'addCharacter', args: { id: 'hero' } }]);
+    });
+
+    it('映射 functionCall/functionResponse 与 thoughtSignature', async () => {
+      const generateContent = vi.fn().mockResolvedValue({
+        usageMetadata,
+        candidates: [
+          {
+            content: {
+              parts: [
+                {
+                  functionCall: { id: 'fc_1', name: 'getScene', args: { sceneId: 'start' } },
+                  thoughtSignature: 'sig',
+                },
+              ],
+            },
+          },
+        ],
+      });
+      const provider = new GoogleAiProvider(fakeGenAI({ generateContent }) as never, 'key');
+
+      const result = await provider.chatWithTools(
+        [
+          { role: 'user', content: 'hi' },
+          {
+            role: 'model',
+            content: '',
+            toolCalls: [{ id: 'fc_0', name: 'listScenes', args: {}, signature: 'sig0' }],
+          },
+          { role: 'tool', content: '{"ok":true}', toolCallId: 'fc_0', name: 'listScenes' },
+        ],
+        [],
+      );
+
+      const contents = generateContent.mock.calls[0][0].contents;
+      expect(contents[1]).toEqual({
+        role: 'model',
+        parts: [{ functionCall: { id: 'fc_0', name: 'listScenes', args: {} }, thoughtSignature: 'sig0' }],
+      });
+      expect(contents[2]).toEqual({
+        role: 'user',
+        parts: [
+          {
+            functionResponse: {
+              id: 'fc_0',
+              name: 'listScenes',
+              response: { output: '{"ok":true}' },
+            },
+          },
+        ],
+      });
+      expect(result.functionCalls?.[0]).toMatchObject({ id: 'fc_1', name: 'getScene', signature: 'sig' });
     });
   });
 

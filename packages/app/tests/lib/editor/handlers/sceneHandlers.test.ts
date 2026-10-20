@@ -1,9 +1,13 @@
 import type { Edge, Node } from '@xyflow/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import type { Game } from '@roudanio/parser/src/types';
 import {
+  handleAddDialogueLine,
+  handleAddRedirect,
   handleAddScene,
   handleDeleteScene,
   handleRenameScene,
+  handleSetSceneImage,
   handleUpdateScene,
   handleUpdateSceneImagePrompt,
   handleUpdateSceneText,
@@ -19,81 +23,65 @@ function makeEdge(id: string, source: string, target: string): Edge {
   return { id, source, target };
 }
 
-function makeCtx(
-  nodes: Node<SceneNodeData>[],
-  edges: Edge[] = [],
-): HandlerContext & { getNodes: () => Node<SceneNodeData>[]; getEdges: () => Edge[] } {
-  let currentNodes = nodes;
-  let currentEdges = edges;
+function makeGame(): Game {
   return {
-    get nodes() {
-      return currentNodes;
-    },
-    get edges() {
-      return currentEdges;
-    },
-    originalGame: null,
-    // HandlerContext.setNodes 的回调类型是通用的 Node[] => Node[]（不带 SceneNodeData 泛型参数），
-    // 生产代码里实际传入的 setState 函数保留了更具体的类型，这里的测试 mock 只需要在边界处转回来。
-    setNodes: vi.fn((fn) => {
-      currentNodes = fn(currentNodes) as Node<SceneNodeData>[];
-    }),
-    setEdges: vi.fn((fn) => {
-      currentEdges = fn(currentEdges);
-    }),
-    setOriginalGame: vi.fn(),
-    getNodes: () => currentNodes,
-    getEdges: () => currentEdges,
+    slug: 'g',
+    title: 'T',
+    initialState: {},
+    ai: { characters: { hero: { name: '英雄' } } },
+    scenes: {},
   };
 }
 
+function makeCtx(nodes: Node<SceneNodeData>[], edges: Edge[] = [], game = makeGame()): HandlerContext {
+  return { nodes, edges, game };
+}
+
 describe('handleUpdateScene', () => {
-  it('场景不存在时跳过更新（返回值仅用于日志展示，不反映是否真的执行了，只能靠状态判断）', () => {
+  it('场景不存在时返回失败，不修改', () => {
     const ctx = makeCtx([makeNode('start')]);
-
-    handleUpdateScene({ sceneId: 'missing', content: 'x' }, ctx);
-
-    expect(ctx.getNodes()).toHaveLength(1);
-    expect(ctx.getNodes()[0].data.content).toBe('');
+    const result = handleUpdateScene({ sceneId: 'missing', content: 'x' }, ctx);
+    expect(result.ok).toBe(false);
+    expect(ctx.nodes[0].data.content).toBe('');
   });
 
-  it('更新已存在场景的内容', () => {
+  it('更新已存在场景的内容，并提示覆盖语义', () => {
     const ctx = makeCtx([makeNode('start', '旧内容')]);
-
-    handleUpdateScene({ sceneId: 'start', content: '新内容' }, ctx);
-
-    expect(ctx.getNodes()[0].data.content).toBe('新内容');
+    const result = handleUpdateScene({ sceneId: 'start', content: '新内容' }, ctx);
+    expect(result.ok).toBe(true);
+    expect(ctx.nodes[0].data.content).toBe('新内容');
+    expect(result.warnings?.[0]).toContain('覆盖');
   });
 });
 
 describe('handleAddScene', () => {
-  it('添加新场景', () => {
-    const ctx = makeCtx([makeNode('start')]);
+  it('添加新场景并支持 afterSceneId 定位', () => {
+    const anchor = makeNode('start');
+    anchor.position = { x: 100, y: 100 };
+    const ctx = makeCtx([anchor]);
 
-    handleAddScene({ sceneId: 'forest', content: '森林场景' }, ctx);
+    const result = handleAddScene({ sceneId: 'forest', content: '森林场景', afterSceneId: 'start' }, ctx);
 
-    expect(ctx.getNodes()).toHaveLength(2);
-    expect(ctx.getNodes()[1]).toMatchObject({ id: 'forest', data: { content: '森林场景' } });
+    expect(result.ok).toBe(true);
+    expect(ctx.nodes).toHaveLength(2);
+    expect(ctx.nodes[1]).toMatchObject({ id: 'forest', data: { content: '森林场景' } });
+    expect(ctx.nodes[1].position.x).toBeGreaterThan(100);
   });
 
-  it('场景 ID 已存在时跳过添加（返回值仅用于日志展示，只能靠状态判断是否真的添加了）', () => {
+  it('重复或非法 ID 返回失败', () => {
     const ctx = makeCtx([makeNode('start', '原内容')]);
-
-    handleAddScene({ sceneId: 'start', content: '新内容' }, ctx);
-
-    expect(ctx.getNodes()).toHaveLength(1);
-    expect(ctx.getNodes()[0].data.content).toBe('原内容');
+    expect(handleAddScene({ sceneId: 'start', content: '新内容' }, ctx).ok).toBe(false);
+    expect(handleAddScene({ sceneId: 'bad id', content: 'x' }, ctx).ok).toBe(false);
+    expect(ctx.nodes).toHaveLength(1);
   });
 });
 
 describe('handleDeleteScene', () => {
   it('禁止删除 start 场景', () => {
     const ctx = makeCtx([makeNode('start')]);
-
     const result = handleDeleteScene({ sceneId: 'start' }, ctx);
-
-    expect(result).toBe('不能删除 start 场景');
-    expect(ctx.getNodes()).toHaveLength(1);
+    expect(result.ok).toBe(false);
+    expect(ctx.nodes).toHaveLength(1);
   });
 
   it('删除场景节点及所有相关的边', () => {
@@ -102,28 +90,20 @@ describe('handleDeleteScene', () => {
       [makeEdge('e1', 'start', 'forest'), makeEdge('e2', 'forest', 'start')],
     );
 
-    handleDeleteScene({ sceneId: 'forest' }, ctx);
+    const result = handleDeleteScene({ sceneId: 'forest' }, ctx);
 
-    expect(ctx.getNodes().map((n) => n.id)).toEqual(['start']);
-    expect(ctx.getEdges()).toEqual([]);
+    expect(result.ok).toBe(true);
+    expect(ctx.nodes.map((node) => node.id)).toEqual(['start']);
+    expect(ctx.edges).toEqual([]);
   });
 });
 
 describe('handleRenameScene', () => {
-  it('新旧 ID 相同时跳过', () => {
-    const ctx = makeCtx([makeNode('start')]);
-
-    const result = handleRenameScene({ oldId: 'start', newId: 'start' }, ctx);
-
-    expect(result).toContain('相同');
-  });
-
-  it('新 ID 已存在时跳过重命名', () => {
+  it('新旧 ID 相同或新 ID 已存在时失败', () => {
     const ctx = makeCtx([makeNode('start'), makeNode('forest')]);
-
-    handleRenameScene({ oldId: 'start', newId: 'forest' }, ctx);
-
-    expect(ctx.getNodes().map((n) => n.id)).toEqual(['start', 'forest']);
+    expect(handleRenameScene({ oldId: 'start', newId: 'start' }, ctx).ok).toBe(false);
+    expect(handleRenameScene({ oldId: 'start', newId: 'forest' }, ctx).ok).toBe(false);
+    expect(ctx.nodes.map((node) => node.id)).toEqual(['start', 'forest']);
   });
 
   it('重命名场景并同步更新引用它的边的 source/target', () => {
@@ -132,10 +112,11 @@ describe('handleRenameScene', () => {
       [makeEdge('e1', 'start', 'forest'), makeEdge('e2', 'forest', 'start')],
     );
 
-    handleRenameScene({ oldId: 'start', newId: 'intro' }, ctx);
+    const result = handleRenameScene({ oldId: 'start', newId: 'intro' }, ctx);
 
-    expect(ctx.getNodes().map((n) => n.id)).toEqual(['intro', 'forest']);
-    expect(ctx.getEdges()).toEqual([
+    expect(result.ok).toBe(true);
+    expect(ctx.nodes.map((node) => node.id)).toEqual(['intro', 'forest']);
+    expect(ctx.edges).toEqual([
       { id: 'e1', source: 'intro', target: 'forest' },
       { id: 'e2', source: 'forest', target: 'intro' },
     ]);
@@ -143,36 +124,22 @@ describe('handleRenameScene', () => {
 });
 
 describe('handleUpdateSceneText', () => {
-  it('场景不存在时跳过（返回值仅用于日志展示，只能靠状态判断是否真的执行了）', () => {
-    const ctx = makeCtx([makeNode('start', '原内容')]);
-
-    handleUpdateSceneText({ sceneId: 'missing', text: 'x' }, ctx);
-
-    expect(ctx.getNodes()).toHaveLength(1);
-    expect(ctx.getNodes()[0].data.content).toBe('原内容');
-  });
-
-  it('更新场景文案', () => {
+  it('场景不存在时失败，存在时只改文案', () => {
     const ctx = makeCtx([makeNode('start', '旧')]);
-
-    handleUpdateSceneText({ sceneId: 'start', text: '新' }, ctx);
-
-    expect(ctx.getNodes()[0].data.content).toBe('新');
+    expect(handleUpdateSceneText({ sceneId: 'missing', text: 'x' }, ctx).ok).toBe(false);
+    expect(handleUpdateSceneText({ sceneId: 'start', text: '新' }, ctx).ok).toBe(true);
+    expect(ctx.nodes[0].data.content).toBe('新');
   });
 });
 
-describe('handleUpdateSceneImagePrompt', () => {
-  it('场景没有 ai_image 资源时新增一条', () => {
+describe('场景配图', () => {
+  it('updateSceneImagePrompt 无 ai_image 时新增', () => {
     const ctx = makeCtx([makeNode('start')]);
-
     handleUpdateSceneImagePrompt({ sceneId: 'start', imagePrompt: '森林里的小屋' }, ctx);
-
-    const assets = ctx.getNodes()[0].data.assets;
-    expect(assets).toHaveLength(1);
-    expect(assets[0].asset).toEqual({ type: 'ai_image', prompt: '森林里的小屋' });
+    expect(ctx.nodes[0].data.assets[0].asset).toEqual({ type: 'ai_image', prompt: '森林里的小屋' });
   });
 
-  it('场景已有 ai_image 资源时更新 prompt，不新增', () => {
+  it('updateSceneImagePrompt 已有 ai_image 时只更新 prompt', () => {
     const node = makeNode('start');
     node.data.assets = [
       { editorId: 'x', asset: { type: 'ai_image', prompt: '旧 prompt', url: 'https://x.com/a.png' } },
@@ -181,8 +148,49 @@ describe('handleUpdateSceneImagePrompt', () => {
 
     handleUpdateSceneImagePrompt({ sceneId: 'start', imagePrompt: '新 prompt' }, ctx);
 
-    const assets = ctx.getNodes()[0].data.assets;
-    expect(assets).toHaveLength(1);
-    expect(assets[0].asset).toEqual({ type: 'ai_image', prompt: '新 prompt', url: 'https://x.com/a.png' });
+    expect(ctx.nodes[0].data.assets).toHaveLength(1);
+    expect(ctx.nodes[0].data.assets[0].asset).toEqual({
+      type: 'ai_image',
+      prompt: '新 prompt',
+      url: 'https://x.com/a.png',
+    });
+  });
+
+  it('setSceneImage 同时写 url/prompt/character', () => {
+    const ctx = makeCtx([makeNode('start')]);
+    const result = handleSetSceneImage(
+      { sceneId: 'start', url: 'https://x/a.png', imagePrompt: '雾林', character: 'hero' },
+      ctx,
+    );
+    expect(result.ok).toBe(true);
+    expect(ctx.nodes[0].data.assets[0].asset).toMatchObject({
+      type: 'ai_image',
+      url: 'https://x/a.png',
+      prompt: '雾林',
+      character: 'hero',
+    });
+  });
+});
+
+describe('对话与重定向', () => {
+  it('addDialogueLine 拒绝未注册角色', () => {
+    const ctx = makeCtx([makeNode('start')]);
+    const result = handleAddDialogueLine({ sceneId: 'start', speaker: 'ghost', content: '……' }, ctx);
+    expect(result.ok).toBe(false);
+    expect(ctx.nodes[0].data.content).toBe('');
+  });
+
+  it('addDialogueLine 追加已注册角色的对话', () => {
+    const ctx = makeCtx([makeNode('start', '开场')]);
+    const result = handleAddDialogueLine({ sceneId: 'start', speaker: 'hero', content: '出发', emotion: '坚定' }, ctx);
+    expect(result.ok).toBe(true);
+    expect(ctx.nodes[0].data.content).toBe('开场\n\n@hero (坚定): 出发');
+  });
+
+  it('addRedirect 要求目标场景存在', () => {
+    const ctx = makeCtx([makeNode('start'), makeNode('forest')]);
+    expect(handleAddRedirect({ sceneId: 'start', targetSceneId: 'ghost' }, ctx).ok).toBe(false);
+    expect(handleAddRedirect({ sceneId: 'start', targetSceneId: 'forest' }, ctx).ok).toBe(true);
+    expect(ctx.nodes[0].data.content).toBe('-> forest');
   });
 });

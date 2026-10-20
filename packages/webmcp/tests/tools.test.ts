@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   WEBMCP_OPERATION_PRIORITY,
   WEBMCP_TOOLS,
+  getPlaybackTools,
   getReadonlyTools,
   getWritableTools,
   sortWebMcpCalls,
@@ -43,8 +44,32 @@ describe('WEBMCP_TOOLS 工具定义', () => {
     for (const tool of readonly) {
       expect(writableNames.has(tool.name)).toBe(false);
     }
-    // getDsl/listScenes 是仅有的两个只读工具
-    expect(readonly.map((t) => t.name).sort()).toEqual(['getDsl', 'listScenes']);
+    // 只读工具：剧本全文/场景列表/场景详情/搜索/校验
+    expect(readonly.map((t) => t.name).sort()).toEqual([
+      'getDsl',
+      'getScene',
+      'listScenes',
+      'searchScenes',
+      'validateScript',
+    ]);
+  });
+
+  it('播放页只暴露 getDsl/listScenes，不暴露场景详情等编辑器工具', () => {
+    expect(
+      getPlaybackTools()
+        .map((t) => t.name)
+        .sort(),
+    ).toEqual(['getDsl', 'listScenes']);
+  });
+
+  it('只读工具带 readOnlyHint，破坏性写工具带 consequentialHint', () => {
+    for (const tool of getReadonlyTools()) {
+      expect(tool.annotations?.readOnlyHint, `${tool.name} 缺少 readOnlyHint`).toBe(true);
+    }
+    for (const name of ['deleteScene', 'deleteVariable', 'deleteCharacter', 'updateScene']) {
+      const tool = WEBMCP_TOOLS.find((t) => t.name === name);
+      expect(tool?.annotations?.consequentialHint, `${name} 缺少 consequentialHint`).toBe(true);
+    }
   });
 });
 
