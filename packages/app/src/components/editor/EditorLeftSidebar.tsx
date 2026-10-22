@@ -67,7 +67,7 @@ export default function EditorLeftSidebar({
         {tab === 'variables' && (
           <SidebarVariables
             state={game.initialState}
-            scenes={game.scenes}
+            scenes={sceneIds ? Object.fromEntries(sceneIds.map((sceneId) => [sceneId, { id: sceneId }])) : game.scenes}
             onChange={(newState) => onGameChange((prev) => ({ ...prev, initialState: newState }))}
           />
         )}

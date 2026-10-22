@@ -35,6 +35,8 @@ import RichEditor, { type RichEditorHandle } from '@/components/editor/RichEdito
 import { useDialog } from '@/components/Dialog';
 import { useUnsavedChangesWarning, useUndoRedoShortcuts } from '@/hooks/useUndoRedo';
 import { useAutoSave, type SaveStatus } from '@/hooks/useAutoSave';
+import { updateScriptMetadata } from '@/lib/editor/script-metadata';
+import { splitFrontmatter } from '@/lib/editor/dsl-tools/markdown';
 
 const nodeTypes = { scene: SceneNode };
 
@@ -119,21 +121,25 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   }, [nodes, scanAndRegisterPendingOperations]);
 
   useEffect(() => {
+    if (activeTab !== 'story' || !textContent.includes('pending://')) return;
+    const parsed = parse(textContent);
+    if (parsed.success) scanAndRegisterPendingOperations(gameToFlow(parsed.data).nodes);
+  }, [activeTab, textContent, scanAndRegisterPendingOperations]);
+
+  useEffect(() => {
     if (!loading && searchParams.get('showImporter') === 'true') {
       setShowImporter(true);
       router.replace(`/my/edit/${id}`);
     }
   }, [loading, searchParams, router, id, setShowImporter]);
 
-  // 当 nodes/edges 变化时同步 textContent（AI 更新场景 / 流程图编辑）。
-  // 用 ref 读取最新 originalGame，避免“侧栏改变量”触发整篇文本重算而覆盖 story tab 未保存的输入。
+  // 仅流程图修改反向生成 DSL；故事、AI 和素材回填直接更新文本。
   const originalGameRef = useRef(originalGame);
   originalGameRef.current = originalGame;
-  // activeTab 故意不进依赖：切到 flowchart 时要等下面的 tab 切换 effect 先把 textContent
-  // 解析成 nodes/edges，再由 nodes/edges 变化触发同步；否则会先用旧画布覆盖刚输入的文本。
+  // 切换视图时先从文本更新画布，避免旧画布覆盖最新正文。
   useEffect(() => {
     const game = originalGameRef.current;
-    if ((activeTab === 'story' || activeTab === 'flowchart') && game && nodes.length > 0) {
+    if (activeTab === 'flowchart' && game && nodes.length > 0) {
       const newGame = flowToGame(nodes as Node<SceneNodeData>[], edges, game);
       setTextContent(stringify(newGame));
     }
@@ -183,6 +189,20 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
     const viewMode = activeTab === 'flowchart' ? 'visual' : 'text';
     await saveGame(nodes, edges, viewMode, activeTab);
     setSaveStatus('saved');
+  }
+
+  function handleStoryChange(content: string) {
+    setTextContent(content);
+    if (splitFrontmatter(content).frontmatter === splitFrontmatter(textContent).frontmatter) return;
+    const parsed = parse(content);
+    if (parsed.success) setOriginalGame((previous) => (previous ? { ...previous, ...parsed.data } : parsed.data));
+  }
+
+  function handleSidebarChange(updater: (game: NonNullable<typeof originalGame>) => NonNullable<typeof originalGame>) {
+    if (!originalGame) return;
+    const game = updater(originalGame);
+    setOriginalGame(game);
+    if (activeTab === 'story') setTextContent((current) => updateScriptMetadata(current, game));
   }
 
   async function handleImport(script: string) {
@@ -294,7 +314,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
               <EditorLeftSidebar
                 game={originalGame}
                 gameId={id}
-                onGameChange={(updater) => setOriginalGame((prev) => (prev ? updater(prev) : prev))}
+                onGameChange={handleSidebarChange}
                 sceneIds={sceneIds}
                 onScrollToScene={(sceneId) => editorHandle?.scrollToScene(sceneId)}
               />
@@ -305,10 +325,11 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
             <div className="flex-1 p-4 overflow-hidden">
               <RichEditor
                 content={textContent}
-                onChange={setTextContent}
+                onChange={handleStoryChange}
                 placeholder="开始写你的故事..."
                 gameId={id}
                 variableNames={originalGame ? Object.keys(originalGame.initialState) : []}
+                characters={originalGame?.ai.characters}
                 onScenesChange={setSceneIds}
                 onEditorReady={setEditorHandle}
               />

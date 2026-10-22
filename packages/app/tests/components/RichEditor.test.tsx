@@ -37,7 +37,7 @@ describe('RichEditor', () => {
 
     await waitForMount();
 
-    expect(screen.getByTitle('加粗 (Ctrl+B)')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '添加选项' })).toBeInTheDocument();
     expect(screen.getByTitle('撤销 (Ctrl+Z)')).toBeInTheDocument();
   });
 
@@ -107,7 +107,7 @@ describe('RichEditor', () => {
     expect(() => handle.scrollToScene('not-a-scene')).not.toThrow();
   });
 
-  it('格式工具栏按钮可以点击而不抛错（不依赖具体的选区状态断言）', async () => {
+  it('工具栏只提供剧情操作，不再推广不支持的 Markdown 格式', async () => {
     render(
       <RichEditor
         content="# start\n\nhi"
@@ -130,7 +130,7 @@ describe('RichEditor', () => {
       '分隔线',
     ];
     for (const title of buttons) {
-      expect(() => screen.getByTitle(title).click()).not.toThrow();
+      expect(screen.queryByTitle(title)).not.toBeInTheDocument();
     }
   });
 

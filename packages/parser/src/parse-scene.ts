@@ -54,6 +54,12 @@ export interface AssetNodes {
   minigame?: SceneMiniGameNode;
 }
 
+function assetExtra(value: unknown, known: string[]): { extra?: Record<string, unknown> } {
+  if (!value || typeof value !== 'object') return {};
+  const extra = Object.fromEntries(Object.entries(value).filter(([key]) => !known.includes(key)));
+  return Object.keys(extra).length ? { extra } : {};
+}
+
 /**
  * 从场景元数据对象构建 AI 素材节点（显式字段映射）。
  * 不用对象展开：body yaml 的 `audio.type` 展开会覆盖节点的 `type: 'ai_audio'`（历史隐藏 bug）。
@@ -64,6 +70,7 @@ export function buildAssetNodes(parsed: Record<string, unknown>): AssetNodes {
 
   if (image) {
     result.image = {
+      ...assetExtra(image, ['prompt', 'character', 'characters', 'url', 'aspectRatio']),
       type: 'ai_image',
       prompt: image.prompt,
       character: image.character,
@@ -75,13 +82,20 @@ export function buildAssetNodes(parsed: Record<string, unknown>): AssetNodes {
   if (audio) {
     // bgm 是历史别名，统一收敛为 background_music（DSL_V2_DESIGN §4.7）
     const audioType = audio.type === 'bgm' || !audio.type ? 'background_music' : audio.type;
-    result.audio = { type: 'ai_audio', audioType, prompt: audio.prompt, url: audio.url };
+    result.audio = {
+      ...assetExtra(audio, ['type', 'prompt', 'url']),
+      type: 'ai_audio',
+      audioType,
+      prompt: audio.prompt,
+      url: audio.url,
+    };
   }
   if (video) {
-    result.video = { type: 'ai_video', prompt: video.prompt, url: video.url };
+    result.video = { ...assetExtra(video, ['prompt', 'url']), type: 'ai_video', prompt: video.prompt, url: video.url };
   }
   if (minigame) {
     result.minigame = {
+      ...assetExtra(minigame, ['prompt', 'variables', 'url']),
       type: 'minigame',
       prompt: minigame.prompt,
       variables: normalizeMiniGameVariables(minigame.variables),

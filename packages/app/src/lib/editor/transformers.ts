@@ -40,6 +40,8 @@ export interface SceneNodeData extends Record<string, unknown> {
    */
   content: string;
   assets: EditorSceneAsset[]; // 编辑器内部素材，editorId 不进入 DSL
+  extra?: Record<string, unknown>;
+  contentOrder?: Array<{ type: 'prose' } | { type: 'asset' | 'choice'; id: string }>;
 }
 
 export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: Edge[] } {
@@ -55,6 +57,14 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
     const choiceNodes = scene.nodes.filter((n) => n.type === 'choice');
 
     const content = proseNodesToContent(proseNodes);
+    const assets = assetNodes.map(createEditorSceneAsset);
+    let assetIndex = 0;
+    let choiceIndex = 0;
+    const contentOrder: NonNullable<SceneNodeData['contentOrder']> = scene.nodes.map((entry) => {
+      if (entry.type === 'text' || entry.type === 'dialogue') return { type: 'prose' };
+      if (entry.type === 'choice') return { type: 'choice', id: `${id}-${entry.nextSceneId}-${choiceIndex++}` };
+      return { type: 'asset', id: assets[assetIndex++].editorId };
+    });
 
     nodes.push({
       id: id,
@@ -62,7 +72,9 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
       data: {
         label: id,
         content,
-        assets: assetNodes.map(createEditorSceneAsset),
+        assets,
+        contentOrder,
+        ...(scene.extra ? { extra: scene.extra } : {}),
       },
       type: 'scene', // We will create a custom node type later
     });
@@ -78,6 +90,7 @@ export function gameToFlow(game: Game): { nodes: Node<SceneNodeData>[]; edges: E
             condition: choice.condition,
             set: choice.set,
             audio_url: choice.audio_url,
+            clauses: choice.clauses,
           },
         });
       }
@@ -123,10 +136,39 @@ export function flowToGame(nodes: Node<SceneNodeData>[], edges: Edge[], original
         condition: edge.data?.condition as string | undefined,
         set: edge.data?.set as string | undefined,
         audio_url: edge.data?.audio_url as string | undefined,
+        clauses: edge.data?.clauses as Record<string, string> | undefined,
       });
     });
 
-    scenes[sceneId] = { id: sceneId, nodes: sceneNodes };
+    let orderedNodes = sceneNodes;
+    if (node.data.contentOrder) {
+      const prose = sceneNodes.filter(
+        (entry) => entry.type === 'text' || entry.type === 'dialogue' || entry.type === 'redirect',
+      );
+      // 原有 redirect 在 assets 中，不能再作为正文重复放入。
+      const originalAssets = new Set(node.data.assets.map((entry) => entry.asset));
+      const proseQueue = prose.filter((entry) => !originalAssets.has(entry));
+      const assetMap = new Map(node.data.assets.map((entry) => [entry.editorId, entry.asset]));
+      const choiceMap = new Map(
+        outgoingEdges.map((edge, index) => [edge.id, sceneNodes.slice(-outgoingEdges.length)[index]]),
+      );
+      const ordered: SceneNode[] = [];
+      for (const slot of node.data.contentOrder) {
+        if (slot.type === 'prose') {
+          const next = proseQueue.shift();
+          if (next) ordered.push(next);
+        } else {
+          const map = slot.type === 'asset' ? assetMap : choiceMap;
+          const next = map.get(slot.id);
+          if (next) {
+            ordered.push(next);
+            map.delete(slot.id);
+          }
+        }
+      }
+      orderedNodes = [...ordered, ...assetMap.values(), ...proseQueue, ...choiceMap.values()];
+    }
+    scenes[sceneId] = { id: sceneId, nodes: orderedNodes, ...(node.data.extra ? { extra: node.data.extra } : {}) };
   });
 
   newGame.scenes = scenes;

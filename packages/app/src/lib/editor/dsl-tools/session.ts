@@ -24,7 +24,7 @@ export function beginDslSession(editor: Editor, request: DslToolRequest, charact
   const { doc, selection } = editor.state;
   const anchor = request.position ?? selection.from;
   const target = request.slashRange
-    ? undefined
+    ? findSceneAsset(doc, request.kind, anchor)
     : (findDslTarget(doc, request.kind, anchor) ?? findSceneAsset(doc, request.kind, anchor));
   const session: DslEditSession = {
     id: crypto.randomUUID(),

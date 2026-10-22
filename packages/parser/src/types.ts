@@ -75,6 +75,7 @@ export type SceneStaticImageNode = { type: 'static_image'; alt?: string; url: st
 export type SceneStaticAudioNode = { type: 'static_audio'; url: string };
 export type SceneStaticVideoNode = { type: 'static_video'; url: string };
 export type SceneAiImageNode = {
+  extra?: Record<string, unknown>;
   type: 'ai_image';
   prompt: string;
   character?: string;
@@ -83,17 +84,20 @@ export type SceneAiImageNode = {
   url?: string;
 };
 export type SceneAiAudioNode = {
+  extra?: Record<string, unknown>;
   type: 'ai_audio';
   audioType: 'sfx' | 'background_music';
   prompt: string;
   url?: string;
 };
 export type SceneAiVideoNode = {
+  extra?: Record<string, unknown>;
   type: 'ai_video';
   prompt: string;
   url?: string;
 };
 export type SceneMiniGameNode = {
+  extra?: Record<string, unknown>;
   type: 'minigame';
   prompt: string;
   variables?: Record<string, string>; // 变量名 -> 用途说明

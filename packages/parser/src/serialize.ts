@@ -103,6 +103,7 @@ function buildSceneMetadata(scene: Scene): Record<string, unknown> {
   const metadata: Record<string, unknown> = {};
   if (imageNode && imageNode.type === 'ai_image') {
     metadata.image = omitUndefined({
+      ...imageNode.extra,
       prompt: imageNode.prompt,
       character: imageNode.character,
       characters: imageNode.characters,
@@ -112,12 +113,15 @@ function buildSceneMetadata(scene: Scene): Record<string, unknown> {
   }
   if (audioNode && audioNode.type === 'ai_audio') {
     metadata.audio = omitUndefined({ type: audioNode.audioType, prompt: audioNode.prompt, url: audioNode.url });
+    metadata.audio = { ...audioNode.extra, ...(metadata.audio as Record<string, unknown>) };
   }
   if (videoNode && videoNode.type === 'ai_video') {
     metadata.video = omitUndefined({ prompt: videoNode.prompt, url: videoNode.url });
+    metadata.video = { ...videoNode.extra, ...(metadata.video as Record<string, unknown>) };
   }
   if (minigameNode && minigameNode.type === 'minigame') {
     metadata.minigame = omitUndefined({
+      ...minigameNode.extra,
       prompt: minigameNode.prompt,
       variables: minigameNode.variables,
       url: minigameNode.url,

@@ -5,6 +5,7 @@ import { Markdown } from 'tiptap-markdown';
 import { parse } from '@roudanio/parser';
 import { DslTools } from '@/lib/editor/extensions/dsl-tools';
 import { DslText } from '@/lib/editor/extensions/dsl-text';
+import { StaticImage } from '@/lib/editor/extensions/static-image';
 import { beginDslSession, mapDslSession } from '@/lib/editor/dsl-tools/session';
 import { applyDslEdit } from '@/lib/editor/dsl-tools/apply';
 import { getEditorMarkdown } from '@/lib/editor/dsl-tools/markdown';
@@ -15,7 +16,13 @@ function setup(
   body = '# start\n\n正文\n\n* [开门] -> room (audio: https://a.test/a.mp3) (timer: 3)\n\n# room\n\n房间',
 ) {
   const editor = new Editor({
-    extensions: [StarterKit.configure({ text: false }), DslText, Markdown.configure({ html: false }), DslTools],
+    extensions: [
+      StarterKit.configure({ text: false }),
+      DslText,
+      StaticImage,
+      Markdown.configure({ html: false }),
+      DslTools,
+    ],
     content: body,
   });
   editor.view.dispatch(
@@ -35,6 +42,23 @@ afterEach(() => {
 });
 
 describe('DSL 定点编辑事务', () => {
+  it('正文编辑保留已有静态图片和语音注释', () => {
+    const body =
+      '# start\n\n正文\n\n<!-- audio: https://a.test/voice.mp3 -->\n\n![图](https://a.test/image.png)\n\n* [开门] -> room\n\n# room\n\n结束';
+    const editor = setup(body);
+    const target = findDslTargets(editor.state.doc).find((item) => item.kind === 'choice')!;
+    const session = beginDslSession(editor, { kind: 'choice', position: target.from }, []);
+    applyDslEdit(editor, session, { ...session.draft, text: '看*字*与[括号]' }, context);
+    const result = parse(getEditorMarkdown(editor));
+    expect(result.success && result.data.scenes.start.nodes).toEqual([
+      { type: 'text', content: '正文', audio_url: 'https://a.test/voice.mp3' },
+      { type: 'static_image', alt: '图', url: 'https://a.test/image.png' },
+      { type: 'choice', text: '看*字*与[括号]', nextSceneId: 'room' },
+    ]);
+    editor.commands.setContent(getEditorMarkdown(editor).split('---\n').at(-1)!);
+    expect(editor.state.doc.textContent).toContain('[看*字*与[括号]]');
+  });
+
   it('修改选项并一次撤销，保留语音和扩展子句', () => {
     const editor = setup();
     const before = getEditorMarkdown(editor);

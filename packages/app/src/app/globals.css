@@ -142,6 +142,17 @@ html[data-immersive="true"] main {
 }
 
 /* DSL 选项高亮 */
+.rich-editor .dsl-editable {
+  cursor: pointer;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: #c2b6aa;
+  text-underline-offset: 4px;
+}
+.rich-editor .dsl-editable:hover {
+  background: #fff7ed;
+  text-decoration-color: #c2410c;
+}
 .rich-editor .dsl-choice-text {
   color: #c2410c;
   font-weight: 500;

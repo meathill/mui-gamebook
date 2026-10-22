@@ -3,6 +3,7 @@ import { Plugin } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { findDslTargets } from '../dsl-tools/targets';
 import type { DslTextSpan, DslToolKind } from '../dsl-tools/types';
+import { REDIRECT_FRAGMENT } from '../dsl-tools/fragments';
 
 export interface DslToolRequest {
   kind: DslToolKind;
@@ -15,7 +16,7 @@ interface DslToolsStorage {
 }
 
 export function requestDslTool(editor: Editor, request: DslToolRequest): boolean {
-  const storage = (editor.storage as { dslTools?: DslToolsStorage }).dslTools;
+  const storage = (editor.storage as { dslTools?: DslToolsStorage } | undefined)?.dslTools;
   if (!storage) return false;
   storage.request(request);
   return true;
@@ -48,6 +49,19 @@ export const DslTools = Extension.create<{ onRequest: (request: DslToolRequest) 
                   title: '点击用表单编辑；也可直接修改文字',
                 }),
               );
+            for (const target of findDslTargets(state.doc)) {
+              if (target.kind !== 'redirect') continue;
+              const match = target.text.match(REDIRECT_FRAGMENT);
+              if (!match) continue;
+              const from = target.from + target.text.indexOf(match[1], target.text.indexOf('->') + 2);
+              decorations.push(
+                Decoration.inline(from, from + match[1].length, {
+                  class: 'dsl-choice-target',
+                  'data-scene-target': match[1],
+                  title: '前往场景 ' + match[1],
+                }),
+              );
+            }
             return DecorationSet.create(state.doc, decorations);
           },
           handleClick(view, _position, event) {

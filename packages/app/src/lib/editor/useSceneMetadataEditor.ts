@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import type { NodeViewProps } from '@tiptap/react';
+import { requestDslTool } from './extensions/dsl-tools';
 import {
   parseSceneMetadata,
   hasMetadataContent,
@@ -41,6 +42,13 @@ export function useSceneMetadataEditor({ node, editor, getPos, gameId }: UseScen
   }
 
   function startEdit(section: SceneMetadataSectionKey) {
+    const position = getPos();
+    if (
+      section !== 'characters' &&
+      position != null &&
+      requestDslTool(editor, { kind: section, position: position + 1 })
+    )
+      return;
     if (section === 'characters') {
       setEditForm({ characters: (metadata.characters || []).join(', ') });
     } else {
@@ -88,6 +96,8 @@ export function useSceneMetadataEditor({ node, editor, getPos, gameId }: UseScen
   }
 
   function addSection(type: 'video' | 'minigame') {
+    const position = getPos();
+    if (position != null && requestDslTool(editor, { kind: type, position: position + 1 })) return;
     const updated = structuredClone(metadata);
     if (type === 'video') updated.video = { prompt: '' };
     else updated.minigame = { prompt: '' };

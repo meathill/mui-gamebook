@@ -4,13 +4,11 @@
  */
 
 // 选项语法正则（目标字符集与 parser 的 SCENE_ID_CHAR_CLASS 保持同口径，支持 Unicode 场景 ID）
-const CHOICE_RE = /\[(.*?)\]\s*->\s*([\p{L}\p{N}_-]+)\s*(.*?)$/u;
-const IF_CLAUSE_RE = /\(if:\s*(.*?)\)/g;
-const SET_CLAUSE_RE = /\(set:\s*(.*?)\)/g;
-const AUDIO_CLAUSE_RE = /\(audio:\s*(.*?)\)/g;
+import { readClauseSpans } from '../dsl-tools/clauses';
+const CHOICE_RE = /^\[([\s\S]*)\]\s*->\s*([\p{L}\p{N}_-]+)\s*([\s\S]*)$/u;
 
 // 变量语法正则
-const VARIABLE_RE = /\{\{(\w+)\}\}/g;
+const VARIABLE_RE = /\{\{\s*([\p{L}_][\p{L}\p{N}_]*)\s*\}\}/gu;
 
 // 素材 URL 正则
 const YAML_URL_RE = /url:\s*(https?:\/\/\S+)/;
@@ -55,7 +53,7 @@ export function findChoiceMatches(text: string): ChoiceMatch[] {
   }
 
   // target 部分
-  const targetStart = text.indexOf(m[2], bracketEnd);
+  const targetStart = text.indexOf(m[2], afterBracket + 2);
   if (targetStart >= 0) {
     matches.push({ from: targetStart, to: targetStart + m[2].length, type: 'choice-target' });
   }
@@ -63,14 +61,12 @@ export function findChoiceMatches(text: string): ChoiceMatch[] {
   // clause 部分
   const clauseStr = m[3];
   if (clauseStr) {
-    const clauseStart = text.indexOf(clauseStr, targetStart + m[2].length);
-    for (const re of [IF_CLAUSE_RE, SET_CLAUSE_RE, AUDIO_CLAUSE_RE]) {
-      re.lastIndex = 0;
-      let cm: RegExpExecArray | null;
-      while ((cm = re.exec(clauseStr)) !== null) {
-        const from = clauseStart + cm.index;
-        matches.push({ from, to: from + cm[0].length, type: 'choice-clause' });
-      }
+    const clauseStart = text.length - clauseStr.length;
+    try {
+      for (const clause of readClauseSpans(clauseStr))
+        matches.push({ from: clauseStart + clause.from, to: clauseStart + clause.to, type: 'choice-clause' });
+    } catch {
+      /* 未完成的输入保留文字，等待作者补齐。 */
     }
   }
 
@@ -85,6 +81,7 @@ export function findVariableMatches(text: string): VariableMatch[] {
   VARIABLE_RE.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = VARIABLE_RE.exec(text)) !== null) {
+    if (m[1].toLowerCase() === 'else') continue;
     matches.push({
       from: m.index,
       to: m.index + m[0].length,

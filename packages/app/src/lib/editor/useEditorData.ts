@@ -10,6 +10,7 @@ import { trackPublishStory } from '@mui-gamebook/site-common/utils';
 import { bindGameIdToSession, getGameSessionId } from '@/lib/editor/game-session';
 import type { Game } from '@roudanio/parser/src/types';
 import type { Node, Edge } from '@xyflow/react';
+import { replacePendingAssetInScript, updateScriptMetadata } from './script-metadata';
 
 // 扩展 Game 类型，添加编辑器特有的字段
 export interface EditorGame extends Game {
@@ -65,6 +66,9 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
   const handleOperationComplete = useCallback(
     (operationId: number, result: { status: 'completed' | 'failed'; url?: string; error?: string }) => {
       const pendingUrl = `pending://${operationId}`;
+      setTextContent((current) =>
+        replacePendingAssetInScript(current, pendingUrl, result.status === 'completed' ? result.url : undefined),
+      );
 
       setNodes((currentNodes) => {
         return currentNodes.map((node) => {
@@ -188,7 +192,7 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
         } else {
           const result = parse(textContent);
           if (result.success) {
-            gameToSave = { ...originalGame, scenes: result.data.scenes };
+            gameToSave = { ...originalGame, ...result.data };
           } else {
             throw new Error(`Cannot save: Invalid Markdown. ${result.error}`);
           }
@@ -205,7 +209,12 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
         }
       }
 
-      const content = stringify(gameToSave);
+      const content =
+        viewMode === 'text'
+          ? activeTab === 'story'
+            ? textContent
+            : updateScriptMetadata(textContent, gameToSave)
+          : stringify(gameToSave);
       setTextContent(content);
 
       const res = await fetch(`/api/cms/games/${id}`, {
