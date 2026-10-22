@@ -45,9 +45,9 @@ vi.mock('@mui-gamebook/site-common/utils', () => ({
   getPublicSiteUrl: () => 'https://muistory.com',
 }));
 
-import PlayPage from '@/app/play/[slug]/page';
+import PlayPage, { generateMetadata } from '@/app/play/[slug]/page';
 import { cachedGetGameBySlug } from '@/lib/games';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 const paramsOf = (slug: string) => Promise.resolve({ slug });
 
@@ -82,5 +82,29 @@ describe('PlayPage 缺失处理', () => {
 
     expect(screen.getByTestId('game-player')).toBeTruthy();
     expect(notFound).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'classic',
+    'immersive',
+  ] as const)('历史子站绑定在 %s 模式下仍在主站播放，canonical 和分享链接指向主站', async (displayMode) => {
+    vi.mocked(cachedGetGameBySlug).mockResolvedValue({
+      title: '历史作品',
+      slug: '1-0771',
+      subdomain: '11',
+      site_template: 'visual-novel',
+      display_mode: displayMode,
+      scenes: {},
+      tags: [],
+      initialState: {},
+    });
+
+    render(await PlayPage({ params: paramsOf('1-0771') }));
+    const metadata = await generateMetadata({ params: paramsOf('1-0771') });
+
+    expect(screen.getByTestId(displayMode === 'classic' ? 'game-player' : 'game-player-immersive')).toBeTruthy();
+    expect(redirect).not.toHaveBeenCalled();
+    expect(metadata.alternates?.canonical).toBe('/play/1-0771');
+    expect(metadata.openGraph?.url).toBe('https://muistory.com/play/1-0771');
   });
 });

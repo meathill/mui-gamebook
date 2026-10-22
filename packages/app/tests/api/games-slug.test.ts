@@ -97,6 +97,16 @@ describe('GET /api/games/[slug]', () => {
     expect(res.headers.get('Cache-Control')).toContain('private');
   });
 
+  it('历史 subdomain 不能让未发布作品变为公开可访问', async () => {
+    mockDb.get
+      .mockResolvedValueOnce({ id: 1, slug: 'g', published: false, ownerId: 'owner-1' })
+      .mockResolvedValueOnce({ content: VALID_CONTENT.replace('---\n# start', 'subdomain: "11"\n---\n# start') });
+
+    const res = await GET({} as Request, makeParams('g'));
+
+    expect(res.status).toBe(404);
+  });
+
   it('已发布时公开访问，返回以数据库字段为准的元数据', async () => {
     mockDb.get
       .mockResolvedValueOnce({

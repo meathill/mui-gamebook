@@ -2,7 +2,7 @@ import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/util
 import { ClockIcon, QuestionIcon, UserIcon } from '@phosphor-icons/react/dist/ssr';
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import Comment from '@/components/Comment';
 import GamePlayer from '@/components/GamePlayer';
@@ -143,12 +143,6 @@ export default async function PlayPage({ params }: Props) {
   if (!game) {
     // 缺失/下架/内容损坏一律真 404（配 sitemap 可玩口径，结构性消除 noindex-in-sitemap）
     notFound();
-  }
-
-  // 绑定了子站点的游戏，重定向到子站点
-  if (game.subdomain) {
-    const subdomainUrl = `https://${game.subdomain}.muistory.com/play/${slug}`;
-    return redirect(subdomainUrl);
   }
 
   const { breadcrumbLd, gameLd } = buildGameJsonLd(game, slug);

@@ -87,7 +87,7 @@
 
 **SEO 实践**
 - robots.txt 和 sitemap 需要特殊处理（预渲染）
-- 主站 sitemap 的作品入口由 `lib/sitemap-games.ts` 读取正文并复用 DSL 解析器筛选：只收录已发布、未封禁、解析成功且无 `subdomain` 的作品；子站绑定不在 `Games` 列表字段里，不能仅凭公开列表判断。无 D1 时从公开详情确认绑定，详情不可用则不收录；不自动替换为未经验证的子站地址（issue #25）。
+- **作品统一主站（2026-10，issue #25）**：子站已停用，移除编辑器站点模版/二级域名入口及播放页的子站跳转。历史 `site_template` / `subdomain` 仅保留 DSL 往返兼容，绑定不能代替发布标志；播放、canonical、分享地址和 sitemap 全部使用本站 `/play/[slug]`。sitemap 直接复用公开目录，不因历史绑定排除作品，也不额外逐部抓取详情。
 - IndexNow 主动推送给搜索引擎（`packages/app/scripts/index-now.ts`，`--all` 支持从 sitemap 批量提交；目前仍是手动运行，未接入部署流程）
 - 域名验证文件放在 public 目录
 

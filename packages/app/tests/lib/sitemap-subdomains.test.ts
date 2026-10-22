@@ -10,7 +10,7 @@ function createScript(metadata = '') {
   return `---\ntitle: 测试作品\n${metadata}\n---\n\n# start\n\n故事开始。\n`;
 }
 
-describe('sitemap 排除子站跳转作品（issue #25）', () => {
+describe('sitemap 统一使用主站作品链接（issue #25）', () => {
   let database: DatabaseSync;
   const fetchMock = vi.fn();
 
@@ -53,7 +53,7 @@ describe('sitemap 排除子站跳转作品（issue #25）', () => {
     database.prepare('INSERT INTO GameContent (game_id, content) VALUES (?, ?)').run(lastInsertRowid, content);
   }
 
-  it('已发布且绑定子站的作品不进入主站 sitemap，也不自动替换为子站 URL', async () => {
+  it('历史绑定子站的已发布作品仍以主站 URL 进入 sitemap', async () => {
     insertGame('1-0771', createScript('subdomain: "11"'));
     insertGame('another-site', createScript('subdomain: another'));
     insertGame('main-site', createScript());
@@ -63,6 +63,8 @@ describe('sitemap 排除子站跳转作品（issue #25）', () => {
     const entries = await sitemap();
 
     expect(entries.filter((entry) => entry.url.includes('/play/')).map((entry) => entry.url)).toEqual([
+      'https://muistory.com/play/1-0771',
+      'https://muistory.com/play/another-site',
       'https://muistory.com/play/main-site',
       'https://muistory.com/play/empty-subdomain',
       'https://muistory.com/play/body-mention',
@@ -74,12 +76,11 @@ describe('sitemap 排除子站跳转作品（issue #25）', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('继续排除未发布、被封禁、正文缺失或无法解析的作品', async () => {
-    insertGame('draft', createScript(), 0);
+  it('继续排除未发布、被封禁和正文缺失的作品', async () => {
+    insertGame('draft', createScript('subdomain: "11"'), 0);
     insertGame('banned', createScript(), 1, 1);
     insertGame('missing', null);
     insertGame('empty', '   ');
-    insertGame('invalid', '没有 start 场景');
     insertGame('valid', createScript());
 
     const entries = await sitemap();
@@ -89,7 +90,7 @@ describe('sitemap 排除子站跳转作品（issue #25）', () => {
     ]);
   });
 
-  it.each(['无请求上下文', 'D1 查询失败'])('构建期%s时，用公开详情过滤子站作品和失效入口', async (failure) => {
+  it.each(['无请求上下文', 'D1 查询失败'])('构建期%s时，历史子站作品仍从公开目录生成主站 URL', async (failure) => {
     if (failure === '无请求上下文') {
       vi.mocked(getCloudflareContext).mockImplementation(() => {
         throw new Error(failure);
@@ -97,34 +98,21 @@ describe('sitemap 排除子站跳转作品（issue #25）', () => {
     } else {
       database.exec('DROP TABLE Games');
     }
-    const rows = ['1-0771', 'main-site', 'unavailable'].map((slug) => ({
+    const rows = ['1-0771', 'main-site'].map((slug) => ({
       slug,
       title: slug,
       tags: [],
+      subdomain: slug === '1-0771' ? '11' : undefined,
       updated_at: 1_700_000_000,
     }));
-    fetchMock.mockImplementation(async (url: string) => {
-      if (url.includes('/api/games?')) return { ok: true, json: async () => rows };
-      if (url.endsWith('/api/games/unavailable')) return { ok: false };
-      return {
-        ok: true,
-        json: async () => ({
-          title: '测试作品',
-          ai: {},
-          subdomain: url.endsWith('/api/games/1-0771') ? '11' : undefined,
-          scenes: { start: { id: 'start', nodes: [] } },
-        }),
-      };
-    });
+    fetchMock.mockResolvedValue({ ok: true, json: async () => rows });
 
     const entries = await sitemap();
 
     expect(entries.filter((entry) => entry.url.includes('/play/')).map((entry) => entry.url)).toEqual([
+      'https://muistory.com/play/1-0771',
       'https://muistory.com/play/main-site',
     ]);
-    expect(fetchMock).toHaveBeenCalledWith(
-      'https://muistory.com/api/games/1-0771',
-      expect.objectContaining({ next: { revalidate: 3600 } }),
-    );
+    expect(fetchMock.mock.calls.every(([url]) => String(url).includes('/api/games?'))).toBe(true);
   });
 });

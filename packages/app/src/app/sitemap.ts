@@ -1,7 +1,6 @@
 import { MetadataRoute } from 'next';
 import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
-import { getAllTags } from '@/lib/games';
-import { getSitemapGames } from '@/lib/sitemap-games';
+import { getPublishedGames, getAllTags } from '@/lib/games';
 import { getPublishedPosts } from '@/lib/blog';
 // Next 要求 segment 配置是字面量，不能从模块导入
 export const revalidate = 3600;
@@ -43,11 +42,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   // 每段独立 try/catch，避免单数据源失败导致整站 sitemap 500（Ahrefs 会判为 text/plain）
-  let games: Awaited<ReturnType<typeof getSitemapGames>> = [];
+  let games: Awaited<ReturnType<typeof getPublishedGames>> = [];
   try {
-    games = await getSitemapGames();
+    games = await getPublishedGames();
   } catch (e) {
-    console.error('sitemap: getSitemapGames failed', e);
+    console.error('sitemap: getPublishedGames failed', e);
   }
   const gamePages: MetadataRoute.Sitemap = games.map((game) => ({
     url: `${baseUrl}/play/${game.slug}`,

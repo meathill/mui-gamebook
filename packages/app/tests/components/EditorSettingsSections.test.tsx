@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { PlaybackModeSection, SiteTemplateSection } from '@/components/editor/EditorSettingsSections';
+import { PlaybackModeSection } from '@/components/editor/EditorSettingsSections';
 
 describe('PlaybackModeSection', () => {
   it('默认按经典模式渲染，不显示沉浸模式专属字段', () => {
@@ -67,57 +67,5 @@ describe('PlaybackModeSection', () => {
     fireEvent.click(screen.getByText('全屏（封面底 + 毛玻璃卡）'));
 
     expect(onChange).toHaveBeenCalledWith('title_layout', 'fullscreen');
-  });
-});
-
-describe('SiteTemplateSection', () => {
-  it('默认模版时不显示二级域名字段', () => {
-    render(
-      <SiteTemplateSection
-        game={{}}
-        onChange={vi.fn()}
-      />,
-    );
-
-    expect(screen.queryByText('二级域名前缀')).not.toBeInTheDocument();
-  });
-
-  it('切换到视觉小说模版时显示二级域名字段', () => {
-    render(
-      <SiteTemplateSection
-        game={{ site_template: 'visual-novel' }}
-        onChange={vi.fn()}
-      />,
-    );
-
-    expect(screen.getByText('二级域名前缀')).toBeInTheDocument();
-  });
-
-  it('二级域名输入会被清洗为小写字母数字和连字符', () => {
-    const onChange = vi.fn();
-    render(
-      <SiteTemplateSection
-        game={{ site_template: 'visual-novel' }}
-        onChange={onChange}
-      />,
-    );
-
-    fireEvent.change(screen.getByPlaceholderText('如：55'), { target: { value: 'My Site_55!' } });
-
-    expect(onChange).toHaveBeenCalledWith('subdomain', 'mysite55');
-  });
-
-  it('点击模版类型选项调用 onChange', () => {
-    const onChange = vi.fn();
-    render(
-      <SiteTemplateSection
-        game={{}}
-        onChange={onChange}
-      />,
-    );
-
-    fireEvent.click(screen.getByText('视觉小说'));
-
-    expect(onChange).toHaveBeenCalledWith('site_template', 'visual-novel');
   });
 });

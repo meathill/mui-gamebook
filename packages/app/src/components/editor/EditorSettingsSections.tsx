@@ -1,6 +1,6 @@
 'use client';
 
-import type { DisplayMode, Game, SiteTemplate, TextBoxPosition, TitleLayout } from '@roudanio/parser/src/types';
+import type { DisplayMode, Game, TextBoxPosition, TitleLayout } from '@roudanio/parser/src/types';
 import TypewriterSpeedField from './TypewriterSpeedField';
 
 type GameFieldChange = (field: string, value: string | number | boolean | Record<string, unknown>) => void;
@@ -104,65 +104,6 @@ export function PlaybackModeSection({ game, onChange }: PlaybackModeSectionProps
             />
             <p className="mt-1 text-[11px] text-amber-700/80">默认 40，数值越小越快。</p>
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-interface SiteTemplateSectionProps {
-  game: Pick<Game, 'site_template' | 'subdomain'>;
-  onChange: GameFieldChange;
-}
-
-/**
- * 站点模版设置：模版类型（默认/视觉小说）+ 视觉小说模版专属的二级域名
- */
-export function SiteTemplateSection({ game, onChange }: SiteTemplateSectionProps) {
-  return (
-    <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-100 space-y-3">
-      <h3 className="text-sm font-medium text-emerald-900">站点模版</h3>
-      <div>
-        <label className="block text-xs text-emerald-800 mb-1">模版类型</label>
-        <div className="flex gap-2">
-          {(
-            [
-              { value: 'default', label: '默认' },
-              { value: 'visual-novel', label: '视觉小说' },
-            ] as { value: SiteTemplate; label: string }[]
-          ).map((opt) => {
-            const current = game.site_template || 'default';
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => onChange('site_template', opt.value)}
-                className={`flex-1 px-3 py-2 text-sm rounded border transition ${
-                  current === opt.value
-                    ? 'bg-emerald-600 text-white border-emerald-600'
-                    : 'bg-white text-gray-700 border-gray-300 hover:border-emerald-400'
-                }`}>
-                {opt.label}
-              </button>
-            );
-          })}
-        </div>
-        <p className="mt-1 text-[11px] text-emerald-700/80">视觉小说模版支持路线图、多存档、设置等功能。</p>
-      </div>
-      {game.site_template === 'visual-novel' && (
-        <div>
-          <label className="block text-xs text-emerald-800 mb-1">二级域名前缀</label>
-          <div className="flex items-center gap-1">
-            <input
-              type="text"
-              value={game.subdomain || ''}
-              onChange={(e) => onChange('subdomain', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-              placeholder="如：55"
-              className="w-24 rounded-md border-gray-300 border shadow-sm focus:border-emerald-500 focus:ring-emerald-500 p-2 text-sm"
-            />
-            <span className="text-sm text-gray-500">.muistory.com</span>
-          </div>
-          <p className="mt-1 text-[11px] text-emerald-700/80">绑定后主站会自动跳转到子站点。</p>
         </div>
       )}
     </div>

@@ -59,8 +59,7 @@ export async function GET(request: Request, { params }: Props) {
   // 满足以下任一条件即视为已发布/允许公开访问：
   // 1. 数据库中 published 为 true
   // 2. DSL 文本 frontmatter 中 published 为 true
-  // 3. DSL 文本 frontmatter 中配置了 subdomain (用于独立子站宣传)
-  const isPublished = game.published || result.data.published || !!result.data.subdomain;
+  const isPublished = game.published || result.data.published;
 
   // 如果游戏未发布且当前用户不是所有者，拒绝访问
   if (!isPublished && !isOwner) {

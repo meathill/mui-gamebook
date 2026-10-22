@@ -197,9 +197,9 @@ export interface Game {
   text_box_position?: TextBoxPosition;
   typewriter_speed?: number; // 毫秒/字，默认 40
 
-  // 站点模版
+  // 历史子站元数据，仅保留 DSL 往返兼容，不影响主站地址和发布状态
   site_template?: SiteTemplate;
-  subdomain?: string; // 绑定的二级域名前缀，如 '55'
+  subdomain?: string;
 
   // 初始状态（带元数据）
   initialState: GameState;

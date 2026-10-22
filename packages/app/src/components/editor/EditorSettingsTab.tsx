@@ -4,7 +4,7 @@ import MDEditor from '@uiw/react-md-editor';
 import QQGroupInvite from '@/components/QQGroupInvite';
 import { isImeComposing } from '@/lib/keyboard';
 import AudiobookGenerationCard from './AudiobookGenerationCard';
-import { PlaybackModeSection, SiteTemplateSection } from './EditorSettingsSections';
+import { PlaybackModeSection } from './EditorSettingsSections';
 import IpRegistrationCard from './IpRegistrationCard';
 import MediaAssetItem from './MediaAssetItem';
 
@@ -79,11 +79,6 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
           </div>
 
           <PlaybackModeSection
-            game={game}
-            onChange={handleChange}
-          />
-
-          <SiteTemplateSection
             game={game}
             onChange={handleChange}
           />

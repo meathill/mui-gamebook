@@ -29,8 +29,8 @@
 - **`title_layout`** (可选): 标题页版式，`classic`（默认，封面条 + 白底内容卡）或 `fullscreen`（全屏封面底 + 居中毛玻璃卡，header/footer 保留，footer 需滚屏可见）。
 - **`text_box_position`** (可选): 沉浸模式下文字框位置，`bottom`（默认）/ `center` / `top`。
 - **`typewriter_speed`** (可选): 沉浸模式打字机速度，单位毫秒/字，默认 `40`。
-- **`site_template`** (可选): 站点模版，`default`（默认）或 `visual-novel`（视觉小说模版，带路线图、多存档、设置界面）。
-- **`subdomain`** (可选): 绑定的二级域名前缀（如 `55`），主站访问该游戏时会重定向到对应子域名。
+
+> 历史 `site_template` / `subdomain` 字段仅保留解析与序列化兼容，不再提供配置入口，也不触发子站跳转或改变发布状态。作品统一使用本站 `/play/[slug]` 地址；播放外观使用 `display_mode` 等字段配置。
 
 > 未知顶层键会被**原样保留**（parse → stringify 往返透传），可以放心存放自定义配置——新功能不需要等解析器升级。
 

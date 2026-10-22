@@ -194,6 +194,22 @@ describe('构建期无 D1 时回退抓线上 API', () => {
     expect(await getGameBySlug('gone')).toBeNull();
   });
 
+  it('getGameBySlug 不再把历史 subdomain 视为发布标志，作者预览仍可访问', async () => {
+    const record = {
+      id: 1,
+      published: 0,
+      shadow_banned: 0,
+      content: '---\ntitle: 历史作品\nsubdomain: "11"\n---\n# start\n故事正文',
+    };
+    const first = vi.fn().mockResolvedValue(record);
+    vi.mocked(getCloudflareContext).mockReturnValue({
+      env: { DB: { prepare: () => ({ bind: () => ({ first }) }) } },
+    } as unknown as ReturnType<typeof getCloudflareContext>);
+
+    expect(await getGameBySlug('1-0771')).toBeNull();
+    expect(await getGameBySlug('1-0771', { includeUnpublished: true })).not.toBeNull();
+  });
+
   it('getGameBySlug D1 查询抛错时向上抛（500，不吞成 null 误缓存）', async () => {
     (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({
       env: {

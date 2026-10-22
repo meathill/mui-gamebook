@@ -260,7 +260,7 @@ WHERE g.id = ?`,
       return null;
     }
 
-    const isPublished = gameRecord.published === 1 || result.data.published || !!result.data.subdomain;
+    const isPublished = gameRecord.published === 1 || result.data.published;
     if (!isPublished && !options?.includeUnpublished) {
       return null;
     }
