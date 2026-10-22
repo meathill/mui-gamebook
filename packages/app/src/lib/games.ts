@@ -184,11 +184,11 @@ export type GameDetail = PlayableGame & {
  *   也可能连上一个空表（no such table），统一抓线上公开 API；抓不到则 null，
  *   保证构建通过，靠重验证自愈。
  *
- * options.includeShadowBanned：预览路径（作者/管理员）放行被封禁作品；公开路径不传。
+ * options.includeUnpublished / includeShadowBanned：仅供已校验作者/管理员权限的预览路径使用；公开路径不传。
  */
 export async function getGameBySlug(
   slug: string,
-  options?: { includeShadowBanned?: boolean },
+  options?: { includeShadowBanned?: boolean; includeUnpublished?: boolean },
 ): Promise<GameDetail | null> {
   let cloudflareContext: { env: { DB: unknown } };
   try {
@@ -261,7 +261,7 @@ WHERE g.id = ?`,
     }
 
     const isPublished = gameRecord.published === 1 || result.data.published || !!result.data.subdomain;
-    if (!isPublished) {
+    if (!isPublished && !options?.includeUnpublished) {
       return null;
     }
 

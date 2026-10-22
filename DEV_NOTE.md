@@ -144,7 +144,7 @@
 - 公开目录 / 博客 / sitemap / 播放页 `revalidate = 3600`；发布、下架、删除走 `revalidatePublicCatalog()`（`revalidatePath`，不另建 tag cache）。
 - 列表分页不能用 `?page=`：await searchParams 会把整页钉成 `private, no-cache`。已改成 `/games/p/2`、`/blog/c/update` 这类路径，旧 query 由 middleware 308 过去。详情页补 `generateStaticParams`（失败则空数组 + `dynamicParams`）才能按需 ISR。
 - `/admin` `/sign-in` `/my` 必须 `force-dynamic`。去掉根布局 cookies 后它们会变成一年静态壳。
-- 播放页不再给作者预览未发布作品（会读 session，页面无法缓存）。作者预览只走编辑器。
+- 播放页不再给作者预览未发布作品（会读 session，页面无法缓存）。作者/管理员预览走 `/preview/[slug]`。
 - `/_next/static/*` 一年 immutable：主站原有 `public/_headers`，55 补齐。
 - `packages/cms`（Payload）未上线，已移除，博客迁移至统一的 MuiCV CMS。
 
@@ -750,7 +750,7 @@ isValidVoiceId(voiceId: string, provider): boolean
   - `force-dynamic`，校验 `ownerId === session.user.id || isAdminUser(session.user)`，未发布与被封禁的作品都能打开
   - `robots: noindex`，不参与 ISR 与 sitemap
   - 编辑器工具栏的预览按钮指向它（顺带修掉了此前"未发布作品点预览打开 404"的老问题）
-- `getGameBySlug(slug, { includeShadowBanned: true })` 是预览路径的放行开关；公开路径不传，被封禁作品返回 null → 404。
+- 预览页先校验作者/管理员权限，再调用 `getGameBySlug(slug, { includeShadowBanned: true, includeUnpublished: true })`；两个开关分别放行封禁/未发布状态，公开路径均不传。预览回归测试使用真实读取与 DSL 解析逻辑，避免 mock 掩盖二次拦截。
 - `/api/games/[slug]` 对 owner 放行被封禁作品，但强制 `private, no-store` 缓存；匿名一律 404。
 - 后台游戏管理提供封禁/解封操作，操作后调 `revalidatePublicCatalog()` 清理 ISR。
 

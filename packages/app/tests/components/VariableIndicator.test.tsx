@@ -26,6 +26,23 @@ describe('VariableIndicator Component', () => {
     expect(screen.getByText('80/100')).toBeInTheDocument();
   });
 
+  it('进度条使用固定细条轨道，名称和数值独立展示', () => {
+    render(
+      <VariableIndicator
+        varKey="courage"
+        meta={{ value: 30, display: 'progress', max: 100, label: '勇气值' }}
+        currentValue={30}
+      />,
+    );
+
+    const bar = screen.getByRole('progressbar', { name: '勇气值' });
+    expect(bar).toHaveClass('h-1.5');
+    expect(bar).toHaveAttribute('aria-valuenow', '30');
+    expect(bar).toHaveAttribute('aria-valuemax', '100');
+    expect(bar.firstElementChild).toHaveStyle({ width: '30%' });
+    expect(bar).not.toContainElement(screen.getByText('30/100'));
+  });
+
   it('should handle undefined values gracefully in progress bar mode', () => {
     const meta: VariableMeta = {
       value: 100,

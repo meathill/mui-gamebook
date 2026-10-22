@@ -105,7 +105,9 @@ export function useGamePlayer(
   // 已通知过 onSceneVisit 的场景（本局内去重，不需要触发渲染，用 ref 即可）
   const recordedScenesRef = useRef<Set<string>>(new Set());
 
-  const visibleVariables = getVisibleVariables(game.initialState);
+  const visibleVariables = getVisibleVariables(game.initialState).filter(
+    ({ key, meta }) => meta.display !== 'icon' || Boolean(runtimeState[key]),
+  );
   const storageKey = `${storagePrefix}_${slug}`;
 
   const notifySceneVisit = useCallback(

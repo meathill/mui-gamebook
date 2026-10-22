@@ -44,7 +44,7 @@ export default async function PreviewPage({ params }: Props) {
   const { env } = getCloudflareContext();
   const db = drizzle(env.DB);
 
-  // 先取归属与封禁状态（这两项不在 getGameBySlug 的返回里），再按权限决定是否渲染
+  // 先校验归属/管理员权限，再放行未发布或被封禁作品的正文读取
   const gameRow = await db.select().from(schema.games).where(eq(schema.games.slug, slug)).get();
   if (!gameRow) {
     notFound();
@@ -55,7 +55,7 @@ export default async function PreviewPage({ params }: Props) {
     notFound();
   }
 
-  const game = await getGameBySlug(slug, { includeShadowBanned: true });
+  const game = await getGameBySlug(slug, { includeShadowBanned: true, includeUnpublished: true });
   if (!game) {
     notFound();
   }
@@ -63,7 +63,7 @@ export default async function PreviewPage({ params }: Props) {
   const banner = gameRow.shadowBanned
     ? { text: '此作品已被封禁，仅你和管理员可见。', tone: 'bg-red-50 text-red-700 border-red-200' }
     : !gameRow.published
-      ? { text: '预览模式：此作品尚未发布，仅你可见。', tone: 'bg-amber-50 text-amber-700 border-amber-200' }
+      ? { text: '预览模式：此作品尚未发布，仅作者和管理员可见。', tone: 'bg-amber-50 text-amber-700 border-amber-200' }
       : null;
 
   return (

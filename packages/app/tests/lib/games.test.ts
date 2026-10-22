@@ -300,6 +300,26 @@ title: "测试作品"
       expect(await getGameBySlug('draft-game')).toBeNull();
     });
 
+    it('经过鉴权的预览可以显式读取未发布作品', async () => {
+      mockGameRecord({ published: 0 });
+
+      const game = await getGameBySlug('-2155', { includeUnpublished: true });
+
+      expect(game?.title).toBe('测试作品');
+    });
+
+    it('仅放行封禁状态仍然不能读取未发布作品', async () => {
+      mockGameRecord({ published: 0, shadow_banned: 1 });
+
+      expect(await getGameBySlug('draft-game', { includeShadowBanned: true })).toBeNull();
+    });
+
+    it('仅放行未发布状态仍然不能读取被封禁作品', async () => {
+      mockGameRecord({ published: 0, shadow_banned: 1 });
+
+      expect(await getGameBySlug('draft-game', { includeUnpublished: true })).toBeNull();
+    });
+
     it('被封禁的作品公开路径返回 null', async () => {
       mockGameRecord({ published: 1, shadow_banned: 1 });
 

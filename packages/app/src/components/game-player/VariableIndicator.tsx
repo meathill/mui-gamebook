@@ -15,22 +15,29 @@ export default function VariableIndicator({ varKey, meta, currentValue }: Variab
     const val = typeof currentValue === 'number' ? currentValue : Number(currentValue) || 0;
     const percentage = Math.max(0, Math.min(100, (val / max) * 100));
     return (
-      <div className="flex items-stretch justify-between gap-1 w-full relative sm:w-48">
-        <span
-          className="text-xs text-gray-600 truncate"
-          style={{ minWidth: 'auto' }}
-          title={label}>
-          {label}
-        </span>
-        <div className="grow-1 shrink-0 basis-16 bg-gray-200 overflow-hidden">
+      <div className="w-full min-w-0 space-y-1 sm:w-48">
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span
+            className="text-gray-600 truncate"
+            title={label}>
+            {label}
+          </span>
+          <span className="shrink-0 font-medium tabular-nums">
+            {val}/{max}
+          </span>
+        </div>
+        <div
+          role="progressbar"
+          aria-label={label}
+          aria-valuemin={0}
+          aria-valuemax={max}
+          aria-valuenow={Math.max(0, Math.min(max, val))}
+          className="h-1.5 rounded-full bg-gray-200 overflow-hidden">
           <div
-            className={`h-full transition-all duration-300 ml-auto ${percentage < 30 ? 'bg-red-500' : percentage < 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
+            className={`h-full rounded-full transition-[width] duration-200 motion-reduce:transition-none ${percentage < 30 ? 'bg-red-500' : percentage < 60 ? 'bg-yellow-500' : 'bg-green-500'}`}
             style={{ width: `${percentage}%` }}
           />
         </div>
-        <span className="text-xs text-right absolute right-1 font-medium tabular-nums">
-          {val}/{max}
-        </span>
       </div>
     );
   }
