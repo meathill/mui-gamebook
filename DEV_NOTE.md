@@ -87,6 +87,7 @@
 
 **SEO 实践**
 - robots.txt 和 sitemap 需要特殊处理（预渲染）
+- 主站 sitemap 的作品入口由 `lib/sitemap-games.ts` 读取正文并复用 DSL 解析器筛选：只收录已发布、未封禁、解析成功且无 `subdomain` 的作品；子站绑定不在 `Games` 列表字段里，不能仅凭公开列表判断。无 D1 时从公开详情确认绑定，详情不可用则不收录；不自动替换为未经验证的子站地址（issue #25）。
 - IndexNow 主动推送给搜索引擎（`packages/app/scripts/index-now.ts`，`--all` 支持从 sitemap 批量提交；目前仍是手动运行，未接入部署流程）
 - 域名验证文件放在 public 目录
 

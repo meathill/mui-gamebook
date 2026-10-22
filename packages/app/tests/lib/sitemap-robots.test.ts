@@ -1,12 +1,15 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const getPublishedGamesMock = vi.fn();
+const getSitemapGamesMock = vi.fn();
 const getAllTagsMock = vi.fn();
 const getPublishedPostsMock = vi.fn();
 
 vi.mock('@/lib/games', () => ({
-  getPublishedGames: () => getPublishedGamesMock(),
   getAllTags: () => getAllTagsMock(),
+}));
+
+vi.mock('@/lib/sitemap-games', () => ({
+  getSitemapGames: () => getSitemapGamesMock(),
 }));
 
 vi.mock('@/lib/blog', () => ({
@@ -22,7 +25,7 @@ describe('sitemap / robots URL 规范化', () => {
   const originalSiteUrl = process.env.NEXT_PUBLIC_SITE_URL;
 
   beforeEach(() => {
-    getPublishedGamesMock.mockResolvedValue([]);
+    getSitemapGamesMock.mockResolvedValue([]);
     getAllTagsMock.mockResolvedValue([]);
     getPublishedPostsMock.mockResolvedValue({ docs: [] });
   });
@@ -56,7 +59,7 @@ describe('sitemap / robots URL 规范化', () => {
 
   it('sitemap 游戏条目带 updated_at，协议仍是 https', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'http://muistory.com';
-    getPublishedGamesMock.mockResolvedValue([{ slug: 'demo', updated_at: 1_700_000_000 }]);
+    getSitemapGamesMock.mockResolvedValue([{ slug: 'demo', updated_at: 1_700_000_000 }]);
 
     const entries = await sitemap();
     const game = entries.find((entry) => entry.url.endsWith('/play/demo'));
@@ -75,7 +78,7 @@ describe('sitemap / robots URL 规范化', () => {
 
   it('数据源 reject 时 sitemap 仍正常返回静态条目，不抛错', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://muistory.com';
-    getPublishedGamesMock.mockRejectedValue(new Error('D1 unavailable'));
+    getSitemapGamesMock.mockRejectedValue(new Error('D1 unavailable'));
     getAllTagsMock.mockRejectedValue(new Error('D1 unavailable'));
     getPublishedPostsMock.mockRejectedValue(new Error('CMS unavailable'));
 
@@ -92,7 +95,7 @@ describe('sitemap / robots URL 规范化', () => {
     ['脏字符串', 'not-a-number'],
   ])('updated_at 为%s等脏值时不含 Invalid Date，sitemap 不 500', async (_label, dirty) => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://muistory.com';
-    getPublishedGamesMock.mockResolvedValue([{ slug: 'dirty-ts', updated_at: dirty }]);
+    getSitemapGamesMock.mockResolvedValue([{ slug: 'dirty-ts', updated_at: dirty }]);
 
     const entries = await sitemap();
     const game = entries.find((entry) => entry.url.endsWith('/play/dirty-ts'));
@@ -106,7 +109,7 @@ describe('sitemap / robots URL 规范化', () => {
 
   it('updated_at 为毫秒级时间戳时按毫秒解析', async () => {
     process.env.NEXT_PUBLIC_SITE_URL = 'https://muistory.com';
-    getPublishedGamesMock.mockResolvedValue([{ slug: 'ms-ts', updated_at: 1_700_000_000_000 }]);
+    getSitemapGamesMock.mockResolvedValue([{ slug: 'ms-ts', updated_at: 1_700_000_000_000 }]);
 
     const entries = await sitemap();
     const game = entries.find((entry) => entry.url.endsWith('/play/ms-ts'));
