@@ -16,6 +16,8 @@ export * from './utils';
 export { stringify } from './stringify';
 export { proseNodeToLine, redirectNodeToLine } from './serialize';
 export { scanClauses } from './parse-choice';
+export { parseExpression, parseStatementList, type ExprNode, type Assignment, type BinaryOp } from './expression/parse';
+export { stringifyExpression, stringifyAssignments } from './expression/stringify';
 export { normalizeMiniGameVariables, parseProseBlock } from './parse-scene';
 export { interpolateTemplate, parseTemplate } from './template';
 export { validateExpression, type ExpressionValidation } from './expression/index';
