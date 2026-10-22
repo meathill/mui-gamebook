@@ -4,6 +4,10 @@ import { readDslFragment, writeDslFragment } from '@/lib/editor/dsl-tools/fragme
 import { findConditionalSpans } from '@/lib/editor/dsl-tools/conditional-spans';
 
 describe('DSL 表单片段', () => {
+  it('角色列表中不可用于对话的标识不会生成失效语法', () => {
+    const draft = readDslFragment('dialogue', '@hero: 你好', ['hero']);
+    expect(() => writeDslFragment({ ...draft, speaker: 'hero-alt' })).toThrow('角色标识');
+  });
   it('修改选项只替换表单字段，保留语音和未知子句', () => {
     const text = '[看看 [里面]] -> 房间 (if: gold > (2 + 3)) (audio: https://a.test/(voice).mp3) (timer: 10)';
     const draft = readDslFragment('choice', text);

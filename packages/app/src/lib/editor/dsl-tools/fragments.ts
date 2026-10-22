@@ -76,6 +76,7 @@ export function writeDslFragment(draft: DslDraft, original = ''): string {
     }
     case 'dialogue':
       if (!draft.speaker || !draft.text.trim()) throw new Error('请选择角色并填写台词');
+      if (!/^[\p{L}\p{N}_]+$/u.test(draft.speaker)) throw new Error('角色标识不能被对话语法引用，请在角色面板修正');
       if (/[\r\n]/.test(draft.text) || /[()（）\r\n]/.test(draft.emotion))
         throw new Error('单条对话不能跨行，语气不能包含括号');
       return '@' + draft.speaker + (draft.emotion ? ' (' + draft.emotion + ')' : '') + ': ' + draft.text;

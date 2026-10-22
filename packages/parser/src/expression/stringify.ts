@@ -44,6 +44,8 @@ function numberToText(value: number): string {
 function print(node: ExprNode): string {
   switch (node.type) {
     case 'identifier':
+      if (!/^[\p{L}_][\p{L}\p{N}_]*$/u.test(node.name) || /^(or|and|not|true|false)$/i.test(node.name))
+        throw new Error('变量名称不能包含特殊字符或使用 DSL 关键字');
       return node.name;
     case 'number':
       return numberToText(node.value);

@@ -32,4 +32,7 @@ describe('表达式表单往返', () => {
   it('不能表达的字符串明确报错', () => {
     expect(() => stringifyExpression({ type: 'string', value: '两种引号\'"' })).toThrow();
   });
+  it('不能把关键字变量误写成布尔常量', () => {
+    expect(() => stringifyExpression({ type: 'identifier', name: 'true' })).toThrow('关键字');
+  });
 });
