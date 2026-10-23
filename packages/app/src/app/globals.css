@@ -57,6 +57,28 @@ html[data-immersive="true"] main {
   }
 }
 
+/* 故事页占据导航栏下方的视口，正文和侧栏各自滚动。 */
+body:has(.game-editor[data-editor-tab="story"]) .site-footer {
+  display: none;
+}
+.game-editor[data-editor-tab="story"] {
+  display: flex;
+  flex-direction: column;
+  height: calc(100dvh - 4rem - 1px);
+  min-height: 0;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+.game-editor[data-editor-tab="story"] > header {
+  position: static;
+  flex-shrink: 0;
+}
+.game-editor[data-editor-tab="story"] .editor-sidebar {
+  position: static;
+  height: 100%;
+  max-height: 100%;
+}
+
 /* TipTap / ProseMirror 编辑器样式 */
 .rich-editor .ProseMirror {
   outline: none;

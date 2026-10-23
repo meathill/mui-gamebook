@@ -40,7 +40,7 @@ export default function Footer() {
   const { setLocale } = useLocale();
 
   return (
-    <footer className="bg-white border-t border-gray-200 mt-auto">
+    <footer className="site-footer bg-white border-t border-gray-200 mt-auto">
       <div className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
           {/* 品牌列 */}

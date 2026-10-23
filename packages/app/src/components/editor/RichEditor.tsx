@@ -150,7 +150,7 @@ export default function RichEditor({
 
   if (!editor) return null;
   return (
-    <div className="rich-editor flex h-full w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+    <div className="rich-editor flex h-full min-h-0 w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
       <DslToolbar
         onOpen={(kind) => tools.open({ kind })}
         onUndo={() => editor.chain().focus().undo().run()}
@@ -160,7 +160,9 @@ export default function RichEditor({
       />
       <EditorContent
         editor={editor}
-        className="min-h-0 flex-1 overflow-y-auto"
+        role="region"
+        aria-label="故事正文"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
       />
       {tools.session && (
         <DslToolDialog

@@ -56,6 +56,19 @@ describe('RichEditor', () => {
     expect(onScenesChange).toHaveBeenCalledWith(['start', 'forest']);
   });
 
+  it('正文滚动区域与剧情工具栏分开，避免工具栏进入正文滚动内容', async () => {
+    render(
+      <RichEditor
+        content={MULTI_SCENE_CONTENT}
+        onChange={() => {}}
+      />,
+    );
+    await waitForMount();
+    const body = screen.getByRole('region', { name: '故事正文' });
+    expect(body).toContainElement(document.querySelector('.ProseMirror'));
+    expect(body).not.toContainElement(screen.getByRole('toolbar', { name: '剧情快速工具' }));
+  });
+
   it('frontmatter 块不会出现在可编辑正文里', async () => {
     render(
       <RichEditor

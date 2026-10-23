@@ -78,3 +78,5 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 片段与事务测试位于 `packages/app/tests/lib/editor/dsl-*.test.ts`，真实 TipTap + dialog 交互测试位于 `packages/app/tests/components/dsl-tool-dialog.test.tsx`；表达式往返覆盖在 `packages/parser/tests/expression-stringify.test.ts`，文本原样保存覆盖在 `packages/app/tests/lib/editor/useEditorData.test.ts`。
 
 验收需覆盖：工具栏创建后再次点击编辑、手动改文本后回填、取消/撤销/重做、中文输入法、弹窗期间外部修改、嵌套条件，以及语音/静态媒体/未知字段经保存与流程图往返的保留。
+
+长正文滚动回归：在实际编辑页载入足以超过三屏的剧本，在桌面和窄屏下将“故事正文”滚动到中部、底部及顶部。剧情工具栏的顶部位置应保持不变，正文滚动不应转为整个页面滚动；滚动后仍能打开插入表单，并通过大纲或目标场景定位到对应标题。jsdom 不计算布局，这项需用真实浏览器验收。

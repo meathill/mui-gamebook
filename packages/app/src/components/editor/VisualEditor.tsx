@@ -74,7 +74,6 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-  // 编辑器状态
   const [sceneIds, setSceneIds] = useState<string[]>([]);
   const [editorHandle, setEditorHandle] = useState<RichEditorHandle | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('saved');
@@ -279,7 +278,9 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   );
 
   return (
-    <div className="grow bg-gray-50 game-editor">
+    <div
+      className="grow bg-gray-50 game-editor"
+      data-editor-tab={activeTab}>
       <EditorToolbar
         title={originalGame?.title || originalGame?.slug}
         slug={slug}
@@ -308,8 +309,8 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
 
       {/* 故事 tab: 左侧栏 + TipTap 编辑器 + AI 助手 */}
       {activeTab === 'story' && (
-        <div className="flex grow">
-          <div>
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="min-h-0 shrink-0">
             {leftSidebarOpen && originalGame && (
               <EditorLeftSidebar
                 game={originalGame}
@@ -320,9 +321,8 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
               />
             )}
           </div>
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* TipTap 编辑器 */}
-            <div className="flex-1 p-4 overflow-hidden">
+          <div className="min-h-0 min-w-0 flex-1 flex flex-col overflow-hidden">
+            <div className="min-h-0 flex-1 p-4 overflow-hidden">
               <RichEditor
                 content={textContent}
                 onChange={handleStoryChange}
