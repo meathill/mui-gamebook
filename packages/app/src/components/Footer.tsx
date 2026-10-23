@@ -96,7 +96,20 @@ export default function Footer() {
 
         {/* 底部栏：版权 + 版本 + 外链 + 语言 */}
         <div className="mt-10 pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-3 items-center">
-          <div className="text-sm text-gray-500">{t('copyright', { year: new Date().getFullYear() })}</div>
+          <div className="text-sm text-gray-500">
+            {t.rich('copyright', {
+              year: new Date().getFullYear(),
+              company: (chunks) => (
+                <a
+                  href="https://meathill.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-gray-900 hover:underline transition-colors">
+                  {chunks}
+                </a>
+              ),
+            })}
+          </div>
           <div className="text-xs text-gray-400">v{process.env.NEXT_PUBLIC_APP_VERSION || 'dev'}</div>
           <div className="flex items-center gap-4 sm:ms-auto">
             <a

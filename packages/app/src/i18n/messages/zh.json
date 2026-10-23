@@ -27,7 +27,7 @@
     "skills": "AI 技能"
   },
   "footer": {
-    "copyright": "© {year} 姆伊游戏书. 保留所有权利.",
+    "copyright": "© {year} <company>Meathill LLC</company>。保留所有权利。",
     "tagline": "在线互动小说，人人能读、人人能写。",
     "groups": {
       "read": "读故事",

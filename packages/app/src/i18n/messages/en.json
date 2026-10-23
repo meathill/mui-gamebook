@@ -27,7 +27,7 @@
     "skills": "Skills"
   },
   "footer": {
-    "copyright": "© {year} MuiStory. All rights reserved.",
+    "copyright": "© {year} <company>Meathill LLC</company>. All rights reserved.",
     "tagline": "Interactive fiction everyone can read and write.",
     "groups": {
       "read": "Read",
