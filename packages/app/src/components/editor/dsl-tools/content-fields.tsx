@@ -1,7 +1,6 @@
-import { useId } from 'react';
 import type { AICharacter } from '@roudanio/parser';
 import type { DslDraft } from '@/lib/editor/dsl-tools/types';
-import { FIELD_CLASS, SelectField, TextField } from './fields';
+import { SelectField, TextField } from './fields';
 import LogicField from './logic-field';
 
 export interface DslFieldsProps {
@@ -13,7 +12,6 @@ export interface DslFieldsProps {
 }
 
 export default function ContentFields({ draft, onChange, scenes, variables, characters }: DslFieldsProps) {
-  const listId = useId();
   const isRoute = draft.kind === 'choice' || draft.kind === 'redirect';
   return (
     <>
@@ -38,30 +36,46 @@ export default function ContentFields({ draft, onChange, scenes, variables, char
       {isRoute && (
         <>
           <div className="space-y-2">
-            <label className="block space-y-1.5 text-sm font-medium text-gray-800">
-              <span>{draft.createTarget ? '新场景名称' : '目标场景'}</span>
-              <input
-                className={FIELD_CLASS}
+            {draft.createTarget ? (
+              <TextField
+                label="新场景名称"
                 value={draft.target}
-                list={draft.createTarget ? undefined : listId}
                 required
-                placeholder={draft.createTarget ? '例如：森林入口' : '输入名称搜索已有场景'}
-                onChange={(event) => onChange({ target: event.target.value })}
+                placeholder="例如：森林入口"
+                onChange={(target) => onChange({ target })}
               />
-            </label>
-            <datalist id={listId}>
-              {scenes.map((name) => (
+            ) : (
+              <SelectField
+                label="目标场景"
+                value={draft.target}
+                onChange={(target) => onChange({ target })}
+                required>
                 <option
-                  key={name}
-                  value={name}
-                />
-              ))}
-            </datalist>
+                  value=""
+                  disabled>
+                  {scenes.length ? '请选择目标场景' : '暂无可选场景，请新建'}
+                </option>
+                {draft.target && !scenes.includes(draft.target) && (
+                  <option
+                    value={draft.target}
+                    disabled>
+                    {draft.target}（场景不存在，请重新选择）
+                  </option>
+                )}
+                {scenes.map((name) => (
+                  <option
+                    key={name}
+                    value={name}>
+                    {name}
+                  </option>
+                ))}
+              </SelectField>
+            )}
             <label className="flex items-center gap-2 text-sm text-gray-600">
               <input
                 type="checkbox"
                 checked={draft.createTarget}
-                onChange={(event) => onChange({ createTarget: event.target.checked })}
+                onChange={(event) => onChange({ createTarget: event.target.checked, target: '' })}
               />
               新建目标场景并连接
             </label>

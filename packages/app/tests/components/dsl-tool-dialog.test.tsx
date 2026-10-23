@@ -45,6 +45,25 @@ beforeEach(() => {
 });
 
 describe('快速工具的双向表单', () => {
+  it('从已有选项的下拉框选择另一个场景并回写目标', async () => {
+    const onChange = vi.fn();
+    render(<Harness onChange={onChange} />);
+    const editor = await getEditor();
+    const target = findDslTargets(editor.state.doc).find((item) => item.kind === 'choice')!;
+    act(() => {
+      requestDslTool(editor, { kind: 'choice', position: target.from });
+    });
+    const select = screen.getByRole('combobox', { name: '目标场景' });
+    expect(select.tagName).toBe('SELECT');
+    fireEvent.change(select, { target: { value: 'start' } });
+    fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
+    const parsed = parse(onChange.mock.calls.at(-1)![0]);
+    expect(parsed.success && parsed.data.scenes.start.nodes.at(-1)).toMatchObject({
+      nextSceneId: 'start',
+      clauses: { timer: '10' },
+    });
+  });
+
   it('工具栏创建选项、连接新场景，之后可再次打开编辑', async () => {
     const onChange = vi.fn();
     render(<Harness onChange={onChange} />);
