@@ -5,22 +5,28 @@ import * as path from 'path';
 import { logoutCommand } from '../src/commands/auth';
 import { resolveConfig, saveUserConfig, clearUserConfig, getCredentialSource } from '../src/utils/config';
 
+vi.mock('os', async () => ({
+  ...(await vi.importActual<typeof import('os')>('os')),
+  homedir: vi.fn(),
+}));
+
 describe('Auth & Config', () => {
-  const rcPath = path.resolve(os.homedir(), '.mgbrc');
-  let originalRc: string | null = null;
+  let directory: string;
+  let rcPath: string;
 
   beforeEach(() => {
-    if (fs.existsSync(rcPath)) {
-      originalRc = fs.readFileSync(rcPath, 'utf-8');
-    }
+    directory = fs.mkdtempSync(path.join(os.tmpdir(), 'mui-cli-auth-'));
+    rcPath = path.join(directory, '.mgbrc');
+    vi.mocked(os.homedir).mockReturnValue(directory);
+    vi.spyOn(process, 'cwd').mockReturnValue(directory);
+    vi.stubEnv('MGB_API_KEY', '');
+    vi.stubEnv('MGB_ENDPOINT', '');
   });
 
   afterEach(() => {
-    if (originalRc !== null) {
-      fs.writeFileSync(rcPath, originalRc, 'utf-8');
-    } else if (fs.existsSync(rcPath)) {
-      fs.unlinkSync(rcPath);
-    }
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+    fs.rmSync(directory, { recursive: true, force: true });
   });
 
   it('saveUserConfig 正确写入 ~/.mgbrc 并被 resolveConfig 识别', () => {

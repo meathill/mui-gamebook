@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getSafeRedirect } from '@/app/sign-in/page';
+import { getSafeRedirect } from '@/lib/sign-in-redirect';
 
 describe('getSafeRedirect', () => {
   it('合法的站内路径原样返回', () => {
