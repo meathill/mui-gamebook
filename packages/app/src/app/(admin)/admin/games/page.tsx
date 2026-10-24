@@ -6,6 +6,8 @@ import Link from 'next/link';
 import PaginationBar from '@/components/admin/PaginationBar';
 import SortableHeader from '@/components/admin/SortableHeader';
 import { useDialog } from '@/components/Dialog';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 import { useListQuery } from '@/hooks/useListQuery';
 import { formatDateTime as formatDate } from '@mui-gamebook/site-common/utils';
 
@@ -146,18 +148,19 @@ export default function AdminGamesPage() {
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
-            <input
+            <Input
               type="text"
               value={list.searchInput}
               onChange={(e) => list.setSearchInput(e.target.value)}
               placeholder="搜索标题、slug 或作者邮箱..."
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="pl-9"
             />
           </div>
-          <select
+          <NativeSelect
             value={list.filters.status ?? 'all'}
             onChange={(e) => list.setFilter('status', e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            wrapperClassName="w-auto"
+            className="text-gray-700">
             {STATUS_OPTIONS.map((option) => (
               <option
                 key={option.value}
@@ -165,7 +168,7 @@ export default function AdminGamesPage() {
                 {option.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <button
             type="submit"
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">

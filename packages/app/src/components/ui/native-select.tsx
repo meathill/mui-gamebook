@@ -8,12 +8,18 @@ import { cn } from '@/lib';
 /**
  * 样式化原生 select：保留原生行为（IME、移动端滚轮、表单语义），
  * 仅统一外观。不使用 radix Select，避免编辑器表单行为变化。
+ * 布局类（flex-1、定宽等）传给 wrapperClassName，其余样式传 className。
  */
-function NativeSelect({ className, children, ...props }: React.ComponentProps<'select'>) {
+function NativeSelect({
+  className,
+  wrapperClassName,
+  children,
+  ...props
+}: React.ComponentProps<'select'> & { wrapperClassName?: string }) {
   return (
     <div
       data-slot="native-select-wrapper"
-      className="relative w-full has-[select:disabled]:opacity-50">
+      className={cn('relative w-full has-[select:disabled]:opacity-50', wrapperClassName)}>
       <select
         data-slot="native-select"
         className={cn(

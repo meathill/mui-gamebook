@@ -1,41 +1,37 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import * as Accordion from '@radix-ui/react-accordion';
-import { CaretDownIcon } from '@phosphor-icons/react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export default function FaqSection({ faqKeys }: { faqKeys: string[] }) {
   const t = useTranslations('home');
 
   return (
-    <section className="py-16 bg-gray-50 border-y border-gray-200">
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{t('faq.title')}</h2>
+    <section className="border-y border-gray-200 bg-gray-50 py-16">
+      <div className="mx-auto max-w-3xl px-4">
+        <div className="mb-12 text-center">
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">{t('faq.title')}</h2>
           <p className="mt-3 text-gray-600">{t('faq.subtitle')}</p>
         </div>
 
-        <Accordion.Root
+        <Accordion
           type="single"
           collapsible
           className="space-y-2">
           {faqKeys.map((key) => (
-            <Accordion.Item
+            <AccordionItem
               key={key}
               value={key}
-              className="bg-white rounded-lg border border-gray-200">
-              <Accordion.Header>
-                <Accordion.Trigger className="w-full flex items-center justify-between px-5 py-4 text-left font-medium text-gray-900 hover:bg-gray-50 rounded-lg transition-colors group">
-                  <span className="text-sm">{t(`faq.${key}.question`)}</span>
-                  <CaretDownIcon className="w-4 h-4 text-gray-400 shrink-0 transition-transform duration-200 group-data-[state=open]:rotate-180" />
-                </Accordion.Trigger>
-              </Accordion.Header>
-              <Accordion.Content className="px-5 pb-4 text-sm text-gray-600 leading-relaxed data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up overflow-hidden">
+              className="rounded-lg border border-gray-200 bg-white px-5 last:border-b">
+              <AccordionTrigger className="py-4 text-sm font-medium text-gray-900 hover:no-underline">
+                {t(`faq.${key}.question`)}
+              </AccordionTrigger>
+              <AccordionContent className="pb-4 leading-relaxed text-gray-600">
                 {t(`faq.${key}.answer`)}
-              </Accordion.Content>
-            </Accordion.Item>
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </Accordion.Root>
+        </Accordion>
       </div>
     </section>
   );

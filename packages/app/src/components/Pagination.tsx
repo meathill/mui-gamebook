@@ -1,6 +1,13 @@
 import Link from 'next/link';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react/dist/ssr';
 import { catalogPageHref } from '@/lib/catalog-path';
+import {
+  Pagination as PaginationRoot,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+} from '@/components/ui/pagination';
 
 interface PaginationProps {
   currentPage: number;
@@ -48,62 +55,85 @@ export default function Pagination({ currentPage, totalPages, basePath }: Pagina
   }
 
   const pageNumbers = getPageNumbers();
+  // 上一页/下一页的公共样式，与 PaginationPrevious/Next 保持一致
+  const arrowClass = 'gap-1 px-2.5 sm:px-2.5';
 
   return (
-    <nav
-      className="flex items-center justify-center gap-1"
-      aria-label="Pagination">
-      {/* 上一页（低意向翻页：关闭预取，避免 _rsc 预取放大 Worker 请求） */}
-      {currentPage > 1 ? (
-        <Link
-          href={catalogPageHref(basePath, currentPage - 1)}
-          prefetch={false}
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
-          aria-label="Previous page">
-          <CaretLeftIcon className="w-5 h-5" />
-        </Link>
-      ) : (
-        <span className="p-2 rounded-lg text-gray-300 cursor-not-allowed">
-          <CaretLeftIcon className="w-5 h-5" />
-        </span>
-      )}
+    <PaginationRoot>
+      <PaginationContent>
+        <PaginationItem>
+          {currentPage > 1 ? (
+            <PaginationLink
+              asChild
+              size="default"
+              className={arrowClass}
+              aria-label="上一页">
+              {/* 低意向翻页：关闭预取，避免 _rsc 预取放大 Worker 请求 */}
+              <Link
+                href={catalogPageHref(basePath, currentPage - 1)}
+                prefetch={false}>
+                <CaretLeftIcon />
+                <span className="hidden sm:block">上一页</span>
+              </Link>
+            </PaginationLink>
+          ) : (
+            <PaginationLink
+              size="default"
+              aria-disabled
+              className={`${arrowClass} pointer-events-none opacity-50`}>
+              <CaretLeftIcon />
+              <span className="hidden sm:block">上一页</span>
+            </PaginationLink>
+          )}
+        </PaginationItem>
 
-      {/* 页码 */}
-      {pageNumbers.map((page, index) =>
-        page === 'ellipsis' ? (
-          <span
-            key={`ellipsis-${index}`}
-            className="px-3 py-2 text-gray-400">
-            ...
-          </span>
-        ) : (
-          <Link
-            key={page}
-            href={catalogPageHref(basePath, page)}
-            prefetch={false}
-            className={`px-3 py-2 rounded-lg font-medium transition-colors ${
-              page === currentPage ? 'bg-orange-500 text-white' : 'text-gray-600 hover:bg-gray-100'
-            }`}
-            aria-current={page === currentPage ? 'page' : undefined}>
-            {page}
-          </Link>
-        ),
-      )}
+        {/* 页码 */}
+        {pageNumbers.map((page, index) =>
+          page === 'ellipsis' ? (
+            <PaginationItem key={`ellipsis-${index}`}>
+              <PaginationEllipsis />
+            </PaginationItem>
+          ) : (
+            <PaginationItem key={page}>
+              <PaginationLink
+                asChild
+                size="default"
+                isActive={page === currentPage}>
+                <Link
+                  href={catalogPageHref(basePath, page)}
+                  prefetch={false}>
+                  {page}
+                </Link>
+              </PaginationLink>
+            </PaginationItem>
+          ),
+        )}
 
-      {/* 下一页 */}
-      {currentPage < totalPages ? (
-        <Link
-          href={catalogPageHref(basePath, currentPage + 1)}
-          prefetch={false}
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 transition-colors"
-          aria-label="Next page">
-          <CaretRightIcon className="w-5 h-5" />
-        </Link>
-      ) : (
-        <span className="p-2 rounded-lg text-gray-300 cursor-not-allowed">
-          <CaretRightIcon className="w-5 h-5" />
-        </span>
-      )}
-    </nav>
+        <PaginationItem>
+          {currentPage < totalPages ? (
+            <PaginationLink
+              asChild
+              size="default"
+              className={arrowClass}
+              aria-label="下一页">
+              <Link
+                href={catalogPageHref(basePath, currentPage + 1)}
+                prefetch={false}>
+                <span className="hidden sm:block">下一页</span>
+                <CaretRightIcon />
+              </Link>
+            </PaginationLink>
+          ) : (
+            <PaginationLink
+              size="default"
+              aria-disabled
+              className={`${arrowClass} pointer-events-none opacity-50`}>
+              <span className="hidden sm:block">下一页</span>
+              <CaretRightIcon />
+            </PaginationLink>
+          )}
+        </PaginationItem>
+      </PaginationContent>
+    </PaginationRoot>
   );
 }

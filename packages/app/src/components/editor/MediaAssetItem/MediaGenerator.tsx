@@ -1,5 +1,7 @@
 import { SpinnerIcon, SparkleIcon, CheckIcon } from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { NativeSelect } from '@/components/ui/native-select';
 import type { MediaGeneratorProps } from './types';
 import MentionInput from '../MentionInput';
 
@@ -30,20 +32,21 @@ export default function MediaGenerator({
             className="mb-2"
           />
         ) : (
-          <textarea
+          <Textarea
             placeholder="描述你想要的内容..."
             value={prompt}
             onChange={(e) => onPromptChange(e.target.value)}
-            className="w-full p-2 text-sm border rounded mb-2 h-20 resize-none"
+            className="w-full p-2 mb-2 h-20 resize-none"
           />
         )}
         {isImage && (
           <div className="flex gap-2 mb-2">
             <label className="text-xs text-gray-600 self-center">比例:</label>
-            <select
+            <NativeSelect
               value={aspectRatio}
               onChange={(e) => onAspectRatioChange(e.target.value)}
-              className="flex-1 p-1.5 text-xs border rounded">
+              wrapperClassName="flex-1"
+              className="p-1.5 text-xs">
               {aspectRatios.map((r) => (
                 <option
                   key={r.value}
@@ -51,7 +54,7 @@ export default function MediaGenerator({
                   {r.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
         )}
         <Button
@@ -83,10 +86,10 @@ export default function MediaGenerator({
           placeholder="输入 AI 生成提示词... 使用 @ 引用角色"
         />
       ) : (
-        <textarea
+        <Textarea
           value={prompt}
           onChange={(e) => onPromptChange(e.target.value)}
-          className="w-full p-2 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 resize-none h-16"
+          className="w-full p-2 text-xs resize-none h-16"
           placeholder="输入 AI 生成提示词..."
         />
       )}
@@ -94,10 +97,11 @@ export default function MediaGenerator({
         {isImage && (
           <div className="flex items-center gap-2 flex-1">
             <label className="text-xs text-gray-500">比例:</label>
-            <select
+            <NativeSelect
               value={aspectRatio}
               onChange={(e) => onAspectRatioChange(e.target.value)}
-              className="flex-1 text-xs p-1 border border-gray-300 rounded">
+              wrapperClassName="flex-1"
+              className="text-xs p-1">
               {aspectRatios.map((r) => (
                 <option
                   key={r.value}
@@ -105,7 +109,7 @@ export default function MediaGenerator({
                   {r.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
         )}
         <Button

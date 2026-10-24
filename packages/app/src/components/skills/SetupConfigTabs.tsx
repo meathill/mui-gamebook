@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import CopyButton from '@/components/skills/CopyButton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { McpClient } from '@/lib/skills/setup';
 
 interface SetupConfigTabsProps {
@@ -12,43 +13,46 @@ interface SetupConfigTabsProps {
 
 export default function SetupConfigTabs({ clients, copyLabel, copiedLabel }: SetupConfigTabsProps) {
   const [active, setActive] = useState<McpClient>(clients[0].id);
-  const current = clients.find((c) => c.id === active) ?? clients[0];
 
   return (
-    <div className="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-      <div className="flex border-b border-stone-200">
-        {clients.map((client) => (
-          <button
-            key={client.id}
-            type="button"
-            onClick={() => setActive(client.id)}
-            className={`flex-1 px-4 py-3 text-sm font-bold transition-colors ${
-              client.id === active
-                ? 'bg-stone-900 text-white'
-                : 'bg-stone-50 text-stone-500 hover:bg-stone-100 hover:text-stone-800'
-            }`}>
-            {client.label}
-          </button>
-        ))}
-      </div>
-      <div className="p-6">
-        <ul className="text-sm text-stone-600 mb-4 space-y-1">
-          {current.filePaths.map((path) => (
-            <li key={path}>
-              <code className="bg-stone-100 px-1.5 py-0.5 rounded text-xs">{path}</code>
-            </li>
+    <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white">
+      <Tabs
+        value={active}
+        onValueChange={(value) => setActive(value as McpClient)}>
+        <TabsList className="h-auto w-full rounded-none border-b border-stone-200 bg-stone-50 p-0">
+          {clients.map((client) => (
+            <TabsTrigger
+              key={client.id}
+              value={client.id}
+              className="h-auto flex-1 flex-none rounded-none px-4 py-3 text-sm font-bold data-[state=active]:bg-stone-900 data-[state=active]:text-white">
+              {client.label}
+            </TabsTrigger>
           ))}
-        </ul>
-        <pre className="bg-stone-900 text-stone-100 text-xs leading-relaxed p-4 rounded-xl overflow-x-auto mb-4">
-          {current.config}
-        </pre>
-        <p className="text-sm text-stone-500 mb-4">{current.note}</p>
-        <CopyButton
-          text={current.config}
-          copyLabel={copyLabel}
-          copiedLabel={copiedLabel}
-        />
-      </div>
+        </TabsList>
+        {clients.map((client) => (
+          <TabsContent
+            key={client.id}
+            value={client.id}
+            className="p-6">
+            <ul className="mb-4 space-y-1 text-sm text-stone-600">
+              {client.filePaths.map((path) => (
+                <li key={path}>
+                  <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs">{path}</code>
+                </li>
+              ))}
+            </ul>
+            <pre className="mb-4 overflow-x-auto rounded-xl bg-stone-900 p-4 text-xs leading-relaxed text-stone-100">
+              {client.config}
+            </pre>
+            <p className="mb-4 text-sm text-stone-500">{client.note}</p>
+            <CopyButton
+              text={client.config}
+              copyLabel={copyLabel}
+              copiedLabel={copiedLabel}
+            />
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   );
 }

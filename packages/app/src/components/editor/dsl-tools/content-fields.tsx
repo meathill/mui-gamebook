@@ -1,5 +1,6 @@
 import type { AICharacter } from '@roudanio/parser';
 import type { DslDraft } from '@/lib/editor/dsl-tools/types';
+import { Checkbox } from '@/components/ui/checkbox';
 import { SelectField, TextField } from './fields';
 import LogicField from './logic-field';
 
@@ -72,10 +73,9 @@ export default function ContentFields({ draft, onChange, scenes, variables, char
               </SelectField>
             )}
             <label className="flex items-center gap-2 text-sm text-gray-600">
-              <input
-                type="checkbox"
+              <Checkbox
                 checked={draft.createTarget}
-                onChange={(event) => onChange({ createTarget: event.target.checked, target: '' })}
+                onCheckedChange={(checked) => onChange({ createTarget: checked === true, target: '' })}
               />
               新建目标场景并连接
             </label>
@@ -178,10 +178,9 @@ export default function ContentFields({ draft, onChange, scenes, variables, char
             hint="支持变量与嵌套条件；可以换行，但不能插入空行。"
           />
           <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={draft.hasElse}
-              onChange={(event) => onChange({ hasElse: event.target.checked })}
+              onCheckedChange={(checked) => onChange({ hasElse: checked === true })}
             />
             条件不成立时显示其他文字
           </label>

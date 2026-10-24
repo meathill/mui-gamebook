@@ -15,7 +15,20 @@ describe('Pagination', () => {
     expect(screen.getByRole('link', { name: '1' })).toHaveAttribute('href', '/games');
     expect(screen.getByRole('link', { name: '2' })).toHaveAttribute('href', '/games/p/2');
     expect(screen.getByRole('link', { name: '3' })).toHaveAttribute('href', '/games/p/3');
-    expect(screen.getByLabelText('Previous page')).toHaveAttribute('href', '/games');
-    expect(screen.getByLabelText('Next page')).toHaveAttribute('href', '/games/p/3');
+    expect(screen.getByLabelText('上一页')).toHaveAttribute('href', '/games');
+    expect(screen.getByLabelText('下一页')).toHaveAttribute('href', '/games/p/3');
+  });
+
+  it('第 1 页时上一页禁用，最后一页时下一页禁用', () => {
+    render(
+      <Pagination
+        currentPage={1}
+        totalPages={2}
+        basePath="/games"
+      />,
+    );
+
+    expect(screen.getByText('上一页').closest('a')).toHaveClass('pointer-events-none');
+    expect(screen.getByText('下一页').closest('a')).toHaveAttribute('href', '/games/p/2');
   });
 });

@@ -23,6 +23,7 @@ vi.mock('next/link', () => ({
 vi.mock('@phosphor-icons/react', () => ({
   FloppyDiskIcon: () => null,
   ArrowLeftIcon: () => null,
+  CaretDownIcon: () => null,
 }));
 
 const INITIAL_CONFIG: AppConfig = {

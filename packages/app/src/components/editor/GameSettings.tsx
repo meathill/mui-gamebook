@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { Game } from '@roudanio/parser/src/types';
 import { XIcon } from '@phosphor-icons/react/dist/ssr';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Props {
   game: Game;
@@ -48,30 +51,30 @@ export default function GameSettings({ game, onSave, onClose }: Props) {
           className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Title</label>
-            <input
+            <Input
               type="text"
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              className="mt-1 block"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Description</label>
-            <textarea
+            <Textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2 h-20"
+              className="mt-1 block h-20"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Background Story (Markdown)</label>
-            <textarea
+            <Textarea
               value={formData.backgroundStory}
               onChange={(e) => setFormData({ ...formData, backgroundStory: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2 h-40 font-mono text-sm"
+              className="mt-1 block h-40 font-mono"
             />
           </div>
 
@@ -79,31 +82,29 @@ export default function GameSettings({ game, onSave, onClose }: Props) {
             <label className="block text-sm font-medium text-gray-700">
               Cover ImageIcon (URL or &quot;prompt:...&quot;)
             </label>
-            <input
+            <Input
               type="text"
               value={formData.cover_image}
               onChange={(e) => setFormData({ ...formData, cover_image: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              className="mt-1 block"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700">Tags (comma separated)</label>
-            <input
+            <Input
               type="text"
               value={formData.tags}
               onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-              className="mt-1 block w-full rounded-md border border-gray-300 p-2"
+              className="mt-1 block"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
+            <Checkbox
               id="published"
               checked={formData.published}
-              onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-              className="rounded text-blue-600"
+              onCheckedChange={(checked) => setFormData({ ...formData, published: checked === true })}
             />
             <label
               htmlFor="published"

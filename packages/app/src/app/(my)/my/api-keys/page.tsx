@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useDialog } from '@/components/Dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 import {
   buildAntigravityConfig,
   buildClaudeCodeCommand,
@@ -224,16 +226,17 @@ export default function ApiKeysPage() {
       <section className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
         <h2 className="font-semibold text-gray-900">创建密钥</h2>
         <div className="flex flex-wrap items-stretch gap-2">
-          <input
+          <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="密钥名称，如 mui-gamebook-mcp"
-            className="flex-1 min-w-[200px] h-10 rounded-lg border border-gray-300 px-3 text-sm"
+            className="h-10 min-w-[200px] flex-1"
           />
-          <select
+          <NativeSelect
             value={expiry}
             onChange={(e) => setExpiry(e.target.value)}
-            className="h-10 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 bg-white">
+            wrapperClassName="w-auto"
+            className="h-10 bg-white text-gray-700">
             {EXPIRY_OPTIONS.map((opt) => (
               <option
                 key={opt.value}
@@ -241,7 +244,7 @@ export default function ApiKeysPage() {
                 {opt.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <Button
             size="lg"
             onClick={handleCreate}

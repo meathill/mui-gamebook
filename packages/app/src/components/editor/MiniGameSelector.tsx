@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MagnifyingGlassIcon, PlusIcon, SpinnerIcon, GameControllerIcon } from '@phosphor-icons/react/dist/ssr';
 import { isImeComposing } from '@/lib/keyboard';
+import { Input } from '@/components/ui/input';
 
 interface MiniGame {
   id: number;
@@ -65,13 +66,13 @@ export default function MiniGameSelector({ onSelect, onGenerate, isGenerating }:
       {/* 搜索和新建 */}
       <div className="flex gap-1">
         <div className="relative flex-1">
-          <input
+          <Input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="搜索小游戏..."
-            className="w-full pl-7 pr-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 outline-none"
+            className="w-full pl-7 pr-2 text-xs"
           />
           <MagnifyingGlassIcon
             size={12}

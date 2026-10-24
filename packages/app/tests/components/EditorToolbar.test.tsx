@@ -38,7 +38,8 @@ describe('EditorToolbar', () => {
   it('点击 tab 按钮调用 store 的 setActiveTab', () => {
     render(<EditorToolbar {...baseProps} />);
 
-    fireEvent.click(screen.getByText('流程图'));
+    // radix Tabs 的激活发生在 trigger 的 focus 上（真实浏览器点击会先聚焦）
+    fireEvent.focus(screen.getByRole('tab', { name: /流程图/ }));
 
     expect(useEditorStore.getState().activeTab).toBe('flowchart');
   });

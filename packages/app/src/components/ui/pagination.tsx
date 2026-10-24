@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
-import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from '@phosphor-icons/react';
+// 本组件会被服务端组件（目录分页）引用，图标必须走 SSR 安全入口（主入口含 createContext）
+import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from '@phosphor-icons/react/dist/ssr';
 
 import { cn } from '@/lib';
 import { buttonVariants } from '@/components/ui/button';

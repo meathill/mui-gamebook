@@ -1,5 +1,6 @@
 import type { AiProviderType } from '@mui-gamebook/core/lib/ai-provider';
 import type { AiPermissions } from '@/lib/ai-permissions';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const PROVIDER_OPTIONS: { value: AiProviderType; label: string }[] = [
   { value: 'opencode', label: 'OpenCode Go（DeepSeek 默认）' },
@@ -97,12 +98,10 @@ export function UserAiPermissionsFields({ value, onChange, planLabel }: UserAiPe
               {PROVIDER_OPTIONS.map((option) => (
                 <label
                   key={option.value}
-                  className="flex items-center gap-2 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
+                  className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                  <Checkbox
                     checked={value.providers.includes(option.value)}
-                    onChange={() => handleToggleProvider(option.value)}
-                    className="rounded border-gray-300"
+                    onCheckedChange={() => handleToggleProvider(option.value)}
                   />
                   {option.label}
                 </label>
@@ -116,12 +115,10 @@ export function UserAiPermissionsFields({ value, onChange, planLabel }: UserAiPe
               {SERVICE_OPTIONS.map((option) => (
                 <label
                   key={option.key}
-                  className="flex items-center gap-2 text-sm text-gray-700">
-                  <input
-                    type="checkbox"
+                  className="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                  <Checkbox
                     checked={value[option.key]}
-                    onChange={(e) => onChange({ ...value, [option.key]: e.target.checked })}
-                    className="rounded border-gray-300"
+                    onCheckedChange={(checked) => onChange({ ...value, [option.key]: checked === true })}
                   />
                   <span>
                     {option.label}

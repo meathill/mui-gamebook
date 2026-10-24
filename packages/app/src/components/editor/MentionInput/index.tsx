@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect, KeyboardEvent, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { isImeComposing } from '@/lib/keyboard';
+import { Textarea } from '@/components/ui/textarea';
 import type { MentionInputProps, MentionPosition } from './types';
 import CharacterDropdown from './CharacterDropdown';
 
@@ -218,14 +219,14 @@ export default function MentionInput({
       {renderHighlightedPreview()}
 
       {/* 实际的 textarea */}
-      <textarea
+      <Textarea
         ref={textareaRef}
         value={value}
         onChange={handleInput}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full p-2 text-sm border border-gray-300 rounded resize-none bg-transparent relative z-10 focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+        className="w-full p-2 resize-none relative z-10"
         style={{ caretColor: 'black' }}
         rows={3}
       />

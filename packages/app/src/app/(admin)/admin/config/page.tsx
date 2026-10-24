@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, useEffect, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { type AdminConfigDraft, createAdminConfigDraft, parseAdminConfigDraft } from '@/lib/admin-config-draft';
 import { authClient } from '@/lib/auth-client';
 import type { AppConfig } from '@/lib/config';
@@ -158,12 +160,12 @@ export default function AdminConfigPage() {
 
             <div className="space-y-4">
               <div>
-                <label
+                <Label
                   htmlFor="daily-token-limit"
-                  className="block text-sm font-medium text-gray-700 mb-1">
+                  className="mb-1 text-gray-700">
                   每日 Token 限制
-                </label>
-                <input
+                </Label>
+                <Input
                   id="daily-token-limit"
                   type="number"
                   min={0}
@@ -172,7 +174,6 @@ export default function AdminConfigPage() {
                   aria-invalid={validationError ? true : undefined}
                   aria-describedby={validationError ? 'daily-token-limit-error' : undefined}
                   onChange={(e) => updateField('dailyTokenLimit', e.target.value)}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
                 />
                 {validationError && (
                   <p

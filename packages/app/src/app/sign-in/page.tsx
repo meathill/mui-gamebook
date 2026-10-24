@@ -5,6 +5,8 @@ import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { trackLogin, trackSignUp } from '@mui-gamebook/site-common/utils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { getSafeRedirect } from '@/lib/sign-in-redirect';
 
 type Mode = 'signIn' | 'signUp';
@@ -76,17 +78,17 @@ export default function SignInPage() {
           onSubmit={handleSubmit}>
           {mode === 'signUp' && (
             <div>
-              <label
+              <Label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 mb-1">
+                className="mb-1 text-gray-700">
                 {t('name')}
-              </label>
-              <input
+              </Label>
+              <Input
                 id="name"
                 name="name"
                 type="text"
                 autoComplete="name"
-                className="block w-full rounded-lg border border-gray-300 py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                className="block text-gray-900"
                 placeholder={t('namePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -94,37 +96,37 @@ export default function SignInPage() {
             </div>
           )}
           <div>
-            <label
+            <Label
               htmlFor="email-address"
-              className="block text-sm font-medium text-gray-700 mb-1">
+              className="mb-1 text-gray-700">
               {t('email')}
-            </label>
-            <input
+            </Label>
+            <Input
               id="email-address"
               name="email"
               type="email"
               autoComplete="email"
               required
-              className="block w-full rounded-lg border border-gray-300 py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+              className="block text-gray-900"
               placeholder={t('emailPlaceholder')}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div>
-            <label
+            <Label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1">
+              className="mb-1 text-gray-700">
               {t('password')}
-            </label>
-            <input
+            </Label>
+            <Input
               id="password"
               name="password"
               type="password"
               autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
               required
               minLength={8}
-              className="block w-full rounded-lg border border-gray-300 py-2 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+              className="block text-gray-900"
               placeholder={t('passwordPlaceholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

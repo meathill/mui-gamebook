@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface ConfigTextFieldProps {
   label: string;
@@ -14,13 +16,12 @@ interface ConfigTextFieldProps {
 export function ConfigTextField({ label, value, onChange, placeholder, hint }: ConfigTextFieldProps) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      <input
+      <Label className="mb-1 text-gray-700">{label}</Label>
+      <Input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
       />
       {hint && <p className="text-xs text-gray-500 mt-1">{hint}</p>}
     </div>

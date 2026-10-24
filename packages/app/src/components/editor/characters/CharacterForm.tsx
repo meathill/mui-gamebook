@@ -2,6 +2,9 @@ import { useState, useRef, useEffect } from 'react';
 import { SparkleIcon, UploadSimpleIcon, SpinnerIcon, PlayIcon, StopCircleIcon } from '@phosphor-icons/react/dist/ssr';
 import type { CharacterFormData } from './index';
 import { getAvailableVoices, getDefaultVoice, type TtsProviderType } from '@/lib/voice-config';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { NativeSelect } from '@/components/ui/native-select';
 
 interface Props {
   formData: CharacterFormData;
@@ -156,11 +159,11 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
         {/* 角色 ID */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">角色 ID</label>
-          <input
+          <Input
             type="text"
             value={formData.id}
             onChange={(e) => onUpdate({ id: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full"
             placeholder="例如: protagonist, villain"
           />
           <p className="mt-1 text-xs text-gray-500">用于在脚本中引用角色</p>
@@ -169,11 +172,11 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
         {/* 角色名称 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">角色名称</label>
-          <input
+          <Input
             type="text"
             value={formData.name}
             onChange={(e) => onUpdate({ name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full"
             placeholder="例如: 张大侠"
           />
         </div>
@@ -181,10 +184,10 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
         {/* 角色描述 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">角色描述</label>
-          <textarea
+          <Textarea
             value={formData.description}
             onChange={(e) => onUpdate({ description: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full resize-none"
             rows={3}
             placeholder="描述角色的背景、性格、特点等"
           />
@@ -193,10 +196,10 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
         {/* 图像提示词 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">图像生成提示词</label>
-          <textarea
+          <Textarea
             value={formData.image_prompt}
             onChange={(e) => onUpdate({ image_prompt: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            className="w-full resize-none"
             rows={2}
             placeholder="用于 AI 生成角色头像的提示词"
           />
@@ -263,10 +266,10 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">角色音色</label>
           <div className="flex items-center gap-2">
-            <select
+            <NativeSelect
               value={formData.voice_name || defaultVoice}
               onChange={(e) => handleVoiceChange(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              wrapperClassName="flex-1">
               {voices.map((voice) => (
                 <option
                   key={voice.id}
@@ -274,7 +277,7 @@ export default function CharacterForm({ formData, isCreating, gameId, onUpdate, 
                   {voice.name} - {voice.description}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <button
               onClick={handleVoicePreview}
               disabled={generatingPreview}

@@ -12,6 +12,8 @@ import {
   XIcon,
 } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
 import { MAX_CHAT_IMAGES } from '@/lib/editor/chat-declarations';
@@ -219,14 +221,14 @@ export default function ChatPanel({
         )}
         {uploadError && <p className="text-xs text-red-500 mb-1.5">{uploadError}</p>}
         <div className="relative">
-          <textarea
+          <Textarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="输入你的请求..."
             rows={2}
-            className="w-full block resize-none rounded-lg border border-gray-300 px-3 py-2 pr-9 text-sm focus:ring-2 focus:ring-orange-400 focus:border-transparent outline-none"
+            className="block resize-none pr-9"
           />
           {messages.length > 0 && (
             <button
@@ -262,10 +264,11 @@ export default function ChatPanel({
               </span>
             )}
             {providers.length > 1 ? (
-              <select
+              <NativeSelect
                 value={activeProvider}
                 onChange={(e) => setSelectedProvider(e.target.value)}
-                className="text-xs text-gray-500 border border-gray-200 rounded px-1 py-0.5 outline-none focus:border-orange-400"
+                wrapperClassName="w-auto"
+                className="text-xs text-gray-500"
                 title="选择 AI 提供者">
                 {providers.map((provider) => (
                   <option
@@ -274,7 +277,7 @@ export default function ChatPanel({
                     {AI_PROVIDER_LABELS[provider]}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             ) : (
               <p className="text-xs text-gray-400">Enter 发送，Shift+Enter 换行</p>
             )}

@@ -15,6 +15,7 @@ import {
   SidebarIcon,
 } from '@phosphor-icons/react';
 import { useEditorStore } from '@/lib/editor/store';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { SaveStatus } from '@/hooks/useAutoSave';
 
 export type Tab = 'settings' | 'story' | 'flowchart';
@@ -70,26 +71,31 @@ export default function EditorToolbar({
         <h1 className="font-semibold text-gray-900 text-sm hidden md:block truncate max-w-40">{title}</h1>
 
         {/* Tabs: 设置 | 故事 | 流程图 */}
-        <div className="flex bg-gray-100 p-0.5 rounded-lg ml-2">
-          <button
-            onClick={() => setActiveTab('settings')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'settings' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-            <GearIcon size={14} />
-            <span className="hidden sm:inline">设置</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('story')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'story' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-            <BookOpenIcon size={14} />
-            <span className="hidden sm:inline">故事</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('flowchart')}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === 'flowchart' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-            <GitBranchIcon size={14} />
-            <span className="hidden sm:inline">流程图</span>
-          </button>
-        </div>
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as Tab)}
+          className="ml-2">
+          <TabsList className="h-auto bg-gray-100 p-0.5">
+            <TabsTrigger
+              value="settings"
+              className="h-auto flex-none gap-1.5 px-2.5 py-1.5 text-xs">
+              <GearIcon size={14} />
+              <span className="hidden sm:inline">设置</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="story"
+              className="h-auto flex-none gap-1.5 px-2.5 py-1.5 text-xs">
+              <BookOpenIcon size={14} />
+              <span className="hidden sm:inline">故事</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="flowchart"
+              className="h-auto flex-none gap-1.5 px-2.5 py-1.5 text-xs">
+              <GitBranchIcon size={14} />
+              <span className="hidden sm:inline">流程图</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* 中部槽位：素材协助邀请 banner（组件自带响应式隐藏） */}

@@ -1,5 +1,6 @@
 import { type BinaryOp, type ExprNode } from '@roudanio/parser';
-import { FIELD_CLASS } from './fields';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 
 const OPERATORS: Array<[BinaryOp, string]> = [
   ['and', '全部满足'],
@@ -59,9 +60,9 @@ export default function ExpressionNodeEditor({
     <fieldset className="min-w-0 space-y-2 rounded-md border border-gray-200 p-3">
       <legend className="px-1 text-xs text-gray-500">{label}</legend>
       <div className="flex flex-wrap items-start gap-2">
-        <select
+        <NativeSelect
           aria-label={label + '类型'}
-          className={FIELD_CLASS + ' sm:w-36'}
+          wrapperClassName="sm:w-36"
           value={kind}
           onChange={(event) => onChange(defaultExpression(event.target.value, variables))}>
           <option value="identifier">变量</option>
@@ -83,11 +84,11 @@ export default function ExpressionNodeEditor({
             disabled={depth >= 24}>
             负数
           </option>
-        </select>
+        </NativeSelect>
         {node.type === 'identifier' && (
-          <select
+          <NativeSelect
             aria-label={label + '变量'}
-            className={FIELD_CLASS + ' sm:flex-1'}
+            wrapperClassName="sm:flex-1"
             value={node.name}
             required
             onChange={(event) => onChange({ ...node, name: event.target.value })}>
@@ -100,12 +101,12 @@ export default function ExpressionNodeEditor({
                 {name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         )}
         {node.type === 'number' && (
-          <input
+          <Input
             aria-label={label + '数字'}
-            className={FIELD_CLASS + ' sm:flex-1'}
+            className="sm:flex-1"
             type="number"
             step="any"
             required
@@ -114,27 +115,27 @@ export default function ExpressionNodeEditor({
           />
         )}
         {node.type === 'string' && (
-          <input
+          <Input
             aria-label={label + '文字'}
-            className={FIELD_CLASS + ' sm:flex-1'}
+            className="sm:flex-1"
             value={node.value}
             onChange={(event) => onChange({ ...node, value: event.target.value })}
           />
         )}
         {node.type === 'boolean' && (
-          <select
+          <NativeSelect
             aria-label={label + '布尔值'}
-            className={FIELD_CLASS + ' sm:flex-1'}
+            wrapperClassName="sm:flex-1"
             value={String(node.value)}
             onChange={(event) => onChange({ ...node, value: event.target.value === 'true' })}>
             <option value="true">是</option>
             <option value="false">否</option>
-          </select>
+          </NativeSelect>
         )}
         {node.type === 'binary' && (
-          <select
+          <NativeSelect
             aria-label={label + '运算'}
-            className={FIELD_CLASS + ' sm:flex-1'}
+            wrapperClassName="sm:flex-1"
             value={node.op}
             onChange={(event) => onChange({ ...node, op: event.target.value as BinaryOp })}>
             {OPERATORS.map(([value, title]) => (
@@ -144,7 +145,7 @@ export default function ExpressionNodeEditor({
                 {title}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         )}
       </div>
       {node.type === 'unary' && (
