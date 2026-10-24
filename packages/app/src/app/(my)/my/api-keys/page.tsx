@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
+import { useDialog } from '@/components/Dialog';
 import { Button } from '@/components/ui/button';
 import {
   buildAntigravityConfig,
@@ -68,6 +69,7 @@ const EXPIRY_OPTIONS = [
 ] as const;
 
 export default function ApiKeysPage() {
+  const dialog = useDialog();
   const [keys, setKeys] = useState<ApiKeyRow[]>([]);
   const [name, setName] = useState('mui-gamebook-mcp');
   const [expiry, setExpiry] = useState<string>('0');
@@ -165,7 +167,11 @@ export default function ApiKeysPage() {
   }
 
   async function handleRevoke(id: string) {
-    if (!window.confirm('确定吊销这把密钥？正在使用它的 Agent 会立刻失效。')) return;
+    const confirmed = await dialog.confirm('确定吊销这把密钥？正在使用它的 Agent 会立刻失效。', '吊销密钥', {
+      confirmText: '吊销',
+      cancelText: '取消',
+    });
+    if (!confirmed) return;
     setError(null);
     const { error: deleteError } = await authClient.apiKey.delete({ keyId: id });
     if (deleteError) {

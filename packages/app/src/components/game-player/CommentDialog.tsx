@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { ChatCircleIcon, XIcon } from '@phosphor-icons/react';
 import Comment from '@/components/Comment';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 
 /**
  * 标题页评论入口：平时只渲染一个按钮，dialog 打开后才挂载 Comment
@@ -15,20 +17,6 @@ export default function CommentDialog({ postId }: { postId: string }) {
   const t = useTranslations('game');
   const tCommon = useTranslations('common');
 
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
-    }
-    window.addEventListener('keydown', onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
   return (
     <section className="max-w-5xl mx-auto px-4 sm:px-0 w-full py-8 text-center">
       <button
@@ -39,32 +27,29 @@ export default function CommentDialog({ postId }: { postId: string }) {
         {t('comments')}
       </button>
 
-      {open && (
-        <div
-          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('comments')}
-          onClick={() => setOpen(false)}>
-          <div
-            className="w-full max-w-2xl max-h-[80dvh] bg-white rounded-2xl shadow-2xl overflow-y-auto text-left"
-            onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b px-5 py-3 flex items-center justify-between rounded-t-2xl">
-              <h3 className="font-semibold text-gray-900">{t('comments')}</h3>
-              <button
+      <Dialog
+        open={open}
+        onOpenChange={setOpen}>
+        {open && (
+          <DialogContent
+            aria-describedby={undefined}
+            showCloseButton={false}
+            className="max-w-2xl gap-0 overflow-hidden p-0">
+            <div className="flex items-center justify-between border-b px-5 py-3">
+              <DialogTitle className="font-semibold">{t('comments')}</DialogTitle>
+              <DialogPrimitive.Close
                 type="button"
-                onClick={() => setOpen(false)}
-                className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-500"
+                className="flex size-8 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 focus-visible:outline-none"
                 aria-label={tCommon('close')}>
                 <XIcon size={18} />
-              </button>
+              </DialogPrimitive.Close>
             </div>
-            <div className="p-5">
+            <div className="max-h-[80dvh] overflow-y-auto p-5">
               <Comment postId={postId} />
             </div>
-          </div>
-        </div>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
     </section>
   );
 }
