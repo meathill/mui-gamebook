@@ -1,4 +1,6 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
+import { sendEmail } from '@/lib/email';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
 import type { McpActor } from '@/lib/mcp-agent/shared';
 import { applyAsset } from './apply';
@@ -36,7 +38,10 @@ export async function executeAssistanceTool(name: string, args: Record<string, u
         break;
       }
       case 'finishMediaAssistanceWork':
-        data = await finishWork(db, gameId);
+        data = await finishWork(db, gameId, {
+          siteUrl: getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
+          send: (message) => sendEmail(message, getCloudflareContext().env),
+        });
         break;
       default:
         throw new AssistanceError('未知素材协助工具', 400);
