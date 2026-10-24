@@ -54,15 +54,16 @@ Object.defineProperty(globalThis, 'IntersectionObserver', {
 });
 
 // jsdom 没有实现 scrollIntoView（下拉菜单等组件依赖它滚动到选中项）
-Object.defineProperty(Element.prototype, 'scrollIntoView', {
-  value: vi.fn(),
-  writable: true,
-});
+if (typeof Element !== 'undefined')
+  Object.defineProperty(Element.prototype, 'scrollIntoView', {
+    value: vi.fn(),
+    writable: true,
+  });
 
 // jsdom 一个测试文件共用一个 window 和一份 localStorage store：
 // 播放页把视图状态放进了 URL hash，上个用例点完「开始」URL 会停在 #play，
 // 下个用例 mount 时读到它就直接进游戏了。存档同理（原先靠每个用例换 slug 绕开）。
 beforeEach(() => {
-  window.history.replaceState(null, '', '/');
+  if (typeof window !== 'undefined') window.history.replaceState(null, '', '/');
   localStorage.clear();
 });

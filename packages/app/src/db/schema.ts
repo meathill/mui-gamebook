@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+export { mediaAssistanceWorks, mediaAssistanceGenerations, mediaAssistanceTargets } from './media-assistance-schema';
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -125,6 +126,8 @@ export const games = sqliteTable(
     coverImage: text('cover_image'),
     tags: text('tags'), // JSON string
     published: integer('published', { mode: 'boolean' }).default(false),
+    mediaAssistanceEnabled: integer('media_assistance_enabled', { mode: 'boolean' }).notNull().default(false),
+    mediaPlanningConfirmed: integer('media_planning_confirmed', { mode: 'boolean' }).notNull().default(false),
     // shadowban：为真时从目录/首页/标签/sitemap 等公开入口消失，仅作者与管理员可见（预览）
     shadowBanned: integer('shadow_banned', { mode: 'boolean' }).notNull().default(false),
     ownerId: text('owner_id').references(() => user.id),
@@ -149,6 +152,8 @@ export const gameContent = sqliteTable(
     id: integer('id').primaryKey(),
     gameId: integer('game_id').references(() => games.id, { onDelete: 'cascade' }),
     content: text('content').notNull(),
+    revision: integer('revision').notNull().default(0),
+    writeToken: text('write_token'),
   },
   (table) => ({
     gameIdIdx: index('game_content_game_id_idx').on(table.gameId),
