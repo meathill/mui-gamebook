@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, ChangeEvent } from 'react';
 import { TrashIcon, SpinnerIcon, UploadSimpleIcon, SparkleIcon, ListIcon } from '@phosphor-icons/react';
 import type { SceneNode } from '@roudanio/parser';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import { useDialog } from '@/components/Dialog';
 import MiniGameSelector from '../MiniGameSelector';
 import { useCmsConfig, getAspectRatios } from '@/hooks/useCmsConfig';
@@ -182,8 +182,8 @@ export default function MediaAssetItem({
               />
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <Button
-                  iconOnly
-                  color="gray"
+                  variant="secondary"
+                  size="icon-sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}>
                   {isUploading ? (
@@ -196,8 +196,8 @@ export default function MediaAssetItem({
                   )}
                 </Button>
                 <Button
-                  iconOnly
-                  color="gray"
+                  variant="secondary"
+                  size="icon-sm"
                   onClick={() => setShowGenerator(true)}
                   disabled={isGenerating}>
                   {isGenerating ? (
@@ -233,7 +233,6 @@ export default function MediaAssetItem({
               <div className="flex flex-col gap-2 mt-2 items-center">
                 <Button
                   variant="ghost"
-                  color="blue"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}>
                   {isUploading ? '上传中...' : '上传文件'}
@@ -241,7 +240,7 @@ export default function MediaAssetItem({
                 <span className="text-xs text-gray-400">- 或者 -</span>
                 <Button
                   variant="ghost"
-                  color="violet"
+                  className="text-violet hover:text-violet"
                   onClick={() => setShowGenerator(!showGenerator)}
                   disabled={isGenerating || !canGenerate}
                   title={canGenerate ? undefined : permissionHint}>
@@ -292,10 +291,8 @@ export default function MediaAssetItem({
         <div className="flex gap-1 ms-auto">
           {isMinigame && (
             <Button
-              iconOnly
               variant="ghost"
-              color="blue"
-              size="sm"
+              size="icon-sm"
               onClick={() => setShowMinigameSelector(!showMinigameSelector)}
               title="选择已有小游戏">
               <ListIcon size={14} />
@@ -303,9 +300,8 @@ export default function MediaAssetItem({
           )}
           {!isMinigame && (
             <Button
-              iconOnly
               variant="ghost"
-              size="sm"
+              size="icon-sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
               title="上传素材">
@@ -320,10 +316,9 @@ export default function MediaAssetItem({
             </Button>
           )}
           <Button
-            iconOnly
             variant="ghost"
-            color="violet"
-            size="sm"
+            size="icon-sm"
+            className="text-violet hover:text-violet"
             disabled={isGenerating || !canGenerate}
             onClick={() => setShowGenerator(!showGenerator)}
             title={canGenerate ? 'AI 生成素材' : permissionHint}>
@@ -331,10 +326,9 @@ export default function MediaAssetItem({
           </Button>
           {showDelete && onAssetDelete && (
             <Button
-              iconOnly
               variant="ghost"
-              color="red"
-              size="sm"
+              size="icon-sm"
+              className="text-destructive hover:text-destructive"
               onClick={onAssetDelete}
               title="删除素材">
               <TrashIcon size={14} />

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ShareNetworkIcon, CopyIcon, CheckIcon } from '@phosphor-icons/react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 
 interface ShareButtonProps {
   title: string;

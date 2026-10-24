@@ -1,5 +1,5 @@
 import { SpinnerIcon, SparkleIcon, CheckIcon } from '@phosphor-icons/react/dist/ssr';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import type { MediaGeneratorProps } from './types';
 import MentionInput from '../MentionInput';
 
@@ -55,6 +55,7 @@ export default function MediaGenerator({
           </div>
         )}
         <Button
+          variant="violet"
           onClick={onGenerate}
           disabled={isGenerating || !prompt}>
           {isGenerating ? (
@@ -108,7 +109,8 @@ export default function MediaGenerator({
           </div>
         )}
         <Button
-          iconOnly
+          variant="violet"
+          size="icon-sm"
           disabled={isGenerating || !prompt}
           onClick={onGenerate}
           title="生成素材">

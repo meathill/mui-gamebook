@@ -11,7 +11,7 @@ import {
   XCircleIcon,
   XIcon,
 } from '@phosphor-icons/react';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
 import { MAX_CHAT_IMAGES } from '@/lib/editor/chat-declarations';
@@ -282,16 +282,15 @@ export default function ChatPanel({
           {loading ? (
             <Button
               onClick={cancelRequest}
-              size="sm"
-              color="red">
+              variant="destructive"
+              size="icon-sm">
               <SquareIcon className="size-3" />
             </Button>
           ) : (
             <Button
               type="submit"
               disabled={!input.trim() && pendingImages.length === 0}
-              size="sm"
-              color="orange">
+              size="icon-sm">
               <PaperPlaneRightIcon className="size-3" />
             </Button>
           )}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import {
   buildAntigravityConfig,
   buildClaudeCodeCommand,
@@ -205,16 +205,9 @@ export default function ApiKeysPage() {
           <p className="text-sm font-medium text-green-800">密钥已创建，请立即复制（只显示这一次）：</p>
           <code className="block break-all bg-white border border-green-200 rounded px-3 py-2 text-sm">{newKey}</code>
           <div className="flex flex-wrap gap-2">
+            <Button onClick={handleCopy}>{copied ? '已复制 Bearer' : '复制 Bearer 头'}</Button>
             <Button
-              size="md"
-              color="green"
-              onClick={handleCopy}>
-              {copied ? '已复制 Bearer' : '复制 Bearer 头'}
-            </Button>
-            <Button
-              size="md"
-              color="gray"
-              variant="soft"
+              variant="secondary"
               onClick={() => setNewKey(null)}>
               我已保存
             </Button>
@@ -245,7 +238,6 @@ export default function ApiKeysPage() {
           </select>
           <Button
             size="lg"
-            color="blue"
             onClick={handleCreate}
             disabled={submitting}>
             {submitting ? '创建中…' : '创建'}
@@ -262,8 +254,7 @@ export default function ApiKeysPage() {
           </div>
           <Button
             size="sm"
-            color="gray"
-            variant="soft"
+            variant="secondary"
             onClick={handleCopyExample}>
             {copiedExample ? '已复制' : '复制配置'}
           </Button>
@@ -338,8 +329,7 @@ export default function ApiKeysPage() {
                   <td className="px-4 py-3 text-right">
                     <Button
                       size="sm"
-                      color="red"
-                      variant="solid"
+                      variant="destructive"
                       onClick={() => handleRevoke(item.id)}>
                       吊销
                     </Button>

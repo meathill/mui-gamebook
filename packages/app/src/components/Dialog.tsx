@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import { XIcon, WarningCircleIcon, CheckCircleIcon, WarningIcon, InfoIcon } from '@phosphor-icons/react';
 
 type DialogType = 'alert' | 'confirm' | 'success' | 'error';
@@ -120,16 +120,12 @@ export function DialogProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const getButtonColor = (): 'green' | 'red' | 'orange' | 'blue' => {
+  const getButtonVariant = (): 'default' | 'destructive' => {
     switch (dialog?.type) {
-      case 'success':
-        return 'green';
       case 'error':
-        return 'red';
-      case 'confirm':
-        return 'orange';
+        return 'destructive';
       default:
-        return 'blue';
+        return 'default';
     }
   };
 
@@ -182,15 +178,14 @@ export function DialogProvider({ children }: { children: ReactNode }) {
               <div className="flex gap-3 w-full justify-center">
                 {dialog?.type === 'confirm' && (
                   <Button
-                    variant="soft"
-                    color="gray"
+                    variant="secondary"
                     size="lg"
                     onClick={() => closeDialog(false)}>
                     {dialog.cancelText}
                   </Button>
                 )}
                 <Button
-                  color={getButtonColor()}
+                  variant={getButtonVariant()}
                   onClick={() => closeDialog(true)}
                   size="lg">
                   {dialog?.confirmText}

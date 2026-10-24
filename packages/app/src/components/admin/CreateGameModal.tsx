@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as Dialog from '@radix-ui/react-dialog';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import { PlusIcon, XIcon } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
@@ -43,7 +43,9 @@ export default function CreateGameModal() {
       open={open}
       onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <Button size="sm">
+        <Button
+          size="sm"
+          variant="violet">
           <PlusIcon size={12} />
           创建新游戏
         </Button>
