@@ -18,10 +18,12 @@ const GAME_SORT_COLUMNS = {
 
 const STATUS_FILTERS = ['all', 'published', 'draft', 'banned'] as const;
 
+const MEDIA_ASSISTANCE_FILTERS = ['all', 'enabled', 'disabled'] as const;
+
 /**
  * GET /api/admin/games
  * 获取全站游戏列表（分页 + 搜索 + 排序 + 状态筛选），root 与内容管理员可用
- * Query: ?page=1&limit=20&search=xxx&sort=updatedAt&order=desc&status=all|published|draft|banned
+ * Query: ?page=1&limit=20&search=xxx&sort=updatedAt&order=desc&status=all|published|draft|banned&mediaAssistance=all|enabled|disabled
  * 搜索匹配 title/slug/作者邮箱
  */
 export async function GET(request: Request) {
@@ -40,6 +42,11 @@ export async function GET(request: Request) {
       defaultSort: 'updatedAt',
     });
     const status = parseEnumFilter(url.searchParams.get('status'), STATUS_FILTERS, 'all');
+    const mediaAssistance = parseEnumFilter(
+      url.searchParams.get('mediaAssistance'),
+      MEDIA_ASSISTANCE_FILTERS,
+      'all',
+    );
 
     const conditions = [];
     if (query.search) {
@@ -54,6 +61,8 @@ export async function GET(request: Request) {
     if (status === 'published') conditions.push(eq(schema.games.published, true));
     else if (status === 'draft') conditions.push(eq(schema.games.published, false));
     else if (status === 'banned') conditions.push(eq(schema.games.shadowBanned, true));
+    if (mediaAssistance === 'enabled') conditions.push(eq(schema.games.mediaAssistanceEnabled, true));
+    else if (mediaAssistance === 'disabled') conditions.push(eq(schema.games.mediaAssistanceEnabled, false));
 
     const where = conditions.length > 0 ? sql.join(conditions, sql` AND `) : undefined;
     const sortColumn = GAME_SORT_COLUMNS[query.sort as keyof typeof GAME_SORT_COLUMNS] ?? GAME_SORT_COLUMNS.updatedAt;
@@ -65,6 +74,7 @@ export async function GET(request: Request) {
         title: schema.games.title,
         published: schema.games.published,
         shadowBanned: schema.games.shadowBanned,
+        mediaAssistanceEnabled: schema.games.mediaAssistanceEnabled,
         ownerEmail: schema.user.email,
         createdAt: schema.games.createdAt,
         updatedAt: schema.games.updatedAt,
@@ -88,6 +98,7 @@ export async function GET(request: Request) {
         ...game,
         published: Boolean(game.published),
         shadowBanned: Boolean(game.shadowBanned),
+        mediaAssistanceEnabled: Boolean(game.mediaAssistanceEnabled),
       })),
       pagination: {
         page: query.page,
