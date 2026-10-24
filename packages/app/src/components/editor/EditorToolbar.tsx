@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import {
   FloppyDiskIcon,
@@ -29,6 +30,8 @@ interface EditorToolbarProps {
   onSave: () => void;
   leftSidebarOpen: boolean;
   onToggleLeftSidebar: () => void;
+  /** 中部槽位：长期展示的素材协助邀请 banner 等 */
+  mediaAssistanceBanner?: ReactNode;
 }
 
 const SAVE_STATUS_MAP: Record<SaveStatus, { label: string; className: string }> = {
@@ -48,6 +51,7 @@ export default function EditorToolbar({
   onSave,
   leftSidebarOpen,
   onToggleLeftSidebar,
+  mediaAssistanceBanner,
 }: EditorToolbarProps) {
   const activeTab = useEditorStore((s) => s.activeTab);
   const setActiveTab = useEditorStore((s) => s.setActiveTab);
@@ -87,6 +91,9 @@ export default function EditorToolbar({
           </button>
         </div>
       </div>
+
+      {/* 中部槽位：素材协助邀请 banner（组件自带响应式隐藏） */}
+      {mediaAssistanceBanner}
 
       <div className="flex items-center gap-1.5">
         {/* 流程图模式的工具按钮 */}

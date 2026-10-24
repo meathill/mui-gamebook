@@ -28,6 +28,7 @@ import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
 import EditorToolbar from '@/components/editor/EditorToolbar';
+import MediaAssistanceBanner from '@/components/editor/media-assistance-banner';
 import EditorLeftSidebar from '@/components/editor/EditorLeftSidebar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import ChatPanel from '@/components/editor/ChatPanel';
@@ -292,6 +293,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
         onSave={handleSave}
         leftSidebarOpen={leftSidebarOpen}
         onToggleLeftSidebar={toggleLeftSidebar}
+        mediaAssistanceBanner={originalGame ? <MediaAssistanceBanner game={originalGame} /> : undefined}
       />
 
       {/* 设置 tab */}
