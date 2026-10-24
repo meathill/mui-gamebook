@@ -8,8 +8,8 @@ export const MEDIA_ASSISTANCE_TOOLS: WebMcpTool[] = [
   {
     name: 'claimMediaAssistanceWork',
     description:
-      '仅管理员：领取或恢复唯一当前作品。先续作，再按访问量和作者更新时间排序。返回冻结输入、稳定目标和进度。',
-    inputSchema: { type: 'object', properties: {} },
+      '仅管理员：领取或恢复唯一当前作品。先续作；再按作者主动开启、无图优先、访问量和更新时间排序。可传 gameId 只领取指定作品（仍校验发布、未屏蔽、作者未退出、剧本有效）。返回冻结输入、稳定目标和进度。',
+    inputSchema: { type: 'object', properties: { gameId: { ...gameId, description: '可选：只领取该作品' } } },
   },
   {
     name: 'saveMediaAssistancePlan',

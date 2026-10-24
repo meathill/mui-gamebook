@@ -38,7 +38,10 @@ export async function createRuntime() {
     ),
     db.prepare('CREATE TABLE GameAnalytics(game_id INTEGER,open_count INTEGER)'),
   ]);
-  const migration = await readFile(new URL('../../../migrations/0011_media_assistance.sql', import.meta.url), 'utf8');
+  const migration = [
+    await readFile(new URL('../../../migrations/0011_media_assistance.sql', import.meta.url), 'utf8'),
+    await readFile(new URL('../../../migrations/0013_media_assistance_system_enroll.sql', import.meta.url), 'utf8'),
+  ].join('\n');
   let statement = '';
   let trigger = false;
   for (const line of migration.split('\n')) {
@@ -76,11 +79,11 @@ export function story(images = 1) {
   );
 }
 
-export async function insertGame(db: D1Database, id: number, content = story(), visits = 0) {
+export async function insertGame(db: D1Database, id: number, content = story(), visits = 0, enabled = true) {
   await db.batch([
     db
-      .prepare('INSERT INTO Games(id,slug,title,owner_id,media_assistance_enabled) VALUES (?,?,?, ?,1)')
-      .bind(id, `game-${id}`, '测试', 'author'),
+      .prepare('INSERT INTO Games(id,slug,title,owner_id,media_assistance_enabled) VALUES (?,?,?, ?,?)')
+      .bind(id, `game-${id}`, '测试', 'author', enabled ? 1 : 0),
     db.prepare('INSERT INTO GameContent(game_id,content) VALUES (?,?)').bind(id, content),
     db.prepare('INSERT INTO GameAnalytics(game_id,open_count) VALUES (?,?)').bind(id, visits),
   ]);

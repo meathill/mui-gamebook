@@ -128,6 +128,11 @@ export const games = sqliteTable(
     published: integer('published', { mode: 'boolean' }).default(false),
     mediaAssistanceEnabled: integer('media_assistance_enabled', { mode: 'boolean' }).notNull().default(false),
     mediaPlanningConfirmed: integer('media_planning_confirmed', { mode: 'boolean' }).notNull().default(false),
+    // 'author' | 'system'：谁开启了素材协助；opted_out_at 非空表示作者主动关闭，站方不再代开
+    mediaAssistanceEnrolledBy: text('media_assistance_enrolled_by'),
+    mediaAssistanceEnrolledAt: integer('media_assistance_enrolled_at', { mode: 'timestamp' }),
+    mediaAssistanceOptedOutAt: integer('media_assistance_opted_out_at', { mode: 'timestamp' }),
+    mediaAssistanceNotifiedAt: integer('media_assistance_notified_at', { mode: 'timestamp' }),
     // shadowban：为真时从目录/首页/标签/sitemap 等公开入口消失，仅作者与管理员可见（预览）
     shadowBanned: integer('shadow_banned', { mode: 'boolean' }).notNull().default(false),
     ownerId: text('owner_id').references(() => user.id),

@@ -33,13 +33,18 @@ export async function saveEditorContent(
   if (enabling && !hasDeclaredMedia(options.game) && options.mediaPlanningConfirmed !== true) {
     throw new AssistanceError('请先确认允许站方规划素材位置和提示词', 400);
   }
+  const disabling = !enabled && Boolean(current.media_assistance_enabled);
   const write = createContentWrite(db, options.gameId, options.expectedRevision, options.content, false, true);
   const game = options.game;
   const statements = [
     db
       .prepare(`UPDATE Games SET slug = ?, title = ?, description = ?, background_story = ?,
     cover_image = ?, tags = ?, published = ?, updated_at = unixepoch(), media_assistance_enabled = ?,
-    media_planning_confirmed = ?, story_prompt = CASE WHEN ? THEN ? ELSE story_prompt END WHERE id = ? AND ${write.guard}`)
+    media_planning_confirmed = ?,
+    media_assistance_enrolled_by = CASE WHEN ? THEN 'author' ELSE media_assistance_enrolled_by END,
+    media_assistance_enrolled_at = CASE WHEN ? THEN unixepoch() ELSE media_assistance_enrolled_at END,
+    media_assistance_opted_out_at = CASE WHEN ? THEN NULL WHEN ? THEN unixepoch() ELSE media_assistance_opted_out_at END,
+    story_prompt = CASE WHEN ? THEN ? ELSE story_prompt END WHERE id = ? AND ${write.guard}`)
       .bind(
         options.slug,
         game.title,
@@ -50,6 +55,10 @@ export async function saveEditorContent(
         game.published ? 1 : 0,
         enabled ? 1 : 0,
         enabling ? 1 : current.media_planning_confirmed,
+        enabling ? 1 : 0,
+        enabling ? 1 : 0,
+        enabling ? 1 : 0,
+        disabling ? 1 : 0,
         options.storyPrompt !== undefined ? 1 : 0,
         options.storyPrompt ?? null,
         options.gameId,

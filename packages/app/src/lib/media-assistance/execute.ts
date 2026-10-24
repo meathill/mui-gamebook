@@ -1,4 +1,6 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
+import { sendEmail } from '@/lib/email';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
 import type { McpActor } from '@/lib/mcp-agent/shared';
 import { applyAsset } from './apply';
@@ -15,10 +17,17 @@ export async function executeAssistanceTool(name: string, args: Record<string, u
     const gameId = Number(args.gameId);
     if (name !== 'claimMediaAssistanceWork' && (!Number.isInteger(gameId) || gameId <= 0))
       throw new AssistanceError('gameId 无效', 400);
+    const notify = {
+      siteUrl: getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
+      revertSecret: getCloudflareContext().env.MEDIA_ASSISTANCE_REVERT_SECRET,
+      send: (message: { to: string; subject: string; body: string }) => sendEmail(message, getCloudflareContext().env),
+    };
     let data: Record<string, unknown>;
     switch (name) {
       case 'claimMediaAssistanceWork':
-        data = await claimWork(db);
+        if (args.gameId !== undefined && args.gameId !== null && (!Number.isInteger(gameId) || gameId <= 0))
+          throw new AssistanceError('gameId 无效', 400);
+        data = await claimWork(db, { gameId: args.gameId == null ? undefined : gameId, notify });
         break;
       case 'saveMediaAssistancePlan':
         data = await savePlan(db, gameId, Number(args.revision), args.items, args.planningComplete !== false);
@@ -36,7 +45,7 @@ export async function executeAssistanceTool(name: string, args: Record<string, u
         break;
       }
       case 'finishMediaAssistanceWork':
-        data = await finishWork(db, gameId);
+        data = await finishWork(db, gameId, notify);
         break;
       default:
         throw new AssistanceError('未知素材协助工具', 400);
