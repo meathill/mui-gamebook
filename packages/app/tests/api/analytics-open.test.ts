@@ -6,7 +6,12 @@ vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: vi.fn(() => ({ env: { KV: kv } })),
 }));
 
+vi.mock('@/lib/daily-analytics', () => ({
+  recordDailyAnalytics: vi.fn(),
+}));
+
 import { POST } from '@/app/api/analytics/open/route';
+import { recordDailyAnalytics } from '@/lib/daily-analytics';
 
 function makeReq(body: unknown, headers: Record<string, string> = {}) {
   return new Request('http://localhost/api/analytics/open', {
@@ -28,7 +33,7 @@ describe('POST /api/analytics/open', () => {
     expect(res.status).toBe(400);
   });
 
-  it('成功路径：递增打开数，按来源域名和设备类型分别统计', async () => {
+  it('成功路径：递增打开数，按来源域名和设备类型分别统计，并按天落库', async () => {
     const res = await POST(
       makeReq(
         { gameId: 1 },
@@ -40,6 +45,7 @@ describe('POST /api/analytics/open', () => {
     expect(kv.put).toHaveBeenCalledWith('analytics:game:1:opens', '1');
     expect(kv.put).toHaveBeenCalledWith('analytics:game:1:referrers', JSON.stringify({ 'www.google.com': 1 }));
     expect(kv.put).toHaveBeenCalledWith('analytics:game:1:devices', JSON.stringify({ mobile: 1 }));
+    expect(recordDailyAnalytics).toHaveBeenCalledWith(1, 'open');
   });
 
   it('没有 referer/user-agent 时回退为 direct/desktop', async () => {

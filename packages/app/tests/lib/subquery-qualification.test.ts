@@ -1,6 +1,10 @@
 import { drizzle } from 'drizzle-orm/d1';
 import { describe, expect, it } from 'vitest';
 import {
+  AI_AUDIO_COUNT_SUBQUERY,
+  AI_IMAGE_COUNT_SUBQUERY,
+  AI_TOTAL_TOKENS_SUBQUERY,
+  AI_VIDEO_COUNT_SUBQUERY,
   GAME_COUNT_SUBQUERY,
   OPEN_COUNT_SUBQUERY,
   PLAN_CODE_SUBQUERY,
@@ -49,5 +53,25 @@ describe('后台列表的相关子查询使用限定列名', () => {
 
     expect(rendered).toContain('subscriptions.user_id = user.id');
     expect(rendered).not.toMatch(/user_id = "id"/);
+  });
+
+  it('AI 用量子查询限定为 AiUsage.user_id = user.id 且类型字面量正确', () => {
+    const rendered = db
+      .select({
+        totalTokens: AI_TOTAL_TOKENS_SUBQUERY,
+        imageCount: AI_IMAGE_COUNT_SUBQUERY,
+        videoCount: AI_VIDEO_COUNT_SUBQUERY,
+        audioCount: AI_AUDIO_COUNT_SUBQUERY,
+      })
+      .from(schema.user)
+      .toSQL().sql;
+
+    expect(rendered).toContain('AiUsage.user_id = user.id');
+    expect(rendered).not.toMatch(/user_id = "id"/);
+    expect(rendered).toContain("AiUsage.type = 'image_generation'");
+    expect(rendered).toContain("AiUsage.type = 'video_generation'");
+    expect(rendered).toContain("AiUsage.type = 'audio_generation'");
+    // 表名写成 snake_case 会 no such table
+    expect(rendered).not.toContain('ai_usage');
   });
 });

@@ -6,7 +6,12 @@ vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: vi.fn(() => ({ env: { KV: kv } })),
 }));
 
+vi.mock('@/lib/daily-analytics', () => ({
+  recordDailyAnalytics: vi.fn(),
+}));
+
 import { POST } from '@/app/api/analytics/complete/route';
+import { recordDailyAnalytics } from '@/lib/daily-analytics';
 
 function makeReq(body: unknown) {
   return new Request('http://localhost/api/analytics/complete', { method: 'POST', body: JSON.stringify(body) });
@@ -30,7 +35,7 @@ describe('POST /api/analytics/complete', () => {
     expect(res.status).toBe(400);
   });
 
-  it('成功路径（无评分）：递增完成数/总时长/会话数，不更新评分', async () => {
+  it('成功路径（无评分）：递增完成数/总时长/会话数，不更新评分，并按天落库', async () => {
     const res = await POST(makeReq({ gameId: 1, duration: 120 }));
 
     expect(res.status).toBe(200);
@@ -38,6 +43,7 @@ describe('POST /api/analytics/complete', () => {
     expect(kv.put).toHaveBeenCalledWith('analytics:game:1:duration', '120');
     expect(kv.put).toHaveBeenCalledWith('analytics:game:1:sessions', '1');
     expect(kv.put).not.toHaveBeenCalledWith('analytics:game:1:ratings', expect.anything());
+    expect(recordDailyAnalytics).toHaveBeenCalledWith(1, 'complete');
   });
 
   it('成功路径（带合法评分 1-5）：更新评分', async () => {
