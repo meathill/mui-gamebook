@@ -441,3 +441,22 @@ export const deviceAnalytics = sqliteTable(
     gameIdIdx: index('device_analytics_game_id_idx').on(table.gameId),
   }),
 );
+
+// 游戏每日统计表：打开/完成事件按 UTC 日期落库（KV 与 GameAnalytics 只有总量，无法按天回溯）
+export const gameDailyAnalytics = sqliteTable(
+  'GameDailyAnalytics',
+  {
+    id: integer('id').primaryKey(),
+    gameId: integer('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    /** UTC 日期，格式 YYYY-MM-DD */
+    date: text('date').notNull(),
+    openCount: integer('open_count').notNull().default(0),
+    completionCount: integer('completion_count').notNull().default(0),
+  },
+  (table) => ({
+    gameIdDateUnique: uniqueIndex('game_daily_analytics_game_id_date_unique').on(table.gameId, table.date),
+    dateIdx: index('game_daily_analytics_date_idx').on(table.date),
+  }),
+);

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { recordDailyAnalytics } from '@/lib/daily-analytics';
 import { getKey, incrementCounter, incrementJsonKey, parseDeviceType, parseReferrer } from '@/lib/analytics';
 
 /**
@@ -37,6 +38,9 @@ export async function POST(request: Request) {
     // 递增设备统计
     const deviceType = parseDeviceType(userAgent);
     await incrementJsonKey(env.KV, getKey(gameId, 'devices'), deviceType);
+
+    // 按天落库（失败不影响 KV 总量）
+    await recordDailyAnalytics(gameId, 'open');
 
     return NextResponse.json({ success: true });
   } catch (error) {

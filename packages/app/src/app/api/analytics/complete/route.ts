@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { recordDailyAnalytics } from '@/lib/daily-analytics';
 import { getKey, incrementCounter, updateRating } from '@/lib/analytics';
 
 /**
@@ -41,6 +42,9 @@ export async function POST(request: Request) {
     if (typeof rating === 'number' && rating >= 1 && rating <= 5) {
       await updateRating(env.KV, getKey(gameId, 'ratings'), rating);
     }
+
+    // 按天落库（失败不影响 KV 总量）
+    await recordDailyAnalytics(gameId, 'complete');
 
     return NextResponse.json({ success: true });
   } catch (error) {
