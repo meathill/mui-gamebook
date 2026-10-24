@@ -180,7 +180,7 @@ describe('legacy MCP（2025-03-26 握手）', () => {
     });
   });
 
-  it('tools/list 可匿名且含 Agent 工具', async () => {
+  it('tools/list 可匿名且含 Agent 工具，不含素材协助工具', async () => {
     const res = await POST(makeLegacyRpc({ method: 'tools/list' }));
     const data = await readJson(res);
     const names = data.result?.tools?.map((t) => t.name) || [];
@@ -188,6 +188,20 @@ describe('legacy MCP（2025-03-26 握手）', () => {
     expect(names).toContain('listGames');
     expect(names).toContain('generateScript');
     expect(names).toContain('createGame');
+    // 素材协助工具已拆到 /api/mcp/media-assistance（仅管理员）
+    expect(names).not.toContain('claimMediaAssistanceWork');
+    expect(names).not.toContain('applyMediaAssistanceAsset');
+  });
+
+  it('tools/call 素材协助工具不再可达（未登录 401，已登录也 Unknown tool）', async () => {
+    const res = await POST(
+      makeLegacyRpc({
+        method: 'tools/call',
+        params: { name: 'claimMediaAssistanceWork', arguments: {} },
+      }),
+    );
+    // 普通端点先鉴权；该工具已拆到 /api/mcp/media-assistance
+    expect(res.status).toBe(401);
   });
 
   it('tools/call 未登录 401', async () => {

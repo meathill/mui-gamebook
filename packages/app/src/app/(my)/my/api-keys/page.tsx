@@ -202,7 +202,7 @@ export default function ApiKeysPage() {
         <h1 className="text-2xl font-bold text-gray-900">API 密钥</h1>
         <p className="mt-1 text-sm text-gray-500">
           供本地 AI Agent / MCP 客户端调用 <code className="bg-gray-100 px-1 rounded">{MCP_ENDPOINT}</code>
-          。密钥绑定你的账号，只能管理你的游戏，可随时吊销。
+          。密钥绑定你的账号，只能管理你的游戏（不含站方素材协助），可随时吊销。
         </p>
       </header>
 

@@ -2,6 +2,7 @@
  * MCP Agent 工具执行入口：CRUD + AI 生成 + 素材上传。
  * 工具实现按域拆在同目录的 handlers-* 模块，这里只做参数解析、
  * 归属权校验和分发；错误语义与拆分前保持一致。
+ * 站方素材协助工具不走这里：见 /api/mcp/media-assistance 专用端点。
  */
 import {
   handleCreateGame,
@@ -11,8 +12,6 @@ import {
   handleSetGameDsl,
   handleUpdateGameMeta,
 } from './handlers-crud';
-import { MEDIA_ASSISTANCE_TOOLS } from '../media-assistance/tools';
-import { executeAssistanceTool } from '../media-assistance/execute';
 import { handleGenerateImage, handleGenerateScript } from './handlers-ai';
 import { handleUploadAsset } from './handlers-upload';
 import {
@@ -49,8 +48,6 @@ export async function executeMcpAgentTool(
   args: Record<string, unknown>,
   actor: McpActor,
 ): Promise<McpToolOutcome> {
-  if (MEDIA_ASSISTANCE_TOOLS.some((tool) => tool.name === toolName))
-    return executeAssistanceTool(toolName, args, actor);
   const db = getDb();
 
   if (toolName === 'listGames') {
