@@ -58,10 +58,7 @@ function ChangeBadge({ changePercent }: { changePercent: number | null }) {
   const isUp = changePercent > 0;
   const isFlat = changePercent === 0;
   return (
-    <span
-      className={`text-sm font-medium ${
-        isFlat ? 'text-gray-500' : isUp ? 'text-green-600' : 'text-red-600'
-      }`}>
+    <span className={`text-sm font-medium ${isFlat ? 'text-gray-500' : isUp ? 'text-green-600' : 'text-red-600'}`}>
       {isFlat ? '持平' : `${isUp ? '+' : ''}${changePercent.toFixed(1)}%`}
       <span className="ml-1 font-normal text-gray-400">对比上期</span>
     </span>
@@ -94,8 +91,7 @@ export default function DailyTrendChart() {
   const metricLabel = METRICS.find((item) => item.key === metric)?.label ?? '';
   const currentTotal = data?.days.reduce((sum, point) => sum + point[metric], 0) ?? 0;
   const previousTotal = data?.previous.reduce((sum, point) => sum + point[metric], 0) ?? 0;
-  const changePercent =
-    data && previousTotal > 0 ? ((currentTotal - previousTotal) / previousTotal) * 100 : null;
+  const changePercent = data && previousTotal > 0 ? ((currentTotal - previousTotal) / previousTotal) * 100 : null;
 
   return (
     <div className="bg-white rounded-lg shadow mb-8">
@@ -107,7 +103,9 @@ export default function DailyTrendChart() {
             onChange={(event) => setDays(Number(event.target.value))}
             className="text-sm border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-700">
             {RANGE_OPTIONS.map((option) => (
-              <option key={option} value={option}>
+              <option
+                key={option}
+                value={option}>
                 最近 {option} 天
               </option>
             ))}
@@ -123,9 +121,7 @@ export default function DailyTrendChart() {
               type="button"
               onClick={() => setMetric(item.key)}
               className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                metric === item.key
-                  ? 'bg-orange-600 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                metric === item.key ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}>
               {item.label}
             </button>
@@ -139,19 +135,23 @@ export default function DailyTrendChart() {
         ) : (
           <>
             <div className="flex items-baseline gap-3 mb-4">
-              <span className="text-2xl font-bold text-gray-900">
-                {formatMetric(metric, currentTotal)}
-              </span>
-              <span className="text-sm text-gray-500">
-                本期{metricLabel}合计（虚线为上一周期对比）
-              </span>
+              <span className="text-2xl font-bold text-gray-900">{formatMetric(metric, currentTotal)}</span>
+              <span className="text-sm text-gray-500">本期{metricLabel}合计（虚线为上一周期对比）</span>
               <ChangeBadge changePercent={changePercent} />
             </div>
 
             <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+              <ResponsiveContainer
+                width="100%"
+                height="100%">
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#e5e7eb"
+                    vertical={false}
+                  />
                   <XAxis
                     dataKey="date"
                     tickFormatter={formatShortDate}

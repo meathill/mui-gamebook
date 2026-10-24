@@ -35,10 +35,10 @@ function toUtcDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-/** 生成 [offsetEnd, offsetStart] 区间内每天的日期列表（offset 为距今天数，升序返回） */
+/** 生成 [offsetStart, offsetEnd] 区间内每天的日期列表（offset 为距今天数，升序返回） */
 function buildDateRange(offsetStart: number, offsetEnd: number): string[] {
   const dates: string[] = [];
-  for (let offset = offsetEnd; offset >= offsetStart; offset--) {
+  for (let offset = offsetStart; offset >= offsetEnd; offset--) {
     dates.push(toUtcDate(utcDayStart(offset)));
   }
   return dates;

@@ -42,11 +42,7 @@ export async function GET(request: Request) {
       defaultSort: 'updatedAt',
     });
     const status = parseEnumFilter(url.searchParams.get('status'), STATUS_FILTERS, 'all');
-    const mediaAssistance = parseEnumFilter(
-      url.searchParams.get('mediaAssistance'),
-      MEDIA_ASSISTANCE_FILTERS,
-      'all',
-    );
+    const mediaAssistance = parseEnumFilter(url.searchParams.get('mediaAssistance'), MEDIA_ASSISTANCE_FILTERS, 'all');
 
     const conditions = [];
     if (query.search) {
