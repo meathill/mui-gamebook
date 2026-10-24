@@ -21,6 +21,14 @@ export const GAME_COUNT_SUBQUERY = sql`(SELECT COUNT(*) FROM Games WHERE Games.o
 /** 游戏的总打开数（按 game_analytics 聚合，无记录时为 0） */
 export const OPEN_COUNT_SUBQUERY = sql`(SELECT COALESCE(SUM(open_count), 0) FROM GameAnalytics WHERE GameAnalytics.game_id = Games.id)`;
 
+/** 用户累计消耗的计费 token（AiUsage.total_tokens 为按模型定价折算的核算 token） */
+export const AI_TOTAL_TOKENS_SUBQUERY = sql`(SELECT COALESCE(SUM(total_tokens), 0) FROM AiUsage WHERE AiUsage.user_id = user.id)`;
+
+/** 用户累计生成的图片/视频/音频次数 */
+export const AI_IMAGE_COUNT_SUBQUERY = sql`(SELECT COUNT(*) FROM AiUsage WHERE AiUsage.user_id = user.id AND AiUsage.type = 'image_generation')`;
+export const AI_VIDEO_COUNT_SUBQUERY = sql`(SELECT COUNT(*) FROM AiUsage WHERE AiUsage.user_id = user.id AND AiUsage.type = 'video_generation')`;
+export const AI_AUDIO_COUNT_SUBQUERY = sql`(SELECT COUNT(*) FROM AiUsage WHERE AiUsage.user_id = user.id AND AiUsage.type = 'audio_generation')`;
+
 /** 有效订阅的状态过滤 + 排序：active 优先，其次 trialing，最后 past_due；同期内取最新周期 */
 const ACTIVE_SUBSCRIPTION_CLAUSE = sql.raw(
   `WHERE subscriptions.user_id = user.id AND status IN ('active', 'trialing', 'past_due') ` +
