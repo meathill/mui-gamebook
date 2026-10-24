@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { TrendUpIcon, UsersIcon, StarIcon, GameControllerIcon } from '@phosphor-icons/react';
 import PaginationBar from '@/components/admin/PaginationBar';
+import DailyTrendChart from '@/components/admin/DailyTrendChart';
 import SortableHeader from '@/components/admin/SortableHeader';
 import type { SortOrder } from '@/lib/list-query';
 
@@ -184,6 +185,9 @@ export default function GlobalStatsPage() {
           color="bg-yellow-100"
         />
       </div>
+
+      {/* Daily Trend Chart */}
+      <DailyTrendChart />
 
       {/* Games Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
