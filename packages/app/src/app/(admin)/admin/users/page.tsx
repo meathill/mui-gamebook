@@ -5,6 +5,8 @@ import { formatPlanLabel, useUsersAdmin, USER_ROLE_OPTIONS } from '@/hooks/useUs
 import { authClient, isRootUserClient } from '@/lib/auth-client';
 import UserFormModal from '@/components/admin/UserFormModal';
 import UsersTable from '@/components/admin/UsersTable';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export default function UsersPage() {
   const admin = useUsersAdmin();
@@ -36,18 +38,19 @@ export default function UsersPage() {
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
-            <input
+            <Input
               type="text"
               value={admin.searchInput}
               onChange={(e) => admin.setSearchInput(e.target.value)}
               placeholder="搜索用户名或邮箱..."
-              className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+              className="pl-9"
             />
           </div>
-          <select
+          <NativeSelect
             value={admin.list.filters.role ?? 'all'}
             onChange={(e) => admin.list.setFilter('role', e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            wrapperClassName="w-auto"
+            className="text-gray-700">
             {USER_ROLE_OPTIONS.map((option) => (
               <option
                 key={option.value}
@@ -55,7 +58,7 @@ export default function UsersPage() {
                 {option.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <button
             type="submit"
             className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm text-gray-700">

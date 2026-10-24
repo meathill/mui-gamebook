@@ -3,6 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { NativeSelect } from '@/components/ui/native-select';
 import { AI_PROVIDER_LABELS } from '@/lib/editor/useAiPermissions';
 
 interface TextModelPreset {
@@ -157,18 +160,18 @@ function ModalitySection({
         <div className="grid gap-3 text-sm text-gray-600">
           <label className="block">
             <span className="block text-xs font-medium text-gray-500 mb-1">供应商（锁定）</span>
-            <input
+            <Input
               disabled
               value={(AI_PROVIDER_LABELS as Record<string, string>)[sysDefault.provider] ?? sysDefault.provider}
-              className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2 text-gray-500"
+              className="bg-gray-100 text-gray-500"
             />
           </label>
           <label className="block">
             <span className="block text-xs font-medium text-gray-500 mb-1">模型（锁定）</span>
-            <input
+            <Input
               disabled
               value={sysDefault.model}
-              className="w-full rounded-md border border-gray-200 bg-gray-100 px-3 py-2 text-gray-500"
+              className="bg-gray-100 text-gray-500"
             />
           </label>
         </div>
@@ -211,13 +214,13 @@ function ModalitySection({
         </div>
 
         <div>
-          <label
+          <Label
             htmlFor={`ai-model-${modality}`}
-            className="block text-sm font-medium text-gray-700 mb-1">
+            className="mb-1 text-gray-700">
             模型
-          </label>
+          </Label>
           {presetOptions.length > 0 ? (
-            <select
+            <NativeSelect
               id={`ai-model-${modality}`}
               value={showCustomInput ? '__custom__' : model}
               onChange={(e) => {
@@ -228,8 +231,7 @@ function ModalitySection({
                 setCustomMode(false);
                 setModel(e.target.value);
                 setSaveError(null);
-              }}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-blue-500 outline-none">
+              }}>
               {presetOptions.map((item) => (
                 <option
                   key={item.value}
@@ -238,19 +240,19 @@ function ModalitySection({
                 </option>
               ))}
               <option value="__custom__">自定义输入…</option>
-            </select>
+            </NativeSelect>
           ) : (
             <p className="text-xs text-gray-500 mb-1">该供应商暂无预设，请手动输入模型 ID。</p>
           )}
           {showCustomInput && (
-            <input
+            <Input
               value={model}
               onChange={(e) => {
                 setModel(e.target.value);
                 setSaveError(null);
               }}
               placeholder="手动输入模型 ID，以官方文档为准"
-              className="mt-2 w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono focus:border-blue-500 focus:ring-blue-500 outline-none"
+              className="mt-2 font-mono"
             />
           )}
           <p className="text-xs text-gray-500 mt-1">1-128 字符，仅允许字母数字及 . _ - / :，保存后即刻对新任务生效。</p>

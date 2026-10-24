@@ -99,6 +99,7 @@ export async function handleGetGameInfo({ db, gameId, game }: McpGameContext): P
     ownerId: game.ownerId,
     sceneIds: Object.keys(parsed.data.scenes),
     sceneCount: Object.keys(parsed.data.scenes).length,
+    revision: content?.revision ?? 0,
     characters: Object.keys(parsed.data.ai?.characters ?? {}),
     variables: Object.keys(parsed.data.initialState ?? {}),
   });
@@ -153,7 +154,12 @@ export async function handleSetGameDsl(
   const parsed = parse(content);
   if (!parsed.success) return fail(`DSL 校验失败: ${parsed.error}`);
   if (dryRun) return ok('dryRun 校验通过，未写库', { dsl: stringify(parsed.data) });
-  return writeGameContent(db, game, stringify(parsed.data));
+  return writeGameContent(
+    db,
+    game,
+    stringify(parsed.data),
+    typeof args.expectedRevision === 'number' ? args.expectedRevision : undefined,
+  );
 }
 
 export async function handleDeleteGame(

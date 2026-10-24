@@ -12,6 +12,12 @@ export interface UserItem {
   emailVerified: boolean;
   createdAt: string | number;
   gameCount: number;
+  /** 累计计费 token（按模型定价折算的核算 token） */
+  totalTokens: number;
+  /** 累计图片/视频/音频生成次数 */
+  imageCount: number;
+  videoCount: number;
+  audioCount: number;
   aiPermissions: string | null;
   isAdmin: boolean;
   /** 当前有效订阅套餐码（服务端附带），未订阅为 null */
@@ -31,11 +37,12 @@ export interface UsersResponse {
 
 export type ModalType = 'create' | 'edit' | 'password' | null;
 
-/** 用户列表的排序键白名单（与 /api/admin/users 的 GAME_SORT_COLUMNS 对应） */
+/** 用户列表的排序键白名单（与 /api/admin/users 的 USER_SORT_COLUMNS 对应） */
 export const USER_SORT_OPTIONS = [
   { value: 'createdAt', label: '注册时间' },
   { value: 'gameCount', label: '游戏数' },
   { value: 'email', label: '邮箱' },
+  { value: 'totalTokens', label: 'AI Token' },
 ] as const;
 
 export const USER_ROLE_OPTIONS = [

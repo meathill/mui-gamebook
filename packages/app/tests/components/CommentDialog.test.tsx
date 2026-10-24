@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import { describe, expect, it, vi } from 'vitest';
 import CommentDialog from '@/components/game-player/CommentDialog';
@@ -45,11 +45,17 @@ describe('CommentDialog', () => {
     expect(screen.queryByTestId('comment')).not.toBeInTheDocument();
   });
 
-  it('点遮罩关闭', () => {
+  it('点遮罩关闭', async () => {
     renderDialog();
     fireEvent.click(screen.getByRole('button', { name: 'Comments' }));
+    // radix 把 dismiss 监听注册在 setTimeout(0)（宏任务）里，先等它挂上
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
 
-    fireEvent.click(screen.getByRole('dialog'));
+    // content 之外的 pointerdown（+延迟到 click）触发关闭
+    fireEvent.pointerDown(document.body);
+    fireEvent.click(document.body);
 
     expect(screen.queryByTestId('comment')).not.toBeInTheDocument();
   });
@@ -58,7 +64,8 @@ describe('CommentDialog', () => {
     renderDialog();
     fireEvent.click(screen.getByRole('button', { name: 'Comments' }));
 
-    fireEvent.keyDown(window, { key: 'Escape' });
+    // radix 在 document 上监听 keydown，事件需要从 body 冒泡
+    fireEvent.keyDown(document.body, { key: 'Escape' });
 
     expect(screen.queryByTestId('comment')).not.toBeInTheDocument();
   });

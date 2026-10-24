@@ -15,7 +15,7 @@ import {
 import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../image-loader';
 import { useDialog } from '@/components/Dialog';
 import ShareButton from '@/components/ShareButton';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import {
   TitleScreen,
   EndScreen,
@@ -263,8 +263,7 @@ export default function GamePlayer({
         <p className="mb-6">{t('cannotFindScene', { sceneId: currentSceneId })}</p>
         {/* 存档指向了不存在的场景，必须清档，否则回标题页点「继续」会死循环 */}
         <Button
-          variant="soft"
-          color="gray"
+          variant="secondary"
           size="lg"
           onClick={() => resetToTitle(true)}>
           {t('backToTitle')}
@@ -300,7 +299,6 @@ export default function GamePlayer({
             {/* 回标题页，保留存档；销毁进度的入口只留标题页的「重新开始」和结局页的「再玩一次」 */}
             <Button
               variant="ghost"
-              color="gray"
               onClick={() => route.goToView('intro')}>
               {t('backToTitle')}
             </Button>

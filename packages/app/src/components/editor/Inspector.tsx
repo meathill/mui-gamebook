@@ -6,6 +6,7 @@ import type { GameState } from '@roudanio/parser/src/types';
 import { extractRuntimeState } from '@roudanio/parser/src/utils';
 import { interpolateVariables } from '@mui-gamebook/site-common/utils';
 import { useDialog } from '@/components/Dialog';
+import { Input } from '@/components/ui/input';
 import { getPrimaryAudioUrl, setPrimaryAudioUrl, stripAudioComments } from '@/lib/editor/prose-audio';
 import { useEditorStore } from '@/lib/editor/store';
 import AssetEditor from './AssetEditor';
@@ -118,12 +119,11 @@ export default function Inspector({
           <>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">场景 ID</label>
-              <input
+              <Input
                 type="text"
                 key={selectedNode.id}
                 defaultValue={nodeData.label}
                 onBlur={(e) => onNodeIdChange(selectedNode.id, e.target.value)}
-                className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
 
@@ -178,11 +178,10 @@ export default function Inspector({
           <>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">选项文本</label>
-              <input
+              <Input
                 type="text"
                 value={(selectedEdge.label as string) || ''}
                 onChange={(e) => onEdgeChange(selectedEdge.id, { label: e.target.value })}
-                className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
               {selectedEdge.label && (
                 <div className="mt-2 flex items-center gap-2">
@@ -213,24 +212,22 @@ export default function Inspector({
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">条件 (if)</label>
-              <input
+              <Input
                 type="text"
                 value={(selectedEdge.data?.condition as string) || ''}
                 onChange={(e) =>
                   onEdgeChange(selectedEdge.id, { data: { ...selectedEdge.data, condition: e.target.value } })
                 }
                 placeholder="例如: has_key == true"
-                className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">状态更新 (set)</label>
-              <input
+              <Input
                 type="text"
                 value={(selectedEdge.data?.set as string) || ''}
                 onChange={(e) => onEdgeChange(selectedEdge.id, { data: { ...selectedEdge.data, set: e.target.value } })}
                 placeholder="例如: gold = gold - 10"
-                className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
               />
             </div>
           </>

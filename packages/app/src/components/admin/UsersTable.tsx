@@ -21,6 +21,13 @@ interface UsersTableProps {
   onDelete: (user: UserItem) => void;
 }
 
+/** 计费 token 用 k/M 缩写，避免长数字撑宽表格 */
+function formatCompactTokens(value: number): string {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}k`;
+  return String(value);
+}
+
 /**
  * 用户列表表格 + 排序表头 + 分页
  */
@@ -71,6 +78,19 @@ export default function UsersTable({
                   align="right"
                 />
                 <SortableHeader
+                  label="AI Token"
+                  sortKey="totalTokens"
+                  activeSort={activeSort}
+                  order={order}
+                  onSort={onSort}
+                  align="right"
+                />
+                <th
+                  className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  title="累计图片 / 视频 / 音频生成次数">
+                  图片 / 视频 / 音频
+                </th>
+                <SortableHeader
                   label="注册时间"
                   sortKey="createdAt"
                   activeSort={activeSort}
@@ -89,6 +109,14 @@ export default function UsersTable({
                   <td className="px-6 py-4 text-sm font-medium text-gray-900">{user.name}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">{user.email}</td>
                   <td className="px-6 py-4 text-sm text-gray-900 text-right">{user.gameCount}</td>
+                  <td
+                    className="px-4 py-4 text-sm text-gray-900 text-right whitespace-nowrap"
+                    title={`计费 token：${user.totalTokens.toLocaleString()}`}>
+                    {formatCompactTokens(user.totalTokens)}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-900 text-right whitespace-nowrap">
+                    {user.imageCount} / {user.videoCount} / {user.audioCount}
+                  </td>
                   <td className="px-6 py-4 text-sm text-gray-500">{formatDate(user.createdAt)}</td>
                   <td className="px-6 py-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1.5">

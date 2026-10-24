@@ -1,10 +1,15 @@
 'use client';
 
 import { CaretUpIcon, CheckIcon, GlobeIcon } from '@phosphor-icons/react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import Link from 'next/link';
 import { useLocale as useCurrentLocale, useTranslations } from 'next-intl';
 import QQGroupInvite from '@/components/QQGroupInvite';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useLocale } from '@/i18n/client';
 import type { Locale } from '@/i18n/config';
 
@@ -121,37 +126,34 @@ export default function Footer() {
             </a>
 
             {/* 语言切换 Dropdown */}
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <button className="flex items-center gap-1.5 px-2 py-1 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 rounded px-2 py-1 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700">
                   <GlobeIcon size={14} />
                   <span>{languages.find((l) => l.code === currentLocale)?.label || '🌐'}</span>
                   <CaretUpIcon size={14} />
                 </button>
-              </DropdownMenu.Trigger>
+              </DropdownMenuTrigger>
 
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content
-                  className="min-w-[120px] bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
-                  sideOffset={5}
-                  align="center">
-                  {languages.map((lang) => (
-                    <DropdownMenu.Item
-                      key={lang.code}
-                      className="flex items-center justify-between px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer outline-none"
-                      onSelect={() => setLocale(lang.code)}>
-                      {lang.label}
-                      {currentLocale === lang.code && (
-                        <CheckIcon
-                          size={14}
-                          className="text-blue-600"
-                        />
-                      )}
-                    </DropdownMenu.Item>
-                  ))}
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
+              <DropdownMenuContent
+                className="min-w-[120px]"
+                sideOffset={5}
+                align="center">
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onSelect={() => setLocale(lang.code)}>
+                    {lang.label}
+                    {currentLocale === lang.code && (
+                      <CheckIcon
+                        size={14}
+                        className="text-primary"
+                      />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>

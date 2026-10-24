@@ -2,6 +2,9 @@
 
 import { useRef, useEffect } from 'react';
 import { CheckIcon, XIcon } from '@phosphor-icons/react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { NativeSelect } from '@/components/ui/native-select';
 
 /**
  * 场景元数据卡片的通用表单组件
@@ -29,17 +32,15 @@ export function FormField({
     <div className="smc-field">
       <label className="smc-field-label">{label}</label>
       {multiline ? (
-        <textarea
+        <Textarea
           ref={ref as React.RefObject<HTMLTextAreaElement>}
-          className="smc-field-input smc-field-textarea"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           rows={2}
         />
       ) : (
-        <input
+        <Input
           ref={ref as React.RefObject<HTMLInputElement>}
-          className="smc-field-input"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -62,8 +63,7 @@ export function SelectField({
   return (
     <div className="smc-field">
       <label className="smc-field-label">{label}</label>
-      <select
-        className="smc-field-input"
+      <NativeSelect
         value={value}
         onChange={(e) => onChange(e.target.value)}>
         {options.map((o) => (
@@ -73,7 +73,7 @@ export function SelectField({
             {o.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
     </div>
   );
 }

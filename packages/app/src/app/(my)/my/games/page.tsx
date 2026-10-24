@@ -15,6 +15,7 @@ import {
 import ImageIcon from 'next/image';
 import Link from 'next/link';
 import { useDialog } from '@/components/Dialog';
+import { Input } from '@/components/ui/input';
 import { formatDate } from '@mui-gamebook/site-common/utils';
 import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../../../../image-loader';
 
@@ -99,12 +100,12 @@ export default function GamesPage() {
         <form
           onSubmit={handleCreate}
           className="flex gap-4">
-          <input
+          <Input
             type="text"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="游戏标题（如：迷失之城）"
-            className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+            className="flex-1"
             required
           />
           <button

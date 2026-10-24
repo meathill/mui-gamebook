@@ -9,71 +9,38 @@ import { executeMcpAgentTool, getDb, resolveMcpActorUser } from '@/lib/mcp-agent
 import { MCP_AGENT_TOOLS } from '@/lib/mcp-agent-tools';
 import { resolveMcpAuth } from '@/lib/mcp-auth';
 import {
-  isModernMcpRequest,
-  isOriginAllowed,
-  JsonRpcRequest,
-  mcpServerMeta,
-  McpAuth,
-  MCP_LEGACY_PROTOCOL_VERSION,
-  MCP_SUPPORTED_PROTOCOL_VERSIONS,
-  validateMcpTransport,
-} from '@/lib/mcp-http';
+  handleMcpPost,
+  methodNotAllowed,
+  rpcError,
+  rpcOk,
+  structuredResult,
+  textResult,
+  APP_ERROR_FORBIDDEN,
+  APP_ERROR_GAME_NOT_FOUND,
+  APP_ERROR_RATE_LIMITED,
+  APP_ERROR_SCRIPT_INVALID,
+  APP_ERROR_UNAUTHORIZED,
+  type McpRouteDescriptor,
+} from '@/lib/mcp-route-core';
+import type { McpAuth } from '@/lib/mcp-http';
+import { MCP_SERVER_NAME } from '@/lib/mcp-http';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
+import { saveEditorContent } from '@/lib/media-assistance/editor-save';
+import { AssistanceError } from '@/lib/media-assistance/types';
 
 /**
  * MCP endpoint（dual-era）：
  * - Modern 2026-07-28：每请求 header + _meta，无 initialize
  * - Legacy 2025-03-26：initialize / ping / tools/list / tools/call（MiMoCode 等客户端）
- * 鉴权 per-request：Bearer ADMIN_PASSWORD 或 cookie session。
- * 工具 = WEBMCP_TOOLS（剧本细粒度）+ MCP_AGENT_TOOLS（CRUD/AI）。
+ * 鉴权 per-request：Bearer API Key / ADMIN_PASSWORD / cookie session。
+ * 工具 = WEBMCP_TOOLS（剧本细粒度）+ MCP_AGENT_TOOLS（CRUD/AI/上传）。
+ * 站方素材协助工具在专用端点 /api/mcp/media-assistance（仅管理员），不在此暴露。
  */
 
 const ALL_TOOLS = [
   ...WEBMCP_TOOLS.map((tool) => ({ kind: 'dsl' as const, tool })),
   ...MCP_AGENT_TOOLS.map((tool) => ({ kind: 'agent' as const, tool })),
 ];
-
-const APP_ERROR_UNAUTHORIZED = 40101;
-const APP_ERROR_FORBIDDEN = 40103;
-const APP_ERROR_GAME_NOT_FOUND = 40104;
-const APP_ERROR_SCRIPT_INVALID = 50001;
-const APP_ERROR_INVALID_ORIGIN = 40301;
-const APP_ERROR_RATE_LIMITED = 40129;
-
-function rpcOk(id: JsonRpcRequest['id'], result: Record<string, unknown>, modern: boolean) {
-  return NextResponse.json({
-    jsonrpc: '2.0',
-    id: id ?? null,
-    result: {
-      ...(modern ? { resultType: 'complete' } : {}),
-      ...result,
-      _meta: { ...mcpServerMeta(), ...(result._meta && typeof result._meta === 'object' ? result._meta : {}) },
-    },
-  });
-}
-
-function rpcError(httpStatus: number, id: JsonRpcRequest['id'], code: number, message: string, data?: unknown) {
-  return NextResponse.json(
-    { jsonrpc: '2.0', id: id ?? null, error: { code, message, ...(data ? { data } : {}) } },
-    { status: httpStatus },
-  );
-}
-
-function textResult(text: string, isError = false) {
-  return { content: [{ type: 'text', text }], ...(isError ? { isError: true } : {}) };
-}
-
-function structuredResult(message: string, data: Record<string, unknown> | undefined, isError: boolean) {
-  return {
-    content: [{ type: 'text', text: data ? `${message}\n${JSON.stringify(data, null, 2)}` : message }],
-    ...(data ? { structuredContent: data } : {}),
-    ...(isError ? { isError: true } : {}),
-  };
-}
-
-function methodNotAllowed() {
-  return NextResponse.json({ error: 'Method Not Allowed' }, { status: 405, headers: { Allow: 'POST' } });
-}
 
 export async function GET() {
   return methodNotAllowed();
@@ -84,20 +51,29 @@ export async function DELETE() {
 }
 
 function toolDescriptors() {
-  return ALL_TOOLS.map(({ tool }) => ({
+  return ALL_TOOLS.map(({ tool, kind }) => ({
     name: tool.name,
     description: tool.description,
-    inputSchema: tool.inputSchema,
+    inputSchema:
+      kind === 'dsl' && !tool.readonly
+        ? {
+            ...tool.inputSchema,
+            properties: {
+              ...tool.inputSchema.properties,
+              expectedRevision: { type: 'integer', description: '当前内容版本；开启站方协助的作品必填' },
+            },
+          }
+        : tool.inputSchema,
     annotations: { readOnlyHint: Boolean(tool.readonly) },
   }));
 }
 
 async function handleToolsCall(
-  id: JsonRpcRequest['id'],
+  id: Parameters<McpRouteDescriptor['onToolsCall']>[0],
   params: Record<string, unknown> | undefined,
-  auth: McpAuth,
+  ctx: { auth: McpAuth | null },
   modern: boolean,
-) {
+): Promise<NextResponse> {
   const toolName = params?.name as string | undefined;
   if (!toolName) return rpcError(400, id, -32602, 'Missing params.name');
   const entry = ALL_TOOLS.find(({ tool }) => tool.name === toolName);
@@ -105,14 +81,14 @@ async function handleToolsCall(
 
   const callArgs = (params?.arguments ?? {}) as Record<string, unknown>;
   const gameId = Number(callArgs.gameId);
-  const needsGame = !['listGames', 'createGame'].includes(toolName);
-  if (needsGame && !gameId) return rpcError(400, id, -32602, 'Missing arguments.gameId');
+  if (!['listGames', 'createGame'].includes(toolName) && !gameId) {
+    return rpcError(400, id, -32602, 'Missing arguments.gameId');
+  }
 
   const db = getDb();
   const sessionUser =
-    auth.mode === 'session' ? { id: auth.session.user.id, email: auth.session.user.email } : undefined;
-  const actor = await resolveMcpActorUser(db, auth.mode, sessionUser);
-  if (!actor) return rpcError(401, id, APP_ERROR_UNAUTHORIZED, 'Unauthorized: no billing user');
+    ctx.auth?.mode === 'session' ? { id: ctx.auth.session.user.id, email: ctx.auth.session.user.email } : undefined;
+  const actor = await resolveMcpActorUser(db, ctx.auth?.mode ?? 'session', sessionUser);
   if (!actor) return rpcError(401, id, APP_ERROR_UNAUTHORIZED, 'Unauthorized: no billing user');
 
   if (entry.kind === 'agent') {
@@ -124,8 +100,8 @@ async function handleToolsCall(
   const game = await db.select().from(schema.games).where(eq(schema.games.id, gameId)).get();
   if (!game) return rpcError(404, id, APP_ERROR_GAME_NOT_FOUND, 'Game not found');
   if (
-    auth.mode === 'session' &&
-    !canManageGame({ user: { id: auth.session.user.id, email: auth.session.user.email } }, game)
+    ctx.auth?.mode === 'session' &&
+    !canManageGame({ user: { id: ctx.auth.session.user.id, email: ctx.auth.session.user.email } }, game)
   ) {
     return rpcError(403, id, APP_ERROR_FORBIDDEN, 'Forbidden');
   }
@@ -136,7 +112,7 @@ async function handleToolsCall(
   const gameData = parsed.data;
 
   if (toolName === 'getDsl') {
-    return rpcOk(id, textResult(content?.content || '暂无内容'), modern);
+    return rpcOk(id, { ...textResult(content?.content || '暂无内容'), revision: content?.revision ?? 0 }, modern);
   }
   if (toolName === 'listScenes') {
     const list = Object.entries(gameData.scenes)
@@ -145,7 +121,12 @@ async function handleToolsCall(
     return rpcOk(id, textResult(list || '暂无场景'), modern);
   }
 
-  const { gameId: _omitGameId, dryRun, ...singleArgs } = callArgs as { gameId?: unknown; dryRun?: boolean };
+  const {
+    gameId: _omitGameId,
+    dryRun,
+    expectedRevision,
+    ...singleArgs
+  } = callArgs as { gameId?: unknown; dryRun?: boolean; expectedRevision?: number };
   void _omitGameId;
   const results = executeWebMcpBatch(gameData, [{ name: toolName, args: singleArgs }]);
   const nextDsl = stringify(gameData);
@@ -161,6 +142,25 @@ async function handleToolsCall(
   }
   if (hasFailure) {
     return rpcOk(id, textResult(summary, true), modern);
+  }
+  if (entry.tool.readonly) return rpcOk(id, textResult(summary), modern);
+
+  if (game.mediaAssistanceEnabled || expectedRevision !== undefined) {
+    try {
+      const revision = await saveEditorContent(getCloudflareContext().env.DB, {
+        gameId,
+        content: nextDsl,
+        game: revalidate.data,
+        expectedRevision: expectedRevision as number,
+        slug: game.slug,
+        actorId: actor.user.id,
+      });
+      revalidatePublicCatalog({ slug: game.slug, tags: revalidate.data.tags });
+      return rpcOk(id, { ...textResult(summary), revision }, modern);
+    } catch (error) {
+      if (error instanceof AssistanceError) return rpcOk(id, textResult(error.message, true), modern);
+      throw error;
+    }
   }
 
   const { title, description, backgroundStory, cover_image, tags, published } = revalidate.data;
@@ -181,86 +181,31 @@ async function handleToolsCall(
   return rpcOk(id, textResult(summary, hasFailure), modern);
 }
 
+const routeDescriptor: McpRouteDescriptor = {
+  serverName: MCP_SERVER_NAME,
+  instructions:
+    '游戏剧本 MCP。tools/call 传 arguments.gameId；写操作建议 dryRun。鉴权：Authorization Bearer <API_KEY 或 ADMIN_PASSWORD>。',
+  tools: toolDescriptors,
+  authScope: 'tools-call',
+  authorize: async (req, id) => {
+    const resolved = await resolveMcpAuth(req);
+    if (!resolved.auth) {
+      const rateLimited = resolved.error === 'rate-limited';
+      return {
+        auth: null,
+        errorResponse: rpcError(
+          rateLimited ? 429 : 401,
+          id,
+          rateLimited ? APP_ERROR_RATE_LIMITED : APP_ERROR_UNAUTHORIZED,
+          rateLimited ? 'API key rate limited' : 'Unauthorized',
+        ),
+      };
+    }
+    return { auth: resolved.auth };
+  },
+  onToolsCall: handleToolsCall,
+};
+
 export async function POST(req: Request) {
-  const { env } = getCloudflareContext();
-  if (!isOriginAllowed(req, env as unknown as Record<string, unknown>)) {
-    return rpcError(403, null, APP_ERROR_INVALID_ORIGIN, 'Invalid Origin');
-  }
-
-  let body: JsonRpcRequest;
-  try {
-    body = (await req.json()) as JsonRpcRequest;
-  } catch {
-    return rpcError(400, null, -32700, 'Parse error');
-  }
-
-  const { id = null, method, params } = body;
-  const modern = isModernMcpRequest(req, body);
-
-  if (modern) {
-    const transportFailure = validateMcpTransport(req, body);
-    if (transportFailure) {
-      return rpcError(400, id, transportFailure.code, transportFailure.message, transportFailure.data);
-    }
-    if (id === null || id === undefined) {
-      return new NextResponse(null, { status: 202 });
-    }
-  }
-
-  if (method === 'initialize') {
-    if (modern) return rpcError(404, id, -32601, 'Method not found: initialize');
-    return rpcOk(
-      id,
-      {
-        protocolVersion: MCP_LEGACY_PROTOCOL_VERSION,
-        capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'mui-gamebook-mcp', version: '0.3.0' },
-      },
-      false,
-    );
-  }
-  if (method === 'notifications/initialized') {
-    return new NextResponse(null, { status: 202 });
-  }
-  if (method === 'ping') {
-    return rpcOk(id, {}, modern);
-  }
-  if (method === 'server/discover') {
-    return rpcOk(
-      id,
-      {
-        supportedVersions: [...MCP_SUPPORTED_PROTOCOL_VERSIONS],
-        capabilities: { tools: { listChanged: false } },
-        instructions:
-          '游戏剧本 MCP。tools/call 传 arguments.gameId；写操作建议 dryRun。鉴权：Authorization Bearer <ADMIN_PASSWORD>。',
-        ttlMs: 3_600_000,
-        cacheScope: 'public',
-      },
-      true,
-    );
-  }
-  if (method === 'tools/list') {
-    return rpcOk(
-      id,
-      {
-        tools: toolDescriptors(),
-        ttlMs: 300_000,
-        cacheScope: 'private',
-      },
-      modern,
-    );
-  }
-  if (method !== 'tools/call') {
-    return rpcError(404, id, -32601, `Method not found: ${method ?? ''}`);
-  }
-
-  const resolved = await resolveMcpAuth(req);
-  if (!resolved.auth) {
-    if (resolved.error === 'rate-limited') {
-      return rpcError(429, id, APP_ERROR_RATE_LIMITED, 'API key rate limited');
-    }
-    return rpcError(401, id, APP_ERROR_UNAUTHORIZED, 'Unauthorized');
-  }
-
-  return handleToolsCall(id, params, resolved.auth, modern);
+  return handleMcpPost(req, routeDescriptor);
 }

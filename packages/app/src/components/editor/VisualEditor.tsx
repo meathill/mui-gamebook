@@ -28,6 +28,7 @@ import SceneNode from '@/components/editor/SceneNode';
 import Inspector from '@/components/editor/Inspector';
 import EditorSettingsTab from '@/components/editor/EditorSettingsTab';
 import EditorToolbar from '@/components/editor/EditorToolbar';
+import MediaAssistanceBanner from '@/components/editor/media-assistance-banner';
 import EditorLeftSidebar from '@/components/editor/EditorLeftSidebar';
 import StoryImporter from '@/components/editor/StoryImporter';
 import ChatPanel from '@/components/editor/ChatPanel';
@@ -186,8 +187,8 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   async function handleSave() {
     // 流程图模式下，viewMode 是 visual；故事模式下是 text
     const viewMode = activeTab === 'flowchart' ? 'visual' : 'text';
-    await saveGame(nodes, edges, viewMode, activeTab);
-    setSaveStatus('saved');
+    const saved = await saveGame(nodes, edges, viewMode, activeTab);
+    setSaveStatus(saved ? 'saved' : 'unsaved');
   }
 
   function handleStoryChange(content: string) {
@@ -292,12 +293,14 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
         onSave={handleSave}
         leftSidebarOpen={leftSidebarOpen}
         onToggleLeftSidebar={toggleLeftSidebar}
+        mediaAssistanceBanner={originalGame ? <MediaAssistanceBanner game={originalGame} /> : undefined}
       />
 
       {/* 设置 tab */}
       {activeTab === 'settings' && originalGame && (
         <div className="grow overflow-y-auto bg-gray-50 p-6">
           <EditorSettingsTab
+            content={textContent}
             game={originalGame}
             id={id}
             onChange={setOriginalGame}

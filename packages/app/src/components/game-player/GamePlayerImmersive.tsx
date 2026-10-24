@@ -16,7 +16,7 @@ import {
   trackStartReading,
 } from '@mui-gamebook/site-common/utils';
 import { useDialog } from '@/components/Dialog';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 import TitleScreen from './TitleScreen';
 import CommentDialog from './CommentDialog';
@@ -240,7 +240,7 @@ export default function GamePlayerImmersive({
         <p>{t('cannotFindScene', { sceneId: currentSceneId })}</p>
         {/* 存档指向了不存在的场景，必须清档，否则回标题页点「继续」会死循环 */}
         <Button
-          variant="soft"
+          variant="secondary"
           size="lg"
           onClick={() => resetToTitle(true)}>
           {t('backToTitle')}

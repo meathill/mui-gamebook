@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
-import Button from '@/components/Button';
+import { useDialog } from '@/components/Dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 import {
   buildAntigravityConfig,
   buildClaudeCodeCommand,
@@ -68,6 +71,7 @@ const EXPIRY_OPTIONS = [
 ] as const;
 
 export default function ApiKeysPage() {
+  const dialog = useDialog();
   const [keys, setKeys] = useState<ApiKeyRow[]>([]);
   const [name, setName] = useState('mui-gamebook-mcp');
   const [expiry, setExpiry] = useState<string>('0');
@@ -165,7 +169,11 @@ export default function ApiKeysPage() {
   }
 
   async function handleRevoke(id: string) {
-    if (!window.confirm('确定吊销这把密钥？正在使用它的 Agent 会立刻失效。')) return;
+    const confirmed = await dialog.confirm('确定吊销这把密钥？正在使用它的 Agent 会立刻失效。', '吊销密钥', {
+      confirmText: '吊销',
+      cancelText: '取消',
+    });
+    if (!confirmed) return;
     setError(null);
     const { error: deleteError } = await authClient.apiKey.delete({ keyId: id });
     if (deleteError) {
@@ -194,7 +202,7 @@ export default function ApiKeysPage() {
         <h1 className="text-2xl font-bold text-gray-900">API 密钥</h1>
         <p className="mt-1 text-sm text-gray-500">
           供本地 AI Agent / MCP 客户端调用 <code className="bg-gray-100 px-1 rounded">{MCP_ENDPOINT}</code>
-          。密钥绑定你的账号，只能管理你的游戏，可随时吊销。
+          。密钥绑定你的账号，只能管理你的游戏（不含站方素材协助），可随时吊销。
         </p>
       </header>
 
@@ -205,16 +213,9 @@ export default function ApiKeysPage() {
           <p className="text-sm font-medium text-green-800">密钥已创建，请立即复制（只显示这一次）：</p>
           <code className="block break-all bg-white border border-green-200 rounded px-3 py-2 text-sm">{newKey}</code>
           <div className="flex flex-wrap gap-2">
+            <Button onClick={handleCopy}>{copied ? '已复制 Bearer' : '复制 Bearer 头'}</Button>
             <Button
-              size="md"
-              color="green"
-              onClick={handleCopy}>
-              {copied ? '已复制 Bearer' : '复制 Bearer 头'}
-            </Button>
-            <Button
-              size="md"
-              color="gray"
-              variant="soft"
+              variant="secondary"
               onClick={() => setNewKey(null)}>
               我已保存
             </Button>
@@ -225,16 +226,17 @@ export default function ApiKeysPage() {
       <section className="rounded-xl border border-gray-200 bg-white p-4 space-y-3">
         <h2 className="font-semibold text-gray-900">创建密钥</h2>
         <div className="flex flex-wrap items-stretch gap-2">
-          <input
+          <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="密钥名称，如 mui-gamebook-mcp"
-            className="flex-1 min-w-[200px] h-10 rounded-lg border border-gray-300 px-3 text-sm"
+            className="h-10 min-w-[200px] flex-1"
           />
-          <select
+          <NativeSelect
             value={expiry}
             onChange={(e) => setExpiry(e.target.value)}
-            className="h-10 rounded-lg border border-gray-300 px-3 text-sm text-gray-700 bg-white">
+            wrapperClassName="w-auto"
+            className="h-10 bg-white text-gray-700">
             {EXPIRY_OPTIONS.map((opt) => (
               <option
                 key={opt.value}
@@ -242,10 +244,9 @@ export default function ApiKeysPage() {
                 {opt.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <Button
             size="lg"
-            color="blue"
             onClick={handleCreate}
             disabled={submitting}>
             {submitting ? '创建中…' : '创建'}
@@ -262,8 +263,7 @@ export default function ApiKeysPage() {
           </div>
           <Button
             size="sm"
-            color="gray"
-            variant="soft"
+            variant="secondary"
             onClick={handleCopyExample}>
             {copiedExample ? '已复制' : '复制配置'}
           </Button>
@@ -338,8 +338,7 @@ export default function ApiKeysPage() {
                   <td className="px-4 py-3 text-right">
                     <Button
                       size="sm"
-                      color="red"
-                      variant="solid"
+                      variant="destructive"
                       onClick={() => handleRevoke(item.id)}>
                       吊销
                     </Button>

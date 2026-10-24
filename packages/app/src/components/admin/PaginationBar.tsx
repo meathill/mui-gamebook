@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+
 interface PaginationBarProps {
   page: number;
   total: number;
@@ -16,23 +18,25 @@ export default function PaginationBar({ page, total, totalPages, unit, onPageCha
   if (totalPages <= 1) return null;
 
   return (
-    <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-      <span className="text-sm text-gray-500">
+    <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
+      <span className="text-muted-foreground text-sm">
         共 {total} {unit}，第 {page} / {totalPages} 页
       </span>
       <div className="flex gap-2">
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => onPageChange((p) => Math.max(1, p - 1))}
-          disabled={page <= 1}
-          className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50">
+          disabled={page <= 1}>
           上一页
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => onPageChange((p) => Math.min(totalPages, p + 1))}
-          disabled={page >= totalPages}
-          className="px-3 py-1 text-sm border rounded hover:bg-gray-50 disabled:opacity-50">
+          disabled={page >= totalPages}>
           下一页
-        </button>
+        </Button>
       </div>
     </div>
   );

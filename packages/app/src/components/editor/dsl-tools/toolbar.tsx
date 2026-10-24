@@ -1,4 +1,9 @@
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   PlusIcon,
   GitBranchIcon,
@@ -52,27 +57,24 @@ export default function DslToolbar({
         <ArrowRightIcon size={16} />
         场景跳转
       </button>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger className={BUTTON_CLASS}>
+      <DropdownMenu>
+        <DropdownMenuTrigger className={BUTTON_CLASS}>
           插入
           <CaretDownIcon size={14} />
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content
-            align="start"
-            sideOffset={6}
-            className="z-50 min-w-40 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
-            {INSERT_TOOLS.map((kind) => (
-              <DropdownMenu.Item
-                key={kind}
-                className="cursor-pointer rounded px-3 py-2 text-sm text-gray-700 outline-none focus:bg-orange-50 focus:text-orange-800"
-                onSelect={() => onOpen(kind)}>
-                {DSL_TOOL_LABELS[kind]}
-              </DropdownMenu.Item>
-            ))}
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          sideOffset={6}
+          className="min-w-40">
+          {INSERT_TOOLS.map((kind) => (
+            <DropdownMenuItem
+              key={kind}
+              onSelect={() => onOpen(kind)}>
+              {DSL_TOOL_LABELS[kind]}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
       <div className="mx-1 h-5 w-px bg-gray-300" />
       <button
         type="button"

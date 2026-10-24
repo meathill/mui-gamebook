@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { PlusIcon, MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr';
 import type { AICharacter } from '@roudanio/parser/src/types';
 import { useDialog } from '@/components/Dialog';
+import { Input } from '@/components/ui/input';
 import {
   CharacterForm,
   CharacterList,
@@ -129,12 +130,12 @@ export default function EditorCharactersTab({ characters, onChange, gameId }: Pr
                 size={14}
                 className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
               />
-              <input
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="搜索..."
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="pl-8"
               />
             </div>
             <button

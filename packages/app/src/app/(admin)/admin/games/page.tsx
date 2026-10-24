@@ -6,6 +6,8 @@ import Link from 'next/link';
 import PaginationBar from '@/components/admin/PaginationBar';
 import SortableHeader from '@/components/admin/SortableHeader';
 import { useDialog } from '@/components/Dialog';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 import { useListQuery } from '@/hooks/useListQuery';
 import { formatDateTime as formatDate } from '@mui-gamebook/site-common/utils';
 
@@ -15,6 +17,8 @@ interface GameItem {
   title: string;
   published: boolean;
   shadowBanned: boolean;
+  /** 是否接受站方 AI 素材协助（作者在编辑器设置中开启） */
+  mediaAssistanceEnabled: boolean;
   ownerEmail: string | null;
   createdAt: string | number;
   updatedAt: string | number;
@@ -38,10 +42,20 @@ const STATUS_OPTIONS = [
   { value: 'banned', label: '已封禁' },
 ] as const;
 
+const MEDIA_ASSISTANCE_OPTIONS = [
+  { value: 'all', label: '素材协助：全部' },
+  { value: 'enabled', label: '素材协助：已开启' },
+  { value: 'disabled', label: '素材协助：未开启' },
+] as const;
+
 export default function AdminGamesPage() {
   const queryClient = useQueryClient();
   const dialog = useDialog();
-  const list = useListQuery({ defaultSort: 'updatedAt', defaultOrder: 'desc', defaultFilters: { status: 'all' } });
+  const list = useListQuery({
+    defaultSort: 'updatedAt',
+    defaultOrder: 'desc',
+    defaultFilters: { status: 'all', mediaAssistance: 'all' },
+  });
 
   const { data, isLoading } = useQuery<GamesResponse>({
     queryKey: ['admin', 'games', list.queryKey],
@@ -146,18 +160,19 @@ export default function AdminGamesPage() {
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             />
-            <input
+            <Input
               type="text"
               value={list.searchInput}
               onChange={(e) => list.setSearchInput(e.target.value)}
               placeholder="搜索标题、slug 或作者邮箱..."
-              className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="pl-9"
             />
           </div>
-          <select
+          <NativeSelect
             value={list.filters.status ?? 'all'}
             onChange={(e) => list.setFilter('status', e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+            wrapperClassName="w-auto"
+            className="text-gray-700">
             {STATUS_OPTIONS.map((option) => (
               <option
                 key={option.value}
@@ -165,7 +180,20 @@ export default function AdminGamesPage() {
                 {option.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
+          <NativeSelect
+            value={list.filters.mediaAssistance ?? 'all'}
+            onChange={(e) => list.setFilter('mediaAssistance', e.target.value)}
+            wrapperClassName="w-auto"
+            className="text-gray-700">
+            {MEDIA_ASSISTANCE_OPTIONS.map((option) => (
+              <option
+                key={option.value}
+                value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </NativeSelect>
           <button
             type="submit"
             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
@@ -201,6 +229,11 @@ export default function AdminGamesPage() {
                 />
                 <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">作者</th>
                 <th className="text-left px-4 py-3 text-sm font-medium text-gray-500">状态</th>
+                <th
+                  className="text-left px-4 py-3 text-sm font-medium text-gray-500"
+                  title="作者在编辑器设置中开启「接受站方 AI 素材协助」">
+                  素材协助
+                </th>
                 <SortableHeader
                   label="更新时间"
                   sortKey="updatedAt"
@@ -243,6 +276,17 @@ export default function AdminGamesPage() {
                         </span>
                       )}
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {game.mediaAssistanceEnabled ? (
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-orange-100 text-orange-700">
+                        已开启
+                      </span>
+                    ) : (
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-400">
+                        未开启
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{formatDate(game.updatedAt)}</td>
                   <td className="px-4 py-3 text-sm text-gray-500 text-right">{game.openCount ?? 0}</td>

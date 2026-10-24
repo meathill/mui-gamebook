@@ -9,7 +9,8 @@ import {
 } from '@roudanio/parser';
 import { PlusIcon, TrashIcon, ArrowUpIcon, ArrowDownIcon } from '@phosphor-icons/react';
 import ExpressionNodeEditor, { defaultExpression } from './expression-node-editor';
-import { FIELD_CLASS } from './fields';
+import { Textarea } from '@/components/ui/textarea';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export default function LogicField({
   label,
@@ -80,9 +81,9 @@ export default function LogicField({
         </button>
       </div>
       {sourceMode ? (
-        <textarea
+        <Textarea
           aria-label={label + '表达式'}
-          className={FIELD_CLASS + ' font-mono'}
+          className="font-mono"
           value={value}
           required={required}
           rows={2}
@@ -128,9 +129,9 @@ export default function LogicField({
               key={index}
               className="space-y-2 rounded-md bg-gray-50 p-3">
               <div className="flex items-center gap-2">
-                <select
+                <NativeSelect
                   aria-label={'第 ' + (index + 1) + ' 条赋值的变量'}
-                  className={FIELD_CLASS + ' flex-1'}
+                  wrapperClassName="flex-1"
                   value={assignment.key}
                   required
                   onChange={(event) =>
@@ -151,7 +152,7 @@ export default function LogicField({
                       {name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
                 <button
                   type="button"
                   aria-label="上移赋值"

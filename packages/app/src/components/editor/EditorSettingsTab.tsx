@@ -1,22 +1,26 @@
 import { XIcon } from '@phosphor-icons/react/dist/ssr';
-import type { Game } from '@roudanio/parser/src/types';
+import type { EditorGame } from '@/lib/editor/useEditorData';
 import MDEditor from '@uiw/react-md-editor';
 import QQGroupInvite from '@/components/QQGroupInvite';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { isImeComposing } from '@/lib/keyboard';
 import AudiobookGenerationCard from './AudiobookGenerationCard';
 import { PlaybackModeSection } from './EditorSettingsSections';
 import IpRegistrationCard from './IpRegistrationCard';
 import MediaAssetItem from './MediaAssetItem';
+import MediaAssistanceSetting from './media-assistance-setting';
 
 interface Props {
-  game: Game;
+  game: EditorGame;
   id: string;
-  onChange: (updatedGame: Game) => void;
+  onChange: (updatedGame: EditorGame) => void;
   onSlugChange: (newSlug: string) => void;
   slug: string;
+  content?: string;
 }
 
-export default function EditorSettingsTab({ game, id, onChange, onSlugChange, slug }: Props) {
+export default function EditorSettingsTab({ game, id, onChange, onSlugChange, slug, content }: Props) {
   function handleChange(field: string, value: string | number | boolean | Record<string, unknown>) {
     onChange({ ...game, [field]: value });
   }
@@ -48,20 +52,20 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">标题</label>
-              <input
+              <Input
                 type="text"
                 value={game.title}
                 onChange={(e) => handleChange('title', e.target.value)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                className="block"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-              <input
+              <Input
                 type="text"
                 value={slug}
                 onChange={(e) => onSlugChange(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-'))}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
+                className="block"
                 placeholder="game-url-slug"
               />
               <p className="mt-1 text-xs text-gray-500">URL 路径标识，仅支持小写字母、数字和连字符</p>
@@ -70,11 +74,11 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">描述</label>
-            <textarea
+            <Textarea
               value={game.description || ''}
               onChange={(e) => handleChange('description', e.target.value)}
               rows={3}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2 resize-none"
+              className="block resize-none"
             />
           </div>
 
@@ -98,11 +102,11 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                   </button>
                 </span>
               ))}
-              <input
+              <Input
                 type="text"
                 placeholder="输入后按回车..."
                 onKeyDown={handleTagsChange}
-                className="flex-1 outline-none text-sm min-w-[80px]"
+                className="h-auto flex-1 min-w-[80px] border-0 px-0 focus-visible:ring-0"
               />
             </div>
           </div>
@@ -141,6 +145,12 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
             }}
           />
 
+          <MediaAssistanceSetting
+            game={game}
+            content={content}
+            onChange={onChange}
+          />
+
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
             <h3 className="text-sm font-medium text-gray-900 mb-3">发布状态</h3>
             <label className="flex items-center gap-3 cursor-pointer">
@@ -151,7 +161,7 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
                   checked={game.published || false}
                   onChange={(e) => handleChange('published', e.target.checked)}
                 />
-                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
               </div>
               <span className={`text-sm font-medium ${game.published ? 'text-green-700' : 'text-gray-500'}`}>
                 {game.published ? '已发布' : '草稿'}
@@ -171,20 +181,20 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
             <h3 className="text-sm font-medium text-blue-900">AI 风格（作用于全篇故事）</h3>
             <div>
               <label className="block text-xs text-blue-700 mb-1">图片风格</label>
-              <textarea
+              <Textarea
                 value={game.ai?.style?.image || ''}
                 onChange={(e) => handleChange('ai', { ...game.ai, style: { ...game.ai.style, image: e.target.value } })}
                 placeholder="全局艺术风格提示词（如：水彩画风，奇幻风格）..."
-                className="w-full p-2 text-sm border border-blue-200 rounded h-16 resize-none"
+                className="h-16 resize-none"
               />
             </div>
             <div>
               <label className="block text-xs text-blue-700 mb-1">TTS 语言风格</label>
-              <textarea
+              <Textarea
                 value={game.ai?.style?.tts || ''}
                 onChange={(e) => handleChange('ai', { ...game.ai, style: { ...game.ai.style, tts: e.target.value } })}
                 placeholder="语音朗读风格（如：用讲童话故事的语气，语速适中，温柔亲切）..."
-                className="w-full p-2 text-sm border border-blue-200 rounded h-16 resize-none"
+                className="h-16 resize-none"
               />
             </div>
           </div>

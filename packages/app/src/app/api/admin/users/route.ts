@@ -5,7 +5,15 @@ import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
 import { isRootUser } from '@/lib/admin';
 import { createAuth } from '@/lib/auth-config';
-import { GAME_COUNT_SUBQUERY, PLAN_CODE_SUBQUERY, SUBSCRIPTION_STATUS_SUBQUERY } from '@/lib/admin-queries';
+import {
+  AI_AUDIO_COUNT_SUBQUERY,
+  AI_IMAGE_COUNT_SUBQUERY,
+  AI_TOTAL_TOKENS_SUBQUERY,
+  AI_VIDEO_COUNT_SUBQUERY,
+  GAME_COUNT_SUBQUERY,
+  PLAN_CODE_SUBQUERY,
+  SUBSCRIPTION_STATUS_SUBQUERY,
+} from '@/lib/admin-queries';
 import { getSession } from '@/lib/auth-server';
 import { parseEnumFilter, parseListQuery } from '@/lib/list-query';
 
@@ -15,6 +23,7 @@ const USER_SORT_COLUMNS = {
   email: schema.user.email,
   name: schema.user.name,
   gameCount: GAME_COUNT_SUBQUERY,
+  totalTokens: AI_TOTAL_TOKENS_SUBQUERY,
 } as const;
 
 const DEFAULT_USER_SORT = 'createdAt';
@@ -64,6 +73,11 @@ export async function GET(request: Request) {
         aiPermissions: schema.user.aiPermissions,
         isAdmin: schema.user.isAdmin,
         gameCount: GAME_COUNT_SUBQUERY,
+        // 累计 AI 用量：计费 token 与图片/视频/音频生成次数
+        totalTokens: AI_TOTAL_TOKENS_SUBQUERY,
+        imageCount: AI_IMAGE_COUNT_SUBQUERY,
+        videoCount: AI_VIDEO_COUNT_SUBQUERY,
+        audioCount: AI_AUDIO_COUNT_SUBQUERY,
         // 当前有效订阅的套餐码与状态；无有效订阅时为 null
         planCode: PLAN_CODE_SUBQUERY,
         subscriptionStatus: SUBSCRIPTION_STATUS_SUBQUERY,

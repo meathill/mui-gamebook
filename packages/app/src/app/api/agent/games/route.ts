@@ -95,6 +95,12 @@ published: false
     };
 
     if (existingGame) {
+      if (existingGame.mediaAssistanceEnabled) {
+        return NextResponse.json(
+          { error: '此作品已开启素材协助，请使用带 expectedRevision 的 CMS 或 MCP 接口更新正文' },
+          { status: 409 },
+        );
+      }
       // Update
       id = existingGame.id;
       await db

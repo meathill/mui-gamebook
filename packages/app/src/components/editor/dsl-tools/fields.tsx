@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react';
-
-export const FIELD_CLASS =
-  'w-full min-w-0 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 disabled:bg-gray-100';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export function TextField({
   label,
@@ -30,7 +30,6 @@ export function TextField({
     required,
     disabled,
     placeholder,
-    className: FIELD_CLASS,
     'aria-describedby': hint ? id + '-hint' : undefined,
   };
   return (
@@ -41,12 +40,12 @@ export function TextField({
         {label}
       </label>
       {multiline ? (
-        <textarea
+        <Textarea
           {...props}
           rows={3}
         />
       ) : (
-        <input {...props} />
+        <Input {...props} />
       )}
       {hint && (
         <p
@@ -78,14 +77,13 @@ export function SelectField({
       htmlFor={id}
       className="block space-y-1.5 text-sm font-medium text-gray-800">
       <span>{label}</span>
-      <select
+      <NativeSelect
         id={id}
-        className={FIELD_CLASS}
         value={value}
         required={required}
         onChange={(event) => onChange(event.target.value)}>
         {children}
-      </select>
+      </NativeSelect>
     </label>
   );
 }

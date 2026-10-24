@@ -1,16 +1,17 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
   ArrowClockwiseIcon,
   CheckCircleIcon,
   MusicNotesIcon,
   SpinnerIcon,
   WarningCircleIcon,
-  XIcon,
 } from '@phosphor-icons/react/dist/ssr';
 import type { Game } from '@roudanio/parser/src/types';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { getGameSessionHeaders } from '@/lib/editor/game-session';
 
 interface AudiobookGenerationCardProps {
@@ -134,106 +135,97 @@ export default function AudiobookGenerationCard({ gameId, game }: AudiobookGener
         为全书每个场景分角色生成语音（旁白与角色对白使用不同音色），生成后可在游戏内自动播放。
       </p>
 
-      <Dialog.Root
+      <Dialog
         open={open}
         onOpenChange={handleOpenChange}>
-        <Dialog.Trigger asChild>
+        <DialogTrigger asChild>
           <button className="w-full py-2 bg-amber-600 text-white rounded text-sm font-medium hover:bg-amber-700 flex justify-center items-center gap-2">
             <MusicNotesIcon size={14} />
             一键生成有声书
           </button>
-        </Dialog.Trigger>
+        </DialogTrigger>
 
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl p-6 w-full max-w-lg shadow-xl z-50 max-h-[80vh] flex flex-col">
-            <Dialog.Title className="text-lg font-semibold text-gray-900 mb-2">生成有声书</Dialog.Title>
+        {/* 生成过程中不允许关闭，取消走「取消剩余」；关闭走底部按钮 */}
+        <DialogContent
+          showCloseButton={false}
+          className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>生成有声书</DialogTitle>
+          </DialogHeader>
 
-            <p className="text-sm text-gray-600 mb-3">
-              {checking
-                ? '正在检查已生成的场景...'
-                : `${running ? '生成中' : '当前'}：${doneCount} / ${sceneIds.length} 个场景已生成${
-                    errorCount > 0 ? `，${errorCount} 个失败` : ''
-                  }`}
-            </p>
+          <p className="text-muted-foreground text-sm">
+            {checking
+              ? '正在检查已生成的场景...'
+              : `${running ? '生成中' : '当前'}：${doneCount} / ${sceneIds.length} 个场景已生成${
+                  errorCount > 0 ? `，${errorCount} 个失败` : ''
+                }`}
+          </p>
 
-            <div className="flex-1 overflow-y-auto border border-gray-200 rounded-md divide-y mb-4">
-              {progress.map((p) => (
-                <div
-                  key={p.sceneId}
-                  className="flex items-center gap-2 px-3 py-2 text-sm">
-                  {p.status === 'pending' && <span className="w-4 h-4 rounded-full bg-gray-200 shrink-0" />}
-                  {p.status === 'generating' && (
-                    <SpinnerIcon
-                      size={16}
-                      className="animate-spin text-amber-600 shrink-0"
-                    />
-                  )}
-                  {p.status === 'done' && (
-                    <CheckCircleIcon
-                      size={16}
-                      className="text-green-600 shrink-0"
-                    />
-                  )}
-                  {p.status === 'error' && (
-                    <WarningCircleIcon
-                      size={16}
-                      className="text-red-600 shrink-0"
-                    />
-                  )}
-                  <span className="font-mono text-xs text-gray-700 truncate flex-1">{p.sceneId}</span>
-                  {p.error && <span className="text-xs text-red-600 truncate">{p.error}</span>}
-                  {!busy && (
-                    <button
-                      onClick={() => generateOne(p.sceneId)}
-                      title="重新生成这个场景"
-                      aria-label={`重新生成场景 ${p.sceneId}`}
-                      className="text-gray-400 hover:text-amber-600 shrink-0">
-                      <ArrowClockwiseIcon size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex gap-3 justify-end">
-              {running ? (
-                <button
-                  onClick={handleCancel}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-                  取消剩余
-                </button>
-              ) : (
-                <>
-                  <Dialog.Close asChild>
-                    <button
-                      disabled={busy}
-                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                      关闭
-                    </button>
-                  </Dialog.Close>
+          <div className="min-h-0 flex-1 overflow-y-auto border rounded-md divide-y">
+            {progress.map((p) => (
+              <div
+                key={p.sceneId}
+                className="flex items-center gap-2 px-3 py-2 text-sm">
+                {p.status === 'pending' && <span className="w-4 h-4 rounded-full bg-gray-200 shrink-0" />}
+                {p.status === 'generating' && (
+                  <SpinnerIcon
+                    size={16}
+                    className="animate-spin text-amber-600 shrink-0"
+                  />
+                )}
+                {p.status === 'done' && (
+                  <CheckCircleIcon
+                    size={16}
+                    className="text-green-600 shrink-0"
+                  />
+                )}
+                {p.status === 'error' && (
+                  <WarningCircleIcon
+                    size={16}
+                    className="text-red-600 shrink-0"
+                  />
+                )}
+                <span className="font-mono text-xs text-gray-700 truncate flex-1">{p.sceneId}</span>
+                {p.error && <span className="text-xs text-red-600 truncate">{p.error}</span>}
+                {!busy && (
                   <button
-                    onClick={handleStart}
-                    disabled={busy || checking || remainingCount === 0}
-                    className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                    {doneCount > 0 ? `继续生成剩余 ${remainingCount} 个` : '开始生成'}
+                    onClick={() => generateOne(p.sceneId)}
+                    title="重新生成这个场景"
+                    aria-label={`重新生成场景 ${p.sceneId}`}
+                    className="text-gray-400 hover:text-amber-600 shrink-0">
+                    <ArrowClockwiseIcon size={14} />
                   </button>
-                </>
-              )}
-            </div>
+                )}
+              </div>
+            ))}
+          </div>
 
-            {!busy && (
-              <Dialog.Close asChild>
-                <button
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                  aria-label="关闭">
-                  <XIcon size={20} />
-                </button>
-              </Dialog.Close>
+          <DialogFooter>
+            {running ? (
+              <Button
+                variant="ghost"
+                onClick={handleCancel}>
+                取消剩余
+              </Button>
+            ) : (
+              <>
+                <DialogPrimitive.Close asChild>
+                  <Button
+                    variant="outline"
+                    disabled={busy}>
+                    关闭
+                  </Button>
+                </DialogPrimitive.Close>
+                <Button
+                  onClick={handleStart}
+                  disabled={busy || checking || remainingCount === 0}>
+                  {doneCount > 0 ? `继续生成剩余 ${remainingCount} 个` : '开始生成'}
+                </Button>
+              </>
             )}
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

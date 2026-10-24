@@ -59,7 +59,7 @@ describe('Dialog 组件', () => {
     // 应该看到确定按钮，并且它是原生的 button 元素且具有对应的样式类
     const confirmBtn = screen.getByRole('button', { name: '确定' });
     expect(confirmBtn).toBeInTheDocument();
-    expect(confirmBtn).toHaveClass('bg-green-600'); // success 类型使用绿色实心按钮
+    expect(confirmBtn).toHaveClass('bg-primary'); // 主操作按钮使用 primary token
 
     // 点击确定按钮关闭 Dialog
     await act(async () => {
@@ -97,8 +97,8 @@ describe('Dialog 组件', () => {
 
     expect(cancelBtn).toBeInTheDocument();
     expect(confirmBtn).toBeInTheDocument();
-    expect(confirmBtn).toHaveClass('bg-orange-500'); // confirm 类型使用橙色实心按钮
-    expect(cancelBtn).toHaveClass('bg-gray-100'); // 取消按钮使用灰色 soft 按钮
+    expect(confirmBtn).toHaveClass('bg-primary'); // confirm 确认按钮使用 primary token
+    expect(cancelBtn).toHaveClass('bg-secondary'); // 取消按钮使用 secondary token
 
     // 点击取消
     await act(async () => {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getPublishedGames } from '@/lib/games';
 
 /** 单页上限：构建期快照抓取按此分页，避免一次拉全表 */
-export const GAMES_API_MAX_LIMIT = 100;
+const GAMES_API_MAX_LIMIT = 100;
 
 function parseLimit(raw: string | null): number | undefined {
   if (raw === null) return undefined;

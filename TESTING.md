@@ -11,6 +11,9 @@
 - `packages/app` 额外有自己的 `vitest.config.ts`（需要 `@` → `src` 的别名和 jsdom 插件），可以在包内单独跑测试；其余包/站点都依赖根配置
 ## 运行测试
 
+站方素材协助专项：`pnpm exec vitest run packages/app/tests/lib/media-assistance packages/app/tests/components/media-assistance-setting.test.tsx`。
+该组使用 Wrangler 配套 Miniflare 的本地 D1/R2，运行真实迁移、唯一约束、并发领取、版本冲突及文件恢复；不读取 `.env`，不连接生产数据库。包含「20 张图改 1 张，其余 19 张不重做」及真实 Worker 流式上传超过 8 MB 的回归。
+
 ```bash
 pnpm test          # 跑全部测试（必须在仓库根目录执行）
 pnpm test:ui       # 带 UI 界面

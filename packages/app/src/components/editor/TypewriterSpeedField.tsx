@@ -1,4 +1,5 @@
 import { type ChangeEvent, useEffect, useRef, useState } from 'react';
+import { Input } from '@/components/ui/input';
 
 const DEFAULT_TYPEWRITER_SPEED = 40;
 const MIN_TYPEWRITER_SPEED = 10;
@@ -49,7 +50,7 @@ export default function TypewriterSpeedField({ value, onChange }: Props) {
   }
 
   return (
-    <input
+    <Input
       type="number"
       aria-label="逐字速度（毫秒/字）"
       min={MIN_TYPEWRITER_SPEED}
@@ -61,7 +62,7 @@ export default function TypewriterSpeedField({ value, onChange }: Props) {
       }}
       onChange={handleChange}
       onBlur={handleBlur}
-      className="block w-full rounded-md border-gray-300 border shadow-sm focus:border-amber-500 focus:ring-amber-500 p-2 text-sm"
+      className="block"
     />
   );
 }

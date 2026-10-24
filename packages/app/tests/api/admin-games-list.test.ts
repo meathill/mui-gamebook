@@ -31,6 +31,8 @@ const mockGames = [
     slug: 'game-a',
     title: '游戏 A',
     published: 1,
+    shadowBanned: 0,
+    mediaAssistanceEnabled: 1,
     ownerEmail: 'a@example.com',
     createdAt: 1700000000000,
     updatedAt: 1700000001000,
@@ -78,12 +80,20 @@ describe('GET /api/admin/games', () => {
     expect(res.status).toBe(200);
 
     const data = (await res.json()) as {
-      games: Array<{ slug: string; published: boolean; ownerEmail: string }>;
+      games: Array<{
+        slug: string;
+        published: boolean;
+        shadowBanned: boolean;
+        mediaAssistanceEnabled: boolean;
+        ownerEmail: string;
+      }>;
       pagination: { total: number; totalPages: number };
     };
     expect(data.games).toHaveLength(1);
     expect(data.games[0].slug).toBe('game-a');
     expect(data.games[0].published).toBe(true);
+    expect(data.games[0].shadowBanned).toBe(false);
+    expect(data.games[0].mediaAssistanceEnabled).toBe(true);
     expect(data.games[0].ownerEmail).toBe('a@example.com');
     expect(data.pagination.total).toBe(1);
     expect(data.pagination.totalPages).toBe(1);
@@ -105,6 +115,15 @@ describe('GET /api/admin/games', () => {
     const res = await GET(new Request('http://localhost/api/admin/games?sort=openCount&order=asc&status=banned'));
     expect(res.status).toBe(200);
     expect(chain.orderBy).toHaveBeenCalled();
+    expect(chain.where).toHaveBeenCalled();
+  });
+
+  it('支持素材协助筛选参数', async () => {
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: 'root@example.com' } });
+    const chain = mockDbWithRows([], 0);
+
+    const res = await GET(new Request('http://localhost/api/admin/games?mediaAssistance=enabled'));
+    expect(res.status).toBe(200);
     expect(chain.where).toHaveBeenCalled();
   });
 

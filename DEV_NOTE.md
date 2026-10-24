@@ -3,6 +3,22 @@
 
 ## 架构演进与技术决策
 
+### 站方 AI 素材协助（2026-10）
+
+- 作者授权保存在 Games 中，不进入 DSL；历史作品默认关闭。仅站方管理员 MCP 可领取，生成发生在本地，不计入作者站内额度。调用和每日任务说明见 [media-assistance.md](docs/media-assistance.md)。
+- 素材位置与生成请求分离：位置保存删除排除记录，生成请求按 `(gameId, SHA-256(最终输入))` 唯一。冻结最终 prompt，hash 不带作品版本、slug、序号或上传 URL。场景通过 `extra.media_assistance_id` 保持重命名后的身份；朗读按文本/说话人指纹及相同文本出现次数定位。
+- 生成、上传、应用分别落库，过期任务进入待核实状态，不能自动重复生成。`GameContent.revision` 由迁移中的触发器覆盖既有正文写入；条件批事务通过 `write_token` 关联后续更新，CAS 失败时后续写入均不执行。站方回填不更新 Games.updated_at，保留作者更新时间的排序语义。
+- 当前 DSL 每场景仅一个图片、视频及环境音频槽位。协助计划必须遵循此限制，不能通过增加同类节点实现多素材，以免序列化丢失。
+
+### coss ui 组件体系（2026-10）
+
+- 基础组件统一迁移到 coss ui（shadcn/ui 新域名）风格：组件源码手写移植到 `packages/app/src/components/ui/`（kebab-case），未用 CLI 脚手架；`components.json` 已配置，后续可用 `pnpm dlx shadcn@latest add` 增补。图标适配为 phosphor、`cn` 复用 `@/lib`。
+- Token 是语义角色制不是色板，定义在 `globals.css` 经 `@theme inline` 映射：`--primary` 品牌橙（orange-600，白字对比度达标）、`--destructive` 红、`--violet` 第二品牌色（自定义 token + 自定义变体，shadcn 标准扩展方式，不占用 secondary）；secondary/muted/accent 为中性灰阶，secondary 用于取消等非强调操作。
+- 动画依赖 `tw-animate-css`（Tailwind v4 必需）。此前代码里的 `animate-in` 系列类一直是无效的（没装动画库），引入后才真正生效。
+- select 一律用 `ui/native-select`（样式化原生控件，保留 IME/移动端行为），不上 radix Select；布局类（flex-1、定宽）传 `wrapperClassName`。EditorSettingsTab 的发布开关保留原生 checkbox + `peer` 方案（开关外观靠 `:checked` 伪类驱动，radix Checkbox 渲染为 button 不兼容）。
+- `useDialog()` 命令式弹窗 API 不变（17 个调用方零改动），内部已换 ui/dialog；决策不引入 toast，success/error 仍为阻塞弹窗。
+- 踩坑：phosphor 的箭头图标叫 `Caret*` 不叫 `Chevron*`；radix 组件的 dismiss 监听在 `setTimeout(0)` 宏任务后才挂载，jsdom 测试模拟「点遮罩关闭」要先 `await act` 一个宏任务，再对 `document.body` 依次触发 `pointerDown + click`；Escape 则对 `document.body` 触发 `keyDown`。
+
 ### 整体架构
 
 **Monorepo + pnpm workspace**

@@ -7,6 +7,8 @@ import * as schema from '@/db/schema';
 import { getSession } from '@/lib/auth-server';
 import { getManagedGame } from '@/lib/game-access';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
+import { saveEditorContent } from '@/lib/media-assistance/editor-save';
+import { AssistanceError } from '@/lib/media-assistance/types';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -32,7 +34,12 @@ export async function GET(req: Request, { params }: Props) {
     published: Boolean(game.published),
   };
 
-  return NextResponse.json({ ...parsedGame, content: content?.content || '' });
+  return NextResponse.json({
+    ...parsedGame,
+    content: content?.content || '',
+    revision: content?.revision ?? 0,
+    canEnableMediaAssistance: game.ownerId === session.user.id,
+  });
 }
 
 export async function PUT(req: Request, { params }: Props) {
@@ -44,10 +51,16 @@ export async function PUT(req: Request, { params }: Props) {
     content,
     slug: newSlug,
     storyPrompt,
+    expectedRevision,
+    mediaAssistanceEnabled,
+    mediaPlanningConfirmed,
   } = (await req.json()) as {
     content: string;
     slug?: string;
     storyPrompt?: string;
+    expectedRevision?: number;
+    mediaAssistanceEnabled?: boolean;
+    mediaPlanningConfirmed?: boolean;
   };
 
   // Validate content with parser
@@ -84,6 +97,35 @@ export async function PUT(req: Request, { params }: Props) {
   }
 
   // Update Games table
+  if (expectedRevision !== undefined || mediaAssistanceEnabled !== undefined || currentGame.mediaAssistanceEnabled) {
+    if (
+      (mediaAssistanceEnabled !== undefined && typeof mediaAssistanceEnabled !== 'boolean') ||
+      (mediaPlanningConfirmed !== undefined && typeof mediaPlanningConfirmed !== 'boolean')
+    ) {
+      return NextResponse.json({ error: '素材协助设置必须是布尔值' }, { status: 400 });
+    }
+    try {
+      const revision = await saveEditorContent(env.DB, {
+        gameId: id,
+        content,
+        game: parseResult.data,
+        expectedRevision: expectedRevision as number,
+        slug: finalSlug,
+        actorId: session.user.id,
+        storyPrompt,
+        mediaAssistanceEnabled,
+        mediaPlanningConfirmed,
+      });
+      revalidatePublicCatalog({ slug: finalSlug, tags });
+      if (currentGame.slug !== finalSlug) revalidatePublicCatalog({ slug: currentGame.slug });
+      return NextResponse.json({ success: true, slug: finalSlug, revision });
+    } catch (error) {
+      if (error instanceof AssistanceError)
+        return NextResponse.json({ error: error.message }, { status: error.status });
+      throw error;
+    }
+  }
+
   await db
     .update(schema.games)
     .set({

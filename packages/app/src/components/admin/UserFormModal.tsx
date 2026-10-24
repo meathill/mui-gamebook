@@ -1,8 +1,11 @@
 'use client';
 
-import { XIcon } from '@phosphor-icons/react';
-import * as Dialog from '@radix-ui/react-dialog';
 import { UserAiPermissionsFields } from '@/components/admin/UserAiPermissionsFields';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import type { AiPermissions } from '@/lib/ai-permissions';
 import type { ModalType, UserItem } from '@/hooks/useUsersAdmin';
 
@@ -41,6 +44,65 @@ interface UserFormModalProps {
   onPasswordSubmit: (e: React.FormEvent) => void;
 }
 
+function TextField({
+  label,
+  type,
+  value,
+  onChange,
+  minLength,
+  required = true,
+}: {
+  label: string;
+  type: string;
+  value: string;
+  onChange: (value: string) => void;
+  minLength?: number;
+  required?: boolean;
+}) {
+  const id = label;
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        minLength={minLength}
+        required={required}
+      />
+    </div>
+  );
+}
+
+function ModalActions({
+  pending,
+  pendingText,
+  submitText,
+  onClose,
+}: {
+  pending: boolean;
+  pendingText: string;
+  submitText: string;
+  onClose: () => void;
+}) {
+  return (
+    <DialogFooter className="pt-2">
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onClose}>
+        取消
+      </Button>
+      <Button
+        type="submit"
+        disabled={pending}>
+        {pending ? pendingText : submitText}
+      </Button>
+    </DialogFooter>
+  );
+}
+
 /**
  * 创建 / 编辑 / 修改密码三种表单共用的弹窗
  */
@@ -69,208 +131,143 @@ export default function UserFormModal({
   onPasswordSubmit,
 }: UserFormModalProps) {
   return (
-    <Dialog.Root
+    <Dialog
       open={modalType !== null}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl p-6 w-full max-w-md shadow-xl z-50">
-          <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
             {modalType === 'create' && '创建用户'}
             {modalType === 'edit' && '编辑用户'}
             {modalType === 'password' && '修改密码'}
-          </Dialog.Title>
+          </DialogTitle>
+        </DialogHeader>
 
-          {/* Create Form */}
-          {modalType === 'create' && (
-            <form onSubmit={onCreateSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
-                  <input
-                    type="text"
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
-                  <input
-                    type="email"
-                    value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
-                  <input
-                    type="password"
-                    value={formPassword}
-                    onChange={(e) => setFormPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    minLength={6}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
-                  <input
-                    type="password"
-                    value={formPasswordConfirm}
-                    onChange={(e) => setFormPasswordConfirm(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    minLength={6}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 justify-end mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800">
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={activeMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                  {activeMutation.isPending ? '创建中...' : '创建'}
-                </button>
-              </div>
-            </form>
-          )}
+        {/* Create Form */}
+        {modalType === 'create' && (
+          <form
+            onSubmit={onCreateSubmit}
+            className="space-y-4">
+            <TextField
+              label="名称"
+              type="text"
+              value={formName}
+              onChange={setFormName}
+            />
+            <TextField
+              label="邮箱"
+              type="email"
+              value={formEmail}
+              onChange={setFormEmail}
+            />
+            <TextField
+              label="密码"
+              type="password"
+              value={formPassword}
+              onChange={setFormPassword}
+              minLength={6}
+            />
+            <TextField
+              label="确认密码"
+              type="password"
+              value={formPasswordConfirm}
+              onChange={setFormPasswordConfirm}
+              minLength={6}
+            />
+            <ModalActions
+              pending={activeMutation.isPending}
+              pendingText="创建中..."
+              submitText="创建"
+              onClose={onClose}
+            />
+          </form>
+        )}
 
-          {/* Edit Form */}
-          {modalType === 'edit' && (
-            <form onSubmit={onEditSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">名称</label>
-                  <input
-                    type="text"
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    required
+        {/* Edit Form */}
+        {modalType === 'edit' && (
+          <form
+            onSubmit={onEditSubmit}
+            className="space-y-4">
+            <TextField
+              label="名称"
+              type="text"
+              value={formName}
+              onChange={setFormName}
+            />
+            <TextField
+              label="邮箱"
+              type="email"
+              value={formEmail}
+              onChange={setFormEmail}
+            />
+            {canGrantAdmin && (
+              <div className="border-t pt-4">
+                <label className="flex items-start gap-2 text-sm">
+                  <Checkbox
+                    checked={formIsAdmin}
+                    disabled={isSelf}
+                    onCheckedChange={(checked) => setFormIsAdmin(checked === true)}
+                    className="mt-0.5"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
-                  <input
-                    type="email"
-                    value={formEmail}
-                    onChange={(e) => setFormEmail(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    required
-                  />
-                </div>
-                {canGrantAdmin && (
-                  <div className="border-t border-gray-200 pt-4">
-                    <label className="flex items-start gap-2 text-sm text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={formIsAdmin}
-                        disabled={isSelf}
-                        onChange={(e) => setFormIsAdmin(e.target.checked)}
-                        className="mt-0.5 rounded border-gray-300"
-                      />
-                      <span>
-                        内容管理员
-                        <span className="block text-xs text-gray-500">
-                          可进后台看统计、管理游戏，且不受 Token 限制；不能管理用户与系统配置。
-                          {isSelf && '（不能取消自己的管理员权限）'}
-                        </span>
-                      </span>
-                    </label>
-                  </div>
-                )}
-
-                <UserAiPermissionsFields
-                  value={formAiPermissions}
-                  onChange={setFormAiPermissions}
-                  planLabel={planLabel}
-                />
+                  <span>
+                    内容管理员
+                    <span className="block text-muted-foreground text-xs">
+                      可进后台看统计、管理游戏，且不受 Token 限制；不能管理用户与系统配置。
+                      {isSelf && '（不能取消自己的管理员权限）'}
+                    </span>
+                  </span>
+                </label>
               </div>
-              <div className="flex gap-3 justify-end mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800">
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={activeMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                  {activeMutation.isPending ? '保存中...' : '保存'}
-                </button>
-              </div>
-            </form>
-          )}
+            )}
 
-          {/* Password Form */}
-          {modalType === 'password' && (
-            <form onSubmit={onPasswordSubmit}>
-              <p className="text-sm text-gray-500 mb-4">正在为用户「{editingUser?.name}」修改密码</p>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">新密码</label>
-                  <input
-                    type="password"
-                    value={formPassword}
-                    onChange={(e) => setFormPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    minLength={6}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">确认新密码</label>
-                  <input
-                    type="password"
-                    value={formPasswordConfirm}
-                    onChange={(e) => setFormPasswordConfirm(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    minLength={6}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 justify-end mt-6">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800">
-                  取消
-                </button>
-                <button
-                  type="submit"
-                  disabled={activeMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                  {activeMutation.isPending ? '修改中...' : '修改密码'}
-                </button>
-              </div>
-            </form>
-          )}
+            <UserAiPermissionsFields
+              value={formAiPermissions}
+              onChange={setFormAiPermissions}
+              planLabel={planLabel}
+            />
+            <ModalActions
+              pending={activeMutation.isPending}
+              pendingText="保存中..."
+              submitText="保存"
+              onClose={onClose}
+            />
+          </form>
+        )}
 
-          {/* Error display */}
-          {activeMutation.isError && <p className="mt-3 text-sm text-red-600">{activeMutation.error?.message}</p>}
+        {/* Password Form */}
+        {modalType === 'password' && (
+          <form
+            onSubmit={onPasswordSubmit}
+            className="space-y-4">
+            <p className="text-muted-foreground text-sm">正在为用户「{editingUser?.name}」修改密码</p>
+            <TextField
+              label="新密码"
+              type="password"
+              value={formPassword}
+              onChange={setFormPassword}
+              minLength={6}
+            />
+            <TextField
+              label="确认新密码"
+              type="password"
+              value={formPasswordConfirm}
+              onChange={setFormPasswordConfirm}
+              minLength={6}
+            />
+            <ModalActions
+              pending={activeMutation.isPending}
+              pendingText="修改中..."
+              submitText="修改密码"
+              onClose={onClose}
+            />
+          </form>
+        )}
 
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-            aria-label="关闭">
-            <XIcon size={20} />
-          </button>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        {/* Error display */}
+        {activeMutation.isError && <p className="text-destructive text-sm">{activeMutation.error?.message}</p>}
+      </DialogContent>
+    </Dialog>
   );
 }

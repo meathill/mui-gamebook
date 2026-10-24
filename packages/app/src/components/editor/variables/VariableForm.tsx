@@ -1,5 +1,8 @@
 import { EyeIcon, EyeSlashIcon } from '@phosphor-icons/react/dist/ssr';
 import type { VariableDisplay } from '@roudanio/parser/src/types';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
 import { VariableFormData, ICON_OPTIONS } from './utils';
 
 interface VariableFormProps {
@@ -28,21 +31,20 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">变量名</label>
-          <input
+          <Input
             type="text"
             value={formData.name}
             onChange={(e) => onUpdate({ name: e.target.value.replace(/\s/g, '_') })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+            className="font-mono"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">显示名称</label>
-          <input
+          <Input
             type="text"
             value={formData.label}
             onChange={(e) => onUpdate({ label: e.target.value })}
             placeholder="可选，用于界面显示"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
           />
         </div>
       </div>
@@ -51,7 +53,7 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
       <div className="grid grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">类型</label>
-          <select
+          <NativeSelect
             value={formData.valueType}
             onChange={(e) => {
               const newType = e.target.value as 'number' | 'string' | 'boolean';
@@ -59,29 +61,26 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
               if (newType === 'boolean') newValue = 'false';
               else if (newType === 'number') newValue = '0';
               onUpdate({ valueType: newType, value: newValue });
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+            }}>
             <option value="number">数字</option>
             <option value="string">文本</option>
             <option value="boolean">布尔值</option>
-          </select>
+          </NativeSelect>
         </div>
         <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 mb-1">初始值</label>
           {formData.valueType === 'boolean' ? (
-            <select
+            <NativeSelect
               value={formData.value}
-              onChange={(e) => onUpdate({ value: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+              onChange={(e) => onUpdate({ value: e.target.value })}>
               <option value="true">true</option>
               <option value="false">false</option>
-            </select>
+            </NativeSelect>
           ) : (
-            <input
+            <Input
               type={formData.valueType === 'number' ? 'number' : 'text'}
               value={formData.value}
               onChange={(e) => onUpdate({ value: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
             />
           )}
         </div>
@@ -90,11 +89,9 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
       {/* 可见性 */}
       <div className="pt-4 border-t">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={formData.visible}
-            onChange={(e) => onUpdate({ visible: e.target.checked })}
-            className="w-4 h-4 text-blue-600 rounded"
+            onCheckedChange={(checked) => onUpdate({ visible: checked === true })}
           />
           <span className="text-sm text-gray-700">在游戏中显示</span>
           {formData.visible ? (
@@ -115,34 +112,31 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">展示方式</label>
-                <select
+                <NativeSelect
                   value={formData.display}
-                  onChange={(e) => onUpdate({ display: e.target.value as VariableDisplay })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                  onChange={(e) => onUpdate({ display: e.target.value as VariableDisplay })}>
                   <option value="value">数值</option>
                   <option value="progress">进度条</option>
                   <option value="icon">图标</option>
-                </select>
+                </NativeSelect>
               </div>
               {formData.display === 'progress' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">最大值</label>
-                  <input
+                  <Input
                     type="number"
                     value={formData.max}
                     onChange={(e) => onUpdate({ max: e.target.value })}
                     placeholder="100"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                   />
                 </div>
               )}
               {formData.display === 'icon' && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">选择图标</label>
-                  <select
+                  <NativeSelect
                     value={formData.icon}
-                    onChange={(e) => onUpdate({ icon: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                    onChange={(e) => onUpdate({ icon: e.target.value })}>
                     {ICON_OPTIONS.map((opt) => (
                       <option
                         key={opt.value}
@@ -150,7 +144,7 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
                         {opt.value} {opt.label}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
               )}
             </div>
@@ -161,11 +155,9 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
       {/* 触发器 */}
       <div className="pt-4 border-t">
         <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
+          <Checkbox
             checked={formData.hasTrigger}
-            onChange={(e) => onUpdate({ hasTrigger: e.target.checked })}
-            className="w-4 h-4 text-orange-600 rounded"
+            onCheckedChange={(checked) => onUpdate({ hasTrigger: checked === true })}
           />
           <span className="text-sm font-medium text-gray-700">条件触发器</span>
           <span className="text-xs text-gray-500">（满足条件时自动跳转场景）</span>
@@ -175,21 +167,20 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
           <div className="mt-4 pl-6 border-l-2 border-orange-200 grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">触发条件</label>
-              <input
+              <Input
                 type="text"
                 value={formData.triggerCondition}
                 onChange={(e) => onUpdate({ triggerCondition: e.target.value })}
                 placeholder="如: <= 0 或 == true"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-sm"
+                className="font-mono"
               />
               <p className="text-xs text-gray-500 mt-1">支持: ==, !=, &gt;, &lt;, &gt;=, &lt;=</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">跳转场景</label>
-              <select
+              <NativeSelect
                 value={formData.triggerScene}
-                onChange={(e) => onUpdate({ triggerScene: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm">
+                onChange={(e) => onUpdate({ triggerScene: e.target.value })}>
                 <option value="">选择场景...</option>
                 {sceneList.map((sceneId) => (
                   <option
@@ -198,7 +189,7 @@ export default function VariableForm({ formData, isCreating, sceneList, onUpdate
                     {sceneId}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
           </div>
         )}

@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import type { TextBoxPosition } from '@roudanio/parser/src/types';
 import { ArrowCounterClockwiseIcon, CaretDownIcon, ChatIcon, HouseIcon } from '@phosphor-icons/react';
-import Button from '@/components/Button';
+import { Button } from '@/components/ui/button';
 import ShareButton from '@/components/ShareButton';
 
 const POSITIONS: TextBoxPosition[] = ['bottom', 'center', 'top'];
@@ -103,8 +103,8 @@ export default function ImmersiveMenu({
               />
               <Button
                 variant="ghost"
-                color="red"
                 size="sm"
+                className="text-destructive hover:text-destructive"
                 onClick={onRestart}>
                 <ArrowCounterClockwiseIcon size={14} />
                 {t('restartFromStart')}

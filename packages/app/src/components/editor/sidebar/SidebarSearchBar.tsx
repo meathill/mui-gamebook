@@ -1,6 +1,7 @@
 'use client';
 
 import { MagnifyingGlassIcon, PlusIcon } from '@phosphor-icons/react';
+import { Input } from '@/components/ui/input';
 
 interface SidebarSearchBarProps {
   searchQuery: string;
@@ -20,12 +21,12 @@ export default function SidebarSearchBar({ searchQuery, onSearchChange, onCreate
             size={14}
             className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
           />
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="搜索..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            className="pl-8 text-xs"
           />
         </div>
         <button

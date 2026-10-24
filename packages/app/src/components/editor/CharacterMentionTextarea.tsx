@@ -3,6 +3,7 @@
 import { useState, useRef, useMemo, KeyboardEvent, useCallback } from 'react';
 import type { AICharacter } from '@roudanio/parser/src/types';
 import { isImeComposing } from '@/lib/keyboard';
+import { Textarea } from '@/components/ui/textarea';
 
 interface CharacterMentionTextareaProps {
   value: string;
@@ -183,7 +184,7 @@ export default function CharacterMentionTextarea({
   return (
     <div className="relative">
       {/* 原始 Textarea */}
-      <textarea
+      <Textarea
         ref={textareaRef}
         value={value}
         onChange={handleInput}

@@ -1,6 +1,9 @@
 import { LightbulbIcon, SparkleIcon, SpinnerIcon, XIcon } from '@phosphor-icons/react/dist/ssr';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDialog } from '@/components/Dialog';
+import { Input } from '@/components/ui/input';
+import { NativeSelect } from '@/components/ui/native-select';
+import { Textarea } from '@/components/ui/textarea';
 import { AI_PROVIDER_LABELS, useAiPermissions } from '@/lib/editor/useAiPermissions';
 import { STORY_PROMPTS } from './storyPrompts';
 import { MAX_CLARIFY_ROUNDS, useClarifyFlow } from './useClarifyFlow';
@@ -167,10 +170,10 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
           在下方输入你的故事大纲或完整故事。AI 会将其转换为可玩的互动游戏脚本，包含场景、选项和分支剧情。
         </p>
 
-        <textarea
+        <Textarea
           value={story}
           onChange={(e) => setStory(e.target.value)}
-          className="w-full h-64 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 resize-none mb-4"
+          className="h-64 resize-none mb-4"
           placeholder="在这里输入你的故事..."
         />
 
@@ -231,11 +234,10 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
               {clarify.questions.map((q, i) => (
                 <div key={q}>
                   <label className="text-xs text-purple-700 mb-1 block">{q}</label>
-                  <input
+                  <Input
                     type="text"
                     value={clarify.answers[i] ?? ''}
                     onChange={(e) => clarify.setAnswer(i, e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500"
                     placeholder="可留空"
                   />
                 </div>
@@ -259,10 +261,11 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
         ) : (
           <div className="flex justify-end items-center gap-3">
             {providers.length > 1 && (
-              <select
+              <NativeSelect
                 value={activeProvider}
                 onChange={(e) => setSelectedProvider(e.target.value)}
-                className="text-sm text-gray-600 border border-gray-300 rounded-md px-2 py-2 outline-none focus:border-purple-500"
+                wrapperClassName="w-auto"
+                className="text-gray-600"
                 title="选择 AI 提供者">
                 {providers.map((provider) => (
                   <option
@@ -271,7 +274,7 @@ export default function StoryImporter({ id, initialStory, existingScript, onImpo
                     {AI_PROVIDER_LABELS[provider]}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             )}
             <button
               onClick={handleGenerateClick}

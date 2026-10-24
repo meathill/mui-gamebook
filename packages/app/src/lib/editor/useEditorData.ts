@@ -11,10 +11,14 @@ import { bindGameIdToSession, getGameSessionId } from '@/lib/editor/game-session
 import type { Game } from '@roudanio/parser/src/types';
 import type { Node, Edge } from '@xyflow/react';
 import { replacePendingAssetInScript, updateScriptMetadata } from './script-metadata';
+import { useEditorPersistence } from './use-editor-persistence';
 
 // 扩展 Game 类型，添加编辑器特有的字段
 export interface EditorGame extends Game {
   storyPrompt?: string;
+  mediaAssistanceEnabled?: boolean;
+  mediaPlanningConfirmed?: boolean;
+  canEnableMediaAssistance?: boolean;
 }
 
 interface UseEditorDataProps {
@@ -32,7 +36,7 @@ interface UseEditorDataReturn {
   loading: boolean;
   saving: boolean;
   error: string;
-  handleSave: (nodes: Node[], edges: Edge[], viewMode: 'visual' | 'text', activeTab: string) => Promise<void>;
+  handleSave: (nodes: Node[], edges: Edge[], viewMode: 'visual' | 'text', activeTab: string) => Promise<boolean>;
   /** 静默云端保存（自动保存用），不弹 dialog */
   cloudSave: (content: string, slug: string) => Promise<boolean>;
   handleGenerateAssets: () => Promise<void>;
@@ -48,6 +52,8 @@ interface UseEditorDataReturn {
 
 export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDataReturn {
   const dialog = useDialog();
+  const { revisionRef, persist } = useEditorPersistence(id);
+  const conflictNotifiedRef = useRef(false);
 
   const [originalGame, setOriginalGame] = useState<EditorGame | null>(null);
   const [slug, setSlug] = useState('');
@@ -110,7 +116,9 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
           slug: string;
           storyPrompt?: string;
           updatedAt: string | number;
+          revision?: number;
         } & Game;
+        revisionRef.current = data.revision;
 
         // 检测本地草稿
         const draft = loadDraft(id);
@@ -179,8 +187,8 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
     edges: Edge[],
     viewMode: 'visual' | 'text',
     activeTab: string,
-  ): Promise<void> {
-    if (!originalGame) return;
+  ): Promise<boolean> {
+    if (!originalGame) return false;
     setSaving(true);
 
     try {
@@ -217,17 +225,10 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
           : stringify(gameToSave);
       setTextContent(content);
 
-      const res = await fetch(`/api/cms/games/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, slug }),
+      const saveResult = await persist(content, slug, {
+        mediaAssistanceEnabled: originalGame.mediaAssistanceEnabled,
+        mediaPlanningConfirmed: originalGame.mediaPlanningConfirmed,
       });
-
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string };
-        throw new Error(data.error || 'Failed to save');
-      }
-      const saveResult = (await res.json()) as { slug?: string };
       if (saveResult.slug) {
         setSlug(saveResult.slug);
       }
@@ -240,8 +241,10 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
       }
       wasPublishedRef.current = nowPublished;
       await dialog.success('保存成功！');
+      return true;
     } catch (err) {
       await dialog.error((err as Error).message);
+      return false;
     } finally {
       setSaving(false);
     }
@@ -250,19 +253,17 @@ export function useEditorData({ id, setNodes }: UseEditorDataProps): UseEditorDa
   /** 静默云端保存（自动保存用），不弹 dialog，返回是否成功 */
   async function cloudSave(contentToSave: string, slugToSave: string): Promise<boolean> {
     try {
-      const res = await fetch(`/api/cms/games/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: contentToSave, slug: slugToSave }),
-      });
-      if (!res.ok) return false;
-      const result = (await res.json()) as { slug?: string };
+      const result = await persist(contentToSave, slugToSave);
       if (result.slug) {
         setSlug(result.slug);
       }
       bindGameIdToSession(id);
       return true;
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('云端作品已更新') && !conflictNotifiedRef.current) {
+        conflictNotifiedRef.current = true;
+        void dialog.error(error.message);
+      }
       return false;
     }
   }

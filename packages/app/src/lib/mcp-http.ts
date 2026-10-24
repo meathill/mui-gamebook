@@ -36,10 +36,10 @@ export interface McpValidationFailure {
   data?: unknown;
 }
 
-export function mcpServerMeta() {
+export function mcpServerMeta(name: string = MCP_SERVER_NAME) {
   return {
     'io.modelcontextprotocol/serverInfo': {
-      name: MCP_SERVER_NAME,
+      name,
       version: MCP_SERVER_VERSION,
     },
   };

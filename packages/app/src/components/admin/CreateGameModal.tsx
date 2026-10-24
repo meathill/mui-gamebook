@@ -2,9 +2,20 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import * as Dialog from '@radix-ui/react-dialog';
-import Button from '@/components/Button';
-import { PlusIcon, XIcon } from '@phosphor-icons/react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { PlusIcon } from '@phosphor-icons/react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export default function CreateGameModal() {
@@ -39,66 +50,54 @@ export default function CreateGameModal() {
   }
 
   return (
-    <Dialog.Root
+    <Dialog
       open={open}
       onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <Button size="sm">
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="violet">
           <PlusIcon size={12} />
           创建新游戏
         </Button>
-      </Dialog.Trigger>
+      </DialogTrigger>
 
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-xl p-6 w-full max-w-md shadow-xl z-50">
-          <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">创建新游戏</Dialog.Title>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>创建新游戏</DialogTitle>
+          <DialogDescription>创建后会进入编辑器，可以导入现有故事或从零开始。</DialogDescription>
+        </DialogHeader>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label
-                htmlFor="game-title"
-                className="block text-sm font-medium text-gray-700 mb-2">
-                游戏标题
-              </label>
-              <input
-                id="game-title"
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="如：迷失之城"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                autoFocus
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-2 pb-4">
+            <Label htmlFor="game-title">游戏标题</Label>
+            <Input
+              id="game-title"
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="如：迷失之城"
+              autoFocus
+              required
+            />
+          </div>
 
-            <div className="flex gap-3 justify-end">
-              <Dialog.Close asChild>
-                <button
-                  type="button"
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
-                  取消
-                </button>
-              </Dialog.Close>
-              <button
-                type="submit"
-                disabled={createMutation.isPending || !title.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                {createMutation.isPending ? '创建中...' : '创建'}
-              </button>
-            </div>
-          </form>
-
-          <Dialog.Close asChild>
-            <button
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              aria-label="关闭">
-              <XIcon size={20} />
-            </button>
-          </Dialog.Close>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          <DialogFooter>
+            <DialogPrimitive.Close asChild>
+              <Button
+                type="button"
+                variant="outline">
+                取消
+              </Button>
+            </DialogPrimitive.Close>
+            <Button
+              type="submit"
+              disabled={createMutation.isPending || !title.trim()}>
+              {createMutation.isPending ? '创建中...' : '创建'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

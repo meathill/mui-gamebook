@@ -74,7 +74,18 @@ describe('Admin Users API', () => {
 
     it('应该返回用户列表', async () => {
       const mockUsers = [
-        { id: 'u1', name: 'User 1', email: 'u1@test.com', emailVerified: true, createdAt: Date.now(), gameCount: 3 },
+        {
+          id: 'u1',
+          name: 'User 1',
+          email: 'u1@test.com',
+          emailVerified: true,
+          createdAt: Date.now(),
+          gameCount: 3,
+          totalTokens: 123456,
+          imageCount: 7,
+          videoCount: 2,
+          audioCount: 11,
+        },
       ];
       const mockDb = {
         select: vi.fn().mockReturnThis(),
@@ -93,6 +104,7 @@ describe('Admin Users API', () => {
       expect(res.status).toBe(200);
       const data = (await res.json()) as any;
       expect(data.users).toEqual(mockUsers);
+      expect(data.users[0].totalTokens).toBe(123456);
       expect(data.pagination.total).toBe(1);
     });
   });

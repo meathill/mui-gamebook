@@ -1,6 +1,7 @@
 'use client';
 
 import { ConfigTextField } from '@/components/admin/ConfigTextField';
+import { NativeSelect } from '@/components/ui/native-select';
 import type { AdminConfigDraft } from '@/lib/admin-config-draft';
 
 /** 提供者下拉可绑定的草稿字段 */
@@ -292,10 +293,9 @@ export function ProviderSection({
         {section.selects.map((select) => (
           <div key={select.field}>
             <label className="block text-sm font-medium text-gray-700 mb-1">{select.label}</label>
-            <select
+            <NativeSelect
               value={formData[select.field]}
-              onChange={(e) => updateField(select.field, e.target.value as AdminConfigDraft[typeof select.field])}
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+              onChange={(e) => updateField(select.field, e.target.value as AdminConfigDraft[typeof select.field])}>
               {select.options.map((option) => (
                 <option
                   key={option.value}
@@ -303,7 +303,7 @@ export function ProviderSection({
                   {option.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             {select.hint && <p className="text-xs text-gray-500 mt-1">{select.hint}</p>}
           </div>
         ))}

@@ -8,6 +8,7 @@ vi.mock('@/components/QQGroupInvite', () => ({ default: () => null }));
 vi.mock('@/components/editor/AudiobookGenerationCard', () => ({ default: () => null }));
 vi.mock('@/components/editor/IpRegistrationCard', () => ({ default: () => null }));
 vi.mock('@/components/editor/MediaAssetItem', () => ({ default: () => null }));
+vi.mock('@/components/editor/media-assistance-setting', () => ({ default: () => null }));
 
 describe('EditorSettingsTab 主站作品配置', () => {
   it.each([

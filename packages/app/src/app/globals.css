@@ -1,16 +1,77 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
+/*
+ * coss ui（shadcn）语义 token：token 是语义角色而非色板。
+ * 彩色只有 --primary（品牌橙）、--destructive（红）和自定义副色 --violet；
+ * secondary / muted / accent 为中性灰阶，secondary 用于取消等非强调操作。
+ */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --primary: #ea580c; /* orange-600，白字对比度达标 */
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5; /* zinc-100 */
+  --secondary-foreground: #27272a; /* zinc-800 */
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a; /* zinc-500 */
+  --accent: #fff7ed; /* orange-50，列表/菜单 hover 带品牌暖色 */
+  --accent-foreground: #431407; /* orange-950 */
+  --destructive: #dc2626; /* red-600 */
+  --border: #e4e4e7; /* zinc-200 */
+  --input: #e4e4e7;
+  --ring: #ea580c;
+  --violet: #7c3aed; /* violet-600，第二品牌色 */
+  --violet-foreground: #ffffff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-violet: var(--violet);
+  --color-violet-foreground: var(--violet-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
 }
 
 body {
