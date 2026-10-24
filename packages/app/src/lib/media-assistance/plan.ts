@@ -1,9 +1,10 @@
 import { parse, stringify } from '@roudanio/parser';
 import { createContentWrite } from './content-write';
-import { canonicalJson, hashGenerationInput, readGenerationInput } from './hash';
+import { serializeGenerationInput, hashGenerationInput, readGenerationInput } from './hash';
 import { loadAssistanceGame, reconcileTargets } from './store';
 import { normalizeTarget, prepareTarget, readTarget, targetKey } from './targets';
-import { AssistanceError, type JsonValue } from './types';
+import { AssistanceError } from './types';
+import { missingDeclaredKeys } from './declarations';
 
 export async function savePlan(
   db: D1Database,
@@ -50,9 +51,18 @@ export async function savePlan(
       json: JSON.stringify(resolved.target),
       sourceHash: resolved.sourceHash,
       inputHash: await hashGenerationInput(input),
-      inputJson: canonicalJson(input as unknown as JsonValue),
+      inputJson: serializeGenerationInput(input),
       status: resolved.url ? 'satisfied' : 'pending',
     });
+  }
+  if (planningComplete) {
+    const registered = new Set([...existing.map((row) => row.target_key), ...planned.map((row) => row.key)]);
+    const missing = missingDeclaredKeys(loaded.game).filter((key) => !registered.has(key));
+    if (missing.length)
+      throw new AssistanceError(
+        `仍有 ${missing.length} 个已声明的缺失素材未纳入计划；分批规划时先传 planningComplete: false`,
+        400,
+      );
   }
   const nextContent = stringify(loaded.game);
   if (!parse(nextContent).success) throw new AssistanceError('素材计划无法序列化', 400);

@@ -10,6 +10,8 @@ import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '@/db/schema';
 import { canManageGame } from '@/lib/game-access';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
+import { saveEditorContent } from '@/lib/media-assistance/editor-save';
+import { AssistanceError } from '@/lib/media-assistance/types';
 
 export interface McpActor {
   mode: 'admin' | 'session';
@@ -85,11 +87,29 @@ export async function loadManagedGame(db: DrizzleD1Database<typeof schema>, game
 
 export async function writeGameContent(
   db: DrizzleD1Database<typeof schema>,
-  game: { id: number; slug: string },
+  game: { id: number; slug: string; mediaAssistanceEnabled?: boolean },
   nextDsl: string,
+  expectedRevision?: number,
 ) {
   const revalidate = parse(nextDsl);
   if (!revalidate.success) return fail(`DSL 校验失败: ${revalidate.error}`);
+  if (game.mediaAssistanceEnabled || expectedRevision !== undefined) {
+    try {
+      const revision = await saveEditorContent(getCloudflareContext().env.DB, {
+        gameId: game.id,
+        content: nextDsl,
+        game: revalidate.data,
+        expectedRevision: expectedRevision as number,
+        slug: game.slug,
+        actorId: '',
+      });
+      revalidatePublicCatalog({ slug: game.slug, tags: revalidate.data.tags });
+      return ok('剧本已更新', { gameId: game.id, slug: game.slug, revision });
+    } catch (error) {
+      if (error instanceof AssistanceError) return fail(error.message);
+      throw error;
+    }
+  }
   const { title, description, backgroundStory, cover_image, tags, published } = revalidate.data;
   await db
     .update(schema.games)

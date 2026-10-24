@@ -10,6 +10,13 @@ BEGIN
   UPDATE GameContent SET revision = OLD.revision + 1 WHERE id = NEW.id;
 END;
 
+-- 封面和发布状态也可单独更新，同样让旧的正文快照失效。
+CREATE TRIGGER game_media_metadata_revision AFTER UPDATE OF cover_image, published, shadow_banned ON Games
+WHEN NEW.cover_image IS NOT OLD.cover_image OR NEW.published IS NOT OLD.published OR NEW.shadow_banned IS NOT OLD.shadow_banned
+BEGIN
+  UPDATE GameContent SET revision = revision + 1 WHERE game_id = NEW.id;
+END;
+
 CREATE TABLE MediaAssistanceWorks (
   game_id INTEGER PRIMARY KEY REFERENCES Games(id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','active','partial','completed')),

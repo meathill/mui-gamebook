@@ -43,9 +43,10 @@ export function readTarget(value: unknown): MediaTarget {
 }
 
 function findScene(game: Game, target: Extract<MediaTarget, { sceneId: string }>): Scene | undefined {
-  return target.sceneKey
-    ? Object.values(game.scenes).find((scene) => scene.extra?.[SCENE_ID_KEY] === target.sceneKey)
-    : game.scenes[target.sceneId];
+  if (!target.sceneKey) return game.scenes[target.sceneId];
+  const matches = Object.values(game.scenes).filter((scene) => scene.extra?.[SCENE_ID_KEY] === target.sceneKey);
+  if (matches.length > 1) throw new AssistanceError('素材所在场景的稳定标识重复，请先确认目标位置');
+  return matches[0];
 }
 
 export async function hashSpeechNode(node: SceneNode): Promise<string> {
@@ -149,7 +150,12 @@ export async function resolveTarget(game: Game, target: MediaTarget): Promise<Re
       };
       if (node.type === 'ai_image') {
         const ids = [...(node.characters ?? []), ...(node.character ? [node.character] : [])];
-        source.characters = ids.map((id) => ({ id, ...game.ai.characters?.[id] })) as JsonValue;
+        // 角色立绘的生成/换图不使其他场景失效；实际参考文件另由冻结输入的 referenceHashes 标识。
+        source.characters = ids.map((id) => ({
+          id,
+          name: game.ai.characters?.[id]?.name ?? '',
+          description: game.ai.characters?.[id]?.description ?? '',
+        }));
       }
       setUrl = (value) => {
         node.url = value;
@@ -186,6 +192,8 @@ export async function prepareTarget(game: Game, target: MediaTarget, input: Gene
       if (target.kind === 'image') scene.nodes.unshift({ type: 'ai_image', prompt: input.prompt });
       if (target.kind === 'video') scene.nodes.unshift({ type: 'ai_video', prompt: input.prompt });
     }
+    const node = scene.nodes.find((entry) => entry.type === `ai_${target.kind}`);
+    if (node && 'prompt' in node && node.type !== 'minigame') node.prompt ||= input.prompt;
   }
   const resolved = await resolveTarget(game, target);
   if (!resolved) throw new AssistanceError('素材目标已变化，请重新规划');

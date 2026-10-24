@@ -13,7 +13,7 @@ export function createContentWrite(
   const guard = 'EXISTS (SELECT 1 FROM GameContent WHERE game_id = ? AND write_token = ?)';
   const guardParams = [gameId, token];
   const eligibility = requireConsent
-    ? ' AND EXISTS (SELECT 1 FROM Games WHERE id = game_id AND media_assistance_enabled = 1 AND published = 1 AND shadow_banned = 0)'
+    ? ' AND EXISTS (SELECT 1 FROM Games WHERE Games.id = GameContent.game_id AND media_assistance_enabled = 1 AND published = 1 AND shadow_banned = 0)'
     : '';
   const first = db
     .prepare(

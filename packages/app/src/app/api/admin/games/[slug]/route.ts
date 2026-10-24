@@ -93,6 +93,12 @@ export async function PUT(req: Request, { params }: Props) {
   }
 
   // 更新 Games 表
+  if (game.mediaAssistanceEnabled) {
+    return NextResponse.json(
+      { error: '此作品已开启素材协助，请使用带 expectedRevision 的 CMS 或 MCP 接口更新正文' },
+      { status: 409 },
+    );
+  }
   await db
     .update(schema.games)
     .set({

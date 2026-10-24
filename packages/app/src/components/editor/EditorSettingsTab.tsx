@@ -1,5 +1,5 @@
 import { XIcon } from '@phosphor-icons/react/dist/ssr';
-import type { Game } from '@roudanio/parser/src/types';
+import type { EditorGame } from '@/lib/editor/useEditorData';
 import MDEditor from '@uiw/react-md-editor';
 import QQGroupInvite from '@/components/QQGroupInvite';
 import { isImeComposing } from '@/lib/keyboard';
@@ -7,16 +7,18 @@ import AudiobookGenerationCard from './AudiobookGenerationCard';
 import { PlaybackModeSection } from './EditorSettingsSections';
 import IpRegistrationCard from './IpRegistrationCard';
 import MediaAssetItem from './MediaAssetItem';
+import MediaAssistanceSetting from './media-assistance-setting';
 
 interface Props {
-  game: Game;
+  game: EditorGame;
   id: string;
-  onChange: (updatedGame: Game) => void;
+  onChange: (updatedGame: EditorGame) => void;
   onSlugChange: (newSlug: string) => void;
   slug: string;
+  content?: string;
 }
 
-export default function EditorSettingsTab({ game, id, onChange, onSlugChange, slug }: Props) {
+export default function EditorSettingsTab({ game, id, onChange, onSlugChange, slug, content }: Props) {
   function handleChange(field: string, value: string | number | boolean | Record<string, unknown>) {
     onChange({ ...game, [field]: value });
   }
@@ -139,6 +141,12 @@ export default function EditorSettingsTab({ game, id, onChange, onSlugChange, sl
               else if (field === 'prompt') handleChange('cover_prompt', value);
               else if (field === 'aspectRatio') handleChange('cover_aspect_ratio', value);
             }}
+          />
+
+          <MediaAssistanceSetting
+            game={game}
+            content={content}
+            onChange={onChange}
           />
 
           <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">

@@ -19,6 +19,8 @@ import {
   validateMcpTransport,
 } from '@/lib/mcp-http';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
+import { saveEditorContent } from '@/lib/media-assistance/editor-save';
+import { AssistanceError } from '@/lib/media-assistance/types';
 
 /**
  * MCP endpoint（dual-era）：
@@ -84,10 +86,19 @@ export async function DELETE() {
 }
 
 function toolDescriptors() {
-  return ALL_TOOLS.map(({ tool }) => ({
+  return ALL_TOOLS.map(({ tool, kind }) => ({
     name: tool.name,
     description: tool.description,
-    inputSchema: tool.inputSchema,
+    inputSchema:
+      kind === 'dsl' && !tool.readonly
+        ? {
+            ...tool.inputSchema,
+            properties: {
+              ...tool.inputSchema.properties,
+              expectedRevision: { type: 'integer', description: '当前内容版本；开启站方协助的作品必填' },
+            },
+          }
+        : tool.inputSchema,
     annotations: { readOnlyHint: Boolean(tool.readonly) },
   }));
 }
@@ -105,7 +116,7 @@ async function handleToolsCall(
 
   const callArgs = (params?.arguments ?? {}) as Record<string, unknown>;
   const gameId = Number(callArgs.gameId);
-  const needsGame = !['listGames', 'createGame'].includes(toolName);
+  const needsGame = !['listGames', 'createGame', 'claimMediaAssistanceWork'].includes(toolName);
   if (needsGame && !gameId) return rpcError(400, id, -32602, 'Missing arguments.gameId');
 
   const db = getDb();
@@ -136,7 +147,7 @@ async function handleToolsCall(
   const gameData = parsed.data;
 
   if (toolName === 'getDsl') {
-    return rpcOk(id, textResult(content?.content || '暂无内容'), modern);
+    return rpcOk(id, { ...textResult(content?.content || '暂无内容'), revision: content?.revision ?? 0 }, modern);
   }
   if (toolName === 'listScenes') {
     const list = Object.entries(gameData.scenes)
@@ -145,7 +156,12 @@ async function handleToolsCall(
     return rpcOk(id, textResult(list || '暂无场景'), modern);
   }
 
-  const { gameId: _omitGameId, dryRun, ...singleArgs } = callArgs as { gameId?: unknown; dryRun?: boolean };
+  const {
+    gameId: _omitGameId,
+    dryRun,
+    expectedRevision,
+    ...singleArgs
+  } = callArgs as { gameId?: unknown; dryRun?: boolean; expectedRevision?: number };
   void _omitGameId;
   const results = executeWebMcpBatch(gameData, [{ name: toolName, args: singleArgs }]);
   const nextDsl = stringify(gameData);
@@ -161,6 +177,25 @@ async function handleToolsCall(
   }
   if (hasFailure) {
     return rpcOk(id, textResult(summary, true), modern);
+  }
+  if (entry.tool.readonly) return rpcOk(id, textResult(summary), modern);
+
+  if (game.mediaAssistanceEnabled || expectedRevision !== undefined) {
+    try {
+      const revision = await saveEditorContent(getCloudflareContext().env.DB, {
+        gameId,
+        content: nextDsl,
+        game: revalidate.data,
+        expectedRevision: expectedRevision as number,
+        slug: game.slug,
+        actorId: actor.user.id,
+      });
+      revalidatePublicCatalog({ slug: game.slug, tags: revalidate.data.tags });
+      return rpcOk(id, { ...textResult(summary), revision }, modern);
+    } catch (error) {
+      if (error instanceof AssistanceError) return rpcOk(id, textResult(error.message, true), modern);
+      throw error;
+    }
   }
 
   const { title, description, backgroundStory, cover_image, tags, published } = revalidate.data;

@@ -186,8 +186,8 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
   async function handleSave() {
     // 流程图模式下，viewMode 是 visual；故事模式下是 text
     const viewMode = activeTab === 'flowchart' ? 'visual' : 'text';
-    await saveGame(nodes, edges, viewMode, activeTab);
-    setSaveStatus('saved');
+    const saved = await saveGame(nodes, edges, viewMode, activeTab);
+    setSaveStatus(saved ? 'saved' : 'unsaved');
   }
 
   function handleStoryChange(content: string) {
@@ -298,6 +298,7 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
       {activeTab === 'settings' && originalGame && (
         <div className="grow overflow-y-auto bg-gray-50 p-6">
           <EditorSettingsTab
+            content={textContent}
             game={originalGame}
             id={id}
             onChange={setOriginalGame}

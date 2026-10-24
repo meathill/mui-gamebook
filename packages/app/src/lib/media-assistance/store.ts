@@ -14,14 +14,15 @@ export interface AssistanceGame {
 
 export async function loadAssistanceGame(db: D1Database, gameId: number): Promise<AssistanceGame> {
   const row = await db
-    .prepare(`SELECT g.id, g.slug, g.title, c.content, c.revision FROM Games g
+    .prepare(`SELECT g.id, g.slug, g.title, g.cover_image AS stored_cover_image, c.content, c.revision FROM Games g
     JOIN GameContent c ON c.game_id = g.id WHERE g.id = ? AND g.media_assistance_enabled = 1
     AND g.published = 1 AND g.shadow_banned = 0`)
     .bind(gameId)
-    .first<Omit<AssistanceGame, 'game'>>();
+    .first<Omit<AssistanceGame, 'game'> & { stored_cover_image: string | null }>();
   if (!row) throw new AssistanceError('作品不存在、未发布或已停止协助');
   const parsed = parse(row.content);
   if (!parsed.success) throw new AssistanceError(`剧本无效：${parsed.error}`, 422);
+  if (row.stored_cover_image) parsed.data.cover_image = row.stored_cover_image;
   return { ...row, game: parsed.data };
 }
 
@@ -46,18 +47,27 @@ export async function reconcileTargets(db: D1Database, loaded: AssistanceGame): 
   const statements: D1PreparedStatement[] = [];
   for (const row of rows) {
     if (row.status === 'dismissed') continue;
-    const resolved = await resolveTarget(loaded.game, JSON.parse(row.target_json) as MediaTarget);
     let status: TargetRow['status'] = row.status;
     let error = row.error;
-    if (!resolved || ((row.status === 'applied' || row.status === 'satisfied') && !resolved.url)) {
-      status = 'dismissed';
-      error = '作者已删除素材或位置';
-    } else if (resolved.url) {
-      status = resolved.url === row.applied_url ? 'applied' : 'satisfied';
-      error = null;
-    } else if (resolved.sourceHash !== row.source_hash) {
+    try {
+      const resolved = await resolveTarget(loaded.game, JSON.parse(row.target_json) as MediaTarget);
+      if (!resolved || (row.applied_url && (row.status === 'applied' || row.status === 'satisfied') && !resolved.url)) {
+        status = 'dismissed';
+        error = '作者已删除素材或位置';
+      } else if (resolved.url) {
+        status = resolved.url === row.applied_url ? 'applied' : 'satisfied';
+        error = null;
+      } else if (resolved.sourceHash !== row.source_hash) {
+        status = 'paused';
+        error = '素材声明已变化，需要增量更新计划';
+      } else if (row.status === 'satisfied') {
+        status = 'pending';
+        error = null;
+      }
+    } catch (cause) {
+      if (!(cause instanceof AssistanceError)) throw cause;
       status = 'paused';
-      error = '素材声明已变化，需要增量更新计划';
+      error = cause.message;
     }
     if (status !== row.status || error !== row.error) {
       statements.push(

@@ -11,6 +11,8 @@ import {
   handleSetGameDsl,
   handleUpdateGameMeta,
 } from './handlers-crud';
+import { MEDIA_ASSISTANCE_TOOLS } from '../media-assistance/tools';
+import { executeAssistanceTool } from '../media-assistance/execute';
 import { handleGenerateImage, handleGenerateScript } from './handlers-ai';
 import { handleUploadAsset } from './handlers-upload';
 import {
@@ -47,6 +49,8 @@ export async function executeMcpAgentTool(
   args: Record<string, unknown>,
   actor: McpActor,
 ): Promise<McpToolOutcome> {
+  if (MEDIA_ASSISTANCE_TOOLS.some((tool) => tool.name === toolName))
+    return executeAssistanceTool(toolName, args, actor);
   const db = getDb();
 
   if (toolName === 'listGames') {

@@ -3,8 +3,10 @@
  * 不进入 WEBMCP_TOOLS：chatbot / in-page 不应拿到建游戏、生图等管理能力。
  */
 import type { WebMcpTool } from '@mui-gamebook/webmcp';
+import { MEDIA_ASSISTANCE_TOOLS } from './media-assistance/tools';
 
 export const MCP_AGENT_TOOLS: WebMcpTool[] = [
+  ...MEDIA_ASSISTANCE_TOOLS,
   {
     name: 'listGames',
     description:
@@ -73,6 +75,7 @@ export const MCP_AGENT_TOOLS: WebMcpTool[] = [
       properties: {
         gameId: { type: 'integer', description: '游戏 ID' },
         content: { type: 'string', description: '完整 DSL（Markdown + frontmatter）' },
+        expectedRevision: { type: 'integer', description: 'getGameInfo 返回的版本号；开启站方协助的作品写入时必填' },
         dryRun: { type: 'boolean', description: 'true 则只校验不落库' },
       },
       required: ['gameId', 'content'],

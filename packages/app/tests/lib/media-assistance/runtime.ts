@@ -5,6 +5,7 @@ interface LocalRuntime {
   getD1Database(name: string): Promise<D1Database>;
   getR2Bucket(name: string): Promise<R2Bucket>;
   dispose(): Promise<void>;
+  dispatchFetch(url: string, options?: RequestInit): Promise<Response>;
 }
 
 // 复用项目已安装的 Wrangler 配套 Miniflare，不加载项目配置或任何 .env。
@@ -17,7 +18,11 @@ const { Miniflare } = wranglerRequire('miniflare') as {
 export async function createRuntime() {
   const runtime = new Miniflare({
     modules: true,
-    script: 'export default { fetch() { return new Response("ok") } }',
+    script: `export default { async fetch(request, env) {
+      if (request.method !== 'PUT') return new Response('ok');
+      const object = await env.ASSETS_BUCKET.put('stream-test', request.body, { sha256: request.headers.get('X-Content-SHA256') });
+      return Response.json({ size: object.size });
+    } }`,
     compatibilityDate: '2026-06-25',
     d1Databases: ['DB'],
     r2Buckets: ['ASSETS_BUCKET'],

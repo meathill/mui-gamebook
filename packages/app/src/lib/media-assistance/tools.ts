@@ -14,12 +14,16 @@ export const MEDIA_ASSISTANCE_TOOLS: WebMcpTool[] = [
   {
     name: 'saveMediaAssistancePlan',
     description:
-      '仅管理员：增量合并素材计划。未变项沿用原 prompt；不改正文、不覆盖已有素材、不恢复作者删除项。kind=image|video|speech|music|sfx。target: cover、character(characterId)、image/video/audio(sceneId)、speech(sceneId,textHash,occurrence，使用领取结果)。每批最多 200 项，末批传完整检查后的当前 revision。',
+      '仅管理员：增量合并素材计划。未变项沿用原 prompt；不改正文、不覆盖已有素材、不恢复作者删除项。kind=image|video|speech|music|sfx。target: cover、character(characterId)、image/video/audio(sceneId)、speech(sceneId,textHash,occurrence，使用领取结果)。每批最多 200 项，未完成规划传 planningComplete=false；后续批次使用返回的 revision。',
     inputSchema: {
       type: 'object',
       properties: {
         gameId,
         revision: { type: 'integer' },
+        planningComplete: {
+          type: 'boolean',
+          description: '默认 true。分批规划的非末批必须传 false，避免中断后漏掉剩余需求。',
+        },
         items: {
           type: 'array',
           items: {

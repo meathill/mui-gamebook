@@ -45,7 +45,10 @@ export async function updateItem(db: D1Database, gameId: number, hash: string, a
   } else {
     if (row.execution_token && args.executionToken !== row.execution_token)
       throw new AssistanceError('执行凭据不匹配', 403);
-    if (action === 'checkpoint' && row.status !== 'generating' && row.status !== 'uncertain') {
+    if (
+      action === 'checkpoint' &&
+      (!row.execution_token || !['generating', 'uncertain', 'paused'].includes(row.status))
+    ) {
       throw new AssistanceError('请先领取素材');
     }
     const reason = typeof args.reason === 'string' ? args.reason.trim() : '';

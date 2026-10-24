@@ -17,7 +17,11 @@ interface DialogConfig {
 
 interface DialogContextType {
   alert: (message: string, title?: string) => Promise<void>;
-  confirm: (message: string, title?: string) => Promise<boolean>;
+  confirm: (
+    message: string,
+    title?: string,
+    labels?: { confirmText?: string; cancelText?: string },
+  ) => Promise<boolean>;
   success: (message: string, title?: string) => Promise<void>;
   error: (message: string, title?: string) => Promise<void>;
 }
@@ -67,13 +71,13 @@ export function DialogProvider({ children }: { children: ReactNode }) {
   );
 
   const confirm = useCallback(
-    async (message: string, title?: string) => {
+    async (message: string, title?: string, labels?: { confirmText?: string; cancelText?: string }) => {
       return showDialog({
         type: 'confirm',
         title: title || '确认',
         message,
-        confirmText: '确定',
-        cancelText: '取消',
+        confirmText: labels?.confirmText ?? '确定',
+        cancelText: labels?.cancelText ?? '取消',
       });
     },
     [showDialog],
@@ -139,7 +143,7 @@ export function DialogProvider({ children }: { children: ReactNode }) {
         <DialogPrimitive.Portal>
           <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
           <DialogPrimitive.Content
-            className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]"
+            className="fixed left-1/2 top-1/2 z-50 w-[calc(100vw_-_2rem)] max-w-md max-h-[calc(100dvh_-_2rem)] overflow-y-auto -translate-x-1/2 -translate-y-1/2 rounded-xl bg-white p-6 shadow-xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]"
             onEscapeKeyDown={(e) => {
               if (dialog?.type === 'confirm') {
                 e.preventDefault();

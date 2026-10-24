@@ -36,6 +36,8 @@ pnpm run upload     # 构建并上传为一个新版本，不自动切流量（C
 
 ## 数据库迁移
 
+站方素材协助需要先应用 `0011_media_assistance.sql`，再上线应用代码。迁移为历史作品新增默认关闭的授权状态，并建立内容版本触发器和素材任务表。生成器仍在本地运行，无需新增云端 cron 或 AI 密钥；使用现有 D1/R2 绑定。
+
 ```bash
 cd packages/app
 pnpm run db:migrate:local    # 本地 D1

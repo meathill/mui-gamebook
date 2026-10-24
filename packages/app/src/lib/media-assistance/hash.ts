@@ -23,15 +23,17 @@ export async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
+export function serializeGenerationInput(input: GenerationInput): string {
+  return canonicalJson({
+    kind: input.kind,
+    prompt: input.prompt,
+    referenceHashes: input.referenceHashes,
+    parameters: input.parameters,
+  });
+}
+
 export async function hashGenerationInput(input: GenerationInput): Promise<string> {
-  return sha256(
-    canonicalJson({
-      kind: input.kind,
-      prompt: input.prompt,
-      referenceHashes: input.referenceHashes,
-      parameters: input.parameters,
-    }),
-  );
+  return sha256(serializeGenerationInput(input));
 }
 
 export function readGenerationInput(value: unknown): GenerationInput {
