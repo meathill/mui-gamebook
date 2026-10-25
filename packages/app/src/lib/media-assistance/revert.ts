@@ -58,6 +58,22 @@ export async function revertAssistance(db: D1Database, gameId: number, bucket?: 
     .bind(gameId)
     .first<{ title: string; cover_image: string | null; content: string; revision: number }>();
   if (!row) throw new AssistanceError('作品不存在', 404);
+  // 先关闭协助并暂停任务：applyAsset/upload 要求 enabled=1，之后不会再有新素材写入。
+  await db.batch([
+    db
+      .prepare(`UPDATE Games SET media_assistance_enabled = 0,
+      media_assistance_opted_out_at = COALESCE(media_assistance_opted_out_at, unixepoch()) WHERE id = ?`)
+      .bind(gameId),
+    db
+      .prepare(`UPDATE MediaAssistanceGenerations SET status = 'paused', error = '作者已撤回', execution_token = NULL,
+      lease_until = NULL WHERE game_id = ? AND status IN ('pending','generating','uncertain')`)
+      .bind(gameId),
+    db
+      .prepare(
+        "UPDATE MediaAssistanceWorks SET status = 'partial', updated_at = unixepoch() WHERE game_id = ? AND status IN ('active','pending')",
+      )
+      .bind(gameId),
+  ]);
   const targets = (
     await db
       .prepare(
@@ -95,25 +111,11 @@ export async function revertAssistance(db: D1Database, gameId: number, bucket?: 
   }
 
   // 所有站方素材位置都标记为 dismissed（包括作者已改动的），以后不再补回。
-  await db.batch([
-    db
-      .prepare(`UPDATE MediaAssistanceTargets SET status = 'dismissed', error = '作者已撤回站方素材'
-      WHERE game_id = ? AND status <> 'dismissed'`)
-      .bind(gameId),
-    db
-      .prepare(`UPDATE Games SET media_assistance_enabled = 0,
-      media_assistance_opted_out_at = COALESCE(media_assistance_opted_out_at, unixepoch()) WHERE id = ?`)
-      .bind(gameId),
-    db
-      .prepare(`UPDATE MediaAssistanceGenerations SET status = 'paused', error = '作者已撤回', execution_token = NULL,
-      lease_until = NULL WHERE game_id = ? AND status IN ('pending','generating','uncertain')`)
-      .bind(gameId),
-    db
-      .prepare(
-        "UPDATE MediaAssistanceWorks SET status = 'partial', updated_at = unixepoch() WHERE game_id = ? AND status IN ('active','pending')",
-      )
-      .bind(gameId),
-  ]);
+  await db
+    .prepare(`UPDATE MediaAssistanceTargets SET status = 'dismissed', error = '作者已撤回站方素材'
+    WHERE game_id = ? AND status <> 'dismissed'`)
+    .bind(gameId)
+    .run();
 
   // 删除已撤回且不再被引用的文件；失败不影响撤回结果。
   let deletedFiles = 0;

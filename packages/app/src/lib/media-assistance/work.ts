@@ -73,6 +73,7 @@ export async function claimWork(db: D1Database): Promise<Record<string, unknown>
         skipped.push({ gameId: candidate.id, reason: error.message });
         continue;
       }
+      if (enrolled) await bumpRevision(db, candidate.id);
       await db
         .prepare(`INSERT OR IGNORE INTO MediaAssistanceWorks(game_id, updated_at) VALUES (?, unixepoch())`)
         .bind(candidate.id)
@@ -90,18 +91,21 @@ export async function claimWork(db: D1Database): Promise<Record<string, unknown>
 
 /**
  * 作者未主动开启（且未主动关闭）时，由站方代为开启。
- * 同时推进正文 revision，让作者手里旧的编辑器快照保存时冲突，避免误把开关关回去。
+ * 成功后推进正文 revision（见 bumpRevision），让作者手里旧的编辑器快照保存时冲突，避免误把开关关回去。
  */
 async function enrollBySystem(db: D1Database, gameId: number): Promise<boolean> {
-  const [result] = await db.batch([
-    db
-      .prepare(`UPDATE Games SET media_assistance_enabled = 1, media_planning_confirmed = 1,
-      media_assistance_enrolled_by = 'system', media_assistance_enrolled_at = unixepoch()
-      WHERE id = ? AND media_assistance_enabled = 0 AND media_assistance_opted_out_at IS NULL`)
-      .bind(gameId),
-    db.prepare('UPDATE GameContent SET revision = revision + 1 WHERE game_id = ?').bind(gameId),
-  ]);
+  const result = await db
+    .prepare(`UPDATE Games SET media_assistance_enabled = 1, media_planning_confirmed = 1,
+    media_assistance_enrolled_by = 'system', media_assistance_enrolled_at = unixepoch()
+    WHERE id = ? AND media_assistance_enabled = 0 AND media_assistance_opted_out_at IS NULL`)
+    .bind(gameId)
+    .run();
   return Boolean(result.meta.changes);
+}
+
+/** 剧本校验通过后再推进 revision，避免无效剧本被反复代开时打扰作者编辑。 */
+async function bumpRevision(db: D1Database, gameId: number) {
+  await db.prepare('UPDATE GameContent SET revision = revision + 1 WHERE game_id = ?').bind(gameId).run();
 }
 
 async function revertSystemEnroll(db: D1Database, gameId: number) {
