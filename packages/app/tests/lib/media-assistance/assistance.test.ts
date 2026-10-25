@@ -270,4 +270,20 @@ describe('真实本地 D1 / R2 素材协助', () => {
     await upload(1, target.input_hash, token, 'a'.repeat(9 * 1024 * 1024));
     expect((await getGeneration(local.db, 1, target.input_hash)).status).toBe('ready');
   }, 30000);
+
+  it('已完成作品的封面仍是占位图且目标为 satisfied（无 applied_url）时可重新领取，封面回到 pending', async () => {
+    const content = story(0).replace('published: true\n', 'published: true\ncover_prompt: 封面\n');
+    await insertGame(local.db, 1, content);
+    const work = await claimWork(local.db, { gameId: 1 });
+    await savePlan(local.db, 1, Number(work.revision), [{ target: { kind: 'cover' }, input: input('封面') }]);
+    // 模拟修复前的旧数据：占位封面被当成已有封面
+    await local.db.batch([
+      local.db.prepare("UPDATE Games SET cover_image = '/images/placeholder-cover-400x600.png' WHERE id = 1"),
+      local.db.prepare("UPDATE MediaAssistanceTargets SET status = 'satisfied' WHERE game_id = 1"),
+      local.db.prepare("UPDATE MediaAssistanceWorks SET status = 'completed', checked_revision = (SELECT revision FROM GameContent WHERE game_id = 1) WHERE game_id = 1"),
+    ]);
+    const again = await claimWork(local.db, { gameId: 1 });
+    expect(again.gameId).toBe(1);
+    expect((await listTargets(local.db, 1)).find((row) => row.target_json.includes('"cover"'))?.status).toBe('pending');
+  }, 30000);
 });

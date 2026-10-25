@@ -69,7 +69,10 @@ export async function claimWork(db: D1Database, options: ClaimOptions = {}): Pro
       WHERE (g.media_assistance_enabled = 1 OR g.media_assistance_opted_out_at IS NULL)
       AND g.published = 1 AND g.shadow_banned = 0 AND (w.game_id IS NULL OR w.checked_revision <> c.revision OR EXISTS (
         SELECT 1 FROM MediaAssistanceTargets t JOIN MediaAssistanceGenerations r ON r.game_id = t.game_id AND r.input_hash = t.input_hash
-        WHERE t.game_id = g.id AND t.status = 'pending' AND r.status <> 'paused'))
+        WHERE t.game_id = g.id AND t.status = 'pending' AND r.status <> 'paused')
+        OR ((COALESCE(g.cover_image, '') = '' OR g.cover_image LIKE '/images/placeholder-%') AND EXISTS (
+          SELECT 1 FROM MediaAssistanceTargets t WHERE t.game_id = g.id AND t.target_json LIKE '%"kind":"cover"%'
+          AND t.status = 'satisfied' AND t.applied_url IS NULL)))
       AND (?1 IS NULL OR g.id = ?1)
       ORDER BY (g.media_assistance_enabled = 1 AND COALESCE(g.media_assistance_enrolled_by, '') <> 'system') DESC,
         ((COALESCE(g.cover_image, '') = '' OR g.cover_image LIKE '/images/placeholder-%') AND c.content NOT LIKE '%url: http%') DESC, (SELECT COALESCE(SUM(open_count),0) FROM GameAnalytics WHERE game_id = g.id) DESC,
