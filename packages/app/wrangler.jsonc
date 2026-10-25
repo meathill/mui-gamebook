@@ -89,6 +89,9 @@
   // 构建前请确保 .env（本地）或构建环境变量里已经填好，见 .env.example。
   // 其中 NEXT_PUBLIC_ROOT_USER_EMAIL（root 管理员邮箱）必填：漏配会导致后台无人可进。
   "vars": {
+    // 统一生态 Payload CMS 地址（issue #28，博客唯一真实数据源）
+    "MUICV_CMS_URL": "https://cms.muicv.com",
+    "NEXT_PUBLIC_CMS_API_URL": "https://cms.muicv.com",
     // TODO: 填入站长收信地址；留空则素材协助通知邮件不设 Reply-To
     "MEDIA_ASSISTANCE_REPLY_TO": "meathill@gmail.com",
     "ASSETS_PUBLIC_DOMAIN": "https://i.muistory.com",

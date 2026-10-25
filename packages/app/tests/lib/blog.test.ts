@@ -95,4 +95,22 @@ describe('blog client library (CMS articles)', () => {
     expect(getCategoryLabel('tutorial')).toBe('教程');
     expect(getCategoryLabel('unknown_category')).toBe('unknown_category');
   });
+
+  it('getCmsUrl 默认返回 https://cms.muicv.com，且防御本站 muistory.com 误配置', async () => {
+    const { getCmsUrl } = await import('@/lib/blog');
+
+    // 默认情况
+    expect(getCmsUrl()).toBe('https://cms.muicv.com');
+
+    // 误配为本站域名（导致死循环 404）时，必须自动回退至线上统一 CMS
+    vi.stubEnv('NEXT_PUBLIC_CMS_API_URL', 'https://muistory.com');
+    expect(getCmsUrl()).toBe('https://cms.muicv.com');
+
+    vi.stubEnv('MUICV_CMS_URL', 'https://muistory.com/');
+    expect(getCmsUrl()).toBe('https://cms.muicv.com');
+
+    // 正确配置独立外部 CMS 地址时，正常采纳并去除末尾斜杠
+    vi.stubEnv('MUICV_CMS_URL', 'https://custom-cms.test.com/');
+    expect(getCmsUrl()).toBe('https://custom-cms.test.com');
+  });
 });

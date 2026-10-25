@@ -55,7 +55,15 @@ export async function claimWork(db: D1Database, options: ClaimOptions = {}): Pro
         .prepare('UPDATE MediaAssistanceWorks SET status = ? WHERE game_id = ? AND status = ?')
         .bind(counts.paused ? 'partial' : 'completed', loaded.id, 'active')
         .run();
-      if (notify) await notifySystemEnrolledAuthor(db, loaded.id, notify.send, notify.siteUrl, notify.revertSecret, notify.replyTo);
+      if (notify)
+        await notifySystemEnrolledAuthor(
+          db,
+          loaded.id,
+          notify.send,
+          notify.siteUrl,
+          notify.revertSecret,
+          notify.replyTo,
+        );
     }
   }
 

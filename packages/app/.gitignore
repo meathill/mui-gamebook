@@ -43,6 +43,7 @@ yarn-error.log*
 next-env.d.ts
 # wrangler 生成物，部署前用 `pnpm run cf-typegen` 本地重新生成（读取本机 .dev.vars）
 cloudflare-env.d.ts
+worker-configuration.d.ts
 .open-next
 .next
 .wrangler

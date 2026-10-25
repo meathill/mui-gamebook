@@ -36,8 +36,12 @@ const DEFAULT_CMS_URL = 'https://cms.muicv.com';
 const DEFAULT_SITE = process.env.NEXT_PUBLIC_BLOG_SITE?.trim() || 'gamebook';
 
 export function getCmsUrl(): string {
-  const url = process.env.NEXT_PUBLIC_CMS_API_URL?.trim() || process.env.MUICV_CMS_URL?.trim();
-  return url || DEFAULT_CMS_URL;
+  const candidate = process.env.MUICV_CMS_URL?.trim() || process.env.NEXT_PUBLIC_CMS_API_URL?.trim();
+  // 必须指向外部 Payload CMS，绝不能误配为 muistory.com 本站或相对路径，否则会陷入自我循环请求不存在的 /api/articles
+  if (candidate && !candidate.includes('muistory.com')) {
+    return candidate.replace(/\/$/, '');
+  }
+  return DEFAULT_CMS_URL;
 }
 
 type RawCmsArticle = {
@@ -134,11 +138,11 @@ export async function getPublishedPosts(options?: {
     const res = await fetch(`${cmsUrl}/api/articles?${params.toString()}`, {
       headers: { Accept: 'application/json' },
       next: { revalidate: 60 },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!res.ok) {
-      console.warn(`[blog] 拉取文章列表失败，HTTP ${res.status}`);
+      console.warn(`[blog] 拉取文章列表失败 (${cmsUrl})，HTTP ${res.status}`);
       return emptyResponse;
     }
 
@@ -191,10 +195,13 @@ export async function getPostBySlug(
     const res = await fetch(`${cmsUrl}/api/articles?${params.toString()}`, {
       headers: { Accept: 'application/json' },
       next: { revalidate: 60 },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(10000),
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.warn(`[blog] 根据 slug 获取文章失败 (${slug}, ${cmsUrl})，HTTP ${res.status}`);
+      return null;
+    }
 
     const data = (await res.json()) as { docs?: RawCmsArticle[] };
     const raw = data.docs?.[0];

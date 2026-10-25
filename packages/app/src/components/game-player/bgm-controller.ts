@@ -1,4 +1,4 @@
-import type { PlayableSceneNode } from "@roudanio/parser/src/types";
+import type { PlayableSceneNode } from '@roudanio/parser/src/types';
 
 /** 换场景时 BGM 淡出时长 */
 export const BGM_FADE_OUT_MS = 1000;
@@ -7,25 +7,16 @@ export const BGM_FADE_IN_MS = 600;
 const STEP_MS = 50;
 
 /** 取场景的背景音乐 URL（第一个有 url 的 background_music 节点） */
-export function getSceneBgmUrl(
-  nodes: PlayableSceneNode[] | undefined,
-): string | null {
+export function getSceneBgmUrl(nodes: PlayableSceneNode[] | undefined): string | null {
   if (!nodes) return null;
   for (const node of nodes) {
-    if (
-      node.type === "ai_audio" &&
-      node.audioType === "background_music" &&
-      node.url
-    )
-      return node.url;
+    if (node.type === 'ai_audio' && node.audioType === 'background_music' && node.url) return node.url;
   }
   return null;
 }
 
 /** 整部作品是否有任何背景音乐（决定是否显示音乐开关） */
-export function gameHasBgm(
-  scenes: Record<string, { nodes?: PlayableSceneNode[] }> | undefined,
-): boolean {
+export function gameHasBgm(scenes: Record<string, { nodes?: PlayableSceneNode[] }> | undefined): boolean {
   if (!scenes) return false;
   return Object.values(scenes).some((scene) => !!getSceneBgmUrl(scene.nodes));
 }
@@ -126,7 +117,7 @@ export class BgmController {
     this.clearFadeIn();
     audio.volume = 0;
     const playing = audio.play();
-    if (playing && typeof playing.catch === "function") {
+    if (playing && typeof playing.catch === 'function') {
       // 移动端自动播放限制：失败就算了，保持原有行为
       playing.catch(() => {});
     }
@@ -179,7 +170,7 @@ function clamp(v: number) {
 
 function stopAudio(audio: HTMLAudioElement) {
   audio.pause();
-  audio.removeAttribute("src");
+  audio.removeAttribute('src');
   try {
     audio.load();
   } catch {

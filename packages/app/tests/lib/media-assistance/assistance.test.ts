@@ -280,7 +280,9 @@ describe('真实本地 D1 / R2 素材协助', () => {
     await local.db.batch([
       local.db.prepare("UPDATE Games SET cover_image = '/images/placeholder-cover-400x600.png' WHERE id = 1"),
       local.db.prepare("UPDATE MediaAssistanceTargets SET status = 'satisfied' WHERE game_id = 1"),
-      local.db.prepare("UPDATE MediaAssistanceWorks SET status = 'completed', checked_revision = (SELECT revision FROM GameContent WHERE game_id = 1) WHERE game_id = 1"),
+      local.db.prepare(
+        "UPDATE MediaAssistanceWorks SET status = 'completed', checked_revision = (SELECT revision FROM GameContent WHERE game_id = 1) WHERE game_id = 1",
+      ),
     ]);
     const again = await claimWork(local.db, { gameId: 1 });
     expect(again.gameId).toBe(1);
