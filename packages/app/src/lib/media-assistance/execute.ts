@@ -40,6 +40,7 @@ export async function executeAssistanceTool(name: string, args: Record<string, u
       case 'finishMediaAssistanceWork':
         data = await finishWork(db, gameId, {
           siteUrl: getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
+          revertSecret: getCloudflareContext().env.MEDIA_ASSISTANCE_REVERT_SECRET,
           send: (message) => sendEmail(message, getCloudflareContext().env),
         });
         break;

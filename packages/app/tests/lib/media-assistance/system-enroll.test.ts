@@ -10,6 +10,13 @@ import { applyAsset } from '@/lib/media-assistance/apply';
 import { listTargets, loadAssistanceGame } from '@/lib/media-assistance/store';
 import { uploadAssistanceAsset } from '@/lib/media-assistance/upload';
 import { saveEditorContent } from '@/lib/media-assistance/editor-save';
+import {
+  createRevertToken,
+  revertAssistance,
+  verifyRevertToken,
+  REVERT_LINK_TTL_SECONDS,
+} from '@/lib/media-assistance/revert';
+import { story } from './runtime';
 
 let local: Awaited<ReturnType<typeof createRuntime>>;
 beforeAll(async () => {
@@ -44,16 +51,27 @@ function gameRow(id: number) {
     .first<Record<string, unknown>>();
 }
 
-async function processOne(gameId: number, revision: number) {
-  await savePlan(local.db, gameId, revision, [
-    {
-      target: { kind: 'image', sceneId: 'scene_0' },
-      input: { kind: 'image', prompt: '图片 0', referenceHashes: [], parameters: { model: 'local-test' } },
-    },
-  ]);
-  const [target] = await listTargets(local.db, gameId);
+async function processOne(gameId: number, revision: number, scenes = 1) {
+  await savePlan(
+    local.db,
+    gameId,
+    revision,
+    Array.from({ length: scenes }, (_, index) => ({
+      target: { kind: 'image' as const, sceneId: `scene_${index}` },
+      input: {
+        kind: 'image' as const,
+        prompt: `图片 ${index}`,
+        referenceHashes: [],
+        parameters: { model: 'local-test' },
+      },
+    })),
+  );
+  for (const target of await listTargets(local.db, gameId)) await processTarget(gameId, target);
+}
+
+async function processTarget(gameId: number, target: Awaited<ReturnType<typeof listTargets>>[number]) {
   const claim = await claimItem(local.db, gameId, target.id, 'worker');
-  const data = 'image-bytes';
+  const data = `image-bytes-${target.id}`;
   await uploadAssistanceAsset(
     local.db,
     local.bucket,
@@ -170,5 +188,64 @@ describe('站方代为开启素材协助', () => {
       }),
     ).rejects.toThrow();
     expect((await gameRow(1))?.media_assistance_enabled).toBe(1);
+  });
+
+  it('撤回令牌：签名、篡改与过期校验', async () => {
+    const token = await createRevertToken('secret', 7, 1000);
+    expect(await verifyRevertToken('secret', token, 1000)).toBe(7);
+    await expect(verifyRevertToken('other', token, 1000)).rejects.toThrow('无效');
+    await expect(verifyRevertToken('secret', token.replace(/^7\./, '8.'), 1000)).rejects.toThrow('无效');
+    await expect(verifyRevertToken('secret', token, 1000 + REVERT_LINK_TTL_SECONDS + 1)).rejects.toThrow('过期');
+    await expect(verifyRevertToken('', token, 1000)).rejects.toThrow('未配置');
+  });
+
+  it('通知邮件包含一键撤回链接', async () => {
+    await insertGame(local.db, 1, undefined, 10, false);
+    const work = await claimWork(local.db);
+    await processOne(1, Number(work.revision));
+    const sent: Parameters<NotifySender>[0][] = [];
+    await finishWork(local.db, 1, {
+      siteUrl: 'https://muistory.test',
+      revertSecret: 'secret',
+      send: async (m) => void sent.push(m),
+    });
+    expect(sent[0].body).toContain('不想要这些 AI 素材？');
+    const token = decodeURIComponent(/revert\?token=([^"]+)/.exec(sent[0].body)![1]);
+    expect(await verifyRevertToken('secret', token)).toBe(1);
+  });
+
+  it('一键撤回：只清除仍为站方素材的位置，保留作者改动，关闭协助且幂等', async () => {
+    await insertGame(local.db, 1, story(2), 10, false);
+    const work = await claimWork(local.db);
+    await processOne(1, Number(work.revision), 2);
+    // 作者把 scene_1 换成了自己的图
+    const loaded = await loadAssistanceGame(local.db, 1);
+    const own = 'https://author.example/own.png';
+    const node = loaded.game.scenes.scene_1.nodes.find((item) => item.type === 'ai_image');
+    if (node && 'url' in node) node.url = own;
+    const { stringify } = await import('@roudanio/parser');
+    await local.db.prepare('UPDATE GameContent SET content = ? WHERE game_id = 1').bind(stringify(loaded.game)).run();
+    expect((await local.bucket.list()).objects.length).toBe(2);
+
+    const result = await revertAssistance(local.db, 1, local.bucket);
+    expect(result.reverted).toBe(1);
+    const content = (await local.db
+      .prepare('SELECT content FROM GameContent WHERE game_id = 1')
+      .first<{ content: string }>())!.content;
+    const parsed = parse(content);
+    if (!parsed.success) throw new Error('invalid');
+    const url = (sceneId: string) => {
+      const item = parsed.data.scenes[sceneId].nodes.find((n) => n.type === 'ai_image');
+      return item && 'url' in item ? item.url : undefined;
+    };
+    expect(url('scene_0')).toBeUndefined();
+    expect(url('scene_1')).toBe(own);
+    expect((await listTargets(local.db, 1)).every((t) => t.status === 'dismissed')).toBe(true);
+    const row = await gameRow(1);
+    expect(row?.media_assistance_enabled).toBe(0);
+    expect(row?.media_assistance_opted_out_at).not.toBeNull();
+    expect((await local.bucket.list()).objects.length).toBe(1);
+    expect((await revertAssistance(local.db, 1, local.bucket)).reverted).toBe(0);
+    expect((await claimWork(local.db)).gameId).toBeNull();
   });
 });

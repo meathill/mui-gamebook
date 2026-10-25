@@ -115,7 +115,11 @@ async function revertSystemEnroll(db: D1Database, gameId: number) {
 
 export type NotifySender = (message: { to: string; subject: string; body: string }) => Promise<void>;
 
-export async function finishWork(db: D1Database, gameId: number, notify?: { send: NotifySender; siteUrl: string }) {
+export async function finishWork(
+  db: D1Database,
+  gameId: number,
+  notify?: { send: NotifySender; siteUrl: string; revertSecret?: string },
+) {
   const loaded = await loadAssistanceGame(db, gameId);
   await reconcileTargets(db, loaded);
   const work = await db.prepare('SELECT * FROM MediaAssistanceWorks WHERE game_id = ?').bind(gameId).first<WorkRow>();
@@ -127,6 +131,8 @@ export async function finishWork(db: D1Database, gameId: number, notify?: { send
     .prepare('UPDATE MediaAssistanceWorks SET status = ?, updated_at = unixepoch() WHERE game_id = ?')
     .bind(status, gameId)
     .run();
-  const notified = notify ? await notifySystemEnrolledAuthor(db, gameId, notify.send, notify.siteUrl) : false;
+  const notified = notify
+    ? await notifySystemEnrolledAuthor(db, gameId, notify.send, notify.siteUrl, notify.revertSecret)
+    : false;
   return { gameId, status, counts, notified };
 }

@@ -77,6 +77,14 @@ node packages/app/scripts/upload-assisted-asset.ts \
 
 生成失败且需要暂缓时调用 `updateMediaAssistanceItem({gameId,inputHash,action:"pause",executionToken,reason})`。恢复前先核对产物；确认既没有产物、也没有运行中任务，才可传 `action:"resume",confirmedNoResult:true`。暂停后找到原文件或外部任务时，使用原 `executionToken` 调用 `checkpoint` 恢复原执行记录，再继续上传/应用，不重做生成。
 
+## 作者一键撤回
+
+通知邮件附「不想要这些 AI 素材？一键撤回」链接：`/media-assistance/revert?token=<gameId>.<expires>.<HMAC-SHA256>`，密钥为 secret `MEDIA_ASSISTANCE_REVERT_SECRET`（`wrangler secret put` 配置；未配置时邮件不带撤回链接，接口返回 503），有效期 60 天。
+
+- GET 只显示确认页（防止邮箱客户端预取链接误触发），POST 才执行撤回。
+- 撤回只清除当前值仍等于 `applied_url` 的位置（正文与 `Games.cover_image`），作者已替换或自己的素材不动，正文写入带 revision 保护；全部站方位置标记 `dismissed`，`media_assistance_enabled=0` 并记录 `opted_out_at`，此后不再代开；进行中的生成任务暂停、当前作品释放；已撤回的 R2 文件尽力删除。重复调用幂等。
+- 过期后作者可登录编辑器删除素材或关闭开关。
+
 ## 每日任务提示词
 
 > 使用姆伊游戏书 MCP 执行站方素材协助。先领取当前作品，阅读已有清单和生成记录。只对 needsPlanning 的版本增量检查，保留既有 prompt、素材和作者删除记录。根据故事与既有风格规划需要的图片、视频、朗读、音乐和音效，不改剧情、选项或变量。

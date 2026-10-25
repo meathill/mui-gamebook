@@ -57,3 +57,6 @@ STORY_PRIVATE_KEY=
 
 # Pinata IPFS 上传 JWT
 PINATA_JWT=
+
+# 素材协助通知邮件「一键撤回」链接的 HMAC 签名密钥（随机长字符串）
+MEDIA_ASSISTANCE_REVERT_SECRET=

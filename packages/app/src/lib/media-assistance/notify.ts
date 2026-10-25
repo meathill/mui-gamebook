@@ -1,3 +1,4 @@
+import { createRevertToken } from './revert';
 import type { MediaTarget } from './types';
 
 const KIND_LABELS: Record<string, string> = {
@@ -28,6 +29,7 @@ export async function notifySystemEnrolledAuthor(
   gameId: number,
   send: (message: { to: string; subject: string; body: string }) => Promise<void>,
   siteUrl: string,
+  revertSecret = '',
 ): Promise<boolean> {
   const game = await db
     .prepare(`SELECT g.id, g.title, u.email FROM Games g JOIN user u ON u.id = g.owner_id
@@ -47,6 +49,9 @@ export async function notifySystemEnrolledAuthor(
   );
   const editorUrl = `${siteUrl.replace(/\/$/, '')}/my/edit/${game.id}`;
   const title = escapeHtml(game.title);
+  const revertUrl = revertSecret
+    ? `${siteUrl.replace(/\/$/, '')}/media-assistance/revert?token=${encodeURIComponent(await createRevertToken(revertSecret, game.id))}`
+    : '';
   try {
     await send({
       to: game.email,
@@ -58,6 +63,7 @@ export async function notifySystemEnrolledAuthor(
 <p>你可以在编辑器中查看和调整：<a href="${editorUrl}">${editorUrl}</a></p>
 <p>如果不喜欢某项素材，直接在编辑器里删除即可，站方不会再为该位置重新生成。</p>
 <p>如果不希望站方继续协助，可以在游戏设置中取消勾选「接受站方 AI 素材协助」，关闭后我们不会再处理这部作品。</p>
+${revertUrl ? `<p><strong>不想要这些 AI 素材？<a href="${revertUrl}">一键撤回</a></strong>（打开后需再确认一次；链接 60 天内有效。撤回会移除站方添加的全部素材并不再处理这部作品，你自己的素材不受影响。）</p>` : ''}
 <p>—— 姆伊游戏书</p>`.trim(),
     });
   } catch (error) {
