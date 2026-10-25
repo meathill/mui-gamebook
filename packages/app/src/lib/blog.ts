@@ -133,6 +133,7 @@ export async function getPublishedPosts(options?: {
   try {
     const res = await fetch(`${cmsUrl}/api/articles?${params.toString()}`, {
       headers: { Accept: 'application/json' },
+      next: { revalidate: 60 },
       signal: AbortSignal.timeout(5000),
     });
 
@@ -189,6 +190,7 @@ export async function getPostBySlug(
 
     const res = await fetch(`${cmsUrl}/api/articles?${params.toString()}`, {
       headers: { Accept: 'application/json' },
+      next: { revalidate: 60 },
       signal: AbortSignal.timeout(5000),
     });
 
