@@ -10,6 +10,8 @@ interface SendEmailOptions {
   subject: string;
   body: string;
   from?: string;
+  /** 回复地址，为空则不设置 */
+  replyTo?: string;
 }
 
 interface SendflareResponse {
@@ -21,6 +23,7 @@ interface SendflareResponse {
 
 export async function sendEmail(options: SendEmailOptions, env: CloudflareEnv): Promise<void> {
   const { to, subject, body, from } = options;
+  const replyTo = options.replyTo?.trim();
   const apiKey = env.SENDFLARE_KEY;
   if (!apiKey) {
     console.warn('SENDFLARE_KEY not configured, skipping email send');
@@ -40,6 +43,7 @@ export async function sendEmail(options: SendEmailOptions, env: CloudflareEnv): 
       to,
       subject,
       body,
+      ...(replyTo ? { replyTo: [replyTo] } : {}),
     }),
   });
 

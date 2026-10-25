@@ -27,10 +27,12 @@ function describeTarget(target: MediaTarget) {
 export async function notifySystemEnrolledAuthor(
   db: D1Database,
   gameId: number,
-  send: (message: { to: string; subject: string; body: string }) => Promise<void>,
+  send: (message: { to: string; subject: string; body: string; replyTo?: string }) => Promise<void>,
   siteUrl: string,
   revertSecret = '',
+  replyTo = '',
 ): Promise<boolean> {
+  replyTo = replyTo.trim();
   const game = await db
     .prepare(`SELECT g.id, g.title, u.email FROM Games g JOIN user u ON u.id = g.owner_id
     WHERE g.id = ? AND g.media_assistance_enrolled_by = 'system' AND g.media_assistance_notified_at IS NULL`)
@@ -55,6 +57,7 @@ export async function notifySystemEnrolledAuthor(
   try {
     await send({
       to: game.email,
+      ...(replyTo ? { replyTo } : {}),
       subject: `我们为《${game.title}》补充了 ${targets.length} 项素材 - 姆伊游戏书`,
       body: `
 <h2>你的作品《${title}》有了新素材</h2>
@@ -64,7 +67,7 @@ export async function notifySystemEnrolledAuthor(
 <p>如果不喜欢某项素材，直接在编辑器里删除即可，站方不会再为该位置重新生成。</p>
 <p>如果不希望站方继续协助，可以在游戏设置中取消勾选「接受站方 AI 素材协助」，关闭后我们不会再处理这部作品。</p>
 ${revertUrl ? `<p><strong>不想要这些 AI 素材？<a href="${revertUrl}">一键撤回</a></strong>（打开后需再确认一次；链接 60 天内有效。撤回会移除站方添加的全部素材并不再处理这部作品，你自己的素材不受影响。）</p>` : ''}
-<p>—— 姆伊游戏书</p>`.trim(),
+${replyTo ? '<p>有任何想法或不满意，直接回复这封邮件即可，我们会认真看每一封回信。</p>\n' : ''}<p>—— 姆伊游戏书</p>`.trim(),
     });
   } catch (error) {
     console.error('素材协助通知邮件发送失败', error);

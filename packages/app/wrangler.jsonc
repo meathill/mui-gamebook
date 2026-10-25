@@ -89,6 +89,8 @@
   // 构建前请确保 .env（本地）或构建环境变量里已经填好，见 .env.example。
   // 其中 NEXT_PUBLIC_ROOT_USER_EMAIL（root 管理员邮箱）必填：漏配会导致后台无人可进。
   "vars": {
+    // TODO: 填入站长收信地址；留空则素材协助通知邮件不设 Reply-To
+    "MEDIA_ASSISTANCE_REPLY_TO": "meathill@gmail.com",
     "ASSETS_PUBLIC_DOMAIN": "https://i.muistory.com",
     "COOKIE_DOMAIN": "",
     "CRON_SECRET": "mui-gamebook-cron",

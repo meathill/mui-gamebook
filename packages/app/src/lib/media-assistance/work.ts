@@ -55,7 +55,7 @@ export async function claimWork(db: D1Database, options: ClaimOptions = {}): Pro
         .prepare('UPDATE MediaAssistanceWorks SET status = ? WHERE game_id = ? AND status = ?')
         .bind(counts.paused ? 'partial' : 'completed', loaded.id, 'active')
         .run();
-      if (notify) await notifySystemEnrolledAuthor(db, loaded.id, notify.send, notify.siteUrl, notify.revertSecret);
+      if (notify) await notifySystemEnrolledAuthor(db, loaded.id, notify.send, notify.siteUrl, notify.revertSecret, notify.replyTo);
     }
   }
 
@@ -132,9 +132,9 @@ async function revertSystemEnroll(db: D1Database, gameId: number) {
     .run();
 }
 
-export type NotifySender = (message: { to: string; subject: string; body: string }) => Promise<void>;
+export type NotifySender = (message: { to: string; subject: string; body: string; replyTo?: string }) => Promise<void>;
 
-export type FinishNotify = { send: NotifySender; siteUrl: string; revertSecret?: string };
+export type FinishNotify = { send: NotifySender; siteUrl: string; revertSecret?: string; replyTo?: string };
 
 export async function finishWork(db: D1Database, gameId: number, notify?: FinishNotify) {
   const loaded = await loadAssistanceGame(db, gameId);
@@ -149,7 +149,7 @@ export async function finishWork(db: D1Database, gameId: number, notify?: Finish
     .bind(status, gameId)
     .run();
   const notified = notify
-    ? await notifySystemEnrolledAuthor(db, gameId, notify.send, notify.siteUrl, notify.revertSecret)
+    ? await notifySystemEnrolledAuthor(db, gameId, notify.send, notify.siteUrl, notify.revertSecret, notify.replyTo)
     : false;
   return { gameId, status, counts, notified };
 }

@@ -20,7 +20,8 @@ export async function executeAssistanceTool(name: string, args: Record<string, u
     const notify = {
       siteUrl: getPublicSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
       revertSecret: getCloudflareContext().env.MEDIA_ASSISTANCE_REVERT_SECRET,
-      send: (message: { to: string; subject: string; body: string }) => sendEmail(message, getCloudflareContext().env),
+      replyTo: getCloudflareContext().env.MEDIA_ASSISTANCE_REPLY_TO,
+      send: (message: { to: string; subject: string; body: string; replyTo?: string }) => sendEmail(message, getCloudflareContext().env),
     };
     let data: Record<string, unknown>;
     switch (name) {
