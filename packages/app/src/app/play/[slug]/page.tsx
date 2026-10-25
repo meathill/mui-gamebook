@@ -311,14 +311,14 @@ export default async function PlayPage({ params }: Props) {
         </div>
       )}
 
-      {/* 评论系统 */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-0">
+      {/* 评论系统：w-full 防止在 flex-col（全屏标题）父容器里被 mx-auto 收缩到内容宽度 */}
+      <div className="max-w-3xl mx-auto px-4 sm:px-0 w-full">
         <Comment postId={slug} />
       </div>
 
       {/* 相关游戏推荐 */}
       {game.tags && game.tags.length > 0 && (
-        <div className="max-w-5xl mx-auto px-4 sm:px-0">
+        <div className="max-w-5xl mx-auto px-4 sm:px-0 w-full">
           <RelatedGames
             currentSlug={slug}
             tags={game.tags}

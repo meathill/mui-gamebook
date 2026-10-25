@@ -7,6 +7,8 @@ type Props = {
 };
 
 const SITE_ID = process.env.NEXT_PUBLIC_AWESOME_COMMENT_SITE_ID;
+// awesomecomment.org 的 Turnstile 站点密钥（公开值）；传入后未登录用户可通过人机验证匿名评论
+const TURNSTILE_SITE_KEY = '0x4AAAAAAEaTL6EjMBTPYdSS';
 
 export default function Comment({ postId }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -14,7 +16,7 @@ export default function Comment({ postId }: Props) {
 
   async function loadAndInit() {
     // 动态加载 CSS
-    const cssUrl = 'https://unpkg.com/@roudanio/awesome-comment@0.10.5/dist/style.css';
+    const cssUrl = 'https://unpkg.com/@roudanio/awesome-comment@0.12.1/dist/style.css';
     if (!document.querySelector(`link[href="${cssUrl}"]`)) {
       const link = document.createElement('link');
       link.rel = 'stylesheet';
@@ -26,7 +28,7 @@ export default function Comment({ postId }: Props) {
       // 使用 ESM 动态导入
       const [authModule, commentModule] = await Promise.all([
         import(/* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-auth@0.1.5/dist/awesome-auth.js'),
-        import(/* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.10.5/dist/awesome-comment.js'),
+        import(/* webpackIgnore: true */ 'https://unpkg.com/@roudanio/awesome-comment@0.12.1/dist/awesome-comment.js'),
       ]);
 
       const auth = authModule.getInstance({
@@ -41,6 +43,7 @@ export default function Comment({ postId }: Props) {
           siteId: SITE_ID as string,
           apiUrl: 'https://awesomecomment.org',
           awesomeAuth: auth,
+          turnstileSiteKey: TURNSTILE_SITE_KEY,
           locale: navigator.language,
         });
       }
@@ -68,7 +71,7 @@ export default function Comment({ postId }: Props) {
     <div
       id="comment"
       ref={containerRef}
-      className="mt-8 px-4 sm:px-0 min-h-50"
+      className="mt-8 w-full min-h-50"
     />
   );
 }
