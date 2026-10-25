@@ -62,6 +62,10 @@
       "binding": "WORKER_SELF_REFERENCE",
       // The service should match the "name" of your worker
       "service": "mui-gamebook"
+    },
+    {
+      "binding": "MUICV_CMS",
+      "service": "muicv-cms"
     }
   ],
   // 声明本项目用到的 secret 名单（不含真实值，值仍然只能用 `wrangler secret put` 设置）。

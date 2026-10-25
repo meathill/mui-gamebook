@@ -9,7 +9,7 @@ import type { Metadata } from 'next';
 import JsonLd from '@/components/JsonLd';
 import { buildOptimizedImageUrl } from '../../../../image-loader';
 
-export const revalidate = 3600;
+export const revalidate = 60;
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

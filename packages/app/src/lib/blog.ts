@@ -6,6 +6,8 @@
  * - 多站点通过 site=gamebook（兼容 muistory）隔离，绝不与 muicv 简历求职博文混淆。
  */
 
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+
 export interface BlogPost {
   id: string;
   title: string;
@@ -42,6 +44,44 @@ export function getCmsUrl(): string {
     return candidate.replace(/\/$/, '');
   }
   return DEFAULT_CMS_URL;
+}
+
+/**
+ * 请求 CMS 接口：优先走 Cloudflare Service Binding 直连 muicv-cms 进程，
+ * 消除公网 DNS 解析与外部网络开销；在非 Worker 运行期安全降级到标准 fetch。
+ */
+async function fetchCmsEndpoint(pathWithQuery: string): Promise<Response> {
+  const cmsUrl = getCmsUrl();
+  const targetUrl = `${cmsUrl}${pathWithQuery}`;
+
+  // 1. 优先通过 Cloudflare Service Binding（MUICV_CMS）直通目标 Worker
+  try {
+    const ctx = (await getCloudflareContext({ async: true })) as {
+      env?: { MUICV_CMS?: { fetch: typeof fetch } };
+    };
+    const cmsFetcher = ctx?.env?.MUICV_CMS;
+    if (cmsFetcher && typeof cmsFetcher.fetch === 'function') {
+      const res = await cmsFetcher.fetch(targetUrl, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(10000),
+      });
+      // 线上环境 Worker 间 Service Binding 正常返回 200
+      if (res.ok) {
+        return res;
+      }
+      // 本地构建期 / 缺少本地目标 Worker 时 miniflare 会返回 503，降级走公网 fetch
+      console.warn(`[blog] Service Binding 返回 HTTP ${res.status}，降级走公网 fetch`);
+    }
+  } catch {
+    // 本地开发 / Node 测试环境 / 构建静态生成期无 Worker Context，安全降级到标准 fetch
+  }
+
+  // 2. 降级走标准 HTTP/HTTPS fetch
+  return fetch(targetUrl, {
+    headers: { Accept: 'application/json' },
+    next: { revalidate: 60 },
+    signal: AbortSignal.timeout(10000),
+  });
 }
 
 type RawCmsArticle = {
@@ -101,6 +141,13 @@ function normalizeCmsArticle(doc: RawCmsArticle): BlogPost {
   };
 }
 
+const categoryLabels: Record<string, { zh: string; en: string }> = {
+  update: { zh: '产品更新', en: 'Updates' },
+  tutorial: { zh: '教程', en: 'Tutorials' },
+  story: { zh: '创作者故事', en: 'Creator Stories' },
+  insight: { zh: '行业观察', en: 'Insights' },
+};
+
 export async function getPublishedPosts(options?: {
   limit?: number;
   page?: number;
@@ -131,18 +178,16 @@ export async function getPublishedPosts(options?: {
   });
 
   if (category) {
-    params.set('where[category][equals]', category);
+    const label = categoryLabels[category]?.zh || category;
+    params.set('where[tags.value][equals]', label);
   }
 
   try {
-    const res = await fetch(`${cmsUrl}/api/articles?${params.toString()}`, {
-      headers: { Accept: 'application/json' },
-      next: { revalidate: 60 },
-      signal: AbortSignal.timeout(10000),
-    });
+    const res = await fetchCmsEndpoint(`/api/articles?${params.toString()}`);
 
     if (!res.ok) {
-      console.warn(`[blog] 拉取文章列表失败 (${cmsUrl})，HTTP ${res.status}`);
+      const errText = await res.text().catch(() => '');
+      console.warn(`[blog] 拉取文章列表失败 (${cmsUrl})，HTTP ${res.status}: ${errText.slice(0, 300)}`);
       return emptyResponse;
     }
 
@@ -192,11 +237,7 @@ export async function getPostBySlug(
       'where[slug][equals]': slug,
     });
 
-    const res = await fetch(`${cmsUrl}/api/articles?${params.toString()}`, {
-      headers: { Accept: 'application/json' },
-      next: { revalidate: 60 },
-      signal: AbortSignal.timeout(10000),
-    });
+    const res = await fetchCmsEndpoint(`/api/articles?${params.toString()}`);
 
     if (!res.ok) {
       console.warn(`[blog] 根据 slug 获取文章失败 (${slug}, ${cmsUrl})，HTTP ${res.status}`);
@@ -211,13 +252,6 @@ export async function getPostBySlug(
     return null;
   }
 }
-
-const categoryLabels: Record<string, { zh: string; en: string }> = {
-  update: { zh: '产品更新', en: 'Updates' },
-  tutorial: { zh: '教程', en: 'Tutorials' },
-  story: { zh: '创作者故事', en: 'Creator Stories' },
-  insight: { zh: '行业观察', en: 'Insights' },
-};
 
 export function getCategoryLabel(category: string, locale = 'zh'): string {
   return categoryLabels[category]?.[locale as 'zh' | 'en'] || category;

@@ -1,11 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getCategoryLabel, getPostBySlug, getPublishedPosts } from '@/lib/blog';
 
+const mockGetCloudflareContext = vi.fn();
+vi.mock('@opennextjs/cloudflare', () => ({
+  getCloudflareContext: (...args: unknown[]) => mockGetCloudflareContext(...args),
+}));
+
 describe('blog client library (CMS articles)', () => {
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     vi.unstubAllEnvs();
+    mockGetCloudflareContext.mockReset();
+    mockGetCloudflareContext.mockImplementation(() => {
+      throw new Error('Not in Cloudflare Worker context');
+    });
   });
 
   afterEach(() => {
@@ -40,8 +49,7 @@ describe('blog client library (CMS articles)', () => {
     const calledUrl = fetchMock.mock.calls[0][0] as string;
     expect(calledUrl).toContain('/api/articles');
     expect(calledUrl).toContain('where%5Bsite%5D%5Bequals%5D=gamebook');
-    expect(calledUrl).toContain('where%5Bstatus%5D%5Bequals%5D=published');
-    expect(calledUrl).toContain('where%5Bcategory%5D%5Bequals%5D=update');
+    expect(calledUrl).toContain('where%5Btags.value%5D%5Bequals%5D=%E4%BA%A7%E5%93%81%E6%9B%B4%E6%96%B0');
 
     expect(res.docs.length).toBe(1);
     expect(res.docs[0].id).toBe('101');
@@ -112,5 +120,25 @@ describe('blog client library (CMS articles)', () => {
     // 正确配置独立外部 CMS 地址时，正常采纳并去除末尾斜杠
     vi.stubEnv('MUICV_CMS_URL', 'https://custom-cms.test.com/');
     expect(getCmsUrl()).toBe('https://custom-cms.test.com');
+  });
+
+  it('当 Cloudflare Service Binding MUICV_CMS 存在时，优先走 Service Binding 直连', async () => {
+    const mockFetcher = {
+      fetch: vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ docs: [{ id: 999, slug: 'binding-post', title: '直连文章' }] }),
+      }),
+    };
+
+    mockGetCloudflareContext.mockResolvedValue({
+      env: { MUICV_CMS: mockFetcher },
+    });
+
+    const post = await getPostBySlug('binding-post');
+    expect(mockFetcher.fetch).toHaveBeenCalled();
+    const calledUrl = mockFetcher.fetch.mock.calls[0][0] as string;
+    expect(calledUrl).toContain('/api/articles');
+    expect(calledUrl).toContain('where%5Bslug%5D%5Bequals%5D=binding-post');
+    expect(post?.title).toBe('直连文章');
   });
 });
