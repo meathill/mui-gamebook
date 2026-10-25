@@ -126,7 +126,7 @@ describe('SceneNodes', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('移动端（hasImage 且未读完全部内容）时 choice 隐藏，桌面端（无图）始终显示', () => {
+  it('带图未读完时 choice 仅按 CSS 隐藏（移动端），桌面端可见；读完或无图时不隐藏', () => {
     const { container, rerender } = render(
       <SceneNodes
         {...baseProps({
@@ -136,7 +136,21 @@ describe('SceneNodes', () => {
         })}
       />,
     );
-    expect(container).toBeEmptyDOMElement();
+    const gated = container.querySelector('button');
+    expect(gated).toBeInTheDocument();
+    expect(gated).toHaveClass('hidden');
+    expect(gated).toHaveClass('sm:flex');
+
+    rerender(
+      <SceneNodes
+        {...baseProps({
+          nodes: [{ type: 'choice', text: '继续', nextSceneId: 'scene2' }],
+          hasImage: true,
+          hasReadAll: true,
+        })}
+      />,
+    );
+    expect(screen.getByText('继续').closest('button')).not.toHaveClass('hidden');
 
     rerender(
       <SceneNodes
@@ -147,7 +161,7 @@ describe('SceneNodes', () => {
         })}
       />,
     );
-    expect(screen.getByText('继续')).toBeInTheDocument();
+    expect(screen.getByText('继续').closest('button')).not.toHaveClass('hidden');
   });
 
   it('点击 choice 按钮调用 onChoice，携带 nextSceneId/set/index', () => {

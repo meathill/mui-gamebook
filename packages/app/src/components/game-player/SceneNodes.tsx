@@ -118,15 +118,12 @@ export default function SceneNodes({
             if (!evaluateCondition(node.condition, runtimeState)) {
               return null;
             }
-            // 移动端：阅读完才显示；桌面端：始终显示
-            if (!hasReadAll && hasImage) {
-              return null;
-            }
             const hasChoiceAudio = 'audio_url' in node && !!node.audio_url;
+            const gatedByReadAll = !hasReadAll && hasImage;
             return (
               <button
                 key={index}
-                className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md flex items-center gap-3 ${hasImage ? 'bg-white/90 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100'} hover:border-orange-400 hover:bg-orange-50`}
+                className={`w-full text-left px-4 py-2 sm:py-4 border-2 rounded-xl transition-all group shadow-sm hover:shadow-md ${gatedByReadAll ? 'hidden sm:flex' : 'flex'} items-center gap-3 ${hasImage ? 'bg-white/90 backdrop-blur-sm border-white/50 hover:bg-white hover:border-orange-400 sm:bg-transparent sm:backdrop-blur-none sm:border-amber-100' : 'border-amber-100'} hover:border-orange-400 hover:bg-orange-50`}
                 onClick={() => onChoice(node.nextSceneId, node.set, index)}>
                 {hasChoiceAudio && (
                   <button

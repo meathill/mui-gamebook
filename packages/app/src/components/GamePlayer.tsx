@@ -192,7 +192,7 @@ export default function GamePlayer({
     if (el.scrollHeight <= el.clientHeight + 10) {
       setHasReadAll(true);
     }
-  }, [currentSceneId, hasReadAll, currentImageUrl]);
+  }, [currentSceneId, hasReadAll, currentImageUrl, isPlaying]);
 
   // 移动端自动滚动文本
   useEffect(() => {
@@ -228,7 +228,7 @@ export default function GamePlayer({
       clearTimeout(timeout);
       if (autoScrollRef.current) cancelAnimationFrame(autoScrollRef.current);
     };
-  }, [autoScrolling, hasReadAll, currentImageUrl, currentSceneId]);
+  }, [autoScrolling, hasReadAll, currentImageUrl, currentSceneId, isPlaying]);
 
   // 用户手动滚动时停止自动滚动
   function handleUserInteraction() {
