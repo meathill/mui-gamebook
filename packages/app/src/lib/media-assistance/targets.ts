@@ -1,3 +1,4 @@
+import { isPlaceholderImage } from '../../../image-loader';
 import type { Game, Scene, SceneNode } from '@roudanio/parser';
 import { canonicalJson, sha256 } from './hash';
 import { AssistanceError, type GenerationInput, type JsonValue, type MediaTarget } from './types';
@@ -90,7 +91,7 @@ export async function resolveTarget(game: Game, target: MediaTarget): Promise<Re
   let setUrl: (url: string) => void;
   let normalized = target;
   if (target.kind === 'cover') {
-    url = game.cover_image;
+    url = isPlaceholderImage(game.cover_image) ? undefined : game.cover_image;
     source = {
       prompt: game.cover_prompt ?? '',
       aspectRatio: game.cover_aspect_ratio ?? '',

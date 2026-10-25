@@ -11,6 +11,13 @@ export const SELF_RESIZING_HOSTS = ['i.muicv.com'];
 /** 本地占位图，替代失效外链 */
 export const PLACEHOLDER_COVER = '/images/placeholder-cover-400x600.png';
 
+/** 本地占位图前缀：以此开头的封面视为"没有封面" */
+export const PLACEHOLDER_PREFIX = '/images/placeholder-';
+
+export function isPlaceholderImage(url: string | null | undefined): boolean {
+  return !!url && url.trim().startsWith(PLACEHOLDER_PREFIX);
+}
+
 function isDevelopmentRuntime() {
   return process.env.NODE_ENV !== 'production';
 }
