@@ -10,6 +10,8 @@ export interface GameSettings {
   textSpeed: number;
   /** BGM 音量 0-100 */
   bgmVolume: number;
+  /** 背景音乐开关，默认开 */
+  bgmEnabled: boolean;
   /** 音效音量 0-100 */
   sfxVolume: number;
   /** 语音音量 0-100 */
@@ -19,6 +21,7 @@ export interface GameSettings {
 const DEFAULT_SETTINGS: GameSettings = {
   textSpeed: 40,
   bgmVolume: 80,
+  bgmEnabled: true,
   sfxVolume: 80,
   voiceVolume: 100,
 };

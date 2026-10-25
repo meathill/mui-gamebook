@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { GameSettings } from '@mui-gamebook/site-common/game-player';
 import SettingsScreen from './SettingsScreen';
 
-const settings: GameSettings = { textSpeed: 40, bgmVolume: 80, sfxVolume: 60, voiceVolume: 100 };
+const settings: GameSettings = { textSpeed: 40, bgmVolume: 80, bgmEnabled: true, sfxVolume: 60, voiceVolume: 100 };
 
 describe('SettingsScreen', () => {
   it('渲染当前设置值', () => {

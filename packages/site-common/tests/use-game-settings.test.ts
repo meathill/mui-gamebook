@@ -27,6 +27,15 @@ describe('useGameSettings', () => {
     await waitFor(() => expect(result2.current.settings.bgmVolume).toBe(30));
   });
 
+  it('bgmEnabled 默认开启，关闭后持久化', async () => {
+    const { result, unmount } = renderHook(() => useGameSettings('settings-bgm'));
+    await waitFor(() => expect(result.current.settings.bgmEnabled).toBe(true));
+    act(() => result.current.updateSetting('bgmEnabled', false));
+    unmount();
+    const { result: result2 } = renderHook(() => useGameSettings('settings-bgm'));
+    await waitFor(() => expect(result2.current.settings.bgmEnabled).toBe(false));
+  });
+
   it('resetSettings 恢复默认设置', async () => {
     const { result } = renderHook(() => useGameSettings('settings-c'));
     await waitFor(() => expect(result.current.settings).toEqual(DEFAULT_SETTINGS));

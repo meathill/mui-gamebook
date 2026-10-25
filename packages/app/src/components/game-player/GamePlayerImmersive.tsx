@@ -28,6 +28,8 @@ import CommentDrawer from './CommentDrawer';
 import FloatingVariablePanel from './FloatingVariablePanel';
 import { useImmersiveMode } from './hooks/useImmersiveMode';
 import { usePreload } from './usePreload';
+import { useSceneBgm } from './hooks/useSceneBgm';
+import { gameHasBgm } from './bgm-controller';
 import { type GamePanel, useGameHashRoute } from './hooks/useGameHashRoute';
 
 const POSITION_STORAGE_KEY = 'immersive_text_pos';
@@ -98,6 +100,10 @@ export default function GamePlayerImmersive({
 
   // 预加载选项指向场景的变换后图片（与实际显示同 URL，暖 CF 缓存）
   usePreload(game, currentSceneId);
+
+  // 背景音乐：场景内循环，换场景淡出
+  const { bgmEnabled, toggleBgm } = useSceneBgm({ slug, currentScene, isPlaying });
+  const hasBgm = useMemo(() => gameHasBgm(game.scenes), [game.scenes]);
 
   // 加载保存的阅读器位置偏好
   useEffect(() => {
@@ -271,6 +277,7 @@ export default function GamePlayerImmersive({
         onOpenComments={() => route.openPanel('comments')}
         onBackToTitle={() => route.goToView('intro')}
         onRestart={() => resetToTitle()}
+        bgm={hasBgm ? { enabled: bgmEnabled, onToggle: toggleBgm } : undefined}
       />
 
       {route.panel === 'comments' && (

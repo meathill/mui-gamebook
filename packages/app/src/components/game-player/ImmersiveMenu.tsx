@@ -6,6 +6,7 @@ import type { TextBoxPosition } from '@roudanio/parser/src/types';
 import { ArrowCounterClockwiseIcon, CaretDownIcon, ChatIcon, HouseIcon } from '@phosphor-icons/react';
 import { Button } from '@/components/ui/button';
 import ShareButton from '@/components/ShareButton';
+import BgmToggle from './BgmToggle';
 
 const POSITIONS: TextBoxPosition[] = ['bottom', 'center', 'top'];
 const POSITION_LABEL: Record<TextBoxPosition, string> = {
@@ -26,6 +27,8 @@ interface ImmersiveMenuProps {
   onBackToTitle: () => void;
   /** 清档重来，带确认 */
   onRestart: () => void;
+  /** 作品有背景音乐时传入，显示音乐开关 */
+  bgm?: { enabled: boolean; onToggle: () => void };
 }
 
 /** 沉浸式播放器左上角的面包屑 + 下拉菜单 */
@@ -39,6 +42,7 @@ export default function ImmersiveMenu({
   onOpenComments,
   onBackToTitle,
   onRestart,
+  bgm,
 }: ImmersiveMenuProps) {
   const t = useTranslations('game');
 
@@ -64,6 +68,13 @@ export default function ImmersiveMenu({
             className={`transition-transform ${open ? 'rotate-180' : ''}`}
           />
         </button>
+        {bgm && (
+          <BgmToggle
+            variant="immersive"
+            enabled={bgm.enabled}
+            onToggle={bgm.onToggle}
+          />
+        )}
       </div>
       {open && (
         <div className="absolute left-0 mt-2 w-64 bg-black/75 backdrop-blur-md rounded-xl ring-1 ring-white/10 p-3 shadow-2xl text-sm">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import type { PlayableGame } from '@roudanio/parser/src/types';
@@ -26,6 +26,9 @@ import {
 } from '@/components/game-player';
 import { type GamePanel, useGameHashRoute } from '@/components/game-player/hooks/useGameHashRoute';
 import { useSceneAudiobook } from '@/components/game-player/hooks/useSceneAudiobook';
+import { useSceneBgm } from '@/components/game-player/hooks/useSceneBgm';
+import BgmToggle from '@/components/game-player/BgmToggle';
+import { gameHasBgm } from '@/components/game-player/bgm-controller';
 import { useGameAnalytics } from '@/hooks/useGameAnalytics';
 
 // classic 播放器没有叠加面板，注册空表让 #settings 之类归一成 intro，不会莫名把人塞进游戏
@@ -94,6 +97,10 @@ export default function GamePlayer({
 
   // 预加载下一个可能场景的素材
   usePreload(game, currentSceneId);
+
+  // 背景音乐：场景内循环，换场景淡出
+  const { bgmEnabled, toggleBgm } = useSceneBgm({ slug, currentScene, isPlaying });
+  const hasBgm = useMemo(() => gameHasBgm(game.scenes), [game.scenes]);
 
   // 打开游戏页面时上报（与"点击开始"是两个不同事件，页面一加载就算打开）
   useEffect(() => {
@@ -285,11 +292,17 @@ export default function GamePlayer({
         {/* Header */}
         <div className="bg-white border-b p-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2 sticky top-0 z-10 bg-opacity-90 backdrop-blur-sm">
           <h1 className="text-lg font-bold truncate text-gray-800">{game.title}</h1>
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center gap-2">
             <AudioControls
               audioPlayer={audioPlayer}
               hasAudio={hasAudioThisScene}
             />
+            {hasBgm && (
+              <BgmToggle
+                enabled={bgmEnabled}
+                onToggle={toggleBgm}
+              />
+            )}
           </div>
           <div className="flex gap-2 text-sm items-center justify-end">
             <ShareButton
