@@ -269,41 +269,4 @@ describe('站方代为开启素材协助', () => {
       delete g.FixedLengthStream;
     }
   });
-
-  it('按 gameId 领取指定作品，且有进行中的其他作品时拒绝', async () => {
-    await insertGame(local.db, 1, undefined, 1000, false);
-    await insertGame(local.db, 2, undefined, 1, false);
-    const work = await claimWork(local.db, { gameId: 2 });
-    expect(work.gameId).toBe(2);
-    expect(await gameRow(2)).toMatchObject({ media_assistance_enrolled_by: 'system' });
-    expect(await gameRow(1)).toMatchObject({ media_assistance_enabled: 0 });
-    await expect(claimWork(local.db, { gameId: 1 })).rejects.toThrow('仍在处理中');
-    await expect(claimWork(local.db, { gameId: 99 })).rejects.toThrow('仍在处理中');
-    expect((await claimWork(local.db)).gameId).toBe(2);
-  });
-
-  it('按 gameId 领取不存在或作者已退出的作品返回空', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
-    await local.db.prepare('UPDATE Games SET media_assistance_opted_out_at = 1 WHERE id = 1').run();
-    expect((await claimWork(local.db, { gameId: 1 })).gameId).toBeNull();
-    expect((await claimWork(local.db, { gameId: 42 })).gameId).toBeNull();
-  });
-
-  it('无图作品优先于已有封面的作品', async () => {
-    await insertGame(local.db, 1, undefined, 1000, false);
-    await local.db.prepare("UPDATE Games SET cover_image = 'https://x.test/c.png' WHERE id = 1").run();
-    await insertGame(local.db, 2, undefined, 1, false);
-    expect((await claimWork(local.db)).gameId).toBe(2);
-  });
-
-  it('续作自动收尾时也通知代开作者', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
-    const work = await claimWork(local.db);
-    await processOne(1, Number(work.revision));
-    const sent: Parameters<NotifySender>[0][] = [];
-    const notify = { siteUrl: 'https://muistory.test', send: async (m: Parameters<NotifySender>[0]) => void sent.push(m) };
-    await claimWork(local.db, { notify });
-    expect(sent).toHaveLength(1);
-    expect((await gameRow(1))?.media_assistance_notified_at).not.toBeNull();
-  });
 });

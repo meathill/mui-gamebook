@@ -47,7 +47,11 @@ export async function uploadAssistanceAsset(
   const key = `media-assistance/${gameId}/${inputHash}/${fileHash}.${extension}`;
   let object = await bucket.head(key);
   if (!object) {
-    object = await bucket.put(key, request.body, {
+    // Next/OpenNext 转发后的 Request.body 不再带已知长度，R2 put 会拒绝未知长度的流；
+    // 用 FixedLengthStream 按 Content-Length 包一层（长度不符时运行时会报错）。
+    const body =
+      typeof FixedLengthStream === 'function' ? request.body.pipeThrough(new FixedLengthStream(length)) : request.body;
+    object = await bucket.put(key, body, {
       sha256: fileHash,
       onlyIf: { etagDoesNotMatch: '*' },
       httpMetadata: { contentType, cacheControl: 'public, max-age=31536000, immutable' },
