@@ -140,7 +140,7 @@
 **Radix UI 引入**
 - 时机：编辑器功能复杂化后，需要更可靠的无障碍组件
 - 使用 Radix Themes 作为基础 UI 库
-- 图标最初统一使用 lucide-react，2026-06-28 起改为统一使用 @phosphor-icons/react（packages/app 与 sites/55 已全量迁移，全仓库不再有 lucide-react 依赖）
+- 图标最初统一使用 lucide-react，2026-06-28 起改为统一使用 @phosphor-icons/react（packages/app 已全量迁移，全仓库不再有 lucide-react 依赖）
 
 **Radix Themes 移除（2026-07-17，issue #5）**
 - 全站实际只用到 Theme/Button/IconButton/DropdownMenu 四种组件，却为此全量加载 812KB（未压缩）styles.css，是 PSI「unused CSS 71KiB」与首页渲染阻塞的主因
@@ -845,8 +845,7 @@ isValidVoiceId(voiceId: string, provider): boolean
   - Parser 语法兼容：`cover_image` 支持 `cover` 作为别名，兼容旧剧本。
 - **Ahrefs Site Audit 8 个技术错误修复**：
   - `/open` 补齐 `generateMetadata` 与 canonical `/open`，并在 `sitemap.ts` 静态清单中补齐。
-  - `sites/55` 首页与播放页补齐 canonical。
-  - 补全/优化全站图片 alt 属性（`GamePlayer` 场景插画、`ImmersiveBackground` 场景图、子站点封面等）。
+  - 补全/优化全站图片 alt 属性（`GamePlayer` 场景插画、`ImmersiveBackground` 场景图等）。
 - **全模态 AI 创作套件与可视化信息图（首页升级）**：
   - 首页 Hero 呈现 Markdown 编辑器 + 随时恭候的 AI Chatbot 灵感副驾实时协同交互。
   - 新增 `AiCreationInfographic` 可视化矩阵，全面展示 AI 灵感副驾、AI 场景生图、AI 动态过场视频、AI 情绪配乐与音效、AI 语音合成 (TTS) 与专属声音克隆。

@@ -7,7 +7,6 @@
 | 单元 | 目录 | Worker 名称 | 说明 |
 |---|---|---|---|
 | 主站（创作平台/CMS） | `packages/app` | `mui-gamebook` | MuiStory 品牌，创作者写作、AI 生成、管理后台，也是游戏播放的默认站点 |
-| 55 站点 | `sites/55` | `muistory-55` | 视觉小说风格的独立站点 |
 | 定时任务 | `packages/cronjob` | `mui-gamebook-cronjob` | 每 15 分钟触发一次，通过 Service Binding 调用主站 |
 
 ## 部署命令

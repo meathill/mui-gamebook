@@ -79,7 +79,7 @@ remark-stringify 会转义文本节点中的词内下划线：`{{ if ron_friends
 
 - 分角色有声书只能靠 LLM 阅读理解猜说话人（`packages/core/lib/audiobook/segmentation.ts`），为处理"角色假扮身份"还维护 800 字滚动上下文（`asset-generator/.../manifest-generator.ts`）——成本高、有错误率
 - 视觉小说的立绘、表情、姓名框、逐角色语音同步都无从标注
-- 项目已明确朝视觉小说演进（`site_template: 'visual-novel'`、sites/55 壳已就位），该短板会被持续放大
+- 项目已明确朝视觉小说演进（`site_template: 'visual-novel'`），该短板会被持续放大
 
 ### 2.7 表达力缺口逼出别扭模式
 
@@ -284,7 +284,7 @@ not  !
 - `parse-dialogue.ts`：行级扫描（全角标点、`break` 补 `\n`、注册角色门槛）
 - 新增 `serialize.ts` 替换 remark-stringify（`stringify.ts` 保留导出转发）
 - `transformers.ts`：保序 nodes 模型，dialogue 不落 assets，flowToGame 不再合并/重排
-- 渲染：`SceneNodes.tsx`、`GamePlayerImmersive.tsx`、sites/55 与 jianjian 播放组件
+- 渲染：`SceneNodes.tsx`、`GamePlayerImmersive.tsx` 与 jianjian 播放组件
 - `segmentation.ts`（core 与 asset-generator 两份副本）：dialogue 节点短路 LLM 分段
 
 验收：对话黄金样例；13 demo round-trip；**打开 HP4 → 保存 → diff 仅含已知规范化差异**；两站点手测。
@@ -318,4 +318,4 @@ DSL 单文件混装「生成产物缓存」（url 回填、`pending://` 占位�
 
 ### 视觉小说 UI 打磨
 
-对话行已提供结构化数据（speaker/emotion）；姓名框、立绘定位、表情差分渲染属站点模板设计任务（sites/55），与 DSL 无关。
+对话行已提供结构化数据（speaker/emotion）；姓名框、立绘定位、表情差分渲染属站点模板设计任务，与 DSL 无关。

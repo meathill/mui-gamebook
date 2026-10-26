@@ -4,9 +4,7 @@
 
 - [Vitest](https://vitest.dev/) 4.x，`jsdom` 环境
 - 配置统一放在仓库根目录：
-  - `vitest.config.ts` — 管理整个 monorepo 的测试，`include` 覆盖两种目录模式：
-    - `packages/*/tests/**/*.{test,spec}.{ts,tsx}`（packages 下用独立的 `tests/` 目录）
-    - `sites/*/src/**/*.{test,spec}.{ts,tsx}`（sites 下测试与源文件同目录内联）
+  - `vitest.config.ts` — 管理整个 monorepo 的测试，`include` 覆盖 `packages/*/tests/**/*.{test,spec}.{ts,tsx}`
   - `vitest.setup.ts` — 全局 setup，mock `localStorage`、引入 `@testing-library/jest-dom`
 - `packages/app` 额外有自己的 `vitest.config.ts`（需要 `@` → `src` 的别名和 jsdom 插件），可以在包内单独跑测试；其余包/站点都依赖根配置
 ## 运行测试
@@ -44,7 +42,6 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 
 - 测试文件与源码文件同名，加 `.test.ts` / `.test.tsx` 后缀
 - `packages/*` 下测试放在包内的 `tests/` 目录，实际约定并不统一：`tests/lib/**` 镜像 `src/lib/**`（或 `lib/**`）的子目录结构（如 `tests/lib/editor/extensions/`）；但 `tests/components/**`、`tests/hooks/**`、`tests/api/**` 是**打平存放**——不管源文件在 `src/components/` 下哪个子目录，测试文件一律直接放这三个目录下一层（例：`src/components/editor/SceneMetadataBlock.tsx` 的测试是 `tests/components/SceneMetadataBlock.test.tsx`，没有 `editor/` 子目录）。写新测试前先看这三个目录下现有文件的实际摆放方式，不要凭直觉镜像 `src/` 结构
-- `sites/*` 下测试与源文件同目录内联——因为根 `vitest.config.ts` 的 `@` 别名只指向 `packages/app/src`，`sites/*` 下的文件如果用 `@/...` 会解析失败；内联测试改用相对路径 import 可以规避这个问题
 - Hook 测试用 `@testing-library/react` 的 `renderHook`/`act`；组件测试用 `render`/`screen`/`fireEvent`
 - 涉及 React state 的 hook 测试要注意：传给 hook 的引用类型参数（比如 `game` 对象）必须在 `renderHook` 回调之外构造成稳定引用，如果每次渲染都重新构造，可能因为 effect 依赖数组识别为"变化"而导致无限渲染循环
 - jsdom 没有实现的浏览器 API 需要手动 mock，仓库里已有可参考的例子：
@@ -63,7 +60,6 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 - `packages/app/src/app/api/**/route.ts` 绝大部分 route（AI 生成计费闭环、Story Protocol 注册、其余 CRUD/代理类 route）
 - 编辑器核心业务逻辑 `packages/app/src/lib/editor/handlers/`，以及编辑器 UI 组件（`RichEditor`/`VisualEditor`/`Inspector`/`ChatPanel` 等）
 - `packages/app/src/components/admin/`、`game-player/`，`packages/cronjob`
-- `sites/55` 的组件层和数据/逻辑层
 
 2026-09 新增：Stripe 计费闭环（`tests/api/stripe-billing.test.ts`）、游戏评分与评价（`tests/lib/game-ratings.test.ts`/`tests/api/cms-game-ratings.test.ts`）、MCP 端点与鉴权（`tests/api/mcp.test.ts`/`tests/lib/mcp-auth.test.ts`）、后台列表排序筛选（`list-query` 等）。
 

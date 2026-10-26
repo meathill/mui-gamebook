@@ -3,7 +3,6 @@ TODO
 
 - **DSL v2 可选跟进**（Phase 0-3 与 D1 清洗均已完成，见 `docs/DSL_V2_DESIGN.md` 与 WIP.md 归档）：
   - （可选）dream-of-modern-city 的 MBTI 分流场景改写为块级重定向，作为 `->` 语法的官方示范
-  - 视觉小说姓名框/立绘 UI 打磨（sites/55，对话行结构化数据已就位）
   - 素材产物 sidecar 化与 i18n：方向设计见 `docs/DSL_V2_DESIGN.md` §8，未排期
 - 选项倒计时（基于 DSL v2 的未知子句透传机制实现——`(timer: 10)` 已能原样透传，只需运行时消费）
 - 许愿墙

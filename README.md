@@ -111,9 +111,6 @@ pnpm --filter=@mui-gamebook/app exec drizzle-kit generate
 ```bash
 # 主站（localhost:3020）
 pnpm --filter @mui-gamebook/app run dev
-
-# 55 独立站点（localhost:3022）
-pnpm --filter ./sites/55 run dev
 ```
 
 ### 4. 用户系统初始化
