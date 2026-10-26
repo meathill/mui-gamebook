@@ -111,10 +111,48 @@ function extractFirstImage(markdown?: string): string | undefined {
   return match?.[1];
 }
 
+function isSameImageUrl(url1: string, url2: string): boolean {
+  const u1 = url1.trim();
+  const u2 = url2.trim();
+  if (u1 === u2) return true;
+  try {
+    return decodeURI(u1) === decodeURI(u2);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 如果 Markdown 开头第一行就是封面图语法（如在正文首行插入的封面图供元数据提取），
+ * 由于文章详情页已在顶部独立渲染该封面 Hero 图，正文开头的重复封面图应当剥离，避免正文首图与顶部大图重复显示。
+ */
+export function stripLeadingCoverImage(markdown: string, coverUrl?: string): string {
+  if (!markdown || !coverUrl) return markdown;
+  const trimmed = markdown.trimStart();
+  // 匹配 Markdown 语法: ![alt](url)
+  const mdMatch = /^!\[.*?\]\((https?:\/\/[^\s)]+|\/[^\s)]+)\)\s*/.exec(trimmed);
+  if (mdMatch) {
+    const matchedUrl = mdMatch[1].trim();
+    if (isSameImageUrl(matchedUrl, coverUrl)) {
+      return trimmed.slice(mdMatch[0].length);
+    }
+  }
+  // 匹配 HTML 语法: <img src="url" ... />
+  const htmlMatch = /^<img[^>]+src=["']([^"']+)["'][^>]*>\s*/i.exec(trimmed);
+  if (htmlMatch) {
+    const matchedUrl = htmlMatch[1].trim();
+    if (isSameImageUrl(matchedUrl, coverUrl)) {
+      return trimmed.slice(htmlMatch[0].length);
+    }
+  }
+  return markdown;
+}
+
 function normalizeCmsArticle(doc: RawCmsArticle): BlogPost {
-  const content = doc.bodyMarkdown || doc.content || '';
+  const rawContent = doc.bodyMarkdown || doc.content || '';
   const coverUrl =
-    doc.coverUrl || (typeof content === 'string' ? extractFirstImage(content) : undefined) || '/hero-bg.png';
+    doc.coverUrl || (typeof rawContent === 'string' ? extractFirstImage(rawContent) : undefined) || '/hero-bg.png';
+  const content = typeof rawContent === 'string' ? stripLeadingCoverImage(rawContent, coverUrl) : rawContent;
   const tags = Array.isArray(doc.tags)
     ? doc.tags
         .map((t) => {

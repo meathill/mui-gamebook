@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { ArrowLeftIcon, CalendarIcon, TagIcon } from '@phosphor-icons/react/dist/ssr';
-import { getPostBySlug, getCategoryLabel } from '@/lib/blog';
+import { getPostBySlug, getCategoryLabel, stripLeadingCoverImage } from '@/lib/blog';
 import { formatLongDate, getPublicSiteUrl } from '@mui-gamebook/site-common/utils';
 import type { Metadata } from 'next';
 import JsonLd from '@/components/JsonLd';
@@ -72,22 +72,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-const markdownComponents = {
-  img: ({ src, alt, ...rest }: React.ComponentProps<'img'>) => {
-    if (!src || typeof src !== 'string') return null;
-    const optimizedSrc = buildOptimizedImageUrl(src, { width: 1280, quality: 75 });
-    return (
-      <img
-        {...rest}
-        src={optimizedSrc}
-        alt={alt || ''}
-        loading="lazy"
-        decoding="async"
-        className="rounded-lg border border-gray-100 shadow-sm my-6 max-w-full h-auto"
-      />
-    );
-  },
-};
+function getMarkdownComponents(coverUrl?: string) {
+  return {
+    img: ({ src, alt, ...rest }: React.ComponentProps<'img'>) => {
+      if (!src || typeof src !== 'string') return null;
+      // 避免正文中重复渲染与顶部封面大图一致的图片
+      if (coverUrl && (src.trim() === coverUrl.trim() || decodeURI(src.trim()) === decodeURI(coverUrl.trim()))) {
+        return null;
+      }
+      const optimizedSrc = buildOptimizedImageUrl(src, { width: 1280, quality: 75 });
+      return (
+        <img
+          {...rest}
+          src={optimizedSrc}
+          alt={alt || ''}
+          loading="lazy"
+          decoding="async"
+          className="rounded-lg border border-gray-100 shadow-sm my-6 max-w-full h-auto"
+        />
+      );
+    },
+  };
+}
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
@@ -174,7 +180,9 @@ export default async function BlogPostPage({ params }: Props) {
         <div className="prose prose-gray max-w-none">
           {post.content ? (
             typeof post.content === 'string' ? (
-              <ReactMarkdown components={markdownComponents}>{post.content}</ReactMarkdown>
+              <ReactMarkdown components={getMarkdownComponents(post.coverUrl)}>
+                {stripLeadingCoverImage(post.content, post.coverUrl)}
+              </ReactMarkdown>
             ) : (
               <RichTextContent content={post.content} />
             )

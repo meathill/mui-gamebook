@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getCategoryLabel, getPostBySlug, getPublishedPosts } from '@/lib/blog';
+import { getCategoryLabel, getPostBySlug, getPublishedPosts, stripLeadingCoverImage } from '@/lib/blog';
 
 const mockGetCloudflareContext = vi.fn();
 vi.mock('@opennextjs/cloudflare', () => ({
@@ -140,5 +140,50 @@ describe('blog client library (CMS articles)', () => {
     expect(calledUrl).toContain('/api/articles');
     expect(calledUrl).toContain('where%5Bslug%5D%5Bequals%5D=binding-post');
     expect(post?.title).toBe('直连文章');
+  });
+
+  it('stripLeadingCoverImage 仅剥离正文开头的重复封面图，保留非开头配图', () => {
+    const cover = 'https://i.muistory.com/cover.jpg';
+
+    // 1. 开头 Markdown 图片且与 coverUrl 一致 -> 剥离
+    const md = '![封面大图](https://i.muistory.com/cover.jpg)\n\n正文第一段';
+    expect(stripLeadingCoverImage(md, cover)).toBe('正文第一段');
+
+    // 2. 开头 HTML <img> 且与 coverUrl 一致 -> 剥离
+    const html = '<img src="https://i.muistory.com/cover.jpg" alt="封面" />\n\n正文内容';
+    expect(stripLeadingCoverImage(html, cover)).toBe('正文内容');
+
+    // 3. 正文中间的配图 -> 保留
+    const middle = '正文第一段\n\n![中间图](https://i.muistory.com/cover.jpg)\n\n正文第二段';
+    expect(stripLeadingCoverImage(middle, cover)).toBe(middle);
+
+    // 4. 开头图片但 URL 与 coverUrl 不一致 -> 保留
+    const different = '![其他图](https://i.muistory.com/other.jpg)\n\n正文内容';
+    expect(stripLeadingCoverImage(different, cover)).toBe(different);
+  });
+
+  it('getPostBySlug 提取正文首图作为 coverUrl，同时从 content 中剥离重复的首图', async () => {
+    const mockDoc = {
+      id: 214,
+      site: 'gamebook',
+      locale: 'zh-CN',
+      title: '双图测试',
+      slug: 'double-image-post',
+      summary: '测试摘要',
+      bodyMarkdown: '![首图封面](https://i.muistory.com/cover.jpg)\n\n正文开始叙述...',
+      author: '姆伊游戏书',
+      status: 'published',
+    };
+
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ docs: [mockDoc] }),
+    });
+
+    const post = await getPostBySlug('double-image-post');
+    expect(post).not.toBeNull();
+    expect(post?.coverUrl).toBe('https://i.muistory.com/cover.jpg');
+    // content 中已剥离重复的首图
+    expect(post?.content).toBe('正文开始叙述...');
   });
 });
