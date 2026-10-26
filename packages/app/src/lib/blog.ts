@@ -63,8 +63,11 @@ async function fetchCmsEndpoint(pathWithQuery: string): Promise<Response> {
     if (cmsFetcher && typeof cmsFetcher.fetch === 'function') {
       const res = await cmsFetcher.fetch(targetUrl, {
         headers: { Accept: 'application/json' },
+        cf: {
+          cacheControl: 'public, max-age=86400, stale-while-revalidate=3600',
+        },
         signal: AbortSignal.timeout(10000),
-      });
+      } as RequestInit);
       // 线上环境 Worker 间 Service Binding 正常返回 200
       if (res.ok) {
         return res;
