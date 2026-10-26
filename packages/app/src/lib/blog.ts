@@ -79,7 +79,7 @@ async function fetchCmsEndpoint(pathWithQuery: string): Promise<Response> {
   // 2. 降级走标准 HTTP/HTTPS fetch
   return fetch(targetUrl, {
     headers: { Accept: 'application/json' },
-    next: { revalidate: 60 },
+    next: { revalidate: 86400 },
     signal: AbortSignal.timeout(10000),
   });
 }

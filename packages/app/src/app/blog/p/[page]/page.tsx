@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { BlogCatalog, generateBlogMetadata } from '../../blog-catalog';
 
-export const revalidate = 60;
+export const revalidate = 86400;
 export const dynamicParams = true;
 
 export function generateStaticParams() {

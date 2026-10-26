@@ -1,6 +1,6 @@
 import { BlogCatalog, generateBlogMetadata } from './blog-catalog';
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 export function generateMetadata() {
   return generateBlogMetadata(undefined, 1);
