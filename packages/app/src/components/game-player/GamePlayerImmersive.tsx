@@ -322,9 +322,11 @@ export default function GamePlayerImmersive({
           position={textPosition}
           speed={game.typewriter_speed}
           showContinueHint={!isLastText || (choices.length > 0 && !choicesRevealed) || !!redirectTarget}
-          onAdvance={handleAdvance}>
+          onAdvance={handleAdvance}
+          hideTextLabel={t('hideText')}
+          showTextLabel={t('showText')}>
           {isLastText && choicesRevealed && choices.length > 0 && (
-            <div className="mt-5 space-y-2">
+            <div className="space-y-2">
               {choices.map(({ node, index }, choiceOrderIndex) => {
                 if (node.type !== 'choice') return null;
                 if (!evaluateCondition(node.condition, runtimeState)) return null;

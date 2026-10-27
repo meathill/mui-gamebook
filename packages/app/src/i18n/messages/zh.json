@@ -323,6 +323,8 @@
     "sceneNotFound": "场景未找到",
     "cannotFindScene": "找不到场景：{sceneId}",
     "backToTitle": "返回标题",
+    "hideText": "隐藏文字",
+    "showText": "显示文字",
     "restartConfirm": "确定要重新开始吗？游戏进度将会丢失。",
     "startGame": "开始游戏",
     "generating": "生成中...",

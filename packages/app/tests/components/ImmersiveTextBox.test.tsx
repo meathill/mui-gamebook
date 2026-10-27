@@ -25,6 +25,8 @@ function baseProps(overrides: Record<string, unknown> = {}) {
     position: 'bottom' as const,
     showContinueHint: true,
     onAdvance: vi.fn(),
+    hideTextLabel: '隐藏文字',
+    showTextLabel: '显示文字',
     ...overrides,
   };
 }
@@ -136,5 +138,75 @@ describe('ImmersiveTextBox', () => {
     );
 
     expect(screen.getByTestId('extra-child')).toBeInTheDocument();
+  });
+
+  it('光标与继续提示共用同一个固定高度的状态行', () => {
+    typewriterState.isComplete = false;
+    const { rerender } = render(<ImmersiveTextBox {...baseProps()} />);
+
+    const typingRow = screen.getByTestId('textbox-status');
+    expect(typingRow).toHaveClass('h-4');
+    expect(typingRow.querySelector('.animate-pulse')).toBeInTheDocument();
+
+    typewriterState.isComplete = true;
+    rerender(<ImmersiveTextBox {...baseProps()} />);
+
+    const completeRow = screen.getByTestId('textbox-status');
+    expect(completeRow).toHaveClass('h-4');
+    expect(completeRow).toHaveTextContent('点击任意处继续 ▼');
+  });
+
+  it('点击隐藏按钮只切换显隐，不触发 complete 或 onAdvance', () => {
+    typewriterState.isComplete = true;
+    const onAdvance = vi.fn();
+    render(<ImmersiveTextBox {...baseProps({ onAdvance })} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '隐藏文字' }));
+
+    expect(screen.getByTestId('textbox-card')).toHaveClass('opacity-0', 'pointer-events-none');
+    expect(screen.getByRole('button', { name: '显示文字' })).toBeInTheDocument();
+    expect(completeMock).not.toHaveBeenCalled();
+    expect(onAdvance).not.toHaveBeenCalled();
+  });
+
+  it('文字隐藏时点击全屏层只恢复文字，恢复后再点击才推进', () => {
+    typewriterState.isComplete = true;
+    const onAdvance = vi.fn();
+    const { container } = render(<ImmersiveTextBox {...baseProps({ onAdvance })} />);
+
+    fireEvent.click(screen.getByRole('button', { name: '隐藏文字' }));
+    fireEvent.click(container.firstChild as Element);
+
+    expect(screen.getByTestId('textbox-card')).not.toHaveClass('opacity-0');
+    expect(completeMock).not.toHaveBeenCalled();
+    expect(onAdvance).not.toHaveBeenCalled();
+
+    fireEvent.click(container.firstChild as Element);
+
+    expect(onAdvance).toHaveBeenCalledTimes(1);
+  });
+
+  it('焦点在按钮上时按键不会推进剧情', () => {
+    typewriterState.isComplete = true;
+    const onAdvance = vi.fn();
+    render(<ImmersiveTextBox {...baseProps({ onAdvance })} />);
+
+    fireEvent.keyDown(screen.getByRole('button', { name: '隐藏文字' }), { key: 'Enter' });
+
+    expect(completeMock).not.toHaveBeenCalled();
+    expect(onAdvance).not.toHaveBeenCalled();
+  });
+
+  it('选项与正文共用同一个滚动区', () => {
+    render(
+      <ImmersiveTextBox {...baseProps()}>
+        <button type="button">选项一</button>
+      </ImmersiveTextBox>,
+    );
+
+    const scroller = screen.getByTestId('textbox-scroll');
+    expect(scroller).toHaveClass('overflow-y-auto');
+    expect(scroller).toContainElement(screen.getByText('选项一'));
+    expect(screen.queryByTestId('textbox-choices')).not.toBeInTheDocument();
   });
 });

@@ -292,4 +292,32 @@ describe('GamePlayerImmersive Component', () => {
     expect(screen.getByText('The End')).toBeInTheDocument();
     expect(screen.getByText('Play Again')).toBeInTheDocument();
   });
+
+  it('隐藏文字按钮不会推进剧情，隐藏时点按只恢复文字', () => {
+    const { container } = renderWithProviders(
+      <GamePlayerImmersive
+        game={mockGame}
+        slug="immersive-hide-text"
+      />,
+    );
+    fireEvent.click(screen.getByText('Start Adventure'));
+
+    const box = container.querySelector('.cursor-pointer') as HTMLElement;
+
+    // 打字过程中点隐藏按钮：既不补完也不推进
+    fireEvent.click(screen.getByRole('button', { name: 'Hide text' }));
+    expect(screen.queryByText('You are at the start.')).not.toBeInTheDocument();
+
+    // 隐藏状态下点全屏层只恢复文字
+    fireEvent.click(box);
+    expect(screen.queryByText('You are at the start.')).not.toBeInTheDocument();
+
+    // 恢复后再点才补完
+    fireEvent.click(box);
+    expect(screen.getByText('You are at the start.')).toBeInTheDocument();
+
+    // 再点一次才揭示选项
+    fireEvent.click(box);
+    expect(screen.getByText('Buy Key (Cost 5)')).toBeInTheDocument();
+  });
 });

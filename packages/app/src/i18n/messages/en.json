@@ -323,6 +323,8 @@
     "sceneNotFound": "Scene Not Found",
     "cannotFindScene": "Cannot find scene: {sceneId}",
     "backToTitle": "Back to Title",
+    "hideText": "Hide text",
+    "showText": "Show text",
     "restartConfirm": "Are you sure you want to restart? Your progress will be lost.",
     "startGame": "Start Game",
     "generating": "Generating...",
