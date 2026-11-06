@@ -124,6 +124,19 @@ export default function Footer() {
               className="text-gray-500 hover:text-gray-900 text-sm transition-colors whitespace-nowrap">
               Featured on First Look
             </a>
+            <a
+              href="https://www.traffiklist.com/p/muistory"
+              target="_blank"
+              rel="noopener"
+              className="inline-flex shrink-0"
+              aria-label="Featured on Traffiklist">
+              <img
+                src="https://www.traffiklist.com/badge.svg"
+                alt="Featured on Traffiklist"
+                width={220}
+                height={56}
+              />
+            </a>
 
             {/* 语言切换 Dropdown */}
             <DropdownMenu>
