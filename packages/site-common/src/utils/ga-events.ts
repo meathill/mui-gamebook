@@ -7,6 +7,9 @@
  * - publish_story：发布故事（创作漏斗终点，新增公开落地页）
  * 另附 2 个 GA4 推荐事件用于登录前后归因（sign_up 建议同样标为关键事件）：
  * - sign_up / login
+ * 以及 2 个非关键的自定义互动事件（替代原站内自建统计）：
+ * - scene_view：到达一个场景
+ * - choice_click：点击一个选项
  *
  * 边界约定：
  * - 阅读类事件只在公开播放页触发（主站 /play/[slug]）。
@@ -24,6 +27,10 @@ export const GA_EVENT_PUBLISH_STORY = 'publish_story';
 export const GA_EVENT_SIGN_UP = 'sign_up';
 /** GA4 推荐事件：登录（不标关键事件，只用于归因串联） */
 export const GA_EVENT_LOGIN = 'login';
+/** 到达场景（非关键事件，替代站内 SceneAnalytics） */
+export const GA_EVENT_SCENE_VIEW = 'scene_view';
+/** 点击选项（非关键事件，替代站内 ChoiceAnalytics） */
+export const GA_EVENT_CHOICE_CLICK = 'choice_click';
 
 export type GaEventParams = Record<string, string | number | boolean | undefined>;
 
@@ -68,6 +75,29 @@ export function trackCompleteReading({ gameId, slug }: ReadingEventTarget): void
 /** 发布故事：草稿 → 已发布的状态跃迁（调用方负责只在跃迁时调一次） */
 export function trackPublishStory({ gameId, slug }: ReadingEventTarget): void {
   sendGaEvent(GA_EVENT_PUBLISH_STORY, { game_id: gameId, game_slug: slug });
+}
+
+export interface SceneViewTarget extends ReadingEventTarget {
+  sceneId: string;
+}
+
+export interface ChoiceClickTarget extends SceneViewTarget {
+  choiceIndex: number;
+}
+
+/** 到达场景（每次场景切换都上报，不去重） */
+export function trackSceneView({ gameId, slug, sceneId }: SceneViewTarget): void {
+  sendGaEvent(GA_EVENT_SCENE_VIEW, { game_id: gameId, game_slug: slug, scene_id: sceneId });
+}
+
+/** 点击选项（每次选择都上报） */
+export function trackChoiceClick({ gameId, slug, sceneId, choiceIndex }: ChoiceClickTarget): void {
+  sendGaEvent(GA_EVENT_CHOICE_CLICK, {
+    game_id: gameId,
+    game_slug: slug,
+    scene_id: sceneId,
+    choice_index: choiceIndex,
+  });
 }
 
 /** 注册成功（GA4 推荐事件，method 固定 email） */

@@ -1,6 +1,6 @@
 import { notifySystemEnrolledAuthor } from './notify';
-import { speechTargets } from './targets';
 import { loadAssistanceGame, publicGeneration, reconcileTargets, workCounts } from './store';
+import { speechTargets } from './targets';
 import { AssistanceError, type GenerationRow, type WorkRow } from './types';
 
 export type ClaimOptions = {
@@ -83,7 +83,7 @@ export async function claimWork(db: D1Database, options: ClaimOptions = {}): Pro
           AND t.status = 'satisfied' AND t.applied_url IS NULL)))
       AND (?1 IS NULL OR g.id = ?1)
       ORDER BY (g.media_assistance_enabled = 1 AND COALESCE(g.media_assistance_enrolled_by, '') <> 'system') DESC,
-        ((COALESCE(g.cover_image, '') = '' OR g.cover_image LIKE '/images/placeholder-%') AND c.content NOT LIKE '%url: http%') DESC, (SELECT COALESCE(SUM(open_count),0) FROM GameAnalytics WHERE game_id = g.id) DESC,
+        ((COALESCE(g.cover_image, '') = '' OR g.cover_image LIKE '/images/placeholder-%') AND c.content NOT LIKE '%url: http%') DESC,
         g.updated_at DESC, g.id DESC LIMIT 50 OFFSET ?2`)
         .bind(gameId ?? null, offset)
         .all<{ id: number; media_assistance_enabled: number }>()

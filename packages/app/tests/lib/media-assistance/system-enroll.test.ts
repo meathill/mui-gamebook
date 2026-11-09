@@ -1,22 +1,22 @@
 // @vitest-environment node
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+
 import { parse } from '@roudanio/parser';
-import { createRuntime, insertGame } from './runtime';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { applyAsset } from '@/lib/media-assistance/apply';
+import { saveEditorContent } from '@/lib/media-assistance/editor-save';
+import { claimItem } from '@/lib/media-assistance/generation';
 import { sha256 } from '@/lib/media-assistance/hash';
 import { savePlan } from '@/lib/media-assistance/plan';
-import { claimWork, finishWork, type NotifySender } from '@/lib/media-assistance/work';
-import { claimItem } from '@/lib/media-assistance/generation';
-import { applyAsset } from '@/lib/media-assistance/apply';
-import { listTargets, loadAssistanceGame } from '@/lib/media-assistance/store';
-import { uploadAssistanceAsset } from '@/lib/media-assistance/upload';
-import { saveEditorContent } from '@/lib/media-assistance/editor-save';
 import {
   createRevertToken,
+  REVERT_LINK_TTL_SECONDS,
   revertAssistance,
   verifyRevertToken,
-  REVERT_LINK_TTL_SECONDS,
 } from '@/lib/media-assistance/revert';
-import { story } from './runtime';
+import { listTargets, loadAssistanceGame } from '@/lib/media-assistance/store';
+import { uploadAssistanceAsset } from '@/lib/media-assistance/upload';
+import { claimWork, finishWork, type NotifySender } from '@/lib/media-assistance/work';
+import { createRuntime, insertGame, story } from './runtime';
 
 let local: Awaited<ReturnType<typeof createRuntime>>;
 beforeAll(async () => {
@@ -35,7 +35,6 @@ beforeEach(async () => {
       'MediaAssistanceWorks',
       'GameContent',
       'Games',
-      'GameAnalytics',
       'user',
     ].map((table) => local.db.prepare(`DELETE FROM ${table}`)),
   );
@@ -93,9 +92,9 @@ async function processTarget(gameId: number, target: Awaited<ReturnType<typeof l
 }
 
 describe('站方代为开启素材协助', () => {
-  it('主动开启的作品优先，其次按访问量领取未设置的作品并标记为站方开启', async () => {
-    await insertGame(local.db, 1, undefined, 1000, false);
-    await insertGame(local.db, 2, undefined, 1, true);
+  it('主动开启的作品优先，并优先领取未设置的作品并标记为站方开启', async () => {
+    await insertGame(local.db, 1, undefined, false);
+    await insertGame(local.db, 2, undefined, true);
     expect((await claimWork(local.db)).gameId).toBe(2);
     expect(await gameRow(1)).toMatchObject({
       media_assistance_enabled: 0,
@@ -104,7 +103,7 @@ describe('站方代为开启素材协助', () => {
   });
 
   it('无主动开启作品时代为开启，并发送一次通知邮件', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
+    await insertGame(local.db, 1, undefined, false);
     const work = await claimWork(local.db);
     expect(work.gameId).toBe(1);
     expect(await gameRow(1)).toMatchObject({
@@ -132,7 +131,7 @@ describe('站方代为开启素材协助', () => {
   });
 
   it('配置回复地址时邮件带 replyTo 并邀请作者回信', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
+    await insertGame(local.db, 1, undefined, false);
     const work = await claimWork(local.db);
     await processOne(1, Number(work.revision));
     const sent: Parameters<NotifySender>[0][] = [];
@@ -160,7 +159,7 @@ describe('站方代为开启素材协助', () => {
   });
 
   it('作者主动关闭后不再被代为开启，重新开启后记为作者开启', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
+    await insertGame(local.db, 1, undefined, false);
     await claimWork(local.db);
     const loaded = await loadAssistanceGame(local.db, 1);
     const parsed = parse(loaded.content);
@@ -197,7 +196,7 @@ describe('站方代为开启素材协助', () => {
   });
 
   it('代为开启会推进版本，旧编辑器快照保存冲突而不会误关开关', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
+    await insertGame(local.db, 1, undefined, false);
     const content = (await local.db
       .prepare('SELECT content FROM GameContent WHERE game_id = 1')
       .first<{ content: string }>())!.content;
@@ -228,7 +227,7 @@ describe('站方代为开启素材协助', () => {
   });
 
   it('通知邮件包含一键撤回链接', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
+    await insertGame(local.db, 1, undefined, false);
     const work = await claimWork(local.db);
     await processOne(1, Number(work.revision));
     const sent: Parameters<NotifySender>[0][] = [];
@@ -243,7 +242,7 @@ describe('站方代为开启素材协助', () => {
   });
 
   it('一键撤回：只清除仍为站方素材的位置，保留作者改动，关闭协助且幂等', async () => {
-    await insertGame(local.db, 1, story(2), 10, false);
+    await insertGame(local.db, 1, story(2), false);
     const work = await claimWork(local.db);
     await processOne(1, Number(work.revision), 2);
     // 作者把 scene_1 换成了自己的图
@@ -299,8 +298,8 @@ describe('站方代为开启素材协助', () => {
   });
 
   it('按 gameId 领取指定作品，且有进行中的其他作品时拒绝', async () => {
-    await insertGame(local.db, 1, undefined, 1000, false);
-    await insertGame(local.db, 2, undefined, 1, false);
+    await insertGame(local.db, 1, undefined, false);
+    await insertGame(local.db, 2, undefined, false);
     const work = await claimWork(local.db, { gameId: 2 });
     expect(work.gameId).toBe(2);
     expect(await gameRow(2)).toMatchObject({
@@ -313,21 +312,21 @@ describe('站方代为开启素材协助', () => {
   });
 
   it('按 gameId 领取不存在或作者已退出的作品返回空', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
+    await insertGame(local.db, 1, undefined, false);
     await local.db.prepare('UPDATE Games SET media_assistance_opted_out_at = 1 WHERE id = 1').run();
     expect((await claimWork(local.db, { gameId: 1 })).gameId).toBeNull();
     expect((await claimWork(local.db, { gameId: 42 })).gameId).toBeNull();
   });
 
   it('无图作品优先于已有封面的作品', async () => {
-    await insertGame(local.db, 1, undefined, 1000, false);
+    await insertGame(local.db, 1, undefined, false);
     await local.db.prepare("UPDATE Games SET cover_image = 'https://x.test/c.png' WHERE id = 1").run();
-    await insertGame(local.db, 2, undefined, 1, false);
+    await insertGame(local.db, 2, undefined, false);
     expect((await claimWork(local.db)).gameId).toBe(2);
   });
 
   it('续作自动收尾时也通知代开作者', async () => {
-    await insertGame(local.db, 1, undefined, 10, false);
+    await insertGame(local.db, 1, undefined, false);
     const work = await claimWork(local.db);
     await processOne(1, Number(work.revision));
     const sent: Parameters<NotifySender>[0][] = [];

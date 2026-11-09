@@ -1,17 +1,18 @@
 // @vitest-environment node
+
+import { parse, stringify } from '@roudanio/parser';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { stringify, parse } from '@roudanio/parser';
-import { createRuntime, insertGame, story } from './runtime';
-import { claimWork, finishWork } from '@/lib/media-assistance/work';
-import { savePlan } from '@/lib/media-assistance/plan';
-import { claimItem, updateItem } from '@/lib/media-assistance/generation';
+import { flowToGame, gameToFlow } from '@/lib/editor/transformers';
 import { applyAsset } from '@/lib/media-assistance/apply';
-import { listTargets, loadAssistanceGame, getGeneration } from '@/lib/media-assistance/store';
-import { uploadAssistanceAsset } from '@/lib/media-assistance/upload';
-import { sha256 } from '@/lib/media-assistance/hash';
 import { saveEditorContent } from '@/lib/media-assistance/editor-save';
-import { gameToFlow, flowToGame } from '@/lib/editor/transformers';
+import { claimItem, updateItem } from '@/lib/media-assistance/generation';
+import { sha256 } from '@/lib/media-assistance/hash';
+import { savePlan } from '@/lib/media-assistance/plan';
+import { getGeneration, listTargets, loadAssistanceGame } from '@/lib/media-assistance/store';
 import type { GenerationInput } from '@/lib/media-assistance/types';
+import { uploadAssistanceAsset } from '@/lib/media-assistance/upload';
+import { claimWork, finishWork } from '@/lib/media-assistance/work';
+import { createRuntime, insertGame, story } from './runtime';
 
 let local: Awaited<ReturnType<typeof createRuntime>>;
 beforeAll(async () => {
@@ -22,14 +23,9 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   await local.db.batch(
-    [
-      'MediaAssistanceTargets',
-      'MediaAssistanceGenerations',
-      'MediaAssistanceWorks',
-      'GameContent',
-      'Games',
-      'GameAnalytics',
-    ].map((table) => local.db.prepare(`DELETE FROM ${table}`)),
+    ['MediaAssistanceTargets', 'MediaAssistanceGenerations', 'MediaAssistanceWorks', 'GameContent', 'Games'].map(
+      (table) => local.db.prepare(`DELETE FROM ${table}`),
+    ),
   );
   const objects = (await local.bucket.list()).objects;
   if (objects.length) await local.bucket.delete(objects.map((object) => object.key));
@@ -256,7 +252,7 @@ describe('素材恢复与增量边界', () => {
   });
 
   it('并发领取作品保持唯一当前作品；下架、封禁及未同意作品不入队', async () => {
-    for (let id = 1; id <= 4; id++) await insertGame(local.db, id, story(), id * 100);
+    for (let id = 1; id <= 4; id++) await insertGame(local.db, id, story());
     await local.db.batch([
       local.db.prepare('UPDATE Games SET published=0 WHERE id=4'),
       local.db.prepare('UPDATE Games SET shadow_banned=1 WHERE id=3'),

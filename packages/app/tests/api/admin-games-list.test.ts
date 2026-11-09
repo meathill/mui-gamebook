@@ -112,7 +112,7 @@ describe('GET /api/admin/games', () => {
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue({ user: { email: 'root@example.com' } });
     const chain = mockDbWithRows([], 0);
 
-    const res = await GET(new Request('http://localhost/api/admin/games?sort=openCount&order=asc&status=banned'));
+    const res = await GET(new Request('http://localhost/api/admin/games?sort=createdAt&order=asc&status=banned'));
     expect(res.status).toBe(200);
     expect(chain.orderBy).toHaveBeenCalled();
     expect(chain.where).toHaveBeenCalled();

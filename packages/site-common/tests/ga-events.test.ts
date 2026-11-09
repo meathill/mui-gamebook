@@ -1,14 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   completeReadingKey,
+  sendGaEvent,
   startReadingKey,
+  trackChoiceClick,
   trackCompleteReading,
   trackLogin,
   trackOnce,
   trackPublishStory,
+  trackSceneView,
   trackSignUp,
   trackStartReading,
-  sendGaEvent,
 } from '../src/utils/ga-events';
 
 describe('sendGaEvent', () => {
@@ -62,6 +64,29 @@ describe('关键事件 helper', () => {
     (window as unknown as { gtag?: unknown }).gtag = gtag;
     trackPublishStory({ gameId: 'abc-123', slug: 'my-story' });
     expect(gtag).toHaveBeenCalledWith('event', 'publish_story', { game_id: 'abc-123', game_slug: 'my-story' });
+  });
+
+  it('trackSceneView 上报 scene_view + 场景标识', () => {
+    const gtag = vi.fn();
+    (window as unknown as { gtag?: unknown }).gtag = gtag;
+    trackSceneView({ gameId: 36, slug: 'dream', sceneId: 'forest' });
+    expect(gtag).toHaveBeenCalledWith('event', 'scene_view', {
+      game_id: 36,
+      game_slug: 'dream',
+      scene_id: 'forest',
+    });
+  });
+
+  it('trackChoiceClick 上报 choice_click + 选项序号', () => {
+    const gtag = vi.fn();
+    (window as unknown as { gtag?: unknown }).gtag = gtag;
+    trackChoiceClick({ gameId: 36, slug: 'dream', sceneId: 'forest', choiceIndex: 2 });
+    expect(gtag).toHaveBeenCalledWith('event', 'choice_click', {
+      game_id: 36,
+      game_slug: 'dream',
+      scene_id: 'forest',
+      choice_index: 2,
+    });
   });
 
   it('trackSignUp/trackLogin 用 GA4 推荐事件名 + method', () => {

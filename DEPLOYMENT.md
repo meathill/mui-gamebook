@@ -23,7 +23,7 @@ pnpm run upload     # 构建并上传为一个新版本，不自动切流量（C
 "deploy": "cp ../../docs/DSL_SPEC.md ./public && opennextjs-cloudflare build && opennextjs-cloudflare deploy"
 ```
 
-`packages/cronjob` 已移除。统计数据（打开/完成/场景/选项/来源/设备）在事件发生时直接增量写入 D1，不再需要独立定时任务 Worker。
+统计数据已全部迁移到 Google Analytics（GA4）：应用内不再自建统计表和采集接口，也不需要独立定时任务 Worker。
 
 ## 环境变量与 Secrets
 
@@ -42,9 +42,11 @@ pnpm run db:migrate:local    # 本地 D1
 pnpm run db:migrate:remote   # 远程 D1，谨慎执行
 ```
 
+`0015_drop_self_analytics.sql` 会删除已下线的自建统计表。执行顺序：先部署不再写入统计的代码，再跑这个迁移，避免旧版本在删表后继续写入。
+
 ## Cloudflare 绑定类型
 
-部署前如果改过 `wrangler.jsonc` 的绑定（新增 D1/KV/R2 等），记得重新生成类型声明：
+部署前如果改过 `wrangler.jsonc` 的绑定（新增 D1/R2 等），记得重新生成类型声明：
 
 ```bash
 pnpm run cf-typegen

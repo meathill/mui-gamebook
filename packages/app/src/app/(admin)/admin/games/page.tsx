@@ -1,5 +1,6 @@
 'use client';
 
+import { formatDateTime as formatDate } from '@mui-gamebook/site-common/utils';
 import { EyeIcon, EyeSlashIcon, MagnifyingGlassIcon, PencilIcon, ProhibitIcon, TrashIcon } from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
@@ -9,7 +10,6 @@ import { useDialog } from '@/components/Dialog';
 import { Input } from '@/components/ui/input';
 import { NativeSelect } from '@/components/ui/native-select';
 import { useListQuery } from '@/hooks/useListQuery';
-import { formatDateTime as formatDate } from '@mui-gamebook/site-common/utils';
 
 interface GameItem {
   id: number;
@@ -22,7 +22,6 @@ interface GameItem {
   ownerEmail: string | null;
   createdAt: string | number;
   updatedAt: string | number;
-  openCount: number;
 }
 
 interface GamesResponse {
@@ -241,14 +240,6 @@ export default function AdminGamesPage() {
                   order={list.order}
                   onSort={list.toggleSort}
                 />
-                <SortableHeader
-                  label="打开数"
-                  sortKey="openCount"
-                  activeSort={list.sort}
-                  order={list.order}
-                  onSort={list.toggleSort}
-                  align="right"
-                />
                 <th className="text-right px-4 py-3 text-sm font-medium text-gray-500">操作</th>
               </tr>
             </thead>
@@ -289,7 +280,6 @@ export default function AdminGamesPage() {
                     )}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{formatDate(game.updatedAt)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500 text-right">{game.openCount ?? 0}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       <Link

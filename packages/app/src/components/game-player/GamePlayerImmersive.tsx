@@ -1,8 +1,5 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
-import type { PlayableGame, PlayableScene, TextBoxPosition } from '@roudanio/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import {
   completeReadingKey,
@@ -11,26 +8,30 @@ import {
   interpolateVariables,
   resolveSpeakerName,
   startReadingKey,
+  trackChoiceClick,
   trackCompleteReading,
   trackOnce,
+  trackSceneView,
   trackStartReading,
 } from '@mui-gamebook/site-common/utils';
+import type { PlayableGame, PlayableScene, TextBoxPosition } from '@roudanio/parser/src/types';
+import { useTranslations } from 'next-intl';
+import { useEffect, useMemo, useState } from 'react';
 import { useDialog } from '@/components/Dialog';
 import { Button } from '@/components/ui/button';
-import { useGameAnalytics } from '@/hooks/useGameAnalytics';
-import TitleScreen from './TitleScreen';
-import CommentDialog from './CommentDialog';
-import EndScreen from './EndScreen';
-import ImmersiveBackground from './ImmersiveBackground';
-import ImmersiveTextBox from './ImmersiveTextBox';
-import ImmersiveMenu from './ImmersiveMenu';
-import CommentDrawer from './CommentDrawer';
-import FloatingVariablePanel from './FloatingVariablePanel';
-import { useImmersiveMode } from './hooks/useImmersiveMode';
-import { usePreload } from './usePreload';
-import { useSceneBgm } from './hooks/useSceneBgm';
 import { gameHasBgm } from './bgm-controller';
+import CommentDialog from './CommentDialog';
+import CommentDrawer from './CommentDrawer';
+import EndScreen from './EndScreen';
+import FloatingVariablePanel from './FloatingVariablePanel';
 import { type GamePanel, useGameHashRoute } from './hooks/useGameHashRoute';
+import { useImmersiveMode } from './hooks/useImmersiveMode';
+import { useSceneBgm } from './hooks/useSceneBgm';
+import ImmersiveBackground from './ImmersiveBackground';
+import ImmersiveMenu from './ImmersiveMenu';
+import ImmersiveTextBox from './ImmersiveTextBox';
+import TitleScreen from './TitleScreen';
+import { usePreload } from './usePreload';
 
 const POSITION_STORAGE_KEY = 'immersive_text_pos';
 const POSITIONS: TextBoxPosition[] = ['bottom', 'center', 'top'];
@@ -66,7 +67,6 @@ export default function GamePlayerImmersive({
 
   const t = useTranslations('game');
   const dialog = useDialog();
-  const analytics = useGameAnalytics();
 
   const [textIndex, setTextIndex] = useState(0);
   const [choicesRevealed, setChoicesRevealed] = useState(false);
@@ -77,7 +77,7 @@ export default function GamePlayerImmersive({
     confirmRestart: () => dialog.confirm(t('restartConfirm')),
     onChoice: (sceneId, choiceIndex) => {
       if (game.id && typeof choiceIndex === 'number') {
-        analytics.trackChoice(game.id, sceneId, choiceIndex);
+        trackChoiceClick({ gameId: game.id, slug, sceneId, choiceIndex });
       }
     },
   });
@@ -121,11 +121,6 @@ export default function GamePlayerImmersive({
     }
   }
 
-  useEffect(() => {
-    if (game.id) analytics.trackOpen(game.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // GA4 关键事件 start_reading：进入游玩视图才算开始阅读（公开播放页专属），会话内去重一次
   useEffect(() => {
     if (isPlaying && game.id) {
@@ -165,7 +160,7 @@ export default function GamePlayerImmersive({
     if (!isPlaying || !currentScene) return;
     setTextIndex(0);
     setChoicesRevealed(false);
-    if (game.id) analytics.trackScene(game.id, currentSceneId);
+    if (game.id) trackSceneView({ gameId: game.id, slug, sceneId: currentSceneId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, isPlaying]);
 
@@ -212,7 +207,6 @@ export default function GamePlayerImmersive({
 
   useEffect(() => {
     if (showEndScreen && game.id) {
-      analytics.trackComplete(game.id);
       // GA4 关键事件 complete_reading：到达结局，会话内只记一次
       trackOnce(completeReadingKey(slug), () => trackCompleteReading({ gameId: game.id as number, slug }));
     }

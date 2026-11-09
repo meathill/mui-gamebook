@@ -34,7 +34,7 @@ pnpm run typecheck   # 聚合跑所有 workspace 包各自的 tsc --noEmit
 pnpm run cf-typegen
 ```
 
-没生成过这个文件时，`packages/app` 的 typecheck 会报出大量 `Property 'DB'/'KV'/... does not exist on type 'CloudflareEnv'` 之类的错误——这不是真实的类型问题，只是绑定类型还没生成。
+没生成过这个文件时，`packages/app` 的 typecheck 会报出大量 `Property 'DB'/'ASSETS_BUCKET'/... does not exist on type 'CloudflareEnv'` 之类的错误——这不是真实的类型问题，只是绑定类型还没生成。
 
 typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 

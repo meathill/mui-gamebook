@@ -18,14 +18,14 @@ vi.mock('next/link', () => ({
 }));
 
 describe('AdminNav', () => {
-  it('root 渲染全部 4 个导航项', () => {
-    vi.mocked(usePathname).mockReturnValue('/admin/stats');
+  it('root 渲染全部 3 个导航项', () => {
+    vi.mocked(usePathname).mockReturnValue('/admin/games');
     render(<AdminNav />);
 
-    expect(screen.getByText('全站统计')).toBeInTheDocument();
     expect(screen.getByText('用户管理')).toBeInTheDocument();
     expect(screen.getByText('游戏管理')).toBeInTheDocument();
     expect(screen.getByText('系统配置')).toBeInTheDocument();
+    expect(screen.queryByText('全站统计')).not.toBeInTheDocument();
   });
 
   it('精确匹配当前路径时高亮对应导航项', () => {
@@ -33,7 +33,7 @@ describe('AdminNav', () => {
     render(<AdminNav />);
 
     expect(screen.getByText('用户管理').closest('a')).toHaveClass('bg-blue-100');
-    expect(screen.getByText('全站统计').closest('a')).not.toHaveClass('bg-blue-100');
+    expect(screen.getByText('游戏管理').closest('a')).not.toHaveClass('bg-blue-100');
   });
 
   it('路径为子路由时也高亮对应导航项', () => {
@@ -47,16 +47,15 @@ describe('AdminNav', () => {
     vi.mocked(usePathname).mockReturnValue('/admin');
     render(<AdminNav />);
 
-    for (const label of ['全站统计', '用户管理', '游戏管理', '系统配置']) {
+    for (const label of ['用户管理', '游戏管理', '系统配置']) {
       expect(screen.getByText(label).closest('a')).not.toHaveClass('bg-blue-100');
     }
   });
 
   it('内容管理员（isRoot=false）看不到用户管理与系统配置', () => {
-    vi.mocked(usePathname).mockReturnValue('/admin/stats');
+    vi.mocked(usePathname).mockReturnValue('/admin/games');
     render(<AdminNav isRoot={false} />);
 
-    expect(screen.getByText('全站统计')).toBeInTheDocument();
     expect(screen.getByText('游戏管理')).toBeInTheDocument();
     expect(screen.queryByText('用户管理')).not.toBeInTheDocument();
     expect(screen.queryByText('系统配置')).not.toBeInTheDocument();

@@ -4,7 +4,6 @@ import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
 import { isAdminUser } from '@/lib/admin';
-import { OPEN_COUNT_SUBQUERY } from '@/lib/admin-queries';
 import { getSession } from '@/lib/auth-server';
 import { parseEnumFilter, parseListQuery } from '@/lib/list-query';
 
@@ -13,7 +12,6 @@ const GAME_SORT_COLUMNS = {
   updatedAt: schema.games.updatedAt,
   createdAt: schema.games.createdAt,
   title: schema.games.title,
-  openCount: OPEN_COUNT_SUBQUERY,
 } as const;
 
 const STATUS_FILTERS = ['all', 'published', 'draft', 'banned'] as const;
@@ -74,7 +72,6 @@ export async function GET(request: Request) {
         ownerEmail: schema.user.email,
         createdAt: schema.games.createdAt,
         updatedAt: schema.games.updatedAt,
-        openCount: OPEN_COUNT_SUBQUERY,
       })
       .from(schema.games)
       .leftJoin(schema.user, eq(schema.games.ownerId, schema.user.id));

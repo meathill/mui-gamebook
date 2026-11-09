@@ -705,7 +705,7 @@ isValidVoiceId(voiceId: string, provider): boolean
   - **root**：由 `NEXT_PUBLIC_ROOT_USER_EMAIL` 指定的唯一账号（单值，不支持逗号分隔），可进系统配置与用户管理。
     - **为什么用 `NEXT_PUBLIC_` 前缀**：服务端 `isRootUser`（`lib/admin.ts`）与客户端 `isRootUserClient`（`lib/auth-client.ts`）刻意读同一个变量，两边构建期内联成同一个字面量，绝不会出现「前端显示了后台入口、后端不放行」或反向的分歧——这类分歧用两个变量（一个 `NEXT_PUBLIC_`、一个服务端专用）必然会出现。`tests/lib/root-user-client.test.ts` 有一致性用例守着。
     - **它是构建期变量**：Next 会把 `process.env.NEXT_PUBLIC_*` 静态内联进产物（**服务端 chunk 也内联**，不只是客户端），所以放 `wrangler.jsonc` 的 `vars` 里完全无效——改它必须重新构建部署。原先的 `ROOT_USER_EMAIL`（走 wrangler vars）已废弃。
-  - **内容管理员**：`user.is_admin` 列（迁移 `0006_user_admin.sql`），能进后台看全站统计、管游戏（含封禁/发布/删除），且不受 Token 限制；不能改系统配置、不能管理用户——避免管理员互相提权。只有 root 能在用户管理里授予/取消。
+  - **内容管理员**：`user.is_admin` 列（迁移 `0006_user_admin.sql`），能进后台管游戏（含封禁/发布/删除），且不受 Token 限制；不能改系统配置、不能管理用户——避免管理员互相提权。只有 root 能在用户管理里授予/取消。
   - 判定顺序统一为 root → is_admin → 普通用户；`isRootUser`/`isAdminUser` 从 `@/lib/admin` 导出，**不要再从 `@/lib/config` 导入**。
 - **权限解析优先级**（`packages/app/src/lib/ai-permissions.ts`）：
   1. root 或内容管理员 → 全开
@@ -713,7 +713,7 @@ isValidVoiceId(voiceId: string, provider): boolean
   3. 否则按当前有效订阅套餐取默认：免费只有文本 / Pro 加生图+声音+音乐 / Pro+ 再加视频（`PLAN_AI_PERMISSIONS`）
 - 存储：`user.ai_permissions` 列，JSON 形状 `{providers, canGenerateImage, canGenerateTts, canGenerateMusic, canGenerateVideo}`，**null = 跟随套餐默认**。旧数据缺少的新字段一律按 false 处理，不给意外提权。
 - 门禁落点：生图在 `cms/assets/generate` 与 `generate-character-image`；TTS 在 `cms/assets/generate-tts` 与 `generate-voice-preview`；视频在 `cms/assets/generate-async`；统一走 `checkAiServicePermission(permissions, service)`。编辑器侧 `MediaAssetItem` 按权限禁用生成按钮（`useAiPermissions` 暴露四个 flag）。
-- **KV 里的 `videoWhitelist` 与 `adminUserIds` 已废弃**：字段从 `AppConfig` 删除，`getConfig()` 合并时用 `LEGACY_CONFIG_KEYS` 剔除 KV 里的历史存量，管理后台的「访问控制」区块一并删除。`videoWhitelist` 里的历史用户需要管理员在用户管理里单独勾选视频权限。
+- **`AppConfig` 里的 `videoWhitelist` 与 `adminUserIds` 已废弃**：字段从 `AppConfig` 删除，`getConfig()` 合并时用 `LEGACY_CONFIG_KEYS` 剔除 D1 里的历史存量，管理后台的「访问控制」区块一并删除。`videoWhitelist` 里的历史用户需要管理员在用户管理里单独勾选视频权限。
 - better-auth 通过 `user.additionalFields.isAdmin`（`input: false`）把该标记带进 session，客户端用 `isAdminSession()` 判后台入口；**不能通过注册/更新接口自行设置**。
 
 ### Secrets 与环境变量
@@ -731,7 +731,7 @@ isValidVoiceId(voiceId: string, provider): boolean
   - **踩过的坑**：一开始只让 `secrets` 三个字段+MIMO+网关 token 落地，但漏了这条——CI 构建机没有 `.dev.vars`，之前设想"部署前手动跑一次 cf-typegen"完全不成立（人跑的是本机，CI 跑的是它自己的干净环境），导致 `ADMIN_PASSWORD` 这类只在窄类型参数里出现的 secret，在 CI 上因为「传入的 `Cloudflare.Env` 和目标类型没有任何字段重叠」触发 TS 的 weak-type 检测报错。`secrets.required` 才是对的、可移植的修法。
   - **连带的坑**：`vars` 里默认值是单一字面量（如 `HEADLESS_MODE: "false"`、`TRUSTED_ORIGINS: ""`）的字段，wrangler 会把类型推断成那个字面量本身而不是 `string`，导致 `=== 'true'` 或"先真值判断再用"的代码在类型层面出错（真值判断后被收窄成 `never`）。这几处（`app/page.tsx`、`app/my/edit/[id]/page.tsx`、`lib/auth-config.ts`）已经加了 `as string` 显式加宽类型；新增类似的 `vars` 字段、且代码里会跟别的字面量比较或做真值判断时，记得同样处理。
   - **另一个连带的坑**：`NEXT_PUBLIC_SITE_URL`/`NEXT_PUBLIC_GA_ID` 从 `wrangler.jsonc` 的 `vars` 移出去之后（见上一节，它们本该走构建期 `process.env` 而不是 Workers 绑定），`process.env.NEXT_PUBLIC_X` 的类型从"wrangler 认定的非空 string"变回 `@types/node` 的 `string | undefined`，暴露出 `auth-config.ts`、`layout.tsx` 两处从未做空值兜底的地方（`next build` 之前一直"能过"是因为本机 stale 的 d.ts 碰巧还留着旧类型）。已加默认值兜底 / 条件渲染修复。
-- **上线硬性顺序**：1) 配置 AI Gateway 并在 `/admin/config` 填 `cfAiGatewayBaseUrl`、`wrangler secret put` 补齐 `wrangler.jsonc` 里 `secrets.required` 列出的所有 secret → 2) `pnpm --filter @mui-gamebook/app run db:migrate:remote`（必须先于 deploy，代码 select 全列）→ 3) deploy（CI/本地跑 `cf-typegen` 都会拿到一致的类型，不需要额外手动步骤）→ 4) 管理员进 `/admin/config` 保存一次（KV 配置是 `{...DEFAULT, ...stored}` 合并，旧存量会盖住新模型默认值）。
+- **上线硬性顺序**：1) 配置 AI Gateway 并在 `/admin/config` 填 `cfAiGatewayBaseUrl`、`wrangler secret put` 补齐 `wrangler.jsonc` 里 `secrets.required` 列出的所有 secret → 2) `pnpm --filter @mui-gamebook/app run db:migrate:remote`（必须先于 deploy，代码 select 全列）→ 3) deploy（CI/本地跑 `cf-typegen` 都会拿到一致的类型，不需要额外手动步骤）→ 4) 管理员进 `/admin/config` 保存一次（D1 `AppConfig` 是 `{...DEFAULT, ...stored}` 合并，旧存量会盖住新模型默认值）。
 
 ### 游戏访问控制
 
@@ -745,19 +745,26 @@ isValidVoiceId(voiceId: string, provider): boolean
 
 1. **必须手写表限定名**。drizzle 渲染 `${schema.user.id}` 得到的是**不带限定符**的 `"id"`，放进子查询后会优先绑定内层表的同名列：
    - `(SELECT COUNT(*) FROM Games WHERE Games.owner_id = "id")` → 恒为 0（外层 `user.id` 根本没参与比较）
-   - `(SELECT SUM(open_count) FROM GameAnalytics WHERE game_id = "id")` → 每行都返回同一张表的合计值
+   - `(SELECT COUNT(*) FROM AiUsage WHERE AiUsage.user_id = "id")` → 每行都返回同一张表的合计值
    正确写法是直接写 `user.id` / `Games.id`：`` sql`(SELECT COUNT(*) FROM Games WHERE Games.owner_id = user.id)` ``。
    - **存量 bug**：用户管理的 `gameCount` 一直是 0，就是这么来的（本次一并修掉）。
-2. **表名以 `migrations/` 的建表语句为准**。本项目的表名不统一：`user`/`subscriptions` 是小写，`Games`/`GameAnalytics`/`GameContent` 是 PascalCase。SQLite 只对**纯大小写差异**不敏感，写错下划线（`game_analytics` ≠ `GameAnalytics`）会直接 `no such table`。
+2. **表名以 `migrations/` 的建表语句为准**。本项目的表名不统一：`user`/`subscriptions` 是小写，`Games`/`AiUsage`/`GameContent` 是 PascalCase。SQLite 只对**纯大小写差异**不敏感，写错下划线（`ai_usage` ≠ `AiUsage`）会直接 `no such table`。
 
 守护测试见 `tests/lib/subquery-qualification.test.ts`；片段集中放在 `src/lib/admin-queries.ts`（单独成文件是为了能被测试直接 import，不被 route 的鉴权依赖拖住）。
 
 ### 后台列表的排序与筛选（2026-09）
 
 - 共用件：`src/lib/list-query.ts`（`parseListQuery` 解析 `?page=&limit=&search=&sort=&order=`，排序键走**白名单映射到 drizzle 列**，非法键回退默认，不把用户输入拼进 SQL；`parseEnumFilter` 处理枚举筛选）、`src/hooks/useListQuery.ts`（前端状态，任何变更都重置到第一页）、`src/components/admin/PaginationBar.tsx`、`src/components/admin/SortableHeader.tsx`。
-- 覆盖：游戏管理（按标题/更新时间/打开数排序 + 状态筛选 全部/已发布/未发布/已封禁）、用户管理（按名称/邮箱/游戏数/注册时间排序 + 身份筛选）、全站统计（按标题/打开数/完成数/评分排序）。
-- 分页条原先在用户/游戏/统计三处各写一遍，已收敛到 `PaginationBar`。
+- 覆盖：游戏管理（按标题/更新时间排序 + 状态筛选 全部/已发布/未发布/已封禁）、用户管理（按名称/邮箱/游戏数/注册时间排序 + 身份筛选）。
+- 分页条原先在用户/游戏两处各写一遍，已收敛到 `PaginationBar`。
 - 新增列表页时的固定改动面：API 侧定义 `*_SORT_COLUMNS` 白名单传给 `parseListQuery`，页面侧用 `useListQuery` + 两个共用组件。
+
+### 统计与埋点（2026-11：全部迁移到 GA4）
+
+- 应用内不再自建统计表和采集接口。阅读/互动统计全部由 GA4 承担，事件定义在 `packages/site-common/src/utils/ga-events.ts`。
+- 事件：`start_reading` / `complete_reading` / `scene_view` / `choice_click` / `publish_story` / `sign_up` / `login`。新增统计需求时加 GA 事件，不要再恢复站内埋点表。
+- 旧表 `GameAnalytics` / `GameDailyAnalytics` / `SceneAnalytics` / `ChoiceAnalytics` / `ReferrerAnalytics` / `DeviceAnalytics` 已由迁移 `0015_drop_self_analytics.sql` 删除；后台「全站统计」页、创作者控制面板的统计卡片与相关 API 一并移除。
+- 评分是独立功能（`GameRatings` 表 + `/api/games/[slug]/ratings`），不依赖上述分析表。
 
 ### 游戏 shadowban（封禁，2026-09）
 
@@ -823,7 +830,7 @@ isValidVoiceId(voiceId: string, provider): boolean
   - **Music / SFX（音乐与音效）**：默认内置素材库，支持配置 `musicModel`（如 `suno-v4`）与 `sfxModel`（如 `eleven-sfx-v1`），预留 Suno / Udio / ElevenLabs / Stable Audio 接入。
   - **STT（语音识别）**：默认 `mimo`。三选一 openai/google/mimo，各自有独立模型字段（`openaiSttModel`/`googleSttModel`/`mimoSttModel`）。**目前只有配置、没有运行时消费方**：`resolveSttProviderType()` 无调用点，`AiProvider` 接口也没有转写方法——加模型字段是为了先把配置面补齐，真正做转写功能时需要一并补 provider 实现。
 - **管理后台 UI 重构（`/admin/config`）**：彻底摆脱按 Provider 分组的旧卡片结构，全面改为按**生成类型（Text, TTS, Image, Video, Music/SFX, STT）**分拆独立卡片，直观呈现每个生成类型的默认引擎及其对应模型配置。
-- **移除代码硬编码兜底**：所有模态与模型的基准值均声明在 `wrangler.jsonc` 的 `vars` 中，运行时由环境变量注入（`getEnvDefaults(env)`），KV 仅作为管理后台动态修改的覆盖层，彻底消除代码中分散的静态 fallback。
+- **移除代码硬编码兜底**：所有模态与模型的基准值均声明在 `wrangler.jsonc` 的 `vars` 中，运行时由环境变量注入（`getEnvDefaults(env)`），D1 `AppConfig` 仅作为管理后台动态修改的覆盖层，彻底消除代码中分散的静态 fallback。
 
 ### OpenCode Go Provider 接入
 

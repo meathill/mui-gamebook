@@ -1,5 +1,5 @@
-import { createRequire } from 'node:module';
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 
 interface LocalRuntime {
   getD1Database(name: string): Promise<D1Database>;
@@ -36,7 +36,6 @@ export async function createRuntime() {
     db.prepare(
       'CREATE TABLE GameContent(id INTEGER PRIMARY KEY,game_id INTEGER REFERENCES Games(id) ON DELETE CASCADE,content TEXT NOT NULL)',
     ),
-    db.prepare('CREATE TABLE GameAnalytics(game_id INTEGER,open_count INTEGER)'),
   ]);
   const migration = [
     await readFile(new URL('../../../migrations/0011_media_assistance.sql', import.meta.url), 'utf8'),
@@ -79,12 +78,11 @@ export function story(images = 1) {
   );
 }
 
-export async function insertGame(db: D1Database, id: number, content = story(), visits = 0, enabled = true) {
+export async function insertGame(db: D1Database, id: number, content = story(), enabled = true) {
   await db.batch([
     db
       .prepare('INSERT INTO Games(id,slug,title,owner_id,media_assistance_enabled) VALUES (?,?,?, ?,?)')
       .bind(id, `game-${id}`, '测试', 'author', enabled ? 1 : 0),
     db.prepare('INSERT INTO GameContent(game_id,content) VALUES (?,?)').bind(id, content),
-    db.prepare('INSERT INTO GameAnalytics(game_id,open_count) VALUES (?,?)').bind(id, visits),
   ]);
 }

@@ -1,22 +1,18 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import GamePlayer from '../../src/components/GamePlayer';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { PlayableGame } from '@roudanio/parser/src/types';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import GamePlayer from '../../src/components/GamePlayer';
 
-// Mock useGameAnalytics hook
-const mockTrackOpen = vi.fn();
-const mockTrackScene = vi.fn();
-const mockTrackChoice = vi.fn();
-const mockTrackComplete = vi.fn();
-
-vi.mock('../../src/hooks/useGameAnalytics', () => ({
-  useGameAnalytics: () => ({
-    trackOpen: mockTrackOpen,
-    trackScene: mockTrackScene,
-    trackChoice: mockTrackChoice,
-    trackComplete: mockTrackComplete,
-  }),
-}));
+vi.mock('@mui-gamebook/site-common/utils', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@mui-gamebook/site-common/utils')>();
+  return {
+    ...actual,
+    trackStartReading: vi.fn(),
+    trackCompleteReading: vi.fn(),
+    trackSceneView: vi.fn(),
+    trackChoiceClick: vi.fn(),
+  };
+});
 
 vi.mock('../../src/components/Dialog', () => ({
   useDialog: () => ({
@@ -28,6 +24,13 @@ vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
   useLocale: () => 'zh',
 }));
+
+import {
+  trackChoiceClick,
+  trackCompleteReading,
+  trackSceneView,
+  trackStartReading,
+} from '@mui-gamebook/site-common/utils';
 
 const mockGame: PlayableGame & { id: number } = {
   id: 123,
@@ -53,23 +56,14 @@ const mockGame: PlayableGame & { id: number } = {
   },
 };
 
-describe('GamePlayer Analytics', () => {
+describe('GamePlayer GA events', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    sessionStorage.clear();
   });
 
-  it('tracks game open on mount', () => {
-    render(
-      <GamePlayer
-        game={mockGame}
-        slug="test-game"
-      />,
-    );
-    expect(mockTrackOpen).toHaveBeenCalledWith(123);
-  });
-
-  it('tracks scene visit on mount', async () => {
+  it('进入游玩视图时发送 start_reading', async () => {
     render(
       <GamePlayer
         game={mockGame}
@@ -77,15 +71,14 @@ describe('GamePlayer Analytics', () => {
       />,
     );
 
-    // Start the game
     fireEvent.click(screen.getByText('startAdventure'));
 
     await waitFor(() => {
-      expect(mockTrackScene).toHaveBeenCalledWith(123, 'start');
+      expect(trackStartReading).toHaveBeenCalledWith({ gameId: 123, slug: 'test-game' });
     });
   });
 
-  it('tracks choice selection', async () => {
+  it('到达场景时发送 scene_view', async () => {
     render(
       <GamePlayer
         game={mockGame}
@@ -93,20 +86,14 @@ describe('GamePlayer Analytics', () => {
       />,
     );
 
-    // Find and click the choice button
-    // Note: The text might be wrapped or interpolated, so we look for the button text
-
-    // Start the game
     fireEvent.click(screen.getByText('startAdventure'));
 
-    // Find and click the choice button
-    const choiceButton = await screen.findByText('Go Next');
-    fireEvent.click(choiceButton);
-
-    expect(mockTrackChoice).toHaveBeenCalledWith(123, 'start', 1);
+    await waitFor(() => {
+      expect(trackSceneView).toHaveBeenCalledWith({ gameId: 123, slug: 'test-game', sceneId: 'start' });
+    });
   });
 
-  it('tracks new scene visit after choice', async () => {
+  it('点击选项时发送 choice_click', async () => {
     render(
       <GamePlayer
         game={mockGame}
@@ -114,20 +101,38 @@ describe('GamePlayer Analytics', () => {
       />,
     );
 
-    // Start the game
     fireEvent.click(screen.getByText('startAdventure'));
 
     const choiceButton = await screen.findByText('Go Next');
     fireEvent.click(choiceButton);
 
-    await waitFor(() => {
-      // Should track the new scene
-      expect(mockTrackScene).toHaveBeenCalledWith(123, 'next-scene');
+    expect(trackChoiceClick).toHaveBeenCalledWith({
+      gameId: 123,
+      slug: 'test-game',
+      sceneId: 'start',
+      choiceIndex: 1,
     });
   });
 
-  it('tracks completion when end screen is shown', async () => {
-    // Game ending scene
+  it('进入下一个场景时再次发送 scene_view', async () => {
+    render(
+      <GamePlayer
+        game={mockGame}
+        slug="test-game"
+      />,
+    );
+
+    fireEvent.click(screen.getByText('startAdventure'));
+
+    const choiceButton = await screen.findByText('Go Next');
+    fireEvent.click(choiceButton);
+
+    await waitFor(() => {
+      expect(trackSceneView).toHaveBeenCalledWith({ gameId: 123, slug: 'test-game', sceneId: 'next-scene' });
+    });
+  });
+
+  it('到达结局时发送 complete_reading', async () => {
     const endMockGame: PlayableGame & { id: number } = {
       ...mockGame,
       scenes: {
@@ -145,12 +150,10 @@ describe('GamePlayer Analytics', () => {
       />,
     );
 
-    // Start the game
     fireEvent.click(screen.getByText('startAdventure'));
 
-    // Since there are no choices, it should show end screen
     await waitFor(() => {
-      expect(mockTrackComplete).toHaveBeenCalledWith(123);
+      expect(trackCompleteReading).toHaveBeenCalledWith({ gameId: 123, slug: 'test-game-complete' });
     });
   });
 });

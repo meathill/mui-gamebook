@@ -1,35 +1,36 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
-import Image from 'next/image';
-import { useTranslations } from 'next-intl';
-import type { PlayableGame } from '@roudanio/parser/src/types';
 import { useGamePlayer } from '@mui-gamebook/site-common/game-player';
 import {
   completeReadingKey,
   startReadingKey,
+  trackChoiceClick,
   trackCompleteReading,
   trackOnce,
+  trackSceneView,
   trackStartReading,
 } from '@mui-gamebook/site-common/utils';
-import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../image-loader';
+import type { PlayableGame } from '@roudanio/parser/src/types';
+import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useDialog } from '@/components/Dialog';
-import ShareButton from '@/components/ShareButton';
-import { Button } from '@/components/ui/button';
 import {
-  TitleScreen,
-  EndScreen,
-  VariableIndicator,
-  SceneNodes,
   AudioControls,
+  EndScreen,
+  SceneNodes,
+  TitleScreen,
   usePreload,
+  VariableIndicator,
 } from '@/components/game-player';
+import BgmToggle from '@/components/game-player/BgmToggle';
+import { gameHasBgm } from '@/components/game-player/bgm-controller';
 import { type GamePanel, useGameHashRoute } from '@/components/game-player/hooks/useGameHashRoute';
 import { useSceneAudiobook } from '@/components/game-player/hooks/useSceneAudiobook';
 import { useSceneBgm } from '@/components/game-player/hooks/useSceneBgm';
-import BgmToggle from '@/components/game-player/BgmToggle';
-import { gameHasBgm } from '@/components/game-player/bgm-controller';
-import { useGameAnalytics } from '@/hooks/useGameAnalytics';
+import ShareButton from '@/components/ShareButton';
+import { Button } from '@/components/ui/button';
+import { PLACEHOLDER_COVER, resolveCoverSrc } from '../../image-loader';
 
 // classic 播放器没有叠加面板，注册空表让 #settings 之类归一成 intro，不会莫名把人塞进游戏
 const NO_PANELS: readonly GamePanel[] = [];
@@ -56,14 +57,13 @@ export default function GamePlayer({
   const autoScrollRef = useRef<number | null>(null);
   const dialog = useDialog();
   const t = useTranslations('game');
-  const analytics = useGameAnalytics();
 
   const gamePlayer = useGamePlayer(game, slug, {
     storagePrefix: 'game_progress',
     confirmRestart: () => dialog.confirm(t('restartConfirm')),
     onChoice: (sceneId, choiceIndex) => {
       if (game.id && typeof choiceIndex === 'number') {
-        analytics.trackChoice(game.id, sceneId, choiceIndex);
+        trackChoiceClick({ gameId: game.id, slug, sceneId, choiceIndex });
       }
     },
   });
@@ -102,14 +102,6 @@ export default function GamePlayer({
   const { bgmEnabled, toggleBgm } = useSceneBgm({ slug, currentScene, isPlaying });
   const hasBgm = useMemo(() => gameHasBgm(game.scenes), [game.scenes]);
 
-  // 打开游戏页面时上报（与"点击开始"是两个不同事件，页面一加载就算打开）
-  useEffect(() => {
-    if (game.id) {
-      analytics.trackOpen(game.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // GA4 关键事件 start_reading：用户进入游玩视图才算开始阅读（公开播放页专属，
   // 私有编辑器预览不走此组件）。会话内去重一次：点开始/继续、#play 深链直达都只记一次。
   useEffect(() => {
@@ -126,17 +118,16 @@ export default function GamePlayer({
 
   useEffect(() => {
     if (showEndScreen && game.id) {
-      analytics.trackComplete(game.id);
       // GA4 关键事件 complete_reading：到达结局，会话内只记一次
       trackOnce(completeReadingKey(slug), () => trackCompleteReading({ gameId: game.id as number, slug }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showEndScreen]);
 
-  // 每次到达场景都上报（不去重，与埋点数据的既有口径一致）
+  // 每次到达场景都上报 GA 事件（不去重）
   useEffect(() => {
     if (isPlaying && game.id && currentSceneId) {
-      analytics.trackScene(game.id, currentSceneId);
+      trackSceneView({ gameId: game.id, slug, sceneId: currentSceneId });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSceneId, isPlaying]);

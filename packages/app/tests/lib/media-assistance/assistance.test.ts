@@ -1,17 +1,18 @@
 // @vitest-environment node
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+
 import { parse, stringify } from '@roudanio/parser';
-import { createRuntime, insertGame, story } from './runtime';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { applyAsset } from '@/lib/media-assistance/apply';
+import { requireAssistanceAdmin } from '@/lib/media-assistance/auth';
+import { saveEditorContent } from '@/lib/media-assistance/editor-save';
+import { claimItem, updateItem } from '@/lib/media-assistance/generation';
 import { hashGenerationInput, sha256 } from '@/lib/media-assistance/hash';
 import { savePlan } from '@/lib/media-assistance/plan';
-import { claimWork, finishWork } from '@/lib/media-assistance/work';
-import { claimItem, updateItem } from '@/lib/media-assistance/generation';
-import { applyAsset } from '@/lib/media-assistance/apply';
 import { getGeneration, listTargets, loadAssistanceGame } from '@/lib/media-assistance/store';
-import { uploadAssistanceAsset } from '@/lib/media-assistance/upload';
-import { saveEditorContent } from '@/lib/media-assistance/editor-save';
-import { requireAssistanceAdmin } from '@/lib/media-assistance/auth';
 import type { GenerationInput } from '@/lib/media-assistance/types';
+import { uploadAssistanceAsset } from '@/lib/media-assistance/upload';
+import { claimWork, finishWork } from '@/lib/media-assistance/work';
+import { createRuntime, insertGame, story } from './runtime';
 
 let local: Awaited<ReturnType<typeof createRuntime>>;
 beforeAll(async () => {
@@ -30,7 +31,6 @@ beforeEach(async () => {
       'MediaAssistanceWorks',
       'GameContent',
       'Games',
-      'GameAnalytics',
       'user',
     ].map((table) => local.db.prepare(`DELETE FROM ${table}`)),
   );
@@ -189,11 +189,10 @@ describe('真实本地 D1 / R2 素材协助', () => {
     ).toBe(false);
   });
 
-  it('访问量优先、当前作品优先，暂停项目后可以处理下一部', async () => {
-    await insertGame(local.db, 1, story(), 10);
-    await insertGame(local.db, 2, story(), 100);
+  it('当前作品优先，暂停项目后可以处理下一部', async () => {
+    await insertGame(local.db, 1, story());
+    await insertGame(local.db, 2, story());
     expect((await claimWork(local.db)).gameId).toBe(2);
-    await local.db.prepare('UPDATE GameAnalytics SET open_count = 1000 WHERE game_id = 1').run();
     const [target] = await planImages();
     expect((await claimWork(local.db)).gameId).toBe(2);
     await updateItem(local.db, 2, target.input_hash, { action: 'pause', reason: '本地工具不支持' });
