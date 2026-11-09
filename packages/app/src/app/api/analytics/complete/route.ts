@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
 import { recordDailyAnalytics } from '@/lib/daily-analytics';
-import { getKey, incrementCounter, updateRating } from '@/lib/analytics';
 
 /**
  * POST /api/analytics/complete
@@ -14,8 +15,8 @@ export async function POST(request: Request) {
   try {
     const { env } = getCloudflareContext();
 
-    if (!env.KV) {
-      return NextResponse.json({ error: 'KV not configured' }, { status: 500 });
+    if (!env.DB) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
     const body = (await request.json()) as { gameId: number; duration: number; rating?: number };
@@ -29,21 +30,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'duration must be a positive number' }, { status: 400 });
     }
 
-    // 递增完成次数
-    await incrementCounter(env.KV, getKey(gameId, 'completions'));
+    const ratingValue = typeof rating === 'number' && rating >= 1 && rating <= 5 ? rating : 0;
 
-    // 累加总时长
-    await incrementCounter(env.KV, getKey(gameId, 'duration'), duration);
+    // 直接增量写入 D1，避免 KV 读-改-写在并发下丢计数
+    const db = drizzle(env.DB);
+    await db.run(sql`
+      INSERT INTO GameAnalytics (game_id, completion_count, total_duration, session_count, rating_count, rating_sum)
+      VALUES (${gameId}, 1, ${duration}, 1, ${ratingValue > 0 ? 1 : 0}, ${ratingValue})
+      ON CONFLICT (game_id) DO UPDATE SET
+        completion_count = COALESCE(completion_count, 0) + 1,
+        total_duration = COALESCE(total_duration, 0) + ${duration},
+        session_count = COALESCE(session_count, 0) + 1,
+        rating_count = COALESCE(rating_count, 0) + ${ratingValue > 0 ? 1 : 0},
+        rating_sum = COALESCE(rating_sum, 0) + ${ratingValue}
+    `);
 
-    // 递增会话数（用于计算平均时长）
-    await incrementCounter(env.KV, getKey(gameId, 'sessions'));
-
-    // 如果有评分，更新评分
-    if (typeof rating === 'number' && rating >= 1 && rating <= 5) {
-      await updateRating(env.KV, getKey(gameId, 'ratings'), rating);
-    }
-
-    // 按天落库（失败不影响 KV 总量）
+    // 按天落库（失败不影响总量）
     await recordDailyAnalytics(gameId, 'complete');
 
     return NextResponse.json({ success: true });

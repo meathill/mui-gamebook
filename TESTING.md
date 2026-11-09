@@ -59,7 +59,7 @@ typecheck 目前**没有接入 CI**，只作为本地开发工具使用。
 - 认证与计费核心 lib（`usage-limit.ts`/`ai-usage.ts`/`auth-server.ts`/`auth-config.ts`）
 - `packages/app/src/app/api/**/route.ts` 绝大部分 route（AI 生成计费闭环、Story Protocol 注册、其余 CRUD/代理类 route）
 - 编辑器核心业务逻辑 `packages/app/src/lib/editor/handlers/`，以及编辑器 UI 组件（`RichEditor`/`VisualEditor`/`Inspector`/`ChatPanel` 等）
-- `packages/app/src/components/admin/`、`game-player/`，`packages/cronjob`
+- `packages/app/src/components/admin/`、`game-player/`
 
 2026-09 新增：Stripe 计费闭环（`tests/api/stripe-billing.test.ts`）、游戏评分与评价（`tests/lib/game-ratings.test.ts`/`tests/api/cms-game-ratings.test.ts`）、MCP 端点与鉴权（`tests/api/mcp.test.ts`/`tests/lib/mcp-auth.test.ts`）、后台列表排序筛选（`list-query` 等）。
 

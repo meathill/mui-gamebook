@@ -29,13 +29,6 @@
   "images": {
     "binding": "IMAGES"
   },
-  "kv_namespaces": [
-    {
-      "binding": "KV",
-      "id": "a9863dd8de514dc8940e0da4cf5c76da",
-      "preview_id": "a9863dd8de514dc8940e0da4cf5c76da"
-    }
-  ],
   "observability": {
     "enabled": true
   },
@@ -100,7 +93,6 @@
     "MEDIA_ASSISTANCE_REPLY_TO": "meathill@gmail.com",
     "ASSETS_PUBLIC_DOMAIN": "https://i.muistory.com",
     "COOKIE_DOMAIN": "",
-    "CRON_SECRET": "mui-gamebook-cron",
     "DEFAULT_TEXT_PROVIDER": "opencode",
     "DEFAULT_TTS_PROVIDER": "mimo",
     "DEFAULT_IMAGE_PROVIDER": "google",

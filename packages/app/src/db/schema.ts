@@ -1,5 +1,6 @@
-import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
-export { mediaAssistanceWorks, mediaAssistanceGenerations, mediaAssistanceTargets } from './media-assistance-schema';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+
+export { mediaAssistanceGenerations, mediaAssistanceTargets, mediaAssistanceWorks } from './media-assistance-schema';
 
 export const user = sqliteTable('user', {
   id: text('id').primaryKey(),
@@ -447,7 +448,7 @@ export const deviceAnalytics = sqliteTable(
   }),
 );
 
-// 游戏每日统计表：打开/完成事件按 UTC 日期落库（KV 与 GameAnalytics 只有总量，无法按天回溯）
+// 游戏每日统计表：打开/完成事件按 UTC 日期落库，与 GameAnalytics 的总量表配合，可按天回溯
 export const gameDailyAnalytics = sqliteTable(
   'GameDailyAnalytics',
   {
@@ -465,3 +466,10 @@ export const gameDailyAnalytics = sqliteTable(
     dateIdx: index('game_daily_analytics_date_idx').on(table.date),
   }),
 );
+
+// 全局运行配置：单行表（id = 1），替代原 KV 中的 app:config
+export const appConfig = sqliteTable('AppConfig', {
+  id: integer('id').primaryKey(),
+  data: text('data').notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).notNull(),
+});

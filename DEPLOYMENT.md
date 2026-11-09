@@ -7,7 +7,6 @@
 | 单元 | 目录 | Worker 名称 | 说明 |
 |---|---|---|---|
 | 主站（创作平台/CMS） | `packages/app` | `mui-gamebook` | MuiStory 品牌，创作者写作、AI 生成、管理后台，也是游戏播放的默认站点 |
-| 定时任务 | `packages/cronjob` | `mui-gamebook-cronjob` | 每 15 分钟触发一次，通过 Service Binding 调用主站 |
 
 ## 部署命令
 
@@ -24,7 +23,7 @@ pnpm run upload     # 构建并上传为一个新版本，不自动切流量（C
 "deploy": "cp ../../docs/DSL_SPEC.md ./public && opennextjs-cloudflare build && opennextjs-cloudflare deploy"
 ```
 
-`packages/cronjob` 是纯 Worker（没有 Next.js/OpenNext），直接 `wrangler deploy`。
+`packages/cronjob` 已移除。统计数据（打开/完成/场景/选项/来源/设备）在事件发生时直接增量写入 D1，不再需要独立定时任务 Worker。
 
 ## 环境变量与 Secrets
 

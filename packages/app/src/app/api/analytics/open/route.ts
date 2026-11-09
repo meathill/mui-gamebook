@@ -1,20 +1,22 @@
-import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
+import { parseDeviceType, parseReferrer } from '@/lib/analytics';
 import { recordDailyAnalytics } from '@/lib/daily-analytics';
-import { getKey, incrementCounter, incrementJsonKey, parseDeviceType, parseReferrer } from '@/lib/analytics';
 
 /**
  * POST /api/analytics/open
  * 记录游戏打开事件
  * Body: { gameId: number }
- * Headers: Referer, UserIcon-Agent
+ * Headers: Referer, User-Agent
  */
 export async function POST(request: Request) {
   try {
     const { env } = getCloudflareContext();
 
-    if (!env.KV) {
-      return NextResponse.json({ error: 'KV not configured' }, { status: 500 });
+    if (!env.DB) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
     const body = (await request.json()) as { gameId: number };
@@ -25,21 +27,30 @@ export async function POST(request: Request) {
     }
 
     // 获取来源和设备信息
-    const referrer = request.headers.get('referer');
-    const userAgent = request.headers.get('user-agent');
+    const referrerDomain = parseReferrer(request.headers.get('referer'));
+    const deviceType = parseDeviceType(request.headers.get('user-agent'));
 
-    // 递增打开计数
-    await incrementCounter(env.KV, getKey(gameId, 'opens'));
+    // 直接增量写入 D1，避免 KV 读-改-写在并发下丢计数
+    const db = drizzle(env.DB);
+    await db.run(sql`
+      INSERT INTO GameAnalytics (game_id, open_count)
+      VALUES (${gameId}, 1)
+      ON CONFLICT (game_id) DO UPDATE SET open_count = COALESCE(open_count, 0) + 1
+    `);
 
-    // 递增来源统计
-    const referrerDomain = parseReferrer(referrer);
-    await incrementJsonKey(env.KV, getKey(gameId, 'referrers'), referrerDomain);
+    await db.run(sql`
+      INSERT INTO ReferrerAnalytics (game_id, referrer, count)
+      VALUES (${gameId}, ${referrerDomain}, 1)
+      ON CONFLICT (game_id, referrer) DO UPDATE SET count = COALESCE(count, 0) + 1
+    `);
 
-    // 递增设备统计
-    const deviceType = parseDeviceType(userAgent);
-    await incrementJsonKey(env.KV, getKey(gameId, 'devices'), deviceType);
+    await db.run(sql`
+      INSERT INTO DeviceAnalytics (game_id, device_type, count)
+      VALUES (${gameId}, ${deviceType}, 1)
+      ON CONFLICT (game_id, device_type) DO UPDATE SET count = COALESCE(count, 0) + 1
+    `);
 
-    // 按天落库（失败不影响 KV 总量）
+    // 按天落库（失败不影响总量）
     await recordDailyAnalytics(gameId, 'open');
 
     return NextResponse.json({ success: true });

@@ -8,6 +8,9 @@ import type {
   VideoProviderType,
 } from '@mui-gamebook/core/lib/ai-provider';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
+import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import * as schema from '@/db/schema';
 
 export interface AppConfig {
   dailyTokenLimit: number;
@@ -69,10 +72,10 @@ export interface AppConfig {
   cfAiGatewayBaseUrl: string;
 }
 
-const CONFIG_KEY = 'app:config';
+const CONFIG_ROW_ID = 1;
 
 /**
- * 已从 AppConfig 移除、但可能残留在 KV 里的字段。
+ * 已从 AppConfig 移除、但可能残留在存储里的字段。
  * 合并时显式剔除，避免旧值重新进入配置对象。
  */
 const LEGACY_CONFIG_KEYS = ['videoWhitelist', 'adminUserIds'] as const;
@@ -121,35 +124,39 @@ export function getEnvDefaults(envMap?: unknown): AppConfig {
 
 /**
  * 获取全局配置
- * 以环境变量为基准，叠加 KV 存储的管理端覆盖值
+ * 以环境变量为基准，叠加 D1 中管理端保存的覆盖值
  */
 export async function getConfig(): Promise<AppConfig> {
   try {
     const { env } = getCloudflareContext();
     const defaults = getEnvDefaults(env);
-    const kv = env.KV;
+    if (!env.DB) return defaults;
 
-    const stored = await kv?.get<Partial<AppConfig>>(CONFIG_KEY, 'json');
-    if (stored) {
-      const textProvider =
-        stored.defaultTextProvider ||
-        (stored as { defaultAiProvider?: TextProviderType }).defaultAiProvider ||
-        defaults.defaultTextProvider;
+    const db = drizzle(env.DB);
+    const row = await db
+      .select({ data: schema.appConfig.data })
+      .from(schema.appConfig)
+      .where(eq(schema.appConfig.id, CONFIG_ROW_ID))
+      .get();
+    if (!row?.data) return defaults;
 
-      const merged = {
-        ...defaults,
-        ...stored,
-        defaultTextProvider: textProvider,
-        defaultAiProvider: textProvider,
-      };
-      for (const key of LEGACY_CONFIG_KEYS) {
-        delete (merged as Record<string, unknown>)[key];
-      }
+    const stored = JSON.parse(row.data) as Partial<AppConfig>;
+    const textProvider =
+      stored.defaultTextProvider ||
+      (stored as { defaultAiProvider?: TextProviderType }).defaultAiProvider ||
+      defaults.defaultTextProvider;
 
-      return merged;
+    const merged = {
+      ...defaults,
+      ...stored,
+      defaultTextProvider: textProvider,
+      defaultAiProvider: textProvider,
+    };
+    for (const key of LEGACY_CONFIG_KEYS) {
+      delete (merged as Record<string, unknown>)[key];
     }
 
-    return defaults;
+    return merged;
   } catch (error) {
     console.error('[Config] 获取配置失败:', error);
     return getEnvDefaults(process.env);
@@ -162,12 +169,18 @@ export async function getConfig(): Promise<AppConfig> {
 export async function updateConfig(config: Partial<AppConfig>): Promise<void> {
   try {
     const { env } = getCloudflareContext();
-    const kv = env.KV;
+    if (!env.DB) throw new Error('Database not configured');
 
     const current = await getConfig();
     const newConfig = { ...current, ...config };
+    const data = JSON.stringify(newConfig);
+    const updatedAt = new Date();
 
-    await kv.put(CONFIG_KEY, JSON.stringify(newConfig));
+    const db = drizzle(env.DB);
+    await db.insert(schema.appConfig).values({ id: CONFIG_ROW_ID, data, updatedAt }).onConflictDoUpdate({
+      target: schema.appConfig.id,
+      set: { data, updatedAt },
+    });
     console.log('[Config] 配置已更新:', newConfig);
   } catch (error) {
     console.error('[Config] 更新配置失败:', error);
