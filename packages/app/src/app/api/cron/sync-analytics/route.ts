@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { drizzle } from 'drizzle-orm/d1';
 import { eq } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
 
 /**
@@ -107,36 +107,8 @@ export async function POST(request: Request) {
         }
       }
 
-      // 同步场景访问（需要遍历 KV，这里简化处理）
-      // 注意：KV list 操作可能有性能问题，建议在单独的 API 中处理
-      const sceneList = await kv.list({ prefix: `${prefix}scene:` });
-      for (const key of sceneList.keys) {
-        const sceneId = key.name.replace(`${prefix}scene:`, '');
-        const visitCount = parseInt((await kv.get(key.name)) || '0', 10);
-        await db
-          .insert(schema.sceneAnalytics)
-          .values({ gameId, sceneId, visitCount })
-          .onConflictDoUpdate({
-            target: [schema.sceneAnalytics.gameId, schema.sceneAnalytics.sceneId],
-            set: { visitCount },
-          });
-      }
-
-      // 同步选项点击
-      const choiceList = await kv.list({ prefix: `${prefix}choice:` });
-      for (const key of choiceList.keys) {
-        const parts = key.name.replace(`${prefix}choice:`, '').split(':');
-        const sceneId = parts[0];
-        const choiceIndex = parseInt(parts[1], 10);
-        const clickCount = parseInt((await kv.get(key.name)) || '0', 10);
-        await db
-          .insert(schema.choiceAnalytics)
-          .values({ gameId, sceneId, choiceIndex, clickCount })
-          .onConflictDoUpdate({
-            target: [schema.choiceAnalytics.gameId, schema.choiceAnalytics.sceneId, schema.choiceAnalytics.choiceIndex],
-            set: { clickCount },
-          });
-      }
+      // 场景访问与选项点击已改为事件发生时直接增量写入 D1，
+      // 不再在定时任务里 list KV（list 操作按次计费且随 KV key 数量增长）。
 
       syncedGames++;
     }

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const kv = { get: vi.fn(), list: vi.fn() };
+const kv = { get: vi.fn() };
 
 const mockDb = {
   select: vi.fn().mockReturnThis(),
@@ -37,7 +37,6 @@ describe('POST /api/cron/sync-analytics', () => {
     // 第一次 select().from() 是顶层游戏列表查询，没有 .where()，直接被 await 成数组；
     // 之后的 from() 调用都是 select().from().where().get() 链式的中间环节，回退为 mockReturnThis。
     mockDb.from.mockReturnValue(mockDb);
-    kv.list.mockResolvedValue({ keys: [] });
     kv.get.mockResolvedValue(null);
   });
 
@@ -57,7 +56,7 @@ describe('POST /api/cron/sync-analytics', () => {
     expect(data).toEqual(expect.objectContaining({ success: true, syncedGames: 0 }));
   });
 
-  it('已有 GameAnalytics 记录时走更新分支，同步来源/设备/场景/选项统计', async () => {
+  it('已有 GameAnalytics 记录时走更新分支，同步来源/设备统计', async () => {
     mockDb.from.mockReturnValueOnce([{ id: 1 }]);
     mockDb.get.mockResolvedValueOnce({ gameId: 1 }); // gameAnalytics 已存在
     kv.get.mockImplementation((key: string) => {
@@ -70,11 +69,6 @@ describe('POST /api/cron/sync-analytics', () => {
       if (key.endsWith(':devices')) return Promise.resolve(JSON.stringify({ mobile: 6 }));
       return Promise.resolve(null);
     });
-    kv.list.mockImplementation(({ prefix }: { prefix: string }) => {
-      if (prefix.includes('scene:')) return Promise.resolve({ keys: [{ name: 'analytics:game:1:scene:start' }] });
-      if (prefix.includes('choice:')) return Promise.resolve({ keys: [{ name: 'analytics:game:1:choice:start:0' }] });
-      return Promise.resolve({ keys: [] });
-    });
 
     const res = await POST(makeReq('Bearer cron-secret'));
 
@@ -85,8 +79,8 @@ describe('POST /api/cron/sync-analytics', () => {
     expect(mockDb.set).toHaveBeenCalledWith(
       expect.objectContaining({ openCount: 10, completionCount: 3, totalDuration: 300, sessionCount: 5 }),
     );
-    // referrer + device + scene + choice 各触发一次 upsert
-    expect(mockDb.onConflictDoUpdate).toHaveBeenCalledTimes(4);
+    // referrer + device 各触发一次 upsert；场景/选项已改为事件发生时直接写 D1
+    expect(mockDb.onConflictDoUpdate).toHaveBeenCalledTimes(2);
   });
 
   it('KV/DB 未配置时返回 500', async () => {

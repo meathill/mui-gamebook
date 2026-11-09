@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const kv = { get: vi.fn(), put: vi.fn() };
+const dbRun = vi.fn();
 
 vi.mock('@opennextjs/cloudflare', () => ({
-  getCloudflareContext: vi.fn(() => ({ env: { KV: kv } })),
+  getCloudflareContext: vi.fn(() => ({ env: { DB: {} } })),
 }));
 
+vi.mock('drizzle-orm/d1', () => ({
+  drizzle: vi.fn(() => ({ run: dbRun })),
+}));
+
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { POST } from '@/app/api/analytics/choice/route';
 
 function makeReq(body: unknown) {
@@ -15,7 +20,6 @@ function makeReq(body: unknown) {
 describe('POST /api/analytics/choice', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    kv.get.mockResolvedValue(null);
   });
 
   it('缺少 gameId 返回 400', async () => {
@@ -36,10 +40,18 @@ describe('POST /api/analytics/choice', () => {
     expect(res.status).toBe(400);
   });
 
-  it('成功路径：递增对应 key 的计数', async () => {
+  it('DB 未配置时返回 500', async () => {
+    (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValueOnce({ env: {} });
+
+    const res = await POST(makeReq({ gameId: 1, sceneId: 's1', choiceIndex: 2 }));
+
+    expect(res.status).toBe(500);
+  });
+
+  it('成功路径：直接增量写入 ChoiceAnalytics', async () => {
     const res = await POST(makeReq({ gameId: 1, sceneId: 's1', choiceIndex: 2 }));
 
     expect(res.status).toBe(200);
-    expect(kv.put).toHaveBeenCalledWith('analytics:game:1:choice:s1:2', '1');
+    expect(dbRun).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
-import { getKey, incrementCounter } from '@/lib/analytics';
+import { sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/d1';
+import { NextResponse } from 'next/server';
 
 /**
  * POST /api/analytics/scene
@@ -11,8 +12,8 @@ export async function POST(request: Request) {
   try {
     const { env } = getCloudflareContext();
 
-    if (!env.KV) {
-      return NextResponse.json({ error: 'KV not configured' }, { status: 500 });
+    if (!env.DB) {
+      return NextResponse.json({ error: 'Database not configured' }, { status: 500 });
     }
 
     const body = (await request.json()) as { gameId: number; sceneId: string };
@@ -26,8 +27,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'sceneId is required' }, { status: 400 });
     }
 
-    // 递增场景访问计数
-    await incrementCounter(env.KV, getKey(gameId, 'scene', sceneId));
+    // 写时增量落库，避免 cron 定期全量 list KV
+    const db = drizzle(env.DB);
+    await db.run(sql`
+      INSERT INTO SceneAnalytics (game_id, scene_id, visit_count)
+      VALUES (${gameId}, ${sceneId}, 1)
+      ON CONFLICT (game_id, scene_id) DO UPDATE SET visit_count = COALESCE(visit_count, 0) + 1
+    `);
 
     return NextResponse.json({ success: true });
   } catch (error) {
