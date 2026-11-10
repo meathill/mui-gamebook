@@ -1,7 +1,16 @@
 import { toPlayableGame } from '@roudanio/parser/src/utils';
 import type { GameRow, ParsedGameRow } from '@/types';
-import { countTags, safeParseTags } from './games-shared';
+import {
+  applyGamesPaging,
+  countTags,
+  filterGamesByTag,
+  normalizeTagList,
+  rankRelatedGames,
+  safeParseTags,
+} from './games-shared';
 import type { GameDetail } from './games';
+
+export { applyGamesPaging };
 
 /** 构建期抓线上公开 API 的分页大小（与 /api/games 上限对齐） */
 const LIVE_SNAPSHOT_PAGE_SIZE = 100;
@@ -13,7 +22,7 @@ function getLiveSiteBase(): string | null {
 
 /** 线上 API 行的 tags 可能是已解析数组（API 直接返回），也可能是 D1 存的 JSON 字符串 */
 function normalizeTags(raw: string | string[] | null | undefined): string[] {
-  if (Array.isArray(raw)) return raw.filter((t): t is string => typeof t === 'string');
+  if (Array.isArray(raw)) return normalizeTagList(raw);
   return safeParseTags(raw ?? null);
 }
 
@@ -68,16 +77,6 @@ export async function fetchLiveGameBySlug(slug: string): Promise<GameDetail | nu
   }
 }
 
-/** 与 D1 分支同语义：只有带 limit 才做分页（offset 单独出现时忽略） */
-export function applyGamesPaging(
-  rows: ParsedGameRow[],
-  options?: { limit?: number; offset?: number },
-): ParsedGameRow[] {
-  if (!options?.limit) return rows;
-  const offset = options.offset ?? 0;
-  return rows.slice(offset, offset + options.limit);
-}
-
 /** 线上快照已按 updated_at 倒序：置顶优先（保序），其余补足到 limit */
 export function pickFeatured(snapshot: ParsedGameRow[], pinnedSlugs: string[], limit: number): ParsedGameRow[] {
   const bySlug = new Map(snapshot.map((row) => [row.slug, row]));
@@ -99,15 +98,10 @@ export async function getRelatedGamesFromLive(
   tags: string[],
   limit: number,
 ): Promise<ParsedGameRow[]> {
-  if (tags.length === 0) return [];
+  const targetTags = normalizeTagList(tags);
+  if (targetTags.length === 0) return [];
   const snapshot = await fetchLiveGamesSnapshot();
-  return snapshot
-    .filter((row) => row.slug !== currentSlug)
-    .map((row) => ({ ...row, matchCount: row.tags.filter((tag) => tags.includes(tag)).length }))
-    .filter((g) => g.matchCount > 0)
-    .sort((a, b) => b.matchCount - a.matchCount)
-    .slice(0, limit)
-    .map(({ matchCount: _, ...rest }) => rest);
+  return rankRelatedGames(snapshot, currentSlug, targetTags, limit);
 }
 
 /** 线上快照已按 updated_at 倒序，与 D1 分支同分页语义 */
@@ -115,11 +109,10 @@ export async function getGamesByTagFromLive(
   tag: string,
   options?: { limit?: number; offset?: number },
 ): Promise<{ games: ParsedGameRow[]; total: number }> {
+  const normalizedTag = tag.trim();
+  if (!normalizedTag) return { games: [], total: 0 };
   const snapshot = await fetchLiveGamesSnapshot();
-  const filtered = snapshot.filter((row) => row.tags.includes(tag));
-  if (!options?.limit) return { games: filtered, total: filtered.length };
-  const offset = options.offset ?? 0;
-  return { games: filtered.slice(offset, offset + options.limit), total: filtered.length };
+  return filterGamesByTag(snapshot, normalizedTag, options);
 }
 
 /** getAllTags 的构建期回退：从线上快照内存推导 */

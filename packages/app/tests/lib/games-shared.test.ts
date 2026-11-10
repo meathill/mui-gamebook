@@ -2,11 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import type { GameRow } from '@/types';
 import {
+  applyGamesPaging,
   countTags,
+  filterGamesByTag,
   gameListColumns,
+  normalizeTagList,
   parseGameRow,
   pickRating,
   playableContentExists,
+  rankRelatedGames,
   safeParseTags,
   withD1Fallback,
 } from '@/lib/games-shared';
@@ -15,9 +19,10 @@ vi.mock('@opennextjs/cloudflare', () => ({
   getCloudflareContext: vi.fn(),
 }));
 
-describe('safeParseTags', () => {
-  it('解析 JSON 字符串数组，过滤非字符串项', () => {
-    expect(safeParseTags('["修仙","冒险",1,null]')).toEqual(['修仙', '冒险']);
+describe('normalizeTagList / safeParseTags', () => {
+  it('解析 JSON 字符串数组，过滤非字符串项、空串与重复项，并去除首尾空白', () => {
+    expect(safeParseTags('["修仙"," 冒险 ",1,null,"","   ","修仙"]')).toEqual(['修仙', '冒险']);
+    expect(normalizeTagList([' 哈利波特 ', '哈利波特', '', '穿越'])).toEqual(['哈利波特', '穿越']);
   });
 
   it('null/空串/非法 JSON/非数组 JSON 都返回空数组', () => {
@@ -25,16 +30,95 @@ describe('safeParseTags', () => {
     expect(safeParseTags('')).toEqual([]);
     expect(safeParseTags('not json')).toEqual([]);
     expect(safeParseTags('{"a":1}')).toEqual([]);
+    expect(normalizeTagList(null)).toEqual([]);
   });
 });
 
-describe('countTags', () => {
-  it('聚合计数并按次数倒序', () => {
-    expect(countTags([['a', 'b'], ['a'], [], ['c', 'a']])).toEqual([
+describe('countTags / filterGamesByTag / rankRelatedGames', () => {
+  it('聚合计数并按次数倒序，单部作品内重复标签或空白只计一次', () => {
+    expect(countTags([['a', 'b', 'a'], [' a '], [''], ['c', 'a']])).toEqual([
       { tag: 'a', count: 3 },
       { tag: 'b', count: 1 },
       { tag: 'c', count: 1 },
     ]);
+  });
+
+  it('filterGamesByTag 支持首尾空白归一化与分页，且 total 与 countTags 一致', () => {
+    const games = [
+      parseGameRow({
+        slug: 'hp',
+        title: '哈利·波特与密室',
+        description: '',
+        cover_image: '',
+        tags: '["哈利波特","穿越","哈利波特"]',
+        created_at: '1',
+        updated_at: '2',
+      }),
+      parseGameRow({
+        slug: 'isekai',
+        title: '异世界之旅',
+        description: '',
+        cover_image: '',
+        tags: '[" 穿越 "]',
+        created_at: '1',
+        updated_at: '1',
+      }),
+    ];
+
+    const counts = countTags(games.map((g) => g.tags));
+    expect(counts).toEqual([
+      { tag: '穿越', count: 2 },
+      { tag: '哈利波特', count: 1 },
+    ]);
+
+    const hpResult = filterGamesByTag(games, ' 哈利波特 ');
+    expect(hpResult.total).toBe(1);
+    expect(hpResult.games.map((g) => g.slug)).toEqual(['hp']);
+
+    const pagedIsekai = filterGamesByTag(games, '穿越', { limit: 1, offset: 1 });
+    expect(pagedIsekai.total).toBe(2);
+    expect(pagedIsekai.games.map((g) => g.slug)).toEqual(['isekai']);
+
+    expect(filterGamesByTag(games, '   ')).toEqual({ games: [], total: 0 });
+    expect(applyGamesPaging(games, { offset: 1 })).toHaveLength(2);
+  });
+
+  it('rankRelatedGames 排除当前作品并按命中标签数排序', () => {
+    const games = [
+      parseGameRow({
+        slug: 'current',
+        title: 'Current',
+        description: '',
+        cover_image: '',
+        tags: '["悬疑","探案"]',
+        created_at: '1',
+        updated_at: '5',
+      }),
+      parseGameRow({
+        slug: 'one-match',
+        title: 'One',
+        description: '',
+        cover_image: '',
+        tags: '["悬疑"]',
+        created_at: '1',
+        updated_at: '4',
+      }),
+      parseGameRow({
+        slug: 'two-matches',
+        title: 'Two',
+        description: '',
+        cover_image: '',
+        tags: '["悬疑","探案"]',
+        created_at: '1',
+        updated_at: '3',
+      }),
+    ];
+
+    expect(rankRelatedGames(games, 'current', ['悬疑', '探案'], 4).map((g) => g.slug)).toEqual([
+      'two-matches',
+      'one-match',
+    ]);
+    expect(rankRelatedGames(games, 'current', ['   '], 4)).toEqual([]);
   });
 });
 

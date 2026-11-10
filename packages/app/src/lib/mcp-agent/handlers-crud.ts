@@ -72,6 +72,7 @@ export async function handleCreateGame(
       slug,
       title,
       description: typeof args.description === 'string' ? args.description : parsed.data.description,
+      ...(parsed.data.tags ? { tags: JSON.stringify(parsed.data.tags) } : {}),
       ownerId,
       createdAt: now,
       updatedAt: now,

@@ -37,22 +37,35 @@ export function parseGameRow(row: GameRow): ParsedGameRow {
   return { ...row, tags: safeParseTags(row.tags), ...pickRating(row) };
 }
 
+/** 归一化标签数组：仅保留非空字符串、去除首尾空白并按单部作品去重 */
+export function normalizeTagList(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set<string>();
+  const tags: string[] = [];
+  for (const item of raw) {
+    if (typeof item !== 'string') continue;
+    const tag = item.trim();
+    if (!tag || seen.has(tag)) continue;
+    seen.add(tag);
+    tags.push(tag);
+  }
+  return tags;
+}
+
 export function safeParseTags(raw: string | null): string[] {
   if (!raw) return [];
   try {
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed.filter((t) => typeof t === 'string');
-    return [];
+    return normalizeTagList(JSON.parse(raw));
   } catch {
     return [];
   }
 }
 
-/** 标签计数聚合（D1 分支与线上快照分支共用） */
+/** 标签计数聚合（D1 分支与线上快照分支共用）：每部作品内部先去重归一化，确保计数与列表筛选一致 */
 export function countTags(tagLists: string[][]): { tag: string; count: number }[] {
   const tagCounts = new Map<string, number>();
   for (const tags of tagLists) {
-    for (const tag of tags) {
+    for (const tag of normalizeTagList(tags)) {
       tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
     }
   }
@@ -61,6 +74,52 @@ export function countTags(tagLists: string[][]): { tag: string; count: number }[
   return Array.from(tagCounts.entries())
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count);
+}
+
+/** 与 D1 分支同语义：只有带 limit 才做分页（offset 单独出现时忽略） */
+export function applyGamesPaging(
+  rows: ParsedGameRow[],
+  options?: { limit?: number; offset?: number },
+): ParsedGameRow[] {
+  if (!options?.limit) return rows;
+  const offset = options.offset ?? 0;
+  return rows.slice(offset, offset + options.limit);
+}
+
+/** 按标签筛选已解析的游戏列表并分页（D1 分支与线上快照分支共用） */
+export function filterGamesByTag(
+  games: ParsedGameRow[],
+  tag: string,
+  options?: { limit?: number; offset?: number },
+): { games: ParsedGameRow[]; total: number } {
+  const normalizedTag = tag.trim();
+  if (!normalizedTag) return { games: [], total: 0 };
+  const filtered = games.filter((row) => row.tags.includes(normalizedTag));
+  return {
+    games: applyGamesPaging(filtered, options),
+    total: filtered.length,
+  };
+}
+
+/** 按标签匹配数计算相关游戏（同分保持原列表的 updated_at 倒序） */
+export function rankRelatedGames(
+  games: ParsedGameRow[],
+  currentSlug: string,
+  tags: string[],
+  limit: number,
+): ParsedGameRow[] {
+  const targetTags = normalizeTagList(tags);
+  if (targetTags.length === 0) return [];
+  return games
+    .filter((row) => row.slug !== currentSlug)
+    .map((row) => ({
+      row,
+      matchCount: row.tags.filter((tag) => targetTags.includes(tag)).length,
+    }))
+    .filter((item) => item.matchCount > 0)
+    .sort((a, b) => b.matchCount - a.matchCount)
+    .slice(0, limit)
+    .map((item) => item.row);
 }
 
 /** games 数据访问用到的最小 D1 接口面（结构化类型，避免依赖生成的 CloudflareEnv 全局） */

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
+import { parse } from '@roudanio/parser';
 import * as schema from '@/db/schema';
 import slugify from 'slugify';
 
@@ -86,12 +87,15 @@ published: false
 
     let id: number;
 
+    const parsedContent = content ? parse(content) : null;
+    const resolvedTags = tags ?? (parsedContent?.success ? parsedContent.data.tags : undefined);
+
     const commonFields = {
       title,
       description,
       backgroundStory,
       coverImage,
-      tags: tags ? JSON.stringify(tags) : undefined,
+      tags: resolvedTags ? JSON.stringify(resolvedTags) : undefined,
     };
 
     if (existingGame) {

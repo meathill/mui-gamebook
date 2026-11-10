@@ -5,17 +5,19 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { cache } from 'react';
 import type { GameRow, ParsedGameRow } from '@/types';
 import {
+  applyGamesPaging,
   countTags,
+  filterGamesByTag,
   gameListColumns,
+  normalizeTagList,
   parseGameRow,
-  pickRating,
   playableContentExists,
+  rankRelatedGames,
   ratingColumns,
   safeParseTags,
   withD1Fallback,
 } from './games-shared';
 import {
-  applyGamesPaging,
   fetchLiveGameBySlug,
   fetchLiveGamesSnapshot,
   getAllTagsFromLive,
@@ -103,35 +105,13 @@ export async function getPublishedGamesCount(): Promise<number> {
 }
 
 export async function getRelatedGames(currentSlug: string, tags: string[], limit = 4): Promise<ParsedGameRow[]> {
+  const normalizedTags = normalizeTagList(tags);
+  if (normalizedTags.length === 0) return [];
   return withD1Fallback(
     'Failed to get related games:',
-    () => getRelatedGamesFromLive(currentSlug, tags, limit),
+    () => getRelatedGamesFromLive(currentSlug, normalizedTags, limit),
     async (DB) => {
-      if (tags.length === 0) return [];
-
-      // 标签匹配数在 SQL 里算好：只回传前 N 行，避免全表拉取再内存打分。
-      // 排序与旧内存版一致：匹配数降序，同分按更新时间倒序。
-      try {
-        const placeholders = tags.map(() => '?').join(', ');
-        const { results } = (await DB.prepare(
-          `SELECT ${gameListColumns('g')}, ${ratingColumns('g')}, COUNT(gt.tag) AS match_count
-           FROM Games g
-           INNER JOIN GameTags gt ON g.id = gt.game_id
-           WHERE g.published = 1 AND g.shadow_banned = 0 AND ${playableContentExists('g')} AND g.slug != ? AND gt.tag IN (${placeholders})
-           GROUP BY g.id
-           ORDER BY match_count DESC, g.updated_at DESC
-           LIMIT ?`,
-        )
-          .bind(currentSlug, ...tags, limit)
-          .all()) as { results: (GameRow & { match_count: number })[] };
-
-        return results.map(({ match_count: _, ...row }) => parseGameRow(row));
-      } catch {
-        // GameTags 表不存在，降级到旧方法
-        console.log('GameTags table not found, falling back to full scan');
-      }
-
-      // 降级：获取所有已发布且可玩的游戏（除当前游戏外），然后在内存中按标签匹配排序
+      // 统一从 Games.tags JSON 读取并在内存中按匹配数打分（GameTags 表无写入链路，直接读 Games.tags 保证与目录/详情同源）
       const { results } = (await DB.prepare(
         `SELECT ${gameListColumns('Games')}, ${ratingColumns('Games')}
          FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')} AND slug != ?
@@ -140,23 +120,7 @@ export async function getRelatedGames(currentSlug: string, tags: string[], limit
         .bind(currentSlug)
         .all()) as { results: GameRow[] };
 
-      // 计算每个游戏与当前游戏的标签匹配数
-      const gamesWithScore = results.map((row) => {
-        const gameTags: string[] = safeParseTags(row.tags);
-        const matchCount = gameTags.filter((tag) => tags.includes(tag)).length;
-        return {
-          ...row,
-          tags: gameTags,
-          matchCount,
-        };
-      });
-
-      // 按匹配数排序，取前 N 个
-      return gamesWithScore
-        .filter((g) => g.matchCount > 0)
-        .sort((a, b) => b.matchCount - a.matchCount)
-        .slice(0, limit)
-        .map(({ matchCount: _, ...rest }) => ({ ...rest, ...pickRating(rest) }));
+      return rankRelatedGames(results.map(parseGameRow), currentSlug, normalizedTags, limit);
     },
   );
 }
@@ -314,79 +278,26 @@ export const cachedGetGameBySlug = cache(getGameBySlug);
 
 /**
  * 按标签获取已发布的游戏
- * 优先使用 GameTags 关联表，若表不存在则降级到 JSON 解析
+ * 与 getAllTags / getPublishedGames 统一从 Games.tags JSON 读取并复用相同公开过滤条件，
+ * 避免依赖未维护写入的 GameTags 关联表导致标签目录显示 0 剧本（issue #30）。
  */
 export async function getGamesByTag(
   tag: string,
   options?: { limit?: number; offset?: number },
 ): Promise<{ games: ParsedGameRow[]; total: number }> {
+  const normalizedTag = tag.trim();
+  if (!normalizedTag) return { games: [], total: 0 };
   return withD1Fallback(
     'Failed to fetch games by tag:',
-    () => getGamesByTagFromLive(tag, options),
+    () => getGamesByTagFromLive(normalizedTag, options),
     async (DB) => {
-      // 尝试使用 GameTags 关联表查询
-      try {
-        // 获取总数
-        const countResult = await DB.prepare(
-          `SELECT COUNT(DISTINCT g.id) as count
-           FROM Games g
-           INNER JOIN GameTags gt ON g.id = gt.game_id
-           WHERE g.published = 1 AND g.shadow_banned = 0 AND ${playableContentExists('g')} AND gt.tag = ?`,
-        )
-          .bind(tag)
-          .first<{ count: number }>();
-
-        const total = countResult?.count ?? 0;
-
-        // 分页查询
-        let query = `SELECT ${gameListColumns('g')}, ${ratingColumns('g')}
-                     FROM Games g
-                     INNER JOIN GameTags gt ON g.id = gt.game_id
-                     WHERE g.published = 1 AND g.shadow_banned = 0 AND ${playableContentExists('g')} AND gt.tag = ?
-                     ORDER BY g.updated_at DESC`;
-
-        if (options?.limit) {
-          query += ` LIMIT ${options.limit}`;
-          if (options?.offset) {
-            query += ` OFFSET ${options.offset}`;
-          }
-        }
-
-        const { results } = (await DB.prepare(query).bind(tag).all()) as { results: GameRow[] };
-
-        return {
-          games: results.map(parseGameRow),
-          total,
-        };
-      } catch {
-        // GameTags 表不存在，降级到旧方法
-        console.log('GameTags table not found, falling back to JSON parsing');
-      }
-
-      // 降级：获取所有已发布且可玩的游戏，然后在内存中筛选
       const { results } = (await DB.prepare(
         `SELECT ${gameListColumns('Games')}, ${ratingColumns('Games')}
          FROM Games WHERE published = 1 AND shadow_banned = 0 AND ${playableContentExists('Games')}
          ORDER BY updated_at DESC`,
       ).all()) as { results: GameRow[] };
 
-      const filteredGames = results.filter((row) => {
-        const gameTags: string[] = safeParseTags(row.tags);
-        return gameTags.includes(tag);
-      });
-
-      const total = filteredGames.length;
-
-      let paginatedGames = filteredGames;
-      if (options?.limit) {
-        const offset = options.offset || 0;
-        paginatedGames = filteredGames.slice(offset, offset + options.limit);
-      }
-
-      return {
-        games: paginatedGames.map(parseGameRow),
-        total,
-      };
+      return filterGamesByTag(results.map(parseGameRow), normalizedTag, options);
     },
   );
 }

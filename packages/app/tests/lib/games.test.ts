@@ -20,42 +20,84 @@ describe('games tag functions', () => {
   });
 
   describe('getGamesByTag', () => {
-    it('should return games matching the tag using GameTags table', async () => {
+    it('直接从 Games.tags JSON 查询并过滤，不依赖未维护的 GameTags 关联表', async () => {
       const mockGames = [
         {
-          slug: 'game1',
-          title: 'Game 1',
+          slug: 'harry-potter-2-chamber-of-secrets',
+          title: '哈利·波特与密室',
           description: 'Desc 1',
           cover_image: null,
-          tags: '["修仙"]',
+          tags: '["哈利波特","奇幻"]',
+          created_at: 1000,
+          updated_at: 3000,
+        },
+        {
+          slug: 'time-travel-story',
+          title: '穿越时空',
+          description: 'Desc 2',
+          cover_image: null,
+          tags: '["穿越","奇幻"]',
           created_at: 1000,
           updated_at: 2000,
         },
       ];
 
-      // Mock count query
       mockDB.prepare.mockReturnValueOnce({
-        bind: vi.fn().mockReturnValue({
-          first: vi.fn().mockResolvedValue({ count: 1 }),
-        }),
+        all: vi.fn().mockResolvedValue({ results: mockGames }),
       });
 
-      // Mock games query
-      mockDB.prepare.mockReturnValueOnce({
-        bind: vi.fn().mockReturnValue({
-          all: vi.fn().mockResolvedValue({ results: mockGames }),
-        }),
-      });
+      const result = await getGamesByTag('哈利波特', { limit: 10 });
 
-      const result = await getGamesByTag('修仙', { limit: 10 });
-
+      expect(mockDB.prepare).toHaveBeenCalledTimes(1);
+      expect(mockDB.prepare.mock.calls[0][0]).not.toContain('GameTags');
+      expect(mockDB.prepare.mock.calls[0][0]).toContain('FROM Games WHERE published = 1 AND shadow_banned = 0');
       expect(result.total).toBe(1);
       expect(result.games).toHaveLength(1);
-      expect(result.games[0].slug).toBe('game1');
-      expect(result.games[0].tags).toEqual(['修仙']);
+      expect(result.games[0].slug).toBe('harry-potter-2-chamber-of-secrets');
+      expect(result.games[0].tags).toEqual(['哈利波特', '奇幻']);
     });
 
-    it('should fall back to JSON parsing when GameTags table does not exist', async () => {
+    it('相同公开数据集下 getAllTags 的计数与 getGamesByTag 的 total 严格一致（issue #30）', async () => {
+      const mockGames = [
+        {
+          slug: 'harry-potter-2-chamber-of-secrets',
+          title: '哈利·波特与密室',
+          description: 'Desc 1',
+          cover_image: null,
+          tags: '["哈利波特","穿越","哈利波特"]',
+          created_at: 1000,
+          updated_at: 3000,
+        },
+        {
+          slug: 'isekai-adventure',
+          title: '异界穿越',
+          description: 'Desc 2',
+          cover_image: null,
+          tags: '[" 穿越 ","冒险"]',
+          created_at: 1000,
+          updated_at: 2000,
+        },
+      ];
+
+      mockDB.prepare.mockReturnValue({
+        all: vi.fn().mockResolvedValue({ results: mockGames }),
+      });
+
+      const allTags = await getAllTags();
+      expect(allTags).toEqual([
+        { tag: '穿越', count: 2 },
+        { tag: '哈利波特', count: 1 },
+        { tag: '冒险', count: 1 },
+      ]);
+
+      for (const { tag, count } of allTags) {
+        const { games, total } = await getGamesByTag(tag);
+        expect(total).toBe(count);
+        expect(games).toHaveLength(count);
+      }
+    });
+
+    it('支持分页切片且保留完整 total，无匹配或空白标签时返回 0', async () => {
       const mockGames = [
         {
           slug: 'game1',
@@ -64,54 +106,34 @@ describe('games tag functions', () => {
           cover_image: null,
           tags: '["修仙","冒险"]',
           created_at: 1000,
-          updated_at: 2000,
+          updated_at: 3000,
         },
         {
           slug: 'game2',
           title: 'Game 2',
           description: 'Desc 2',
           cover_image: null,
-          tags: '["童话"]',
+          tags: '["修仙"]',
           created_at: 1000,
           updated_at: 2000,
         },
       ];
 
-      // Mock GameTags query failure
-      mockDB.prepare.mockReturnValueOnce({
-        bind: vi.fn().mockReturnValue({
-          first: vi.fn().mockRejectedValue(new Error('no such table: GameTags')),
-        }),
-      });
-
-      // Mock fallback query
-      mockDB.prepare.mockReturnValueOnce({
+      mockDB.prepare.mockReturnValue({
         all: vi.fn().mockResolvedValue({ results: mockGames }),
       });
 
-      const result = await getGamesByTag('修仙');
+      const paged = await getGamesByTag('修仙', { limit: 1, offset: 1 });
+      expect(paged.total).toBe(2);
+      expect(paged.games.map((g) => g.slug)).toEqual(['game2']);
 
-      expect(result.total).toBe(1);
-      expect(result.games[0].slug).toBe('game1');
-    });
+      const empty = await getGamesByTag('不存在的标签');
+      expect(empty).toEqual({ games: [], total: 0 });
 
-    it('should return empty result when no games match', async () => {
-      mockDB.prepare.mockReturnValueOnce({
-        bind: vi.fn().mockReturnValue({
-          first: vi.fn().mockResolvedValue({ count: 0 }),
-        }),
-      });
-
-      mockDB.prepare.mockReturnValueOnce({
-        bind: vi.fn().mockReturnValue({
-          all: vi.fn().mockResolvedValue({ results: [] }),
-        }),
-      });
-
-      const result = await getGamesByTag('不存在的标签');
-
-      expect(result.total).toBe(0);
-      expect(result.games).toHaveLength(0);
+      vi.clearAllMocks();
+      const blank = await getGamesByTag('   ');
+      expect(blank).toEqual({ games: [], total: 0 });
+      expect(mockDB.prepare).not.toHaveBeenCalled();
     });
   });
 
@@ -368,16 +390,6 @@ title: "测试作品"
   describe('getRelatedGames', () => {
     const mockRows = [
       {
-        slug: 'game-a',
-        title: 'Game A',
-        description: 'Desc A',
-        cover_image: null,
-        tags: '["悬疑","探案"]',
-        created_at: 1000,
-        updated_at: 3000,
-        match_count: 2,
-      },
-      {
         slug: 'game-b',
         title: 'Game B',
         description: 'Desc B',
@@ -385,11 +397,19 @@ title: "测试作品"
         tags: '["悬疑"]',
         created_at: 1000,
         updated_at: 4000,
-        match_count: 1,
+      },
+      {
+        slug: 'game-a',
+        title: 'Game A',
+        description: 'Desc A',
+        cover_image: null,
+        tags: '["悬疑","探案"]',
+        created_at: 1000,
+        updated_at: 3000,
       },
     ];
 
-    it('走 GameTags 在 SQL 内排序，只取前 N 行', async () => {
+    it('从 Games.tags JSON 计算匹配数并按匹配数降序、更新时间倒序取前 N 行', async () => {
       const bind = vi.fn().mockReturnValue({
         all: vi.fn().mockResolvedValue({ results: mockRows }),
       });
@@ -399,13 +419,12 @@ title: "测试作品"
       const result = await getRelatedGames('current', ['悬疑', '探案'], 4);
 
       const sql = prepare.mock.calls[0][0] as string;
-      expect(sql).toContain('GROUP BY');
-      expect(sql).toContain('ORDER BY match_count DESC');
-      expect(sql).toContain('LIMIT ?');
-      expect(bind).toHaveBeenCalledWith('current', '悬疑', '探案', 4);
+      expect(sql).not.toContain('GameTags');
+      expect(sql).toContain('FROM Games WHERE published = 1 AND shadow_banned = 0');
+      expect(bind).toHaveBeenCalledWith('current');
       expect(result.map((game) => game.slug)).toEqual(['game-a', 'game-b']);
       expect(result[0].tags).toEqual(['悬疑', '探案']);
-      expect(result[0]).not.toHaveProperty('match_count');
+      expect(result[0]).not.toHaveProperty('matchCount');
     });
 
     it('无标签时直接返回空，不查库', async () => {
@@ -413,26 +432,6 @@ title: "测试作品"
 
       expect(result).toEqual([]);
       expect(mockDB.prepare).not.toHaveBeenCalled();
-    });
-
-    it('GameTags 表不存在时降级全表扫描 + 内存打分', async () => {
-      mockDB.prepare
-        .mockReturnValueOnce({
-          bind: vi.fn().mockReturnValue({
-            all: vi.fn().mockRejectedValue(new Error('no such table: GameTags')),
-          }),
-        })
-        .mockReturnValueOnce({
-          bind: vi.fn().mockReturnValue({
-            all: vi.fn().mockResolvedValue({ results: mockRows }),
-          }),
-        });
-
-      const result = await getRelatedGames('current-game', ['悬疑', '探案'], 4);
-
-      // 内存打分：game-a 命中 2 个标签排前，game-b 命中 1 个排后
-      //（排除当前作品由 SQL 的 slug != ? 保证，见上一条对 bind 参数的断言）
-      expect(result.map((game) => game.slug)).toEqual(['game-a', 'game-b']);
     });
   });
 });

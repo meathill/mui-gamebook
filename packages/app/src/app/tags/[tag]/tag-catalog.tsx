@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { getTranslations } from 'next-intl/server';
 import { Metadata } from 'next';
 import Link from 'next/link';
@@ -11,34 +12,39 @@ export const TAG_PAGE_SIZE = 12;
 
 function safeDecodeTag(tag: string): string {
   try {
-    return decodeURIComponent(tag);
+    return decodeURIComponent(tag).trim();
   } catch {
-    return tag;
+    return tag.trim();
   }
 }
 
+const getTagPageData = cache(async (decodedTag: string, currentPage: number) => {
+  const offset = (currentPage - 1) * TAG_PAGE_SIZE;
+  return getGamesByTag(decodedTag, {
+    limit: TAG_PAGE_SIZE,
+    offset,
+  });
+});
+
 export async function generateTagMetadata(tag: string, page: number): Promise<Metadata> {
   const decodedTag = safeDecodeTag(tag);
-  const t = await getTranslations('tags');
+  const currentPage = Math.max(1, page);
+  const [t, { games }] = await Promise.all([getTranslations('tags'), getTagPageData(decodedTag, currentPage)]);
   const basePath = `/tags/${tag}`;
 
   return {
     title: t('pageTitle', { tag: decodedTag }),
     description: t('pageDescription', { tag: decodedTag }),
-    alternates: { canonical: catalogPageHref(basePath, page) },
+    alternates: { canonical: catalogPageHref(basePath, currentPage) },
+    // 真正无公开作品的空标签页或越界分页不进入索引，有效目录保持正常索引（issue #30）
+    ...(games.length === 0 ? { robots: { index: false, follow: true } } : {}),
   };
 }
 
 export async function TagCatalog({ tag, page }: { tag: string; page: number }) {
   const decodedTag = safeDecodeTag(tag);
   const currentPage = Math.max(1, page);
-  const offset = (currentPage - 1) * TAG_PAGE_SIZE;
-  const t = await getTranslations('tags');
-
-  const { games, total } = await getGamesByTag(decodedTag, {
-    limit: TAG_PAGE_SIZE,
-    offset,
-  });
+  const [t, { games, total }] = await Promise.all([getTranslations('tags'), getTagPageData(decodedTag, currentPage)]);
 
   const totalPages = Math.ceil(total / TAG_PAGE_SIZE);
 

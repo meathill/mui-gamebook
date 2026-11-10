@@ -98,6 +98,32 @@ describe('POST /api/agent/games', () => {
     expect(mockDb.update).toHaveBeenCalledTimes(1); // 只更新 games，不更新 gameContent
     expect(mockDb.insert).toHaveBeenCalledTimes(1); // 补插 gameContent
   });
+
+  it('未传顶层 tags 但传入含 frontmatter tags 的 content 时，自动同步到 Games.tags', async () => {
+    mockDb.limit.mockResolvedValueOnce([{ id: 'first-user' }]);
+    mockDb.get.mockResolvedValueOnce(null);
+    mockDb.returning.mockResolvedValueOnce([{ id: 12 }]);
+
+    const content = `---
+title: "哈利·波特与密室"
+tags:
+  - 哈利波特
+  - 奇幻
+---
+
+# start
+密室被打开了。
+`;
+    const res = await POST(makeReq({ title: '哈利·波特与密室', slug: 'hp-2', content }));
+
+    expect(res.status).toBe(200);
+    expect(mockDb.values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slug: 'hp-2',
+        tags: JSON.stringify(['哈利波特', '奇幻']),
+      }),
+    );
+  });
 });
 
 describe('GET /api/agent/games', () => {
