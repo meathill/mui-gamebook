@@ -1,5 +1,6 @@
 import { GoogleAnalytics } from '@next/third-parties/google';
 import type { Metadata } from 'next';
+import Clarity from '@/components/Clarity';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { getLocale, getMessages } from 'next-intl/server';
 import './globals.css';
@@ -71,6 +72,7 @@ export default async function RootLayout({
         />
       </head>
       {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />}
+      <Clarity />
       <body className={cn('antialiased flex flex-col min-h-screen', interSans.variable, jetBrainsMono.variable)}>
         <LocaleProvider
           initialLocale={locale as Locale}

@@ -19,6 +19,7 @@ if (existsSync(envPath)) {
 const knownValues: Record<string, string> = {
   NEXT_PUBLIC_SITE_URL: 'https://muistory.com',
   NEXT_PUBLIC_GA_ID: 'G-244NXPS1H0',
+  NEXT_PUBLIC_CLARITY_ID: 'zh74gh2cce',
   NEXT_PUBLIC_ROOT_USER_EMAIL: 'meathill@gmail.com',
 };
 
