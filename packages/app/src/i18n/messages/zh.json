@@ -535,7 +535,8 @@
     "verifyError": "验证码错误或已过期",
     "signInError": "登录失败，请检查邮箱和密码",
     "loading": "处理中...",
-    "unknownError": "发生未知错误"
+    "unknownError": "发生未知错误",
+    "agreeHint": "登录或注册即表示您同意我们的 <terms>服务条款</terms> 和 <privacy>隐私政策</privacy>"
   },
   "errors": {
     "notFound": "页面未找到",

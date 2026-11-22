@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 import { trackLogin } from '@mui-gamebook/site-common/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -280,6 +281,25 @@ export default function SignInPage() {
             </button>
           )}
         </div>
+
+        <p className="text-center text-xs text-gray-400">
+          {t.rich('agreeHint', {
+            terms: (chunks) => (
+              <Link
+                href="/terms"
+                className="text-gray-600 underline decoration-gray-300 underline-offset-2 hover:text-gray-900">
+                {chunks}
+              </Link>
+            ),
+            privacy: (chunks) => (
+              <Link
+                href="/privacy"
+                className="text-gray-600 underline decoration-gray-300 underline-offset-2 hover:text-gray-900">
+                {chunks}
+              </Link>
+            ),
+          })}
+        </p>
       </div>
     </div>
   );

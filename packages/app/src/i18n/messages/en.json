@@ -535,7 +535,8 @@
     "verifyError": "Invalid or expired code",
     "signInError": "Sign in failed. Please check your email and password.",
     "loading": "Processing...",
-    "unknownError": "An unknown error occurred"
+    "unknownError": "An unknown error occurred",
+    "agreeHint": "By signing in or creating an account, you agree to our <terms>Terms of Service</terms> and <privacy>Privacy Policy</privacy>"
   },
   "errors": {
     "notFound": "Page not found",
