@@ -27,13 +27,18 @@ vi.mock('@/lib/auth-config', () => ({
   createAuth: vi.fn(),
 }));
 
+// Mock 公开目录缓存失效（内部依赖 next/cache 与 CF 上下文）
+vi.mock('@/lib/public-cache', () => ({
+  revalidatePublicCatalog: vi.fn(),
+}));
+
 import { GET, POST } from '@/app/api/admin/users/route';
 import { GET as GET_USER, PUT as PUT_USER, DELETE as DELETE_USER } from '@/app/api/admin/users/[id]/route';
-import { PUT as PUT_PASSWORD } from '@/app/api/admin/users/[id]/password/route';
+import { PATCH as PATCH_BAN } from '@/app/api/admin/users/[id]/ban/route';
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import { drizzle } from 'drizzle-orm/d1';
 import { getSession } from '@/lib/auth-server';
-import { isRootUser } from '@/lib/admin';
+import { isRootUser, isAdminUser } from '@/lib/admin';
 import { createAuth } from '@/lib/auth-config';
 
 describe('Admin Users API', () => {
@@ -51,11 +56,12 @@ describe('Admin Users API', () => {
     (getCloudflareContext as ReturnType<typeof vi.fn>).mockReturnValue({ env: mockEnv });
     (getSession as ReturnType<typeof vi.fn>).mockResolvedValue(mockSession);
     (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(true);
+    (isAdminUser as ReturnType<typeof vi.fn>).mockReturnValue(true);
   });
 
   describe('GET /api/admin/users', () => {
     it('应该拒绝非管理员的请求', async () => {
-      (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      (isAdminUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
 
       const req = new Request('http://localhost/api/admin/users');
       const res = await GET(req);
@@ -270,79 +276,110 @@ describe('Admin Users API', () => {
     });
   });
 
-  describe('PUT /api/admin/users/[id]/password', () => {
+  describe('PATCH /api/admin/users/[id]/ban', () => {
     it('应该拒绝非管理员的请求', async () => {
-      (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      (isAdminUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
 
-      const req = new Request('http://localhost/api/admin/users/u1/password', {
-        method: 'PUT',
+      const req = new Request('http://localhost/api/admin/users/u1/ban', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: '123456' }),
+        body: JSON.stringify({ banned: true }),
       });
-      const res = await PUT_PASSWORD(req, { params: Promise.resolve({ id: 'u1' }) });
+      const res = await PATCH_BAN(req, { params: Promise.resolve({ id: 'u1' }) });
 
       expect(res.status).toBe(403);
     });
 
-    it('应该拒绝过短的密码', async () => {
-      const req = new Request('http://localhost/api/admin/users/u1/password', {
-        method: 'PUT',
+    it('应该拒绝缺少 banned 字段的请求', async () => {
+      const req = new Request('http://localhost/api/admin/users/u1/ban', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: '12' }),
+        body: JSON.stringify({ banReason: 'NSFW' }),
       });
-      const res = await PUT_PASSWORD(req, { params: Promise.resolve({ id: 'u1' }) });
+      const res = await PATCH_BAN(req, { params: Promise.resolve({ id: 'u1' }) });
 
       expect(res.status).toBe(400);
     });
 
-    it('应该在找不到 credential account 时返回错误', async () => {
-      const mockDb = {
-        select: vi.fn().mockReturnThis(),
-        from: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        get: vi.fn().mockResolvedValue(null),
-      };
-      (drizzle as ReturnType<typeof vi.fn>).mockReturnValue(mockDb);
-      (createAuth as ReturnType<typeof vi.fn>).mockReturnValue({});
-
-      const req = new Request('http://localhost/api/admin/users/u1/password', {
-        method: 'PUT',
+    it('应该拒绝封禁自己', async () => {
+      const req = new Request('http://localhost/api/admin/users/admin-1/ban', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: '123456' }),
+        body: JSON.stringify({ banned: true }),
       });
-      const res = await PUT_PASSWORD(req, { params: Promise.resolve({ id: 'u1' }) });
+      const res = await PATCH_BAN(req, { params: Promise.resolve({ id: 'admin-1' }) });
 
       expect(res.status).toBe(400);
       const data = (await res.json()) as any;
-      expect(data.error).toContain('密码登录');
+      expect(data.error).toContain('自己');
     });
 
-    it('应该成功修改密码', async () => {
+    it('应该拒绝封禁 root 账号', async () => {
       const mockDb = {
         select: vi.fn().mockReturnThis(),
         from: vi.fn().mockReturnThis(),
         where: vi.fn().mockReturnThis(),
-        get: vi.fn().mockResolvedValue({ id: 'acc-1', userId: 'u1', providerId: 'credential' }),
-        update: vi.fn().mockReturnThis(),
-        set: vi.fn().mockReturnThis(),
+        get: vi.fn().mockResolvedValue({ email: 'admin@test.com' }),
       };
       (drizzle as ReturnType<typeof vi.fn>).mockReturnValue(mockDb);
-      (createAuth as ReturnType<typeof vi.fn>).mockReturnValue({
-        $context: Promise.resolve({
-          password: { hash: vi.fn().mockResolvedValue('hashed-password') },
-        }),
-      });
 
-      const req = new Request('http://localhost/api/admin/users/u1/password', {
-        method: 'PUT',
+      const req = new Request('http://localhost/api/admin/users/u1/ban', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword: 'newpass123' }),
+        body: JSON.stringify({ banned: true }),
       });
-      const res = await PUT_PASSWORD(req, { params: Promise.resolve({ id: 'u1' }) });
+      const res = await PATCH_BAN(req, { params: Promise.resolve({ id: 'u1' }) });
+
+      expect(res.status).toBe(400);
+      const data = (await res.json()) as any;
+      expect(data.error).toContain('root');
+    });
+
+    it('封禁应级联清除 session', async () => {
+      (isRootUser as ReturnType<typeof vi.fn>).mockReturnValue(false);
+      const sessionDelete = vi.fn().mockResolvedValue(undefined);
+      const mockDb = {
+        select: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        get: vi.fn().mockResolvedValue({ email: 'u1@test.com' }),
+        update: vi.fn().mockReturnThis(),
+        set: vi.fn().mockReturnThis(),
+        delete: vi.fn(() => ({ where: sessionDelete })),
+      };
+      (drizzle as ReturnType<typeof vi.fn>).mockReturnValue(mockDb);
+
+      const req = new Request('http://localhost/api/admin/users/u1/ban', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ banned: true, banReason: 'NSFW', shadowBanGames: false }),
+      });
+      const res = await PATCH_BAN(req, { params: Promise.resolve({ id: 'u1' }) });
 
       expect(res.status).toBe(200);
       const data = (await res.json()) as any;
       expect(data.success).toBe(true);
+      expect(data.banned).toBe(true);
+      expect(mockDb.delete).toHaveBeenCalled();
+    });
+
+    it('应该在用户不存在时返回 404', async () => {
+      const mockDb = {
+        select: vi.fn().mockReturnThis(),
+        from: vi.fn().mockReturnThis(),
+        where: vi.fn().mockReturnThis(),
+        get: vi.fn().mockResolvedValue(undefined),
+      };
+      (drizzle as ReturnType<typeof vi.fn>).mockReturnValue(mockDb);
+
+      const req = new Request('http://localhost/api/admin/users/ghost/ban', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ banned: true }),
+      });
+      const res = await PATCH_BAN(req, { params: Promise.resolve({ id: 'ghost' }) });
+
+      expect(res.status).toBe(404);
     });
   });
 });

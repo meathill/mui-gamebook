@@ -6,7 +6,15 @@ import { desc, eq } from 'drizzle-orm';
 import slugify from 'slugify';
 import * as schema from '@/db/schema';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
-import { type McpGameContext, type McpToolContext, type McpToolOutcome, fail, ok, writeGameContent } from './shared';
+import {
+  type McpGameContext,
+  moderatePublishGuard,
+  type McpToolContext,
+  type McpToolOutcome,
+  fail,
+  ok,
+  writeGameContent,
+} from './shared';
 
 export async function handleListGames(
   { db, actor }: McpToolContext,
@@ -122,6 +130,14 @@ export async function handleUpdateGameMeta(
       if (existing) return fail(`slug 已被占用: ${nextSlug}`);
     }
   }
+  // NSFW 发布审查：发布或已发布作品的公开元数据变化时触发
+  const guardResult = await moderatePublishGuard(db, game, {
+    published: typeof args.published === 'boolean' ? args.published : Boolean(game.published),
+    title: typeof args.title === 'string' ? args.title : game.title,
+    description: typeof args.description === 'string' ? args.description : game.description,
+    backgroundStory: typeof args.backgroundStory === 'string' ? args.backgroundStory : game.backgroundStory,
+  });
+  if (guardResult) return guardResult;
   await db
     .update(schema.games)
     .set({

@@ -8,6 +8,7 @@ import { eq, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '@/db/schema';
+import { isModerationError, moderatePublishIfNeeded } from '@/lib/content-moderation';
 import { canManageGame } from '@/lib/game-access';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
 import { saveEditorContent } from '@/lib/media-assistance/editor-save';
@@ -46,6 +47,49 @@ export function ok(message: string, data?: Record<string, unknown>): McpToolOutc
 
 export function fail(message: string): McpToolOutcome {
   return { ok: false, message };
+}
+
+/**
+ * MCP 侧 NSFW 发布审查守卫：发布可见性或公开内容变化时跑审查，
+ * 未通过返回 fail（不抛错，MCP 工具层以结果对象为协议）。
+ *
+ * @param next 目标元数据；nextContent 缺省视为正文不变（取当前库里的正文参与审查）
+ */
+export async function moderatePublishGuard(
+  db: DrizzleD1Database<typeof schema>,
+  game: {
+    id: number;
+    published: boolean | number | null;
+    title: string;
+    description: string | null;
+    backgroundStory: string | null;
+  },
+  next: { published: boolean; title: string; description: string | null; backgroundStory: string | null },
+  nextContent?: string,
+): Promise<McpToolOutcome | null> {
+  if (!next.published) return null;
+  const contentRow = await db
+    .select({ content: schema.gameContent.content })
+    .from(schema.gameContent)
+    .where(eq(schema.gameContent.gameId, game.id))
+    .get();
+  const currentContent = contentRow?.content ?? null;
+  try {
+    await moderatePublishIfNeeded({
+      next: { ...next, content: nextContent ?? currentContent ?? '' },
+      current: {
+        published: Boolean(game.published),
+        title: game.title,
+        description: game.description,
+        backgroundStory: game.backgroundStory,
+        content: currentContent,
+      },
+    });
+    return null;
+  } catch (error) {
+    if (isModerationError(error)) return fail(error.message);
+    throw error;
+  }
 }
 
 export function getDb(): DrizzleD1Database<typeof schema> {
@@ -87,7 +131,15 @@ export async function loadManagedGame(db: DrizzleD1Database<typeof schema>, game
 
 export async function writeGameContent(
   db: DrizzleD1Database<typeof schema>,
-  game: { id: number; slug: string; mediaAssistanceEnabled?: boolean },
+  game: {
+    id: number;
+    slug: string;
+    mediaAssistanceEnabled?: boolean;
+    published: boolean | number | null;
+    title: string;
+    description: string | null;
+    backgroundStory: string | null;
+  },
   nextDsl: string,
   expectedRevision?: number,
 ) {
@@ -111,6 +163,19 @@ export async function writeGameContent(
     }
   }
   const { title, description, backgroundStory, cover_image, tags, published } = revalidate.data;
+  // NSFW 发布审查：发布跃迁或已发布作品正文变更时触发
+  const guardResult = await moderatePublishGuard(
+    db,
+    game,
+    {
+      published: Boolean(published),
+      title,
+      description: description ?? null,
+      backgroundStory: backgroundStory ?? null,
+    },
+    nextDsl,
+  );
+  if (guardResult) return guardResult;
   await db
     .update(schema.games)
     .set({

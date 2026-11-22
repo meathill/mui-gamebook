@@ -1,7 +1,15 @@
 'use client';
 
 import { formatDateTime as formatDate } from '@mui-gamebook/site-common/utils';
-import { EyeIcon, EyeSlashIcon, MagnifyingGlassIcon, PencilIcon, ProhibitIcon, TrashIcon } from '@phosphor-icons/react';
+import {
+  EyeIcon,
+  EyeSlashIcon,
+  MagnifyingGlassIcon,
+  PencilIcon,
+  ProhibitIcon,
+  SparkleIcon,
+  TrashIcon,
+} from '@phosphor-icons/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import PaginationBar from '@/components/admin/PaginationBar';
@@ -118,6 +126,31 @@ export default function AdminGamesPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'games'] });
+    },
+    onError: (e) => {
+      dialog.error((e as Error).message);
+    },
+  });
+
+  /** NSFW 审查（违禁词 + LLM），只读不改状态，结论用弹窗展示 */
+  const moderateMutation = useMutation({
+    mutationFn: async (slug: string) => {
+      const res = await fetch(`/api/admin/games/${slug}/moderate`, { method: 'POST' });
+      if (!res.ok) {
+        const err = (await res.json()) as { error?: string };
+        throw new Error(err.error || '审查失败');
+      }
+      return res.json() as Promise<{ pass: boolean; source: string; reason: string | null }>;
+    },
+    onSuccess: (verdict, slug) => {
+      if (verdict.pass) {
+        dialog.success('AI 审查通过，未发现明显违规内容', `审查「${slug}」`);
+      } else {
+        dialog.error(
+          `${verdict.reason ?? '发现疑似违规内容'}（审查方式：${verdict.source}），建议封禁或下架`,
+          `审查「${slug}」`,
+        );
+      }
     },
     onError: (e) => {
       dialog.error((e as Error).message);
@@ -300,6 +333,13 @@ export default function AdminGamesPage() {
                         className="p-2 text-gray-400 hover:text-amber-600 rounded disabled:opacity-50"
                         title={game.published ? '下架' : '发布'}>
                         {game.published ? <EyeSlashIcon size={16} /> : <EyeIcon size={16} />}
+                      </button>
+                      <button
+                        onClick={() => moderateMutation.mutate(game.slug)}
+                        disabled={moderateMutation.isPending}
+                        className="p-2 text-gray-400 hover:text-purple-600 rounded disabled:opacity-50"
+                        title="AI 内容审查（NSFW 检查，只读）">
+                        <SparkleIcon size={16} />
                       </button>
                       <button
                         onClick={() => handleShadowBan(game)}

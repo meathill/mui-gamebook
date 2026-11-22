@@ -5,6 +5,7 @@ import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
 import { getSession } from '@/lib/auth-server';
+import { isModerationError, moderatePublishIfNeeded } from '@/lib/content-moderation';
 import { getManagedGame } from '@/lib/game-access';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
 import { saveEditorContent } from '@/lib/media-assistance/editor-save';
@@ -122,8 +123,34 @@ export async function PUT(req: Request, { params }: Props) {
     } catch (error) {
       if (error instanceof AssistanceError)
         return NextResponse.json({ error: error.message }, { status: error.status });
+      if (isModerationError(error)) return NextResponse.json({ error: error.message }, { status: 400 });
       throw error;
     }
+  }
+
+  // NSFW 发布审查：发布跃迁或已发布作品变更时触发（此分支为无版本号的直写保存）
+  if (published) {
+    const currentContent = await db
+      .select({ content: schema.gameContent.content })
+      .from(schema.gameContent)
+      .where(eq(schema.gameContent.gameId, id))
+      .get();
+    await moderatePublishIfNeeded({
+      next: {
+        published: true,
+        title,
+        description: description ?? null,
+        backgroundStory: backgroundStory ?? null,
+        content,
+      },
+      current: {
+        published: Boolean(currentGame.published),
+        title: currentGame.title,
+        description: currentGame.description,
+        backgroundStory: currentGame.backgroundStory,
+        content: currentContent?.content ?? null,
+      },
+    });
   }
 
   await db

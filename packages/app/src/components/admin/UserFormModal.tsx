@@ -31,6 +31,10 @@ interface UserFormModalProps {
   setFormAiPermissions: (value: AiPermissions | null) => void;
   formIsAdmin: boolean;
   setFormIsAdmin: (value: boolean) => void;
+  formBanReason: string;
+  setFormBanReason: (value: string) => void;
+  formShadowBanGames: boolean;
+  setFormShadowBanGames: (value: boolean) => void;
   /** 当前登录者是 root：只有 root 能授予/取消管理员 */
   canGrantAdmin: boolean;
   /** 被编辑的用户就是当前登录者：不能取消自己的管理员权限 */
@@ -41,7 +45,7 @@ interface UserFormModalProps {
   onClose: () => void;
   onCreateSubmit: (e: React.FormEvent) => void;
   onEditSubmit: (e: React.FormEvent) => void;
-  onPasswordSubmit: (e: React.FormEvent) => void;
+  onBanSubmit: (e: React.FormEvent) => void;
 }
 
 function TextField({
@@ -121,6 +125,10 @@ export default function UserFormModal({
   setFormAiPermissions,
   formIsAdmin,
   setFormIsAdmin,
+  formBanReason,
+  setFormBanReason,
+  formShadowBanGames,
+  setFormShadowBanGames,
   canGrantAdmin,
   isSelf,
   planLabel,
@@ -128,7 +136,7 @@ export default function UserFormModal({
   onClose,
   onCreateSubmit,
   onEditSubmit,
-  onPasswordSubmit,
+  onBanSubmit,
 }: UserFormModalProps) {
   return (
     <Dialog
@@ -141,7 +149,7 @@ export default function UserFormModal({
           <DialogTitle>
             {modalType === 'create' && '创建用户'}
             {modalType === 'edit' && '编辑用户'}
-            {modalType === 'password' && '修改密码'}
+            {modalType === 'ban' && '封禁用户'}
           </DialogTitle>
         </DialogHeader>
 
@@ -236,30 +244,38 @@ export default function UserFormModal({
           </form>
         )}
 
-        {/* Password Form */}
-        {modalType === 'password' && (
+        {/* Ban Form */}
+        {modalType === 'ban' && (
           <form
-            onSubmit={onPasswordSubmit}
+            onSubmit={onBanSubmit}
             className="space-y-4">
-            <p className="text-muted-foreground text-sm">正在为用户「{editingUser?.name}」修改密码</p>
+            <p className="text-muted-foreground text-sm">
+              封禁「{editingUser?.name}」（{editingUser?.email}）后，其全部登录状态立即失效，且无法再登录。
+            </p>
             <TextField
-              label="新密码"
-              type="password"
-              value={formPassword}
-              onChange={setFormPassword}
-              minLength={6}
+              label="封禁原因（内部记录，可选）"
+              type="text"
+              value={formBanReason}
+              onChange={setFormBanReason}
+              required={false}
             />
-            <TextField
-              label="确认新密码"
-              type="password"
-              value={formPasswordConfirm}
-              onChange={setFormPasswordConfirm}
-              minLength={6}
-            />
+            <label className="flex items-start gap-2 text-sm">
+              <Checkbox
+                checked={formShadowBanGames}
+                onCheckedChange={(checked) => setFormShadowBanGames(checked === true)}
+                className="mt-0.5"
+              />
+              <span>
+                同时下架其全部已发布作品
+                <span className="block text-muted-foreground text-xs">
+                  处置违规内容时勾选；作品解封需在游戏管理中逐个操作。
+                </span>
+              </span>
+            </label>
             <ModalActions
               pending={activeMutation.isPending}
-              pendingText="修改中..."
-              submitText="修改密码"
+              pendingText="处理中..."
+              submitText="封禁"
               onClose={onClose}
             />
           </form>

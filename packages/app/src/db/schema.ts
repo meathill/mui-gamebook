@@ -15,6 +15,10 @@ export const user = sqliteTable('user', {
   aiPermissions: text('ai_permissions'),
   // 管理员标记（内容管理员）：可进后台查看统计、管理游戏，且不受 Token 限制；只有 root 能授予
   isAdmin: integer('is_admin', { mode: 'boolean' }).notNull().default(false),
+  // 封禁标记：封禁后 OTP 不发送、session 级联清除，无法再登录（见 migrations/0016_user_ban.sql）
+  banned: integer('banned', { mode: 'boolean' }).notNull().default(false),
+  bannedAt: integer('banned_at', { mode: 'timestamp' }),
+  banReason: text('ban_reason'),
   // 用户自选文本模型：preferred_text_provider 为 5 种文本供应商之一，preferred_text_model 为具体模型 ID；
   // 均为空 = 跟随系统默认；仅付费用户（有效订阅/管理员/root）允许设置，免费用户锁定默认
   preferredTextProvider: text('preferred_text_provider'),
@@ -79,6 +83,16 @@ export const verification = sqliteTable('verification', {
   expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }),
   updatedAt: integer('updated_at', { mode: 'timestamp' }),
+});
+
+/** better-auth 全局限速存储（rateLimit 模型，storage: 'database'）。
+ * 导出名必须是 `rateLimit`：drizzle adapter 按 model 名取表（见 migrations/0017_auth_rate_limit.sql）。
+ */
+export const rateLimit = sqliteTable('RateLimit', {
+  id: text('id').primaryKey(),
+  key: text('key').notNull(),
+  count: integer('count').notNull(),
+  lastRequest: integer('last_request').notNull(),
 });
 
 /** better-auth apiKey 插件（用户级 API Key，供 MCP / Agent 使用）。

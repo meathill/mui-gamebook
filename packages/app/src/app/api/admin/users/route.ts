@@ -3,7 +3,7 @@ import { asc, desc, like, or, sql } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/d1';
 import { NextResponse } from 'next/server';
 import * as schema from '@/db/schema';
-import { isRootUser } from '@/lib/admin';
+import { isAdminUser, isRootUser } from '@/lib/admin';
 import { createAuth } from '@/lib/auth-config';
 import {
   AI_AUDIO_COUNT_SUBQUERY,
@@ -32,13 +32,13 @@ const ROLE_FILTERS = ['all', 'admin', 'user'] as const;
 
 /**
  * GET /api/admin/users
- * 获取用户列表（分页 + 搜索 + 排序 + 身份筛选），仅 root 管理员可用
+ * 获取用户列表（分页 + 搜索 + 排序 + 身份筛选），root 或内容管理员可用
  * Query: ?page=1&limit=20&search=xxx&sort=createdAt&order=desc&role=all|admin|user
  */
 export async function GET(request: Request) {
   try {
     const session = await getSession();
-    if (!session?.user?.email || !isRootUser(session.user.email)) {
+    if (!session?.user?.email || !isAdminUser(session.user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -72,6 +72,8 @@ export async function GET(request: Request) {
         createdAt: schema.user.createdAt,
         aiPermissions: schema.user.aiPermissions,
         isAdmin: schema.user.isAdmin,
+        banned: schema.user.banned,
+        banReason: schema.user.banReason,
         gameCount: GAME_COUNT_SUBQUERY,
         // 累计 AI 用量：计费 token 与图片/视频/音频生成次数
         totalTokens: AI_TOTAL_TOKENS_SUBQUERY,

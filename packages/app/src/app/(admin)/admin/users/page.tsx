@@ -85,7 +85,8 @@ export default function UsersPage() {
         onSort={admin.list.toggleSort}
         onPageChange={admin.setPage}
         onEdit={admin.openEdit}
-        onPassword={admin.openPassword}
+        onBan={admin.openBan}
+        onUnban={admin.handleUnban}
         onDelete={admin.handleDelete}
       />
 
@@ -104,6 +105,10 @@ export default function UsersPage() {
         setFormAiPermissions={admin.setFormAiPermissions}
         formIsAdmin={admin.formIsAdmin}
         setFormIsAdmin={admin.setFormIsAdmin}
+        formBanReason={admin.formBanReason}
+        setFormBanReason={admin.setFormBanReason}
+        formShadowBanGames={admin.formShadowBanGames}
+        setFormShadowBanGames={admin.setFormShadowBanGames}
         canGrantAdmin={canGrantAdmin}
         isSelf={admin.editingUser?.id === session?.user.id}
         planLabel={formatPlanLabel(admin.editingUser?.planCode)}
@@ -111,7 +116,7 @@ export default function UsersPage() {
         onClose={admin.closeModal}
         onCreateSubmit={admin.handleCreateSubmit}
         onEditSubmit={admin.handleEditSubmit}
-        onPasswordSubmit={admin.handlePasswordSubmit}
+        onBanSubmit={admin.handleBanSubmit}
       />
     </div>
   );

@@ -1,6 +1,11 @@
 TODO
 ====
 
+- **NSFW 治理后续**（2026-11-22 已落地 OTP 登录、用户封禁、发布审查，见 DEV_NOTE「OTP 登录与用户封禁」）：
+  - 图片 vision 审查：上传接口与 AI 生图无内容审查，需接多模态模型过一遍（成本与延迟待评估）
+  - 播放页举报按钮：服务条款已承诺举报机制，目前只有 mailto；需要 GameReports 表 + admin 处理列表
+  - 一次性邮箱域名黑名单：OTP 登录后仍可用新邮箱换号注册，可加常见一次性邮箱域名拦截
+  - 存量已发布作品跑一遍 `scripts/audit-published-games.ts`（ADMIN_PASSWORD 由本机提供）
 - **DSL v2 可选跟进**（Phase 0-3 与 D1 清洗均已完成，见 `docs/DSL_V2_DESIGN.md` 与 WIP.md 归档）：
   - （可选）dream-of-modern-city 的 MBTI 分流场景改写为块级重定向，作为 `->` 语法的官方示范
   - 素材产物 sidecar 化与 i18n：方向设计见 `docs/DSL_V2_DESIGN.md` §8，未排期

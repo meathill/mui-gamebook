@@ -20,6 +20,9 @@ export interface UserItem {
   audioCount: number;
   aiPermissions: string | null;
   isAdmin: boolean;
+  /** 封禁标记与原因（封禁后无法登录） */
+  banned: boolean;
+  banReason: string | null;
   /** 当前有效订阅套餐码（服务端附带），未订阅为 null */
   planCode?: string | null;
   subscriptionStatus?: string | null;
@@ -35,7 +38,7 @@ export interface UsersResponse {
   };
 }
 
-export type ModalType = 'create' | 'edit' | 'password' | null;
+export type ModalType = 'create' | 'edit' | 'ban' | null;
 
 /** 用户列表的排序键白名单（与 /api/admin/users 的 USER_SORT_COLUMNS 对应） */
 export const USER_SORT_OPTIONS = [
@@ -85,6 +88,9 @@ export function useUsersAdmin() {
   // null = 跟随套餐默认权限
   const [formAiPermissions, setFormAiPermissions] = useState<AiPermissions | null>(null);
   const [formIsAdmin, setFormIsAdmin] = useState(false);
+  // 封禁表单：原因 + 是否同时下架其全部已发布作品（NSFW 处置默认勾选）
+  const [formBanReason, setFormBanReason] = useState('');
+  const [formShadowBanGames, setFormShadowBanGames] = useState(true);
 
   const { data, isLoading } = useQuery<UsersResponse>({
     queryKey: ['admin', 'users', list.queryKey],
@@ -142,22 +148,33 @@ export function useUsersAdmin() {
     },
   });
 
-  const passwordMutation = useMutation({
-    mutationFn: async ({ id, newPassword }: { id: string; newPassword: string }) => {
-      const res = await fetch(`/api/admin/users/${id}/password`, {
-        method: 'PUT',
+  const banMutation = useMutation({
+    mutationFn: async ({
+      id,
+      banned,
+      banReason,
+      shadowBanGames,
+    }: {
+      id: string;
+      banned: boolean;
+      banReason?: string;
+      shadowBanGames?: boolean;
+    }) => {
+      const res = await fetch(`/api/admin/users/${id}/ban`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newPassword }),
+        body: JSON.stringify({ banned, banReason, shadowBanGames }),
       });
       if (!res.ok) {
         const err = (await res.json()) as { error?: string };
-        throw new Error(err.error || '修改密码失败');
+        throw new Error(err.error || (banned ? '封禁失败' : '解封失败'));
       }
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       closeModal();
-      dialog.success('密码已修改');
+      queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+      dialog.success(variables.banned ? '已封禁，该用户全部登录状态已失效' : '已解封');
     },
   });
 
@@ -203,11 +220,17 @@ export function useUsersAdmin() {
     setModalType('edit');
   }
 
-  function openPassword(user: UserItem) {
+  function openBan(user: UserItem) {
     setEditingUser(user);
-    setFormPassword('');
-    setFormPasswordConfirm('');
-    setModalType('password');
+    setFormBanReason('');
+    setFormShadowBanGames(true);
+    setModalType('ban');
+  }
+
+  async function handleUnban(user: UserItem) {
+    const confirmed = await dialog.confirm(`确定解封「${user.name}」（${user.email}）吗？其作品需另行手动解封。`);
+    if (!confirmed) return;
+    banMutation.mutate({ id: user.id, banned: false });
   }
 
   async function handleDelete(user: UserItem) {
@@ -237,18 +260,18 @@ export function useUsersAdmin() {
     });
   }
 
-  function handlePasswordSubmit(e: React.FormEvent) {
+  function handleBanSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingUser) return;
-    if (formPassword !== formPasswordConfirm) {
-      dialog.error('两次输入的密码不一致');
-      return;
-    }
-    passwordMutation.mutate({ id: editingUser.id, newPassword: formPassword });
+    banMutation.mutate({
+      id: editingUser.id,
+      banned: true,
+      banReason: formBanReason || undefined,
+      shadowBanGames: formShadowBanGames,
+    });
   }
 
-  const activeMutation =
-    modalType === 'create' ? createMutation : modalType === 'edit' ? updateMutation : passwordMutation;
+  const activeMutation = modalType === 'create' ? createMutation : modalType === 'edit' ? updateMutation : banMutation;
 
   return {
     data,
@@ -275,14 +298,19 @@ export function useUsersAdmin() {
     setFormAiPermissions,
     formIsAdmin,
     setFormIsAdmin,
+    formBanReason,
+    setFormBanReason,
+    formShadowBanGames,
+    setFormShadowBanGames,
     activeMutation,
     closeModal,
     openCreate,
     openEdit,
-    openPassword,
+    openBan,
+    handleUnban,
     handleDelete,
     handleCreateSubmit,
     handleEditSubmit,
-    handlePasswordSubmit,
+    handleBanSubmit,
   };
 }

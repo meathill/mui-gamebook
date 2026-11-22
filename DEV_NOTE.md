@@ -969,3 +969,17 @@ isValidVoiceId(voiceId: string, provider): boolean
 - 表单修改只替换记录的文档范围，并随 ProseMirror 事务映射位置；目标发生变化时要求重新打开。取消不删斜杠菜单触发文字，提交以一个历史事务完成。
 - 场景改名涉及的 frontmatter 触发器放在编辑器 doc 属性中参与撤销；文本视图手动保存沿用原文，不经全篇 parse → stringify 清洗。侧栏只更新 frontmatter，异步素材回填只更新相应 YAML，避免旧画布覆盖未保存正文。
 - 表达式表单使用 parser 的 AST 和序列化器；语法边界以运行时为准。选项/素材更新保留表单不认识的字段，流程图内部保存内容顺序、场景扩展键与选项扩展子句，素材节点的 extra 保存未知子键。
+
+## OTP 登录与用户封禁（2026-11-22）
+
+- **决策**：邮箱验证码（OTP）完全替换密码登录。邮箱可达性 = 可封禁锚点（NSFW 治理的第一步）；密码哈希不再可用，忘记密码流程随之消失。
+- **root 密码后门**：`auth-config.ts` 的 `hooks.before` 拦截 `/sign-in/email`，仅放行 `NEXT_PUBLIC_ROOT_USER_EMAIL`（构建期内联，与 `isRootUser` 同源）。这是邮件通道故障时的应急入口；改动 root 邮箱必须重新构建部署。登录页页脚的「管理员密码登录」入口对普通用户无感（服务端 403）。
+- **better-auth emailOTP 插件要点**：
+  - 客户端命名空间是 `authClient.emailOtp`（camelCase），不是 `emailOTP`；`sendVerificationOtp({ email, type: 'sign-in' })` + `signIn.emailOtp({ email, otp })`。
+  - `sendVerificationOTP` 回调里做封禁拦截（静默丢码，不暴露封禁状态）；`SENDFLARE_KEY` 缺失时把验证码打印到控制台，本地冒烟靠这个。
+  - OTP 自动注册的邮箱即为登录名，未注册邮箱自动建号（`disableSignUp` 默认 false）。
+- **封禁闭环**：`user.banned` + 发码回调拦截 + `databaseHooks.session.create.before`（任何路径建 session 都拒绝）+ 封禁动作级联删除全部 session。解封不自动恢复其作品。
+- **rateLimit storage: 'database'**：serverless 下内存限速各 isolate 独立不共享，落 D1 需要建 `RateLimit` 表（migration 0017，drizzle 导出名必须是 `rateLimit`），否则所有认证请求报错。全局 20 次/分钟/IP。
+- **NSFW 发布审查**：`src/lib/content-moderation.ts`。违禁词快筛（小而准，模糊词交给 LLM）+ LLM JSON verdict；LLM 故障/输出异常 fail-open（不锁死创作者），但违禁词是硬闸。触发时机只算「公开可见性变化」：发布跃迁、已发布作品正文或元数据变更；纯草稿编辑与无变化重存不审查（自动保存免费）。审查守卫集中在 `moderatePublishIfNeeded`，接入点：`saveEditorContent`（编辑器保存唯一入口）、cms PUT 直写分支、MCP `updateGameMeta`/`writeGameContent`/站内 MCP。管理员手动上架（admin games PATCH）跳过审查。
+- **存量审查**：`POST /api/admin/games/[slug]/moderate`（只读），后台游戏列表 AI 审查按钮 + `scripts/audit-published-games.ts` 批量脚本（ADMIN_PASSWORD 通道）。
+- **better-auth + drizzle 列名坑**：better-auth 模型字段是 camelCase（`lastRequest`），drizzle adapter 写 SQL 用的是 schema 里声明的**列名**——新表列名必须与 schema 声明一致（本项目惯例 snake_case，如 `last_request`），别照抄 better-auth 文档的 camelCase。0017 初版踩了这个坑（认证端点全 500），0018 重建修复。

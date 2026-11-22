@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyIcon, PencilIcon, TrashIcon } from '@phosphor-icons/react';
+import { ArrowCounterClockwiseIcon, PencilIcon, ProhibitIcon, TrashIcon } from '@phosphor-icons/react';
 import { formatDate } from '@mui-gamebook/site-common/utils';
 import PaginationBar from '@/components/admin/PaginationBar';
 import SortableHeader from '@/components/admin/SortableHeader';
@@ -17,7 +17,8 @@ interface UsersTableProps {
   onSort: (sortKey: string) => void;
   onPageChange: (updater: (page: number) => number) => void;
   onEdit: (user: UserItem) => void;
-  onPassword: (user: UserItem) => void;
+  onBan: (user: UserItem) => void;
+  onUnban: (user: UserItem) => void;
   onDelete: (user: UserItem) => void;
 }
 
@@ -41,7 +42,8 @@ export default function UsersTable({
   onSort,
   onPageChange,
   onEdit,
-  onPassword,
+  onBan,
+  onUnban,
   onDelete,
 }: UsersTableProps) {
   return (
@@ -123,6 +125,13 @@ export default function UsersTable({
                       {user.isAdmin && (
                         <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-xs">管理员</span>
                       )}
+                      {user.banned && (
+                        <span
+                          className="px-2 py-0.5 rounded bg-red-50 text-red-700 text-xs"
+                          title={user.banReason || '已封禁'}>
+                          已封禁
+                        </span>
+                      )}
                       <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-xs">
                         {formatPlanLabel(user.planCode)}
                       </span>
@@ -136,12 +145,21 @@ export default function UsersTable({
                         title="编辑">
                         <PencilIcon size={16} />
                       </button>
-                      <button
-                        onClick={() => onPassword(user)}
-                        className="p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded"
-                        title="修改密码">
-                        <KeyIcon size={16} />
-                      </button>
+                      {user.banned ? (
+                        <button
+                          onClick={() => onUnban(user)}
+                          className="p-2 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded"
+                          title="解封">
+                          <ArrowCounterClockwiseIcon size={16} />
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onBan(user)}
+                          className="p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded"
+                          title="封禁">
+                          <ProhibitIcon size={16} />
+                        </button>
+                      )}
                       <button
                         onClick={() => onDelete(user)}
                         className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded"

@@ -1,4 +1,5 @@
 import type { Game } from '@roudanio/parser';
+import { moderatePublishIfNeeded } from '@/lib/content-moderation';
 import { createContentWrite } from './content-write';
 import { hasDeclaredMedia } from './targets';
 import { AssistanceError } from './types';
@@ -21,12 +22,47 @@ export async function saveEditorContent(
   } & AssistanceSettings,
 ) {
   const current = await db
-    .prepare('SELECT owner_id, media_assistance_enabled, media_planning_confirmed FROM Games WHERE id = ?')
+    .prepare(
+      'SELECT owner_id, published, title, description, background_story, media_assistance_enabled, media_planning_confirmed FROM Games WHERE id = ?',
+    )
     .bind(options.gameId)
-    .first<{ owner_id: string; media_assistance_enabled: number; media_planning_confirmed: number }>();
+    .first<{
+      owner_id: string;
+      published: number;
+      title: string;
+      description: string | null;
+      background_story: string | null;
+      media_assistance_enabled: number;
+      media_planning_confirmed: number;
+    }>();
   if (!current) throw new AssistanceError('作品不存在', 404);
   if (!Number.isInteger(options.expectedRevision) || options.expectedRevision < 0)
     throw new AssistanceError('请重新加载作品后保存，缺少有效版本号');
+
+  // NSFW 发布审查：仅当发布可见性或公开内容变化时触发（草稿编辑与无变化重存免费）
+  if (options.game.published) {
+    const contentRow = await db
+      .prepare('SELECT content FROM GameContent WHERE game_id = ?')
+      .bind(options.gameId)
+      .first<{ content: string }>();
+    await moderatePublishIfNeeded({
+      next: {
+        published: true,
+        title: options.game.title,
+        description: options.game.description ?? null,
+        backgroundStory: options.game.backgroundStory ?? null,
+        content: options.content,
+      },
+      current: {
+        published: Boolean(current.published),
+        title: current.title,
+        description: current.description,
+        backgroundStory: current.background_story,
+        content: contentRow?.content ?? null,
+      },
+    });
+  }
+
   const enabled = options.mediaAssistanceEnabled ?? Boolean(current.media_assistance_enabled);
   const enabling = enabled && !current.media_assistance_enabled;
   if (enabling && current.owner_id !== options.actorId) throw new AssistanceError('只有作者可以开启素材协助', 403);

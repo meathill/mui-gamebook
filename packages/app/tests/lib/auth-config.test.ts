@@ -14,8 +14,15 @@ vi.mock('better-auth/adapters/drizzle', () => ({
   drizzleAdapter: vi.fn(() => ({})),
 }));
 
+const dbMock = {
+  select: vi.fn().mockReturnThis(),
+  from: vi.fn().mockReturnThis(),
+  where: vi.fn().mockReturnThis(),
+  get: vi.fn().mockResolvedValue(undefined),
+};
+
 vi.mock('drizzle-orm/d1', () => ({
-  drizzle: vi.fn(() => ({})),
+  drizzle: vi.fn(() => dbMock),
 }));
 
 vi.mock('@/lib/email', () => ({
@@ -25,7 +32,14 @@ vi.mock('@/lib/email', () => ({
 import { createAuth } from '@/lib/auth-config';
 import { sendEmail } from '@/lib/email';
 
-function makeEnv(overrides: { TRUSTED_ORIGINS?: string; COOKIE_DOMAIN?: string } = {}): CloudflareEnv {
+function makeEnv(
+  overrides: {
+    TRUSTED_ORIGINS?: string;
+    COOKIE_DOMAIN?: string;
+    SENDFLARE_KEY?: string;
+    NEXT_PUBLIC_ROOT_USER_EMAIL?: string;
+  } = {},
+): CloudflareEnv {
   return {
     DB: {},
     ...overrides,
@@ -102,39 +116,6 @@ describe('createAuth', () => {
   });
 
   describe('邮件回调', () => {
-    it('sendResetPassword 发送重置密码邮件，正文包含链接', async () => {
-      const config = createAuth(makeEnv()) as unknown as {
-        emailAndPassword: {
-          sendResetPassword: (params: { user: { email: string; name?: string }; url: string }) => Promise<void>;
-        };
-      };
-
-      await config.emailAndPassword.sendResetPassword({
-        user: { email: 'a@b.com', name: '小明' },
-        url: 'https://muistory.com/reset?token=xyz',
-      });
-
-      expect(sendEmail).toHaveBeenCalledTimes(1);
-      const [options] = (sendEmail as ReturnType<typeof vi.fn>).mock.calls[0];
-      expect(options.to).toBe('a@b.com');
-      expect(options.subject).toContain('重置密码');
-      expect(options.body).toContain('https://muistory.com/reset?token=xyz');
-      expect(options.body).toContain('小明');
-    });
-
-    it('sendResetPassword 在用户没有 name 时不插入多余的问候语片段', async () => {
-      const config = createAuth(makeEnv()) as unknown as {
-        emailAndPassword: {
-          sendResetPassword: (params: { user: { email: string; name?: string }; url: string }) => Promise<void>;
-        };
-      };
-
-      await config.emailAndPassword.sendResetPassword({ user: { email: 'a@b.com' }, url: 'https://x.com/r' });
-
-      const [options] = (sendEmail as ReturnType<typeof vi.fn>).mock.calls[0];
-      expect(options.body).not.toContain('，undefined');
-    });
-
     it('sendVerificationEmail 发送验证邮箱邮件', async () => {
       const config = createAuth(makeEnv()) as unknown as {
         emailVerification: {
@@ -152,6 +133,68 @@ describe('createAuth', () => {
       expect(options.to).toBe('c@d.com');
       expect(options.subject).toContain('验证邮箱');
       expect(options.body).toContain('https://muistory.com/verify?token=abc');
+    });
+  });
+
+  describe('OTP 发码回调', () => {
+    function getOtpCallback(env: CloudflareEnv) {
+      const config = createAuth(env) as unknown as {
+        plugins: Array<{
+          id: string;
+          options: { sendVerificationOTP: (data: { email: string; otp: string; type: string }) => Promise<void> };
+        }>;
+      };
+      const otpPlugin = config.plugins.find((plugin) => plugin.id === 'email-otp') as {
+        options: { sendVerificationOTP: (data: { email: string; otp: string; type: string }) => Promise<void> };
+      };
+      return otpPlugin.options.sendVerificationOTP;
+    }
+
+    beforeEach(() => {
+      dbMock.select.mockClear().mockReturnThis();
+      dbMock.from.mockClear().mockReturnThis();
+      dbMock.where.mockClear().mockReturnThis();
+      dbMock.get.mockClear().mockResolvedValue(undefined);
+    });
+
+    it('发送 sign-in 类型验证码邮件，正文包含验证码', async () => {
+      const sendVerificationOTP = getOtpCallback(makeEnv({ SENDFLARE_KEY: 'test-key' }));
+
+      await sendVerificationOTP({ email: 'user@test.com', otp: '654321', type: 'sign-in' });
+
+      expect(sendEmail).toHaveBeenCalledTimes(1);
+      const [options] = (sendEmail as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(options.to).toBe('user@test.com');
+      expect(options.subject).toContain('验证码');
+      expect(options.body).toContain('654321');
+    });
+
+    it('封禁用户静默丢码，不发送任何邮件', async () => {
+      dbMock.get.mockResolvedValue({ banned: true });
+      const sendVerificationOTP = getOtpCallback(makeEnv({ SENDFLARE_KEY: 'test-key' }));
+
+      await sendVerificationOTP({ email: 'banned@test.com', otp: '654321', type: 'sign-in' });
+
+      expect(sendEmail).not.toHaveBeenCalled();
+    });
+
+    it('非 sign-in 类型不做任何处理', async () => {
+      const sendVerificationOTP = getOtpCallback(makeEnv({ SENDFLARE_KEY: 'test-key' }));
+
+      await sendVerificationOTP({ email: 'user@test.com', otp: '654321', type: 'email-verification' });
+
+      expect(sendEmail).not.toHaveBeenCalled();
+    });
+
+    it('没有 SENDFLARE_KEY 时把验证码打印到控制台（本地冒烟用）', async () => {
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const sendVerificationOTP = getOtpCallback(makeEnv());
+
+      await sendVerificationOTP({ email: 'dev@test.com', otp: '123456', type: 'sign-in' });
+
+      expect(sendEmail).not.toHaveBeenCalled();
+      expect(logSpy).toHaveBeenCalledWith(expect.stringContaining('123456'));
+      logSpy.mockRestore();
     });
   });
 });

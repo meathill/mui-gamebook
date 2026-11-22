@@ -28,6 +28,8 @@ function makeUser(overrides: Partial<UserItem> = {}): UserItem {
     audioCount: 0,
     aiPermissions: null,
     isAdmin: false,
+    banned: false,
+    banReason: null,
     planCode: null,
     ...overrides,
   };
@@ -188,38 +190,67 @@ describe('useUsersAdmin', () => {
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/admin/users/'), expect.anything());
   });
 
-  describe('handlePasswordSubmit', () => {
-    it('两次密码不一致时报错', () => {
-      const { result } = renderUseUsersAdmin();
-      act(() => result.current.openPassword(makeUser()));
-      act(() => result.current.setFormPassword('a'));
-      act(() => result.current.setFormPasswordConfirm('b'));
-
-      act(() => result.current.handlePasswordSubmit({ preventDefault: vi.fn() } as unknown as React.FormEvent));
-
-      expect(dialog.error).toHaveBeenCalledWith('两次输入的密码不一致');
-    });
-
-    it('成功修改密码后关闭弹窗并提示成功', async () => {
+  describe('handleBanSubmit / handleUnban', () => {
+    it('成功封禁后关闭弹窗、刷新列表并提示成功', async () => {
       fetchMock.mockImplementation((input) => {
         if (typeof input === 'string' && input.startsWith('/api/admin/users?')) {
           return Promise.resolve(
             jsonResponse({ users: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }),
           );
         }
-        return Promise.resolve(jsonResponse({ success: true }));
+        return Promise.resolve(jsonResponse({ success: true, banned: true }));
       });
       const { result } = renderUseUsersAdmin();
-      act(() => result.current.openPassword(makeUser({ id: 'u1' })));
-      act(() => result.current.setFormPassword('newpass'));
-      act(() => result.current.setFormPasswordConfirm('newpass'));
+      act(() => result.current.openBan(makeUser({ id: 'u1' })));
+      act(() => result.current.setFormBanReason('NSFW 内容'));
+      act(() => result.current.setFormShadowBanGames(true));
 
-      act(() => result.current.handlePasswordSubmit({ preventDefault: vi.fn() } as unknown as React.FormEvent));
+      act(() => result.current.handleBanSubmit({ preventDefault: vi.fn() } as unknown as React.FormEvent));
 
-      await waitFor(() => expect(dialog.success).toHaveBeenCalledWith('密码已修改'));
+      await waitFor(() => expect(dialog.success).toHaveBeenCalledWith('已封禁，该用户全部登录状态已失效'));
       expect(fetchMock).toHaveBeenCalledWith(
-        '/api/admin/users/u1/password',
-        expect.objectContaining({ method: 'PUT', body: JSON.stringify({ newPassword: 'newpass' }) }),
+        '/api/admin/users/u1/ban',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ banned: true, banReason: 'NSFW 内容', shadowBanGames: true }),
+        }),
+      );
+    });
+
+    it('确认解封后发起解封请求', async () => {
+      dialog.confirm.mockResolvedValue(true);
+      fetchMock.mockImplementation((input) => {
+        if (typeof input === 'string' && input.startsWith('/api/admin/users?')) {
+          return Promise.resolve(
+            jsonResponse({ users: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }),
+          );
+        }
+        return Promise.resolve(jsonResponse({ success: true, banned: false }));
+      });
+      const { result } = renderUseUsersAdmin();
+
+      await act(async () => {
+        await result.current.handleUnban(makeUser({ id: 'u1' }));
+      });
+
+      await waitFor(() => expect(dialog.success).toHaveBeenCalledWith('已解封'));
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/admin/users/u1/ban',
+        expect.objectContaining({ method: 'PATCH', body: JSON.stringify({ banned: false }) }),
+      );
+    });
+
+    it('用户取消解封确认时不发起请求', async () => {
+      dialog.confirm.mockResolvedValue(false);
+      const { result } = renderUseUsersAdmin();
+
+      await act(async () => {
+        await result.current.handleUnban(makeUser());
+      });
+
+      expect(fetchMock).not.toHaveBeenCalledWith(
+        expect.stringContaining('/ban'),
+        expect.objectContaining({ method: 'PATCH' }),
       );
     });
   });
@@ -254,7 +285,7 @@ describe('useUsersAdmin', () => {
   it('activeMutation 根据 modalType 解析为对应的 mutation', () => {
     const { result } = renderUseUsersAdmin();
 
-    act(() => result.current.openPassword(makeUser()));
+    act(() => result.current.openBan(makeUser()));
     expect(result.current.activeMutation.isPending).toBe(false);
 
     act(() => result.current.openCreate());

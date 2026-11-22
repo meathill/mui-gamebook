@@ -26,7 +26,9 @@ import type { McpAuth } from '@/lib/mcp-http';
 import { MCP_SERVER_NAME } from '@/lib/mcp-http';
 import { revalidatePublicCatalog } from '@/lib/public-cache';
 import { saveEditorContent } from '@/lib/media-assistance/editor-save';
+import { isModerationError } from '@/lib/content-moderation';
 import { AssistanceError } from '@/lib/media-assistance/types';
+import { moderatePublishGuard } from '@/lib/mcp-agent/shared';
 
 /**
  * MCP endpoint（dual-era）：
@@ -159,11 +161,27 @@ async function handleToolsCall(
       return rpcOk(id, { ...textResult(summary), revision }, modern);
     } catch (error) {
       if (error instanceof AssistanceError) return rpcOk(id, textResult(error.message, true), modern);
+      if (isModerationError(error)) return rpcOk(id, textResult(error.message, true), modern);
       throw error;
     }
   }
 
   const { title, description, backgroundStory, cover_image, tags, published } = revalidate.data;
+  // NSFW 发布审查：发布跃迁或已发布作品正文变更时触发
+  const guardResult = await moderatePublishGuard(
+    db,
+    game,
+    {
+      published: Boolean(published),
+      title,
+      description: description ?? null,
+      backgroundStory: backgroundStory ?? null,
+    },
+    nextDsl,
+  );
+  if (guardResult) {
+    return rpcOk(id, textResult(guardResult.message, true), modern);
+  }
   await db
     .update(schema.games)
     .set({
