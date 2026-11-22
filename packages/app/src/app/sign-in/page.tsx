@@ -1,17 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { trackLogin } from '@mui-gamebook/site-common/utils';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { OTPField, OTPFieldInput } from '@/components/ui/otp-field';
 import { getSafeRedirect } from '@/lib/sign-in-redirect';
 
 type Step = 'email' | 'otp';
 /** root 的应急密码登录（服务端只放行 NEXT_PUBLIC_ROOT_USER_EMAIL 对应邮箱） */
 type Mode = 'otp' | 'password';
+
+const OTP_LENGTH = 6;
 
 export default function SignInPage() {
   const [mode, setMode] = useState<Mode>('otp');
@@ -21,6 +24,8 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // 填满自动提交与手动按钮可能并发，用 ref 防重复请求
+  const verifying = useRef(false);
   const router = useRouter();
   const t = useTranslations('auth');
 
@@ -49,14 +54,17 @@ export default function SignInPage() {
     void sendOtp();
   }
 
-  async function handleVerifyOtp(e: React.FormEvent) {
-    e.preventDefault();
+  async function verifyOtp(code: string) {
+    if (verifying.current || code.length !== OTP_LENGTH) return;
+    verifying.current = true;
     setLoading(true);
     setError('');
     try {
-      const { error: verifyError } = await authClient.signIn.emailOtp({ email, otp });
+      const { error: verifyError } = await authClient.signIn.emailOtp({ email, otp: code });
       if (verifyError) {
         setError(verifyError.message || t('verifyError'));
+        // 清空格子重新输入，OTPField 会自动聚焦回首位
+        setOtp('');
       } else {
         // OTP 无法在发送前区分注册/登录，统一按登录事件上报
         trackLogin();
@@ -65,9 +73,23 @@ export default function SignInPage() {
       }
     } catch (err) {
       setError(t('unknownError') + ' ' + (err as Error).message);
+      setOtp('');
     } finally {
+      verifying.current = false;
       setLoading(false);
     }
+  }
+
+  function handleVerifyOtp(e: React.FormEvent) {
+    e.preventDefault();
+    void verifyOtp(otp);
+  }
+
+  function handleOtpChange(next: string) {
+    setOtp(next);
+    setError('');
+    // 填满 6 位自动提交（onValueChange 时 state 还没更新，直接传 next）
+    if (next.length === OTP_LENGTH) void verifyOtp(next);
   }
 
   async function handleAdminSignIn(e: React.FormEvent) {
@@ -137,29 +159,28 @@ export default function SignInPage() {
             className="space-y-4"
             onSubmit={handleVerifyOtp}>
             <div>
-              <Label
-                htmlFor="otp-code"
-                className="mb-1 text-gray-700">
-                {t('otpLabel')}
-              </Label>
-              <Input
-                id="otp-code"
-                name="otp"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                required
-                maxLength={6}
-                className="block text-center text-lg tracking-[0.5em] text-gray-900"
-                placeholder={t('otpPlaceholder')}
+              <Label className="mb-1.5 text-gray-700">{t('otpLabel')}</Label>
+              <OTPField
+                length={OTP_LENGTH}
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
-              />
+                onValueChange={handleOtpChange}
+                disabled={loading}
+                className="w-full *:flex-1">
+                {Array.from({ length: OTP_LENGTH }, (_, i) => (
+                  <OTPFieldInput
+                    key={i}
+                    // Base UI 会忽略首格的 aria-label（要求用 label 关联），首格不传以免控制台警告
+                    aria-label={i === 0 ? undefined : `${t('otpLabel')} ${i + 1}/${OTP_LENGTH}`}
+                    autoComplete={i === 0 ? 'one-time-code' : undefined}
+                    className="text-gray-900"
+                  />
+                ))}
+              </OTPField>
               <p className="mt-2 text-xs text-gray-500">{t('otpSentHint')}</p>
             </div>
             {error && <div className="text-red-600 text-sm text-center bg-red-50 p-2 rounded-lg">{error}</div>}
             <button
-              disabled={loading || otp.length !== 6}
+              disabled={loading || otp.length !== OTP_LENGTH}
               className="w-full rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
               {loading ? t('loading') : t('verifyButton')}
             </button>

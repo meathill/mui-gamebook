@@ -522,7 +522,6 @@
     "otpHint": "Unregistered emails will automatically create an account",
     "sendCode": "Send code",
     "otpLabel": "Verification code",
-    "otpPlaceholder": "6 digits",
     "otpSentHint": "Code sent to your inbox, valid for 5 minutes",
     "verifyButton": "Verify & sign in",
     "backToEmail": "Change email",

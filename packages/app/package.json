@@ -27,6 +27,7 @@
     "audit-sitemap": "node --experimental-strip-types scripts/audit-sitemap-urls.ts"
   },
   "dependencies": {
+    "@base-ui/react": "^1.9.0",
     "@better-auth/api-key": "^1.6.21",
     "@google/genai": "^2.10.0",
     "@mdx-js/loader": "^3.1.1",

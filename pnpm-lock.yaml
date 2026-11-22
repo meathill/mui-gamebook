@@ -75,6 +75,9 @@ importers:
 
   packages/app:
     dependencies:
+      '@base-ui/react':
+        specifier: ^1.9.0
+        version: 1.9.0(@types/react@19.2.17)(date-fns@4.4.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@better-auth/api-key':
         specifier: ^1.6.21
         version: 1.6.21(@better-auth/core@1.6.21(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0))(@better-auth/utils@0.4.2)(better-auth@1.6.21(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(kysely@0.29.2))(next@16.3.4(@types/node@26.0.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9))(better-call@1.3.7(zod@4.4.3))
@@ -227,10 +230,10 @@ importers:
         version: 2.53.1(typescript@6.0.3)(zod@4.4.3)
       zundo:
         specifier: ^2.3.0
-        version: 2.3.0(zustand@5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7)))
+        version: 2.3.0(zustand@5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.7.0(react@19.2.7)))
       zustand:
         specifier: ^5.0.14
-        version: 5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
+        version: 5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.7.0(react@19.2.7))
     devDependencies:
       '@tailwindcss/postcss':
         specifier: ^4.3.1
@@ -735,6 +738,33 @@ packages:
   '@babel/runtime@7.29.7':
     resolution: {integrity: sha512-Nq8OhGWiZIZGV6hLHoyAKLLcJihP/xFeBMGJoUrxTX2psI8dCifzLhZISFb+VWS3wFMRDmCGw5R+dOySCqPLhw==}
     engines: {node: '>=6.9.0'}
+
+  '@base-ui/react@1.9.0':
+    resolution: {integrity: sha512-S8CSYosASBKtpL8SWUfS78rFElfLijiCgA7oHOK22jCJ95FULsYyKwBNFOgudt0RA+/7yNc7F81bOvQnRgbBiQ==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@date-fns/tz': ^1.2.0
+      '@types/react': ^17 || ^18 || ^19
+      date-fns: ^4.0.0
+      react: ^17 || ^18 || ^19
+      react-dom: ^17 || ^18 || ^19
+    peerDependenciesMeta:
+      '@date-fns/tz':
+        optional: true
+      '@types/react':
+        optional: true
+      date-fns:
+        optional: true
+
+  '@base-ui/utils@0.5.0':
+    resolution: {integrity: sha512-dYGGcEttjkYiMoa5nHm8vLaJ2UcuTWxo3BFAwOYXeRg/q7UVVvA6cacEIXEs3FgBfK1CGtW1ptElqs7wsx+t9A==}
+    peerDependencies:
+      '@types/react': ^17 || ^18 || ^19
+      react: ^17 || ^18 || ^19
+      react-dom: ^17 || ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   '@better-auth/api-key@1.6.21':
     resolution: {integrity: sha512-8K3vO7h0m6+VZBDyNqoo2wznMO8ZNg3Tq2LJ+bb4+txAqAdv6WiYXVIrr7aiNBtnr34yKUE0UMrZY6eU1Ca3WQ==}
@@ -1636,8 +1666,14 @@ packages:
   '@floating-ui/core@1.7.5':
     resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
 
+  '@floating-ui/core@1.8.0':
+    resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
+
   '@floating-ui/dom@1.7.6':
     resolution: {integrity: sha512-9gZSAI5XM36880PPMm//9dfiEngYoC6Am2izES1FF406YFsjvyBMmeJ2g4SAju3xWwtuynNRFL2s9hgxpLI5SQ==}
+
+  '@floating-ui/dom@1.8.0':
+    resolution: {integrity: sha512-yXSrzeHZBTZadLOlfyhCkJHNeLJnHRnRInwdZ40L7ZiaAtrBwoYlsDrX3v5zB1Utk7CLfzcOVnVVWoXEky7Ceg==}
 
   '@floating-ui/react-dom@2.1.8':
     resolution: {integrity: sha512-cC52bHwM/n/CxS87FH0yWdngEZrjdtLW/qVruo68qg+prK7ZQ4YGdut2GyDVpoGeAYe/h899rVeOVm6Oi40k2A==}
@@ -1645,8 +1681,17 @@ packages:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
 
+  '@floating-ui/react-dom@2.1.9':
+    resolution: {integrity: sha512-JDjEFGCpImxDCA7JJKviA0M9+RtmJdj0m/NVU5IMgBK+AmZouAQQ7/+2GLH0GXXY0YMw9oXPB8hKdbPYg5QLYg==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
+
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@floating-ui/utils@0.2.12':
+    resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
 
   '@formatjs/fast-memoize@3.1.6':
     resolution: {integrity: sha512-H5aexk1Le7T9TPmscacZ+1pR6CTa2n1wq+HDVGXhH8TzUlQQpeXzZs91dRtmFHrbeNbjPFPfQujUqm7MHgVoXQ==}
@@ -3157,7 +3202,9 @@ packages:
   '@smithy/core@3.26.0':
     resolution: {integrity: sha512-mLUktFAn+Pa2agl1J7VgtYNFWCX8/b4GMJSK1hCu4YCvtBfM6F8Os3EP4ry+DFFlXOf3wyvlgXhuUdFoy52D3g==}
     engines: {node: '>=18.0.0'}
-    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with this
+        version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/credential-provider-imds@4.4.2':
     resolution: {integrity: sha512-18UMDMyrAbDcpmL1gLUA7ww0fRTcdCrSjSJOi2Sbld+tVjwD/pW+OAwjlScFLR7vvBnhZrIPQ7kVuTf1mnJLug==}
@@ -5960,6 +6007,9 @@ packages:
   reselect@5.2.0:
     resolution: {integrity: sha512-AgZ3UOZm3YndfrJ4OYjgrT7bmCm/1iqkjvEfH/oYjzh6PD2qw4QuT3jjnXIrpdt4MTpMXclMT3lXbmRY+XRakw==}
 
+  reselect@5.3.0:
+    resolution: {integrity: sha512-XGoLeRAVzUTcJ1qkxPQhDJyIZ5d6zzZD9nT7AEZOaaU9UbWclhycElmhO+VD5bFeLuzhPBaOV2oXC8uG35ZSpg==}
+
   resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
     engines: {node: '>=4'}
@@ -6367,6 +6417,11 @@ packages:
 
   use-sync-external-store@1.6.0:
     resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  use-sync-external-store@1.7.0:
+    resolution: {integrity: sha512-6L+EeigHMQhdaIPNIFUKwfWJSwWFQ8gJbJ2DLOs5sDIegTwR9fRxvnM3uciHKjIZhFz+KAv2emhWMRvDmMcY8A==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -7328,6 +7383,30 @@ snapshots:
 
   '@babel/runtime@7.29.7': {}
 
+  '@base-ui/react@1.9.0(@types/react@19.2.17)(date-fns@4.4.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@babel/runtime': 7.29.7
+      '@base-ui/utils': 0.5.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@floating-ui/react-dom': 2.1.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@floating-ui/utils': 0.2.12
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      use-sync-external-store: 1.7.0(react@19.2.7)
+    optionalDependencies:
+      '@types/react': 19.2.17
+      date-fns: 4.4.0
+
+  '@base-ui/utils@0.5.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@babel/runtime': 7.29.7
+      '@floating-ui/utils': 0.2.12
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+      reselect: 5.3.0
+      use-sync-external-store: 1.7.0(react@19.2.7)
+    optionalDependencies:
+      '@types/react': 19.2.17
+
   '@better-auth/api-key@1.6.21(@better-auth/core@1.6.21(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0))(@better-auth/utils@0.4.2)(better-auth@1.6.21(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(kysely@0.29.2))(next@16.3.4(@types/node@26.0.1)(babel-plugin-macros@3.1.0)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(sass@1.77.4))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.9))(better-call@1.3.7(zod@4.4.3))':
     dependencies:
       '@better-auth/core': 1.6.21(@better-auth/utils@0.4.2)(@better-fetch/fetch@1.3.1)(better-call@1.3.7(zod@4.4.3))(jose@6.2.3)(kysely@0.29.2)(nanostores@1.3.0)
@@ -7854,10 +7933,19 @@ snapshots:
     dependencies:
       '@floating-ui/utils': 0.2.11
 
+  '@floating-ui/core@1.8.0':
+    dependencies:
+      '@floating-ui/utils': 0.2.12
+
   '@floating-ui/dom@1.7.6':
     dependencies:
       '@floating-ui/core': 1.7.5
       '@floating-ui/utils': 0.2.11
+
+  '@floating-ui/dom@1.8.0':
+    dependencies:
+      '@floating-ui/core': 1.8.0
+      '@floating-ui/utils': 0.2.12
 
   '@floating-ui/react-dom@2.1.8(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
@@ -7865,7 +7953,15 @@ snapshots:
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
 
+  '@floating-ui/react-dom@2.1.9(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
+    dependencies:
+      '@floating-ui/dom': 1.8.0
+      react: 19.2.7
+      react-dom: 19.2.7(react@19.2.7)
+
   '@floating-ui/utils@0.2.11': {}
+
+  '@floating-ui/utils@0.2.12': {}
 
   '@formatjs/fast-memoize@3.1.6': {}
 
@@ -9964,7 +10060,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.17
       tinyrainbow: 3.1.0
-      vitest: 4.1.9(@types/node@24.13.2)(@vitest/ui@4.1.9)(happy-dom@20.10.6)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.0(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.22.4)(yaml@2.9.0))
+      vitest: 4.1.9(@types/node@26.0.1)(@vitest/ui@4.1.9)(happy-dom@20.10.6)(jsdom@29.1.1(@noble/hashes@2.2.0))(vite@8.1.0(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.22.4)(yaml@2.9.0))
 
   '@vitest/utils@4.1.9':
     dependencies:
@@ -12513,6 +12609,8 @@ snapshots:
 
   reselect@5.2.0: {}
 
+  reselect@5.3.0: {}
+
   resolve-from@4.0.0:
     optional: true
 
@@ -13050,6 +13148,10 @@ snapshots:
     dependencies:
       react: 19.2.7
 
+  use-sync-external-store@1.7.0(react@19.2.7):
+    dependencies:
+      react: 19.2.7
+
   util-deprecate@1.0.2: {}
 
   vary@1.1.2: {}
@@ -13373,9 +13475,9 @@ snapshots:
 
   zod@4.6.5: {}
 
-  zundo@2.3.0(zustand@5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))):
+  zundo@2.3.0(zustand@5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.7.0(react@19.2.7))):
     dependencies:
-      zustand: 5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
+      zustand: 5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.7.0(react@19.2.7))
 
   zustand@4.5.7(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7):
     dependencies:
@@ -13385,11 +13487,11 @@ snapshots:
       immer: 11.2.9
       react: 19.2.7
 
-  zustand@5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7)):
+  zustand@5.0.14(@types/react@19.2.17)(immer@11.2.9)(react@19.2.7)(use-sync-external-store@1.7.0(react@19.2.7)):
     optionalDependencies:
       '@types/react': 19.2.17
       immer: 11.2.9
       react: 19.2.7
-      use-sync-external-store: 1.6.0(react@19.2.7)
+      use-sync-external-store: 1.7.0(react@19.2.7)
 
   zwitch@2.0.4: {}

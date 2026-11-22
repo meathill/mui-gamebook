@@ -522,7 +522,6 @@
     "otpHint": "未注册的邮箱将自动创建账号",
     "sendCode": "发送验证码",
     "otpLabel": "验证码",
-    "otpPlaceholder": "6 位数字",
     "otpSentHint": "验证码已发送至你的邮箱，5 分钟内有效",
     "verifyButton": "验证并登录",
     "backToEmail": "返回修改邮箱",
