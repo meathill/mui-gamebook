@@ -32,7 +32,7 @@ export default function EndScreen({ title, shareUrl, onRestart, slug, avgRating,
           {t('playAgain')}
         </button>
         <Link
-          href="/"
+          href="/games"
           className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 shadow-sm transition-transform hover:-translate-y-0.5 font-medium">
           {t('backToLibrary')}
         </Link>

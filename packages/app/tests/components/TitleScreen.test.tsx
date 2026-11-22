@@ -176,7 +176,7 @@ describe('TitleScreen', () => {
     expect(onRestart).toHaveBeenCalledTimes(1);
   });
 
-  it('"返回首页"链接指向 /', () => {
+  it('"返回游戏库"链接指向 /games', () => {
     renderWithProviders(
       <TitleScreen
         game={baseGame}
@@ -186,7 +186,7 @@ describe('TitleScreen', () => {
       />,
     );
 
-    expect(screen.getByText('Back to Library').closest('a')).toHaveAttribute('href', '/');
+    expect(screen.getByText('Back to Library').closest('a')).toHaveAttribute('href', '/games');
   });
 
   it('title_layout=fullscreen 时渲染全屏毛玻璃版式（传统白卡标记缺席）', () => {

@@ -113,12 +113,13 @@ describe('VisualEditor', () => {
     (useEditorData as ReturnType<typeof vi.fn>).mockReturnValue(makeEditorData());
   });
 
-  it('未登录且鉴权状态确定后跳转到登录页', async () => {
+  it('未登录且鉴权状态确定后跳转到登录页并带上回跳地址', async () => {
     (authClient.useSession as ReturnType<typeof vi.fn>).mockReturnValue({ data: null, isPending: false });
 
     renderVisualEditor();
 
-    await waitFor(() => expect(push).toHaveBeenCalledWith('/sign-in'));
+    // jsdom 下 window.location.pathname 为 '/'
+    await waitFor(() => expect(push).toHaveBeenCalledWith('/sign-in?redirect=%2F'));
   });
 
   it('鉴权状态未知时不跳转，显示加载中', () => {

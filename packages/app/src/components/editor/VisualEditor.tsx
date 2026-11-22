@@ -53,7 +53,8 @@ export default function VisualEditor({ id, previewUrl }: { id: string; previewUr
 
   useEffect(() => {
     if (!isAuthPending && !session) {
-      router.push('/sign-in');
+      // 带上当前编辑器路径，登录后回到正在编辑的作品而不是首页
+      router.push(`/sign-in?redirect=${encodeURIComponent(window.location.pathname)}`);
     }
   }, [isAuthPending, session, router]);
 

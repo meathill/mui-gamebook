@@ -1,13 +1,14 @@
 'use client';
 
 import { authClient, isAdminSession, isRootUserClient } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import AdminNav from '@/components/admin/AdminNav';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
   // root 与内容管理员都能进后台；用户管理/系统配置页由后端继续按 root 收紧
   const canEnterAdmin = isAdminSession(session?.user);
@@ -15,11 +16,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (isPending) return;
     if (!session) {
-      router.push('/sign-in');
+      router.push(`/sign-in?redirect=${encodeURIComponent(pathname)}`);
     } else if (!canEnterAdmin) {
       router.push('/my/dashboard');
     }
-  }, [isPending, session, canEnterAdmin, router]);
+  }, [isPending, session, canEnterAdmin, router, pathname]);
 
   if (isPending) {
     return (

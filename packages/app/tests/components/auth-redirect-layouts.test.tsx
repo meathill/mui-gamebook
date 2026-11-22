@@ -24,8 +24,10 @@ vi.mock('@/lib/auth-client', async (importOriginal) => {
 
 const pushSpy = vi.fn();
 let routerPush: (path: string) => void = pushSpy;
+let currentPathname = '/my/dashboard';
 
 vi.mock('next/navigation', () => ({
+  usePathname: () => currentPathname,
   useRouter: () => ({
     push: (path: string) => routerPush(path),
   }),
@@ -64,6 +66,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   sessionState.data = null;
   sessionState.isPending = false;
+  currentPathname = '/my/dashboard';
   errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 });
 
@@ -73,10 +76,10 @@ afterEach(() => {
 });
 
 describe('MyLayout 登录守卫', () => {
-  it('未登录时跳转 /sign-in，且不在渲染期调用 router.push', async () => {
+  it('未登录时跳转 /sign-in 并带上回跳地址，且不在渲染期调用 router.push', async () => {
     renderWithRouter(<MyLayout>{<div>受保护内容</div>}</MyLayout>);
 
-    await waitFor(() => expect(pushSpy).toHaveBeenCalledWith('/sign-in'));
+    await waitFor(() => expect(pushSpy).toHaveBeenCalledWith('/sign-in?redirect=%2Fmy%2Fdashboard'));
     expect(screen.queryByText('受保护内容')).not.toBeInTheDocument();
     expectNoRenderPhaseUpdateWarning();
   });
@@ -101,10 +104,11 @@ describe('MyLayout 登录守卫', () => {
 });
 
 describe('AdminLayout 权限守卫', () => {
-  it('未登录时跳转 /sign-in，且不在渲染期调用 router.push', async () => {
+  it('未登录时跳转 /sign-in 并带上回跳地址，且不在渲染期调用 router.push', async () => {
+    currentPathname = '/admin';
     renderWithRouter(<AdminLayout>{<div>后台内容</div>}</AdminLayout>);
 
-    await waitFor(() => expect(pushSpy).toHaveBeenCalledWith('/sign-in'));
+    await waitFor(() => expect(pushSpy).toHaveBeenCalledWith('/sign-in?redirect=%2Fadmin'));
     expect(screen.queryByText('后台内容')).not.toBeInTheDocument();
     expectNoRenderPhaseUpdateWarning();
   });

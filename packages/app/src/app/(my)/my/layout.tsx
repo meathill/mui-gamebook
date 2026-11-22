@@ -1,7 +1,7 @@
 'use client';
 
 import { authClient } from '@/lib/auth-client';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import MyNav from '@/components/my/MyNav';
 import CreateGameModal from '@/components/admin/CreateGameModal';
@@ -9,12 +9,14 @@ import CreateGameModal from '@/components/admin/CreateGameModal';
 export default function MyLayout({ children }: { children: React.ReactNode }) {
   const { data: session, isPending } = authClient.useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
+  // 登录后回跳到原本要去的页面，避免"点开始创作 → 登录 → 回首页"丢失意图
   useEffect(() => {
     if (!isPending && !session) {
-      router.push('/sign-in');
+      router.push(`/sign-in?redirect=${encodeURIComponent(pathname)}`);
     }
-  }, [isPending, session, router]);
+  }, [isPending, session, router, pathname]);
 
   if (isPending) {
     return (

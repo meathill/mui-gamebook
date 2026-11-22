@@ -70,7 +70,7 @@ export default function AdminConfigPage() {
 
   useEffect(() => {
     if (!isAuthPending && !session) {
-      router.push('/sign-in');
+      router.push(`/sign-in?redirect=${encodeURIComponent('/admin/config')}`);
     }
   }, [isAuthPending, session, router]);
 

@@ -47,7 +47,7 @@ describe('EndScreen', () => {
     expect(onRestart).toHaveBeenCalledWith(true);
   });
 
-  it('"返回首页"链接指向 /', () => {
+  it('"返回游戏库"链接指向 /games', () => {
     renderWithProviders(
       <EndScreen
         title="迷失之城"
@@ -56,7 +56,7 @@ describe('EndScreen', () => {
       />,
     );
 
-    expect(screen.getByText('Back to Library').closest('a')).toHaveAttribute('href', '/');
+    expect(screen.getByText('Back to Library').closest('a')).toHaveAttribute('href', '/games');
   });
 
   it('渲染分享区块，传入正确的 title', () => {

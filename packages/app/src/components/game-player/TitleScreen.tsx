@@ -141,7 +141,7 @@ export default function TitleScreen({
           </div>
 
           <Link
-            href="/"
+            href="/games"
             prefetch={false}
             className="mt-3 text-sm text-white/70 hover:text-white underline">
             {t('backToLibrary')}
@@ -243,7 +243,7 @@ export default function TitleScreen({
         </div>
 
         <Link
-          href="/"
+          href="/games"
           prefetch={false}
           className="mt-3 text-sm text-gray-500 hover:text-gray-800 underline">
           {t('backToLibrary')}
