@@ -88,6 +88,9 @@ Insights：Rage clicks / **Dead clicks** / Excessive scrolling / **Quick backs**
 | 同一 URL 反复出现且无点击 | 移动端返回键/手势后退 | 无 click 事件 + 相邻 Page visit 成对出现 |
 | 时长 ≤1s + 0 点击 + 1 页面 | **可执行 JS 的爬虫/链接预览**（Clarity 未必标为 bot），或极快 bounce | 看入口 URL 是否分散、是否有 referrer；占比高时先剔除再算转化率 |
 | 登录成功后访问 /my/dashboard 被弹回首页 | 会话态竞态（useSession 缓存未失效）或路由竞态，机制待复现（#35） | 按 issue 复现步骤验证；留意是否有点击事件（无点击 = 程序跳转） |
+| JavaScript errors 卡片显示 100% script error | 跨域脚本抛错且无 CORS 头，浏览器不提供堆栈 | 点卡片内「Recordings」按钮过滤出对应会话，看错误所在页面；长期方案是自建 `window.onerror` 上报 |
+
+**定位 JS 错误会话的快捷方式**：JavaScript errors 卡片 → 卡片内 `Recordings` 按钮 → 会话列表被过滤（URL 带 `ScriptErrorText` 参数）→ 打开会话看 Event timeline 的按页面事件分组（如 `Visited: /play/xxx  01:11  Events: 16 Click / 3 JavaScript error`），可精确定位到出错页面与时间窗。
 
 ## 巡检基线记录
 
@@ -97,7 +100,7 @@ Insights：Rage clicks / **Dead clicks** / Excessive scrolling / **Quick backs**
 |---|---|---|---|---|---|---|---|---|
 | 2026-11-22 | 6 / 5 | 5 | 50%（3） | 33%（2） | 28 s | 140 ms | 0.038 | 基线 |
 | 2026-11-24 | 19 / 17 | 3 | 15.8%（3） | 26%（5） | 4.4 s | 210 ms | 0.001 | 流量 3 倍 |
-| 2026-11-25 | 18 / 15 | 3.44 | 5.6%（1） | 33%（6） | **2.3 s** | **140 ms** | 0.027 | 性能全部 good（30 pageviews，综合分 86） |
+| 2026-11-25 | 18→31 / 15→26 | 3.44 | 5.6%→12.9% | 33%→35.5% | 2.3→2.5 s | 140→210 ms | 0.025 | 日内两次读数；首次出现 3 个 JS 错误 |
 
 判读注意：quick back 的绝对数随流量增长而增加是正常的；关注其**构成**（坏链 vs 主动抽样浏览）而不是只看百分比。2026-11-25 起流量以桌面 Chrome/Edge + 搜索引擎（bing/google）为主。
 
@@ -107,3 +110,4 @@ Insights：Rage clicks / **Dead clicks** / Excessive scrolling / **Quick backs**
 - **2026-11-22**：死点击 50%、LCP 28s（n=1）、AI 直链落地 0 点击 → 记录为 issue #31 / #32 / #33，留待数据积累后复核。
 - **2026-11-24**：流量 3 倍增长（19 会话，cn.bing/google 进站）。抽查 quick back 会话均为**主动抽样浏览**（游戏详情页 3–8s 进出、定价页 7s），新增回放中未再出现「返回游戏库→首页」模式，初步验证 `381ac9f`。新发现：42%（8/19）会话为 1s/0 点击（疑爬虫/预览）；游戏详情页筛选循环 → issue #34；详情页性能更新到 #32、直链落地证据补充到 #33。
 - **2026-11-25**：性能全面达标（LCP 2.3s / INP 140ms / 综合 86，#32 可关闭）；死点击降至 5.6%，且全部集中在游戏详情页标题/简介文字被点（#34 证据增强）。新发现登录后访问 /my/dashboard 被弹回首页（1fzjqy4 回放，机制不明）→ issue #35。高价值样本：UAE 用户 1fzjqy4 两次会话共 25+5 点击，展示了「列表→详情→游玩→返回」完整路径与 OTP 登录流程。
+- **2026-11-25（二次巡检，31 会话 / 26 用户）**：首次出现 JS 错误（3 个，100% script error），用「卡片内 Recordings 过滤」定位到唯一会话 1bo5qev：错误全部集中在**首页精选游戏 zhumadian-exorcist 游玩页**（71 秒 16 点击 + 死点击 + 快速返回）→ issue #37。登录漏斗：3 个会话止步 `/sign-in?redirect=/my/dashboard`（Submit form 3 / Login 1）→ issue #36；`/sign-in?redirect=...` 作为入口/出口 URL 出现，确认 11-22 redirect 修复生效。直链落地 /play 再 +3 例（累计 8，含 10s/13s 停留）。
