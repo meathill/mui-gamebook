@@ -32,7 +32,8 @@ Insights：Rage clicks / **Dead clicks** / Excessive scrolling / **Quick backs**
 ### 3. 回放分析（Recordings）
 
 - 列表按 `Entry / Exit / Duration / Clicks / Pages / User ID` 快速筛选可疑会话：**时长极短 + 点击多 + 页面多 = 卡壳**；**时长长 + 点击多 = 最丰富的行为样本**
-- 打开回放 → `More details` 打开事件时间线，逐条读事件重建用户行为链
+- 打开回放 → `Event timeline` 打开事件时间线，按页面分组读事件，重建用户行为链
+- **工具提示**：Clarity SPA 偶发交互失效（卡片/按钮点击全部无响应，但页面仍渲染）。先 `tab.reload()` 刷新，再点击即可恢复——不要误判为页面结构变化
 
 ### 4. 代码验证
 
@@ -87,6 +88,7 @@ Insights：Rage clicks / **Dead clicks** / Excessive scrolling / **Quick backs**
 | 列表 → 详情 → 返回，每次停留 3–8 秒，反复多次 | 用户在快速筛选内容；详情页决策信息不足或缺直接开玩入口 | 看详情页均值停留与详情→游玩的转化率 |
 | 每页停留 1–20 秒 + 连续 quick back，按导航顺序遍历全站 | **全站快速评估型用户**（调研/比价/测评），非缺陷 | 看是否按 nav 顺序访问多个营销页；停留短但每页都有点击 |
 | 长时间停留（>3min）+ 0 点击 | 页面未就绪/不可交互（重组件、移动端水合慢），或用户挂后台 | 看 active time 与页面类型；对比同页其他会话；优先查重页面（编辑器）的移动端性能 |
+| Smart events 的 Login 数为 0，但存在带交互的 /my/dashboard 会话 | Login 事件绑定在「点击登录元素」而非真实鉴权成功，指标不可信 | 以「/my/dashboard 或 /my/edit 出现带点击的会话」作为登录成功的真实信号 |
 | 同一 URL 反复出现且无点击 | 移动端返回键/手势后退 | 无 click 事件 + 相邻 Page visit 成对出现 |
 | 时长 ≤1s + 0 点击 + 1 页面 | **可执行 JS 的爬虫/链接预览**（Clarity 未必标为 bot），或极快 bounce | 看入口 URL 是否分散、是否有 referrer；占比高时先剔除再算转化率 |
 | 登录成功后访问 /my/dashboard 被弹回首页 | 会话态竞态（useSession 缓存未失效）或路由竞态，机制待复现（#35） | 按 issue 复现步骤验证；留意是否有点击事件（无点击 = 程序跳转） |
@@ -116,3 +118,4 @@ Insights：Rage clicks / **Dead clicks** / Excessive scrolling / **Quick backs**
 - **2026-11-25（二次巡检，31 会话 / 26 用户）**：首次出现 JS 错误（3 个，100% script error），用「卡片内 Recordings 过滤」定位到唯一会话 1bo5qev：错误全部集中在**首页精选游戏 zhumadian-exorcist 游玩页**（71 秒 16 点击 + 死点击 + 快速返回）→ issue #37。登录漏斗：3 个会话止步 `/sign-in?redirect=/my/dashboard`（Submit form 3 / Login 1）→ issue #36；`/sign-in?redirect=...` 作为入口/出口 URL 出现，确认 11-22 redirect 修复生效。直链落地 /play 再 +3 例（累计 8，含 10s/13s 停留）。
 - **2026-11-27**：性能三项回退（LCP 3.9s / **INP 540ms poor** / CLS 0.11），移动端占比从 ~14% 升至 ~30%，疑为低端设备 + 慢网络所致（样本 13 pageviews）→ #32。JS 错误无新增（仍是 11-25 的会话）。登录漏斗恶化：Submit form 3 / Login 0 → #36。出现 **gemini.google.com** 来源（AI 引擎推荐流量）；`/play/zhumadian-exorcist` 成为访问量最高的游玩页（3/22）。发现「全站快速评估型」用户 xn5xwa：1:51 内按导航顺序遍历 11 个页面、10 次 quick back，最后在 /create 停 8 秒离开——quick back 的高占比主要由这类浏览习惯贡献，不是坏链。
 - **2026-11-27（二次读数，29 会话 / 28 用户）**：INP 仍 540ms poor（连续两轮同值，LCP/CLS 已恢复 good）；登录漏斗 Submit form 4 / Login 0，`/sign-in` 访问 7 次 → #36 升级关注。首次捕捉到创作漏斗会话：128x851（China / Edge Mobile，14:57、**137 点击、33 页面**，入口 /create）证明移动端有强创作意图；ttr4kv（ChromeMobile，/my/edit/284 **9 分钟 0 点击**后跳 sign-in?redirect）→ 新建 #38 移动端编辑器不可交互调查。`/my/edit` 首次出现，redirect 修复在编辑器守卫生效。注：本轮 Clarity 播放器无法通过自动化打开（卡片点击失效），分析基于会话元数据。
+- **2026-11-27（三次巡检，深挖 128x851）**：无新增流量（29 会话持平），转为深挖上一轮打不开的会话。**首次完整记录创作全流程**：撞登录墙（sign-in?redirect=/my/dashboard）→ OTP 登录成功（8 点击/7 次输入/1 提交）→ /my/dashboard 正常 → /create 新建 → /my/edit/284 两次编辑（1:42 + **6:15、77 点击、33 次输入**）→ /play/-9449 预览往返 3 次。**两个重要修正**：① 登录实际可完成，`Login 0` 是智能事件不可信（以 /my/dashboard 带交互会话为成功信号，#36）；② 编辑器在移动端可用，ttr4kv 的 9 分钟 0 点击更可能是挂后台。**新问题**：编辑器死点击率高——/my/edit 77 点击 9 死点击（12%）、/my/games 4 点击 2 死点击（#38、#31）。另沉淀工具经验：Clarity SPA 交互失效时 reload 页面即可恢复。
